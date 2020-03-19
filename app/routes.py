@@ -1,8 +1,24 @@
-from flask import render_template, request
 from app import app
+from app import functions
+from flask import render_template, request
 
 
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Hello, World!"
+    return render_template('index.html')
+
+
+@app.route('/terminal', methods=['GET'])
+def terminal():
+    # Get session_id from url
+    session_id = request.args.get('session_id', type=int)
+    source = request.args.get('source', type=str)
+
+    # Get parameters for current session
+    session_params = functions.get_df_session_params(session_id)
+
+    # Get chart
+    chart = functions.get_chart(session_params, source)
+
+    return render_template('terminal.html', session_params=session_params)
