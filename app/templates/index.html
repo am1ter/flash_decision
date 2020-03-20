@@ -6,5 +6,12 @@
 </head>
 <body>
     <h1>Hello World!</h1>
+
+    <select name="tickers" method="GET" action="/">
+        {% for code in tickers %}
+            <option value="{{ code }}">{{ code }}</option>
+        {% endfor %}
+    </select>
+
 </body>
 </html>
