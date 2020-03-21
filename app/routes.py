@@ -21,6 +21,6 @@ def web_terminal():
     session_params = functions.get_df_session_params(session_id)
 
     # Get chart
-    chart = functions.get_chart(session_params, source)
+    chart = functions.draw_chart_plotly(session_params, source)
 
-    return render_template('terminal.html', session_params=session_params)
+    return render_template('terminal.html', session_params=session_params, plot=chart)

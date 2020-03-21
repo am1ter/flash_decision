@@ -2,9 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
     <title>Title</title>
 </head>
 <body>
     <h1>Session_id: {{ session_params | safe }}</h1>
+    <div class="chart" id="chart">
+        <script>
+            var graphs = {{plot | safe}};
+            var data = [graphs[0].data[0]];
+            var layout = {
+                        title: 'Chart',
+                        dragmode: 'zoom',
+                        showlegend: false,
+                        margin: {
+                            r: 10,
+                            t: 25,
+                            b: 40,
+                            l: 60
+                        },
+                        xaxis: {
+                            autorange: true,
+                            rangeslider: {visible: false},
+                            title: 'Date',
+                            showticklabels: false
+                          }
+                        };
+            Plotly.plot('chart', data, layout);
+        </script>
+    </div>
 </body>
 </html>

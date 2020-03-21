@@ -3,6 +3,11 @@ import pyodbc
 import pandas as pd
 import datetime
 
+import numpy as np
+import json
+import plotly
+import plotly.graph_objs as go
+
 # Data readers
 from finam.export import Exporter, Market, LookupComparator, Timeframe
 # import pandas_datareader as pdr
@@ -83,36 +88,25 @@ def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, fin
         instrument = exporter.lookup(code=ticker, market=eval(market),
                               code_comparator=LookupComparator.EQUALS)
         assert len(instrument) == 1
-        sec = exporter.download(id_=instrument.index[0], market=eval(market),
-                                 start_date=start, end_date=datetime.datetime(2020, 3, 16),
+        df_full = exporter.download(id_=instrument.index[0], market=eval(market),
+                                 start_date=start, end_date=finish,
                                  timeframe=eval(timeframe))
-        print(sec.tail(bars_number))
-
-        sec.to_csv(save_path)
+        df = df_full.iloc[-bars_number:]
+        df.to_csv(save_path)
     elif source == 'hdd':
+        # Load dataframe from hdd
         try:
-            sec = pd.read_csv(save_path, parse_dates=True)
+            df = pd.read_csv(save_path, parse_dates=True)
         except FileNotFoundError:
             raise FileNotFoundError('File not found: ' + save_path)
     else:
         raise NameError('Only internet or hdd can be used as data source')
-    return sec
-
-
-def graphs_plotly(seq):
-    #seq['Start'] = seq.iloc[15-1]
-    mpl_fig = plt.figure()
-    graph = mpl_fig.add_subplot(111)
-    graph.plot(seq, lw=5)
-    plt.title('Pattern starts at ' + str(seq.index[15-1]))
-    b = plotly.tools.mpl_to_plotly(mpl_fig, resize=True)
-    b['layout']['xaxis']['showgrid'] = True
-    b['layout']['yaxis']['showgrid'] = True
-    plotly.offline.plot(b)
+    return df
 
 
 def get_chart(session_params, source):
     """Get all data to draw chart"""
+    # Format parameters
     chart_market = session_params['case_market'].values[0]
     chart_ticker = session_params['case_ticker'].values[0]
     chart_timeframe = session_params['case_timeframe'].values[0]
@@ -125,5 +119,28 @@ def get_chart(session_params, source):
                              timeframe = chart_timeframe, bars_number = chart_bars_number,
                              start=chart_start, finish=chart_finish)
 
-    chart = 'Chart'
     return data
+
+
+def draw_chart_plotly(session_params, source):
+    df = get_chart(session_params, source)
+    df['id'] = df.reset_index().index
+
+    data = [
+        go.Figure(
+            data=[go.Candlestick(
+                x=df['id'],                             #x=df.index,
+                open=df['<OPEN>'],
+                close=df['<CLOSE>'],
+                low=df['<LOW>'],
+                high=df['<HIGH>'],
+
+                increasing_line_color='#59a14f',
+                decreasing_line_color='#e15759'
+            )]
+        )
+    ]
+
+    graphJSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return graphJSON
