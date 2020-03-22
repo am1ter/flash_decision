@@ -6,9 +6,12 @@ from flask import render_template, request
 @app.route('/')
 @app.route('/index')
 def web_index():
-    tickers = functions.get_df_all_tickers()
+    session_id = functions.get_last_session_id()
     timeframes = functions.get_df_all_timeframes()
-    return render_template('index.html', tickers=tickers['code'], timeframes=timeframes)
+    markets = functions.get_df_all_markets()
+    tickers = functions.get_df_all_tickers()
+    return render_template('index.html',
+                           session_id=session_id, markets=markets, timeframes=timeframes, tickers=tickers['code'])
 
 
 @app.route('/terminal', methods=['GET'])

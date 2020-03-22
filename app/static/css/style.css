@@ -1,0 +1,125 @@
+/* ============================== */
+/* == General */
+/* ============================== */
+
+
+.text_default {
+    font-family: Roboto;
+    font-style: normal;
+    font-weight: normal;
+    color: #464646;
+}
+
+.menu {
+    font-family: Roboto;
+    color: #ffffff;
+}
+
+
+/* ============================== */
+/* == Unique */
+/* ============================== */
+
+/* Header */
+
+
+.header {
+    position: absolute;
+    width: 100%;
+    height: 40px;
+    left: 0px;
+    top: 0px;
+
+    background: #464646;
+}
+
+#header_container {
+    position: relative;
+    width: 50%;
+    height: 50%;
+    top: 25%;
+    margin: 0px 25px;
+}
+
+
+/* Index page */
+
+
+.content {
+    position: relative;
+    width: 420px;
+    height: 100%;
+    top: 8px;
+    left: 0px;
+    margin: auto;
+}
+
+#layout_title {
+    position: relative;
+    width: 100%;
+    height: 110px;
+    line-height: 110px;
+}
+
+#title {
+    text-align: center;
+    font-size: 48px;
+}
+
+#layout_separator_01 {
+    position: relative;
+    width: 100%;
+}
+
+.separator {
+    border-bottom: 1px solid #464646;
+}
+
+#layout_subtitle {
+    position: relative;
+    width: 100%;
+    line-height: 50px;
+}
+
+#subtitle {
+    text-align: center;
+    font-size: 18px;
+    color: #464646;
+}
+
+#layout_separator_02 {
+    position: relative;
+    width: 100%;
+}
+
+#layout_forms {
+    position: relative;
+    width: 100%;
+    top: 20px;
+}
+
+#layout_forms_left {
+    position: absolute;
+    width: 20%;
+    height: 30px;
+    left: 10%;
+
+    text-align: right;
+    line-height: 30px;
+}
+
+.text_default.layout_forms_left_text {
+    margin: 20px 10px;
+}
+
+#layout_forms_right {
+    position: absolute;
+    width: 60%;
+    height: 30px;
+    left: 30%;
+}
+
+.layout_forms_right_dropdown {
+    position: relative;
+    margin: 20px 0px;
+}

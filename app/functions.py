@@ -9,8 +9,13 @@ import plotly
 import plotly.graph_objs as go
 
 # Data readers
-from finam.export import Exporter, Market, LookupComparator, Timeframe
+from finam.export import Exporter, Market, LookupComparator, Timeframe # https://github.com/ffeast/finam-export
 # import pandas_datareader as pdr
+
+
+# ==============================
+# == Service functions
+# ==============================
 
 
 def sql_connect_to_db():
@@ -27,23 +32,86 @@ def sql_connect_to_db():
     return connection
 
 
-def sql_select_to_pandas(request):
-    """ Execute sql request and export data to pandas """
+def sql_select_to_value(query):
+    """ Execute sql query and export data to pandas """
+
+    # Connect to DB
+    connection = sql_connect_to_db()
+
+    # Create cursor
+    cursor = connection.cursor()
+
+    # Run query
+    cursor.execute(query)
+    value = cursor.fetchone()
+    value = value[0]
+
+    return value
+
+
+def sql_select_to_pandas(query):
+    """ Execute sql query and export data to pandas """
 
     # Connect to DB
     connection = sql_connect_to_db()
 
     # Read sql data
-    df = pd.read_sql(request, connection)
+    df = pd.read_sql(query, connection)
 
     return df
+
+
+# ==============================
+# == Index
+# ==============================
+
+
+def get_last_session_id():
+    """Get: Last session_id in DB """
+    # Select Query:
+    query = \
+        f'''SELECT 
+                TOP(1) [session_id]
+            FROM {config.SQL_TABLE_SESSIONS}
+            ORDER BY [session_id] DESC
+        '''
+
+    # Get pandas df from query
+    session_id = sql_select_to_value(query)
+    return session_id
+
+
+def get_df_all_timeframes():
+    all_timeframes = []
+    for idx, tf in enumerate(Timeframe):
+        all_timeframes.append(str(list(tuple(Timeframe))[idx]))
+    return all_timeframes
+
+
+def get_df_all_markets():
+    all_markets = []
+    for idx, market in enumerate(Market):
+        all_markets.append(str(list(tuple(Market))[idx]))
+    return all_markets
+
+
+def get_df_all_tickers():
+    """Get dataframe with all tickers by finam.export library https://www.finam.ru/profile/moex-akcii/gazprom/export/"""
+    exporter = Exporter()
+    tickers = exporter.lookup(market=[Market.SHARES])
+    return tickers
+
+
+# ==============================
+# == Terminal
+# ==============================
 
 
 def get_df_session_params(session_id):
     """Get dataframe with session parameters"""
 
     # Select Query:
-    request = \
+    query = \
         f'''SELECT 
                [session_id]
               ,[session_status]
@@ -57,23 +125,9 @@ def get_df_session_params(session_id):
           WHERE session_id = {session_id}
         '''
 
-    # Get pandas df from request
-    df = sql_select_to_pandas(request)
+    # Get pandas df from query
+    df = sql_select_to_pandas(query)
     return df
-
-
-def get_df_all_tickers():
-    """Get dataframe with all tickers by finam.export library https://www.finam.ru/profile/moex-akcii/gazprom/export/"""
-    exporter = Exporter()
-    tickers = exporter.lookup(market=[Market.SHARES])
-    return tickers
-
-
-def get_df_all_timeframes():
-    all_timeframes = []
-    for idx, tf in enumerate(Timeframe):
-        all_timeframes.append(str(list(tuple(Timeframe))[idx]))
-    return all_timeframes
 
 
 def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, finish):

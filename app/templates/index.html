@@ -1,17 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    <h1>Hello World!</h1>
+{% extends "layout.html" %}
 
-    <select name="tickers" method="GET" action="/">
-        {% for code in tickers %}
-            <option value="{{ code }}">{{ code }}</option>
-        {% endfor %}
-    </select>
+<!--Head-->
 
-</body>
-</html>
+{% block title %}Home page{% endblock %}
+
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+<!--Body-->
+
+{% block header %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="content">
+
+    <div id="layout_title">
+        <h1 class="text_default" id="title">Flash decision v.0.1</h1>
+    </div>
+
+    <div id="layout_separator_01">
+        <div class="separator"></div>
+    </div>
+
+    <div id="layout_subtitle">
+        <p class="text_default" id="subtitle">Set parameters of the session and press start</p>
+    </div>
+
+    <div id="layout_separator_02">
+        <div class="separator"></div>
+    </div>
+
+    <div id="layout_forms">
+        <div id="layout_forms_left">
+            <p class="text_default layout_forms_left_text">User</p>
+            <p class="text_default layout_forms_left_text">Market</p>
+            <p class="text_default layout_forms_left_text">Ticker</p>
+        </div>
+        <div id="layout_forms_right">
+            <div class="layout_forms_right_dropdown">
+                <select class="form_dropdown" name="state" style="width: 100%">
+                    {% for market in markets %}
+                    <option value="{{ market }}">{{ market }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="layout_forms_right_dropdown">
+                <select class="form_dropdown" name="state" style="width: 100%">
+                    {% for market in markets %}
+                    <option value="{{ market }}">{{ market }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="layout_forms_right_dropdown" >
+                <select class="form_dropdown" name="state" style="width: 100%">
+                    {% for code in tickers %}
+                    <option value="{{ code }}">{{ code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+{% endblock %}
