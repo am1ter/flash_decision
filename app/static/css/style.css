@@ -7,6 +7,7 @@
     font-family: Roboto;
     font-style: normal;
     font-weight: normal;
+    font-size: 14px;
     color: #464646;
 }
 
@@ -14,7 +15,6 @@
     font-family: Roboto;
     color: #ffffff;
 }
-
 
 /* ============================== */
 /* == Unique */
@@ -49,7 +49,7 @@
     position: relative;
     width: 420px;
     height: 100%;
-    top: 8px;
+    top: 40px;
     left: 0px;
     margin: auto;
 }
@@ -59,6 +59,9 @@
     width: 100%;
     height: 110px;
     line-height: 110px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
 }
 
 #title {
@@ -85,6 +88,7 @@
     text-align: center;
     font-size: 18px;
     color: #464646;
+    margin: auto;
 }
 
 #layout_separator_02 {
@@ -100,12 +104,12 @@
 
 #layout_forms_left {
     position: absolute;
-    width: 20%;
+    width: 25%;
     height: 30px;
     left: 10%;
 
     text-align: right;
-    line-height: 30px;
+    line-height: 34px;
 }
 
 .text_default.layout_forms_left_text {
@@ -114,12 +118,15 @@
 
 #layout_forms_right {
     position: absolute;
-    width: 60%;
-    height: 30px;
-    left: 30%;
+    width: 50%;
+    left: 35%;
 }
 
-.layout_forms_right_dropdown {
+.layout_forms_right_input {
     position: relative;
     margin: 20px 0px;
+}
+
+#layout_button_start {
+    direction: rtl;
 }

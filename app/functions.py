@@ -115,12 +115,14 @@ def get_df_session_params(session_id):
         f'''SELECT 
                [session_id]
               ,[session_status]
+              ,[username]
               ,[case_market]
               ,[case_ticker]
               ,[case_datetime]
               ,[case_timeframe]
               ,[case_bars_number]
               ,[case_timer]
+              ,[case_iterations]
           FROM {config.SQL_TABLE_SESSIONS}
           WHERE session_id = {session_id}
         '''

@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="content">
+<section class="content">
 
     <div id="layout_title">
         <h1 class="text_default" id="title">Flash decision v.0.1</h1>
@@ -34,37 +34,90 @@
     </div>
 
     <div id="layout_forms">
+
         <div id="layout_forms_left">
             <p class="text_default layout_forms_left_text">User</p>
             <p class="text_default layout_forms_left_text">Market</p>
             <p class="text_default layout_forms_left_text">Ticker</p>
+            <p class="text_default layout_forms_left_text">Timeframe</p>
+            <p class="text_default layout_forms_left_text">Bars number</p>
+            <p class="text_default layout_forms_left_text">Time limit</p>
+            <p class="text_default layout_forms_left_text">Date & time</p>
+            <p class="text_default layout_forms_left_text">Iterations</p>
         </div>
+
         <div id="layout_forms_right">
-            <div class="layout_forms_right_dropdown">
-                <select class="form_dropdown" name="state" style="width: 100%">
+
+            <div class="layout_forms_right_input">
+              <input type="text" class="form-control" id="form_user">
+            </div>
+            
+            <div class="layout_forms_right_input">
+                <select class="form-control" id="form_market">
                     {% for market in markets %}
                     <option value="{{ market }}">{{ market }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="layout_forms_right_dropdown">
-                <select class="form_dropdown" name="state" style="width: 100%">
-                    {% for market in markets %}
-                    <option value="{{ market }}">{{ market }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="layout_forms_right_dropdown" >
-                <select class="form_dropdown" name="state" style="width: 100%">
+
+            <div class="layout_forms_right_input">
+                <select class="form-control" id="form_ticker">
                     {% for code in tickers %}
                     <option value="{{ code }}">{{ code }}</option>
                     {% endfor %}
                 </select>
             </div>
+
+            <div class="layout_forms_right_input">
+                <select class="form-control" id="form_timeframe">
+                    {% for timeframe in timeframes %}
+                    <option value="{{ timeframe }}">{{ timeframe }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="layout_forms_right_input">
+                <select class="form-control" id="form_bars_number">
+                    <option value="10">10 bars</option>
+                    <option value="20">20 bars</option>
+                    <option value="50" selected="selected">50 bars</option>
+                    <option value="100">100 bars</option>
+                </select>
+            </div>
+
+            <div class="layout_forms_right_input">
+                <select class="form-control" id="form_timer">
+                    <option value="1">1 sec</option>
+                    <option value="2" selected="selected">2 sec</option>
+                    <option value="5">5 sec</option>
+                    <option value="60">60 sec</option>
+                </select>
+            </div>
+
+            <div class="layout_forms_right_input input-group date" id="datetimepicker1">
+                <input type="text" class="form-control" />
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+            </div>
+
+            <div class="layout_forms_right_input">
+                <select class="form-control" id="form_iterations">
+                    <option value="1">1 iteration</option>
+                    <option value="5">5 iterations</option>
+                    <option value="10" selected="selected">10 iterations</option>
+                    <option value="20">20 iterations</option>
+                </select>
+            </div>
+
+            <div class="layout_forms_right_input" id="layout_button_start">
+                <div class="btn-group" role="group" aria-label="...">
+                    <button type="button" class="btn btn-default">Start</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
-
-
-</div>
+</section>
 {% endblock %}

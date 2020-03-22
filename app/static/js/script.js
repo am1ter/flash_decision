@@ -1,6 +1,4 @@
 // Select boxes
-$(document).ready(function() {
-    $('.form_dropdown').select2({
-
-    });
+$(function () {
+    $('#datetimepicker1').datetimepicker();
 });
