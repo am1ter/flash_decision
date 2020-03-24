@@ -1,9 +1,10 @@
 from app import config
+
 import pyodbc
 import pandas as pd
 import datetime
+from sqlalchemy import create_engine
 
-import numpy as np
 import json
 import plotly
 import plotly.graph_objs as go
@@ -18,10 +19,15 @@ from finam.export import Exporter, Market, LookupComparator, Timeframe # https:/
 # ==============================
 
 
+def sqlalchemy_create_engine():
+    engine = create_engine(config.SQL_ENGINE, pool_size=10, max_overflow=20, convert_unicode=True)
+    return engine
+
+
 def sql_connect_to_db():
     """ Connect to SQL Server """
     try:
-        connection = pyodbc.connect(f'Driver={config.SQL_DRIVER};'
+        connection = pyodbc.connect(f'Driver={config.SQL_DRIVER_PYODBC};'
                                     f'Server={config.SQL_SERVER};'
                                     f'Port={config.SQL_PORT};'
                                     f'Database={config.SQL_DB};'
@@ -61,6 +67,14 @@ def sql_select_to_pandas(query):
     return df
 
 
+def sql_insert_from_pandas(df, table):
+    """ Insert into SQL table pandas dataframe with SQL-Alchemy """
+    try:
+        df.to_sql(table, con=sqlalchemy_create_engine(), if_exists='append', index=False)
+    except Exception as error:
+        raise SystemError(f"Failed to insert DF into the table. {error.args}")
+
+
 # ==============================
 # == Index
 # ==============================
@@ -77,7 +91,7 @@ def get_last_session_id():
         '''
 
     # Get pandas df from query
-    session_id = sql_select_to_value(query)
+    session_id = int(sql_select_to_value(query))
     return session_id
 
 
@@ -100,6 +114,16 @@ def get_df_all_tickers():
     exporter = Exporter()
     tickers = exporter.lookup(market=[Market.SHARES])
     return tickers
+
+
+def db_insert_session(df_dict):
+    # Insert into the SQL table with SQL-Alchemy:
+
+    # Create DataFrame
+    df = pd.DataFrame(df_dict)
+
+    # Insert df
+    sql_insert_from_pandas(df=df, table=config.SQL_TABLE_SESSIONS)
 
 
 # ==============================
