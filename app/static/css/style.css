@@ -14,6 +14,7 @@
 .menu {
     font-family: Roboto;
     color: #ffffff;
+    margin: 0px 20px;
 }
 
 /* ============================== */
@@ -33,7 +34,7 @@
     background: #464646;
 }
 
-#header_container {
+.header_container {
     position: relative;
     width: 50%;
     height: 50%;
@@ -45,7 +46,7 @@
 /* Index page */
 
 
-.content {
+.content_homepage {
     position: relative;
     width: 420px;
     height: 100%;
@@ -64,7 +65,7 @@
     flex-direction: column;
 }
 
-#title {
+.title {
     text-align: center;
     font-size: 48px;
 }
@@ -84,7 +85,7 @@
     line-height: 50px;
 }
 
-#subtitle {
+.subtitle {
     text-align: center;
     font-size: 18px;
     color: #464646;
@@ -129,4 +130,20 @@
 
 #layout_button_start {
     direction: rtl;
+}
+
+/* Terminal page */
+
+.content_terminal {
+    position: relative;
+    width: 800px;
+    height: 100%;
+    top: 40px;
+    left: 0px;
+    margin: auto;
+}
+
+.chart {
+    position: relative;
+    top: 40px;
 }

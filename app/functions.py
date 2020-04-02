@@ -55,6 +55,22 @@ def sql_select_to_value(query):
     return value
 
 
+def sql_update(query):
+    """ Execute sql query and export data to pandas """
+
+    # Connect to DB
+    connection = sql_connect_to_db()
+
+    # Create cursor
+    cursor = connection.cursor()
+
+    # Run query
+    cursor.execute(query)
+    connection.commit()
+
+    return
+
+
 def sql_select_to_pandas(query):
     """ Execute sql query and export data to pandas """
 
@@ -134,7 +150,7 @@ def db_insert_session(df_dict):
 def get_df_session_params(session_id):
     """Get dataframe with session parameters"""
 
-    # Select Query:
+    # Select query:
     query = \
         f'''SELECT 
                [session_id]
@@ -153,7 +169,10 @@ def get_df_session_params(session_id):
 
     # Get pandas df from query
     df = sql_select_to_pandas(query)
-    return df
+    if df['session_status'].values[0] == config.SESSION_STATUS_ACTIVE:
+        return df
+    else:
+        raise ValueError('This session is not active. Return to home page and try again.')
 
 
 def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, finish):
@@ -171,7 +190,10 @@ def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, fin
         df_full = exporter.download(id_=instrument.index[0], market=eval(market),
                                  start_date=start, end_date=finish,
                                  timeframe=eval(timeframe))
-        df = df_full.iloc[-bars_number:]
+        # Cut df to selected finish date
+        df_cut = df_full[:(df_full.index.get_loc(str(finish),method='nearest'))+1]
+        # Cut df with selected bars_number
+        df = df_cut.iloc[-bars_number:]
         df.to_csv(save_path)
     elif source == 'hdd':
         # Load dataframe from hdd
@@ -224,3 +246,26 @@ def draw_chart_plotly(session_params, source):
     graphJSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
 
     return graphJSON
+
+
+def db_update_close_session(session_id):
+    """Close current session"""
+
+    # Update query:
+    query = \
+        f'''UPDATE {config.SQL_TABLE_SESSIONS}
+            SET
+              [session_status] = '{config.SESSION_STATUS_CLOSED}'
+          WHERE session_id = {session_id}
+        '''
+
+    sql_update(query)
+
+
+def db_insert_decision(decision):
+    """Insert decision into table"""
+
+    # Create df from dict
+    df = pd.DataFrame(decision, index=[0])
+
+    sql_insert_from_pandas(df, config.SQL_TABLE_DECISIONS)

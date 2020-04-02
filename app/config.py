@@ -15,10 +15,15 @@ SQL_ENGINE = "mssql+pyodbc://%s:%s@%s:%s/%s?driver=%s" % \
 
 # SQL table names
 SQL_TABLE_SESSIONS = 'sessions'
+SQL_TABLE_DECISIONS = 'decisions'
 
 # Files
 PATH_APP = os.path.dirname(os.path.abspath(__file__))
 PATH_UPLOAD_FOLDER = os.path.join(os.path.dirname(PATH_APP), 'upload_folder') # go up one folder
+
+# Session parameters
+SESSION_STATUS_ACTIVE = 'active'
+SESSION_STATUS_CLOSED = 'closed'
 
 # Chart parameters
 DF_DURATION_DAYS = 90

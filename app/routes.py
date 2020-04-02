@@ -1,10 +1,9 @@
-from app import app
-from app import functions
-from flask import render_template, request, redirect
+from app import app, config, functions
+from flask import render_template, request, redirect, Response
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET'])
+@app.route('/index', methods=['GET'])
 def web_index_get():
     session_id = functions.get_last_session_id()
     timeframes = functions.get_df_all_timeframes()
@@ -18,7 +17,7 @@ def web_index_get():
 def web_index_post():
     # Update session parameters
     session_id = functions.get_last_session_id() + 1
-    session_status = 'processing'
+    session_status = config.SESSION_STATUS_ACTIVE
 
     # Get form data from webpage
     username = request.form['form_username']
@@ -54,3 +53,18 @@ def web_terminal_get():
     chart = functions.draw_chart_plotly(session_params, source)
 
     return render_template('terminal.html', session_params=session_params, plot=chart)
+
+
+@app.route('/terminal', methods=['POST'])
+def web_terminal_post():
+    # Get key parameters from url
+    session_id = request.form['session_id']
+
+    # Get decision parameters
+    decision = {'session_id':session_id, 'decision_action': request.form['form_button'], 'decision_time': 1.9}
+
+    functions.db_insert_decision(decision)
+    functions.db_update_close_session(session_id)
+
+    #return redirect(f'/index')
+    return Response('You decided to ' + decision['decision_action'] + '. Time spent: ' + str(decision['decision_time']))

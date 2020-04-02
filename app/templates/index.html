@@ -15,10 +15,10 @@
 {% endblock %}
 
 {% block content %}
-<section class="content">
+<section class="content_homepage">
 
     <div id="layout_title">
-        <h1 class="text_default" id="title">Flash decision v.0.1</h1>
+        <h1 class="text_default title">Flash decision v.0.1</h1>
     </div>
 
     <div id="layout_separator_01">
@@ -26,7 +26,7 @@
     </div>
 
     <div id="layout_subtitle">
-        <p class="text_default" id="subtitle">Set parameters of the session and press start</p>
+        <p class="text_default subtitle">Set parameters of the session and press start</p>
     </div>
 
     <div id="layout_separator_02">
@@ -49,7 +49,7 @@
 
         <div id="layout_forms_right">
 
-            <form action="{{ url_for('web_index_post') }}" method="post">
+            <form action="{{ url_for('web_index_post') }}" method="POST">
 
                 <div class="layout_forms_right_input">
                   <input type="text" class="form-control" name="form_username">
@@ -58,7 +58,11 @@
                 <div class="layout_forms_right_input">
                     <select class="form-control" name="form_market">
                         {% for market in markets %}
-                        <option value="{{ market }}">{{ market }}</option>
+                        {% if market == 'Market.SHARES' %}
+                        <option value="{{ market }}" selected="selected">{{ market }}</option>
+                        {% else %}
+                        <option value="{{ macvxrket }}">{{ market }}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -66,7 +70,11 @@
                 <div class="layout_forms_right_input">
                     <select class="form-control" name="form_ticker">
                         {% for code in tickers %}
+                        {% if code == 'SBER' %}
+                        <option value="{{ code }}" selected="selected">{{ code }}</option>
+                        {% else %}
                         <option value="{{ code }}">{{ code }}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -74,7 +82,11 @@
                 <div class="layout_forms_right_input">
                     <select class="form-control" name="form_timeframe">
                         {% for timeframe in timeframes %}
+                        {% if timeframe == 'Timeframe.MINUTES1' %}
+                        <option value="{{ timeframe }}" selected="selected">{{ timeframe }}</option>
+                        {% else %}
                         <option value="{{ timeframe }}">{{ timeframe }}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
