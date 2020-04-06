@@ -44,6 +44,8 @@
             <p class="text_default layout_forms_left_text">Time limit</p>
             <p class="text_default layout_forms_left_text">Date & time</p>
             <p class="text_default layout_forms_left_text">Iterations</p>
+            <p class="text_default layout_forms_left_text">Slippage</p>
+            <p class="text_default layout_forms_left_text">Fixing bar</p>
         </div>
 
 
@@ -122,6 +124,24 @@
                         <option value="5">5 iterations</option>
                         <option value="10" selected="selected">10 iterations</option>
                         <option value="20">20 iterations</option>
+                    </select>
+                </div>
+
+                <div class="layout_forms_right_input">
+                    <select class="form-control" name="form_slippage">
+                        <option value="0">No slippage</option>
+                        <option value="0.001" selected="selected">0.1%</option>
+                        <option value="0.005">0.5%</option>
+                        <option value="0.01">1%</option>
+                    </select>
+                </div>
+
+                <div class="layout_forms_right_input">
+                    <select class="form-control" name="form_fixing_bar">
+                        <option value="10">10</option>
+                        <option value="15" selected="selected">15</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
                     </select>
                 </div>
 

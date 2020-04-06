@@ -163,6 +163,8 @@ def get_df_session_params(session_id):
               ,[case_bars_number]
               ,[case_timer]
               ,[case_iterations]
+              ,[case_slippage]
+              ,[case_fixing_bar]
           FROM {config.SQL_TABLE_SESSIONS}
           WHERE session_id = {session_id}
         '''
@@ -175,7 +177,7 @@ def get_df_session_params(session_id):
         raise ValueError('This session is not active. Return to home page and try again.')
 
 
-def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, finish):
+def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, finish, fixing_bar):
     """Get dataframe with finance data"""
 
     # Set path to save/load downloaded ticker data
@@ -215,11 +217,12 @@ def get_chart(session_params, source):
     chart_bars_number = session_params['case_bars_number'].values[0]
     chart_start = pd.to_datetime((session_params['case_datetime'] - pd.offsets.Day(config.DF_DURATION_DAYS)).values[0])
     chart_finish = pd.to_datetime(session_params['case_datetime'].values[0])
+    chart_fixing_bar = session_params['chart_fixing_bar'].values[0]
 
     # Send parameters to parser and get chart data
     data = get_df_chart_data(source=source, market=chart_market, ticker=chart_ticker,
-                             timeframe = chart_timeframe, bars_number = chart_bars_number,
-                             start=chart_start, finish=chart_finish)
+                             timeframe=chart_timeframe, bars_number=chart_bars_number,
+                             start=chart_start, finish=chart_finish, fixing_bar=chart_fixing_bar)
 
     return data
 

@@ -28,12 +28,14 @@ def web_index_post():
     timer = request.form['form_timer']
     datetime_finish = request.form['form_datetime_finish']
     iterations = request.form['form_iterations']
+    slippage = request.form['form_slippage']
+    fixing_bar = request.form['form_fixing_bar']
 
     # Create dataframe
     df_dict = {'session_id': str(session_id), 'username': [username], 'session_status': [session_status],
                'case_market': [market], 'case_ticker': [ticker], 'case_datetime': [datetime_finish],
                'case_timeframe': [timeframe], 'case_bars_number': [bars_number], 'case_timer': [timer],
-               'case_iterations': [iterations]}
+               'case_iterations': [iterations], 'case_slippage': [slippage], 'case_fixing_bar': [fixing_bar]}
 
     functions.db_insert_session(df_dict)
 
