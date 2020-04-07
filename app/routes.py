@@ -63,7 +63,7 @@ def web_terminal_post():
     session_id = request.form['session_id']
 
     # Get decision parameters
-    decision = {'session_id':session_id, 'decision_action': request.form['form_button'], 'decision_time': 1.9}
+    decision = {'session_id': session_id, 'decision_action': request.form['form_button'], 'decision_time': 1.9}
 
     functions.db_insert_decision(decision)
     functions.db_update_close_session(session_id)

@@ -177,8 +177,32 @@ def get_df_session_params(session_id):
         raise ValueError('This session is not active. Return to home page and try again.')
 
 
+def get_df_download_data(market, ticker, timeframe, bars_number, start, finish, fixing_bar):
+    """Get dataframe with finance data and save it to file"""
+
+    # Set path to save/load downloaded ticker data
+    save_path = config.PATH_UPLOAD_FOLDER + '\\' + ticker + '.csv'
+
+    # Parse quotes with finam.export library
+    exporter = Exporter()
+    instrument = exporter.lookup(code=ticker, market=eval(market),
+                          code_comparator=LookupComparator.EQUALS)
+    assert len(instrument) == 1
+    df_full = exporter.download(id_=instrument.index[0], market=eval(market),
+                             start_date=start, end_date=current_date,
+                             timeframe=eval(timeframe))
+
+    # Save full df to file
+    df_full.to_csv(save_path)
+
+    return df_full
+
+
 def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, finish, fixing_bar):
     """Get dataframe with finance data"""
+
+    # Get current date to download data (df to finish date will be cut after download)
+    current_date = pd.to_datetime(datetime.datetime.now())
 
     # Set path to save/load downloaded ticker data
     save_path = config.PATH_UPLOAD_FOLDER + '\\' + ticker + '.csv'
@@ -190,13 +214,20 @@ def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, fin
                               code_comparator=LookupComparator.EQUALS)
         assert len(instrument) == 1
         df_full = exporter.download(id_=instrument.index[0], market=eval(market),
-                                 start_date=start, end_date=finish,
+                                 start_date=start, end_date=current_date,
                                  timeframe=eval(timeframe))
+        # Save full df to file
+        df_full.to_csv(save_path)
         # Cut df to selected finish date
-        df_cut = df_full[:(df_full.index.get_loc(str(finish),method='nearest'))+1]
+        df_cut = df_full[:(df_full.index.get_loc(str(finish), method='nearest'))+1]
         # Cut df with selected bars_number
         df = df_cut.iloc[-bars_number:]
-        df.to_csv(save_path)
+
+        # Get df with final result: finish bar number + fixing bar number
+        finish_df_shift = df_full.index.get_loc(str(finish), method='nearest') + fixing_bar
+        df_result = df_full[finish_df_shift:finish_df_shift+1][config.COLUMN_RESULT]
+
+
     elif source == 'hdd':
         # Load dataframe from hdd
         try:
@@ -217,7 +248,7 @@ def get_chart(session_params, source):
     chart_bars_number = session_params['case_bars_number'].values[0]
     chart_start = pd.to_datetime((session_params['case_datetime'] - pd.offsets.Day(config.DF_DURATION_DAYS)).values[0])
     chart_finish = pd.to_datetime(session_params['case_datetime'].values[0])
-    chart_fixing_bar = session_params['chart_fixing_bar'].values[0]
+    chart_fixing_bar = session_params['case_fixing_bar'].values[0]
 
     # Send parameters to parser and get chart data
     data = get_df_chart_data(source=source, market=chart_market, ticker=chart_ticker,

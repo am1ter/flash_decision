@@ -2,7 +2,7 @@ import os
 
 # SQL connection properties
 SQL_DRIVER_PYODBC = '{SQL Server}'
-SQL_SERVER = 'sql-scan.nemanadvisors.com'
+SQL_SERVER = 'localhost'
 SQL_PORT = '1433'
 SQL_DB = 'flash'
 SQL_USER = 'flash'
@@ -27,3 +27,4 @@ SESSION_STATUS_CLOSED = 'closed'
 
 # Chart parameters
 DF_DURATION_DAYS = 90
+COLUMN_RESULT = '<CLOSE>'
