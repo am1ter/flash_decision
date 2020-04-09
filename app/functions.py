@@ -20,6 +20,7 @@ from finam.export import Exporter, Market, LookupComparator, Timeframe # https:/
 
 
 def sqlalchemy_create_engine():
+    """ Create SQL engine for SQL Alchemy """
     engine = create_engine(config.SQL_ENGINE, pool_size=10, max_overflow=20, convert_unicode=True)
     return engine
 
@@ -91,13 +92,19 @@ def sql_insert_from_pandas(df, table):
         raise SystemError(f"Failed to insert DF into the table. {error.args}")
 
 
+def get_filename_saved_data(session_id, ticker):
+    """ Get filename for current session_id and ticker """
+    save_path = config.PATH_UPLOAD_FOLDER + '\\' + str(session_id) + '_' + str(ticker) + '.csv'
+    return save_path
+
+
 # ==============================
 # == Index
 # ==============================
 
 
 def get_last_session_id():
-    """Get: Last session_id in DB """
+    """ Get: Last session_id in DB """
     # Select Query:
     query = \
         f'''SELECT 
@@ -148,7 +155,7 @@ def db_insert_session(df_dict):
 
 
 def get_df_session_params(session_id):
-    """Get dataframe with session parameters"""
+    """ Get dataframe with session parameters """
 
     # Select query:
     query = \
@@ -177,11 +184,28 @@ def get_df_session_params(session_id):
         raise ValueError('This session is not active. Return to home page and try again.')
 
 
-def get_df_download_data(market, ticker, timeframe, bars_number, start, finish, fixing_bar):
-    """Get dataframe with finance data and save it to file"""
+def get_df_session_iteration(session_id):
+    """ Get current iteration number for current session """
+
+    # Select query:
+    query = \
+        f'''SELECT 
+            MAX([session_iteration]) as "session_iteration"
+            FROM {config.SQL_TABLE_DECISIONS}
+            WHERE session_id = {session_id}
+        '''
+
+    # Get pandas df from query
+    df = sql_select_to_pandas(query)
+
+    return df.values[0][0]
+
+
+def download_data(session_id, market, ticker, timeframe, start, finish):
+    """ Get dataframe with finance data and save it to file """
 
     # Set path to save/load downloaded ticker data
-    save_path = config.PATH_UPLOAD_FOLDER + '\\' + ticker + '.csv'
+    save_path = get_filename_saved_data(session_id, ticker)
 
     # Parse quotes with finam.export library
     exporter = Exporter()
@@ -189,7 +213,7 @@ def get_df_download_data(market, ticker, timeframe, bars_number, start, finish, 
                           code_comparator=LookupComparator.EQUALS)
     assert len(instrument) == 1
     df_full = exporter.download(id_=instrument.index[0], market=eval(market),
-                             start_date=start, end_date=current_date,
+                             start_date=start, end_date=finish,
                              timeframe=eval(timeframe))
 
     # Save full df to file
@@ -198,74 +222,86 @@ def get_df_download_data(market, ticker, timeframe, bars_number, start, finish, 
     return df_full
 
 
-def get_df_chart_data(source, market, ticker, timeframe, bars_number, start, finish, fixing_bar):
-    """Get dataframe with finance data"""
-
-    # Get current date to download data (df to finish date will be cut after download)
-    current_date = pd.to_datetime(datetime.datetime.now())
-
+def load_hdd_data(session_id, ticker):
+    """ Get dataframe by reading data from hdd file """
     # Set path to save/load downloaded ticker data
-    save_path = config.PATH_UPLOAD_FOLDER + '\\' + ticker + '.csv'
+    save_path = get_filename_saved_data(session_id, ticker)
 
-    if source == 'internet':
-        # Parse quotes with finam.export library
-        exporter = Exporter()
-        instrument = exporter.lookup(code=ticker, market=eval(market),
-                              code_comparator=LookupComparator.EQUALS)
-        assert len(instrument) == 1
-        df_full = exporter.download(id_=instrument.index[0], market=eval(market),
-                                 start_date=start, end_date=current_date,
-                                 timeframe=eval(timeframe))
-        # Save full df to file
-        df_full.to_csv(save_path)
-        # Cut df to selected finish date
-        df_cut = df_full[:(df_full.index.get_loc(str(finish), method='nearest'))+1]
-        # Cut df with selected bars_number
-        df = df_cut.iloc[-bars_number:]
+    # Load dataframe from hdd
+    try:
+        df_full = pd.read_csv(save_path, parse_dates=True, index_col='index')
+    except FileNotFoundError:
+        raise FileNotFoundError('File not found: ' + save_path)
 
-        # Get df with final result: finish bar number + fixing bar number
-        finish_df_shift = df_full.index.get_loc(str(finish), method='nearest') + fixing_bar
-        df_result = df_full[finish_df_shift:finish_df_shift+1][config.COLUMN_RESULT]
+    return df_full
 
 
-    elif source == 'hdd':
-        # Load dataframe from hdd
-        try:
-            df = pd.read_csv(save_path, parse_dates=True)
-        except FileNotFoundError:
-            raise FileNotFoundError('File not found: ' + save_path)
-    else:
-        raise NameError('Only internet or hdd can be used as data source')
+def get_df_chart_data(df_full, bars_number, finish):
+    """ Get dataframe with finance data """
+    # Cut df to selected finish date
+    df_cut = df_full[:(df_full.index.get_loc(str(finish), method='nearest'))+1]
+    # Cut df with selected bars_number
+    df = df_cut.iloc[-bars_number:]
+
     return df
 
 
+def get_result_percent(session_id, ticker, finish, fixing_bar):
+    """ Get percent change from finish bar to fixing bar """
+
+    df_full = load_hdd_data(session_id, ticker)
+
+    # Get value in finish bar
+    finish_df_shift = df_full.index.get_loc(str(finish), method='nearest')
+    df_finish = df_full[finish_df_shift:finish_df_shift+1][config.COLUMN_RESULT]
+    val_finish = df_finish[0]
+
+    # Get value in fixing bar
+    fixing_df_shift = int(finish_df_shift) + int(fixing_bar)
+    df_fixing = df_full[fixing_df_shift:fixing_df_shift+1][config.COLUMN_RESULT]
+    val_fixing = df_fixing[0]
+
+    # Get percent change
+    result = round(((val_fixing - val_finish) / val_finish), 4)
+
+    return result
+
+
 def get_chart(session_params, source):
-    """Get all data to draw chart"""
+    """ Get all data to draw chart """
     # Format parameters
+    session_id = session_params['session_id'].values[0]
     chart_market = session_params['case_market'].values[0]
     chart_ticker = session_params['case_ticker'].values[0]
     chart_timeframe = session_params['case_timeframe'].values[0]
     chart_bars_number = session_params['case_bars_number'].values[0]
-    chart_start = pd.to_datetime((session_params['case_datetime'] - pd.offsets.Day(config.DF_DURATION_DAYS)).values[0])
-    chart_finish = pd.to_datetime(session_params['case_datetime'].values[0])
-    chart_fixing_bar = session_params['case_fixing_bar'].values[0]
+    chart_start = pd.to_datetime((session_params['case_datetime'] - pd.offsets.Day(config.DF_DAYS_BEFORE)).values[0])
+    chart_finish = pd.to_datetime(datetime.datetime.now())
 
-    # Send parameters to parser and get chart data
-    data = get_df_chart_data(source=source, market=chart_market, ticker=chart_ticker,
-                             timeframe=chart_timeframe, bars_number=chart_bars_number,
-                             start=chart_start, finish=chart_finish, fixing_bar=chart_fixing_bar)
+    # Send parameters to parser and download data
+    df_full = download_data(session_id=session_id, market=chart_market, ticker=chart_ticker,
+                            timeframe=chart_timeframe, start=chart_start, finish=chart_finish)
+
+    # Parameters to cut dataframe
+    chart_cut_finish = pd.to_datetime(session_params['case_datetime'].values[0])
+
+    # Render chart
+    data = get_df_chart_data(df_full=df_full, bars_number=chart_bars_number, finish=chart_cut_finish)
+
+
 
     return data
 
 
 def draw_chart_plotly(session_params, source):
+    """ Prepare JSON with chart data to export to HTML """
     df = get_chart(session_params, source)
     df['id'] = df.reset_index().index
 
     data = [
         go.Figure(
             data=[go.Candlestick(
-                x=df['id'],                             #x=df.index,
+                x=df.index,                             #x=df['df.index'] OR x=df.index,
                 open=df['<OPEN>'],
                 close=df['<CLOSE>'],
                 low=df['<LOW>'],
@@ -283,7 +319,7 @@ def draw_chart_plotly(session_params, source):
 
 
 def db_update_close_session(session_id):
-    """Close current session"""
+    """ Close current session """
 
     # Update query:
     query = \
@@ -297,7 +333,7 @@ def db_update_close_session(session_id):
 
 
 def db_insert_decision(decision):
-    """Insert decision into table"""
+    """ Insert decision into table """
 
     # Create df from dict
     df = pd.DataFrame(decision, index=[0])

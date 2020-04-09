@@ -1,6 +1,8 @@
 from app import app, config, functions
 from flask import render_template, request, redirect, Response
 
+import pandas as pd
+
 
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
@@ -39,7 +41,7 @@ def web_index_post():
 
     functions.db_insert_session(df_dict)
 
-    return redirect(f'/terminal?session_id={session_id}')
+    return redirect(f'/terminal?session_id={session_id}&iteration=1')
 
 
 @app.route('/terminal', methods=['GET'])
@@ -47,26 +49,42 @@ def web_terminal_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
     source = request.args.get('source', type=str, default='internet')
+    iteration = request.args.get('iteration', type=int)
 
     # Get parameters for current session
     session_params = functions.get_df_session_params(session_id)
 
+    # Get current iteration number for current session
+    # iteration_number = functions.get_df_session_iteration(session_id)
+
     # Get chart
     chart = functions.draw_chart_plotly(session_params, source)
 
-    return render_template('terminal.html', session_params=session_params, plot=chart)
+    return render_template('terminal.html', session_params=session_params, iteration=iteration, plot=chart)
 
 
 @app.route('/terminal', methods=['POST'])
 def web_terminal_post():
-    # Get key parameters from url
+    # Get key parameters by reading hidden forms
     session_id = request.form['session_id']
+    ticker = request.form['ticker']
+    iteration = int(request.form['iteration'])
+    decision_action = request.form['form_button']
+    decision_time = 1.9
+    chart_fixing_bar = request.form['fixing_bar']
+    chart_cut_finish = pd.to_datetime(request.form['datetime'])
 
-    # Get decision parameters
-    decision = {'session_id': session_id, 'decision_action': request.form['form_button'], 'decision_time': 1.9}
+    # Get result
+    decision_result = functions.get_result_percent(session_id, ticker, chart_cut_finish, chart_fixing_bar)
+
+    # Format decision parameters like dict
+    decision = {'session_id': session_id, 'decision_action': decision_action, 'session_iteration': iteration,
+                'decision_time': decision_time, 'decision_result': decision_result}
 
     functions.db_insert_decision(decision)
     functions.db_update_close_session(session_id)
+
+    iteration += 1
 
     #return redirect(f'/index')
     return Response('You decided to ' + decision['decision_action'] + '. Time spent: ' + str(decision['decision_time']))

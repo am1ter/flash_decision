@@ -64,6 +64,10 @@
             <div class="btn-group" role="group">
                 <form action="{{ url_for('web_terminal_post') }}" method="POST">
                     <input type="hidden" name="session_id" value="{{ session_params['session_id'].values[0] }}">
+                    <input type="hidden" name="ticker" value="{{ session_params['case_ticker'].values[0] }}">
+                    <input type="hidden" name="fixing_bar" value="{{ session_params['case_fixing_bar'].values[0] }}">
+                    <input type="hidden" name="datetime" value="{{ session_params['case_datetime'].values[0] }}">
+                    <input type="hidden" name="iteration" value="{{ iteration }}">
                     <button type="submit" class="btn btn-default" name="form_button" value="buy">Buy</button>
                     <button type="submit" class="btn btn-default" name="form_button" value="sell">Sell</button>
                     <button type="submit" class="btn btn-default" name="form_button" value="skip">Skip</button>
