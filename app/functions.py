@@ -184,23 +184,6 @@ def get_df_session_params(session_id):
         raise ValueError('This session is not active. Return to home page and try again.')
 
 
-def get_df_session_iteration(session_id):
-    """ Get current iteration number for current session """
-
-    # Select query:
-    query = \
-        f'''SELECT 
-            MAX([session_iteration]) as "session_iteration"
-            FROM {config.SQL_TABLE_DECISIONS}
-            WHERE session_id = {session_id}
-        '''
-
-    # Get pandas df from query
-    df = sql_select_to_pandas(query)
-
-    return df.values[0][0]
-
-
 def download_data(session_id, market, ticker, timeframe, start, finish):
     """ Get dataframe with finance data and save it to file """
 
@@ -253,13 +236,16 @@ def get_result_percent(session_id, ticker, finish, fixing_bar):
 
     # Get value in finish bar
     finish_df_shift = df_full.index.get_loc(str(finish), method='nearest')
-    df_finish = df_full[finish_df_shift:finish_df_shift+1][config.COLUMN_RESULT]
+    df_finish = df_full[finish_df_shift:finish_df_shift + 1][config.COLUMN_RESULT]
     val_finish = df_finish[0]
 
     # Get value in fixing bar
     fixing_df_shift = int(finish_df_shift) + int(fixing_bar)
-    df_fixing = df_full[fixing_df_shift:fixing_df_shift+1][config.COLUMN_RESULT]
-    val_fixing = df_fixing[0]
+    df_fixing = df_full[fixing_df_shift:fixing_df_shift + 1][config.COLUMN_RESULT]
+    try:
+        val_fixing = df_fixing[0]
+    except ValueError:
+        raise ValueError('Fixing bar is not exist yet. Choose an earlier date')
 
     # Get percent change
     result = round(((val_fixing - val_finish) / val_finish), 4)
@@ -278,17 +264,18 @@ def get_chart(session_params, source):
     chart_start = pd.to_datetime((session_params['case_datetime'] - pd.offsets.Day(config.DF_DAYS_BEFORE)).values[0])
     chart_finish = pd.to_datetime(datetime.datetime.now())
 
-    # Send parameters to parser and download data
-    df_full = download_data(session_id=session_id, market=chart_market, ticker=chart_ticker,
-                            timeframe=chart_timeframe, start=chart_start, finish=chart_finish)
+    if source == 'internet':
+        # Send parameters to parser and download data
+        df_full = download_data(session_id=session_id, market=chart_market, ticker=chart_ticker,
+                                timeframe=chart_timeframe, start=chart_start, finish=chart_finish)
+    elif source == 'hdd':
+        df_full = load_hdd_data(session_id, chart_ticker)
 
     # Parameters to cut dataframe
     chart_cut_finish = pd.to_datetime(session_params['case_datetime'].values[0])
 
     # Render chart
     data = get_df_chart_data(df_full=df_full, bars_number=chart_bars_number, finish=chart_cut_finish)
-
-
 
     return data
 

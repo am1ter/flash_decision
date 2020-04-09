@@ -34,7 +34,7 @@ def web_index_post():
     fixing_bar = request.form['form_fixing_bar']
 
     # Create dataframe
-    df_dict = {'session_id': str(session_id), 'username': [username], 'session_status': [session_status],
+    df_dict = {'username': [username], 'session_status': [session_status],
                'case_market': [market], 'case_ticker': [ticker], 'case_datetime': [datetime_finish],
                'case_timeframe': [timeframe], 'case_bars_number': [bars_number], 'case_timer': [timer],
                'case_iterations': [iterations], 'case_slippage': [slippage], 'case_fixing_bar': [fixing_bar]}
@@ -48,17 +48,24 @@ def web_index_post():
 def web_terminal_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
-    source = request.args.get('source', type=str, default='internet')
+    # source = request.args.get('source', type=str, default='internet')
     iteration = request.args.get('iteration', type=int)
 
     # Get parameters for current session
     session_params = functions.get_df_session_params(session_id)
 
-    # Get current iteration number for current session
-    # iteration_number = functions.get_df_session_iteration(session_id)
-
-    # Get chart
-    chart = functions.draw_chart_plotly(session_params, source)
+    # Change route by iteration number
+    if iteration == 1:
+        source = 'internet'
+        # Get chart
+        chart = functions.draw_chart_plotly(session_params, source)
+    else:
+        source = 'hdd'
+        # Change datetime by iteration number
+        iteration_offset = session_params['case_datetime'] - pd.offsets.Week(iteration - 1)
+        session_params.loc[0, 'case_datetime'] = pd.to_datetime(iteration_offset).values[0]
+        # Get chart
+        chart = functions.draw_chart_plotly(session_params, source)
 
     return render_template('terminal.html', session_params=session_params, iteration=iteration, plot=chart)
 
@@ -68,6 +75,7 @@ def web_terminal_post():
     # Get key parameters by reading hidden forms
     session_id = request.form['session_id']
     ticker = request.form['ticker']
+    total_iterations = int(request.form['total_iterations'])
     iteration = int(request.form['iteration'])
     decision_action = request.form['form_button']
     decision_time = 1.9
@@ -82,9 +90,11 @@ def web_terminal_post():
                 'decision_time': decision_time, 'decision_result': decision_result}
 
     functions.db_insert_decision(decision)
-    functions.db_update_close_session(session_id)
 
-    iteration += 1
-
-    #return redirect(f'/index')
-    return Response('You decided to ' + decision['decision_action'] + '. Time spent: ' + str(decision['decision_time']))
+    # Check: Is it last iteration?
+    if iteration == total_iterations:
+        functions.db_update_close_session(session_id)
+        return redirect(f'/index')
+    else:
+        iteration += 1
+        return redirect(f'/terminal?session_id={session_id}&iteration={iteration}')
