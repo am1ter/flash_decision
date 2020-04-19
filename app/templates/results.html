@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+<!--Head-->
+
+{% block title %}Results{% endblock %}
+
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+<!--Body-->
+
+{% block header %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+<section class="content_results">
+
+    <div id="layout_title">
+        <h1 class="text_default title">Results</h1>
+    </div>
+
+    <div id="layout_separator_01">
+        <div class="separator"></div>
+    </div>
+
+    <div id="layout_subtitle">
+        <p class="text_default subtitle">Iterations: {{ results['total_iterations'].values[0] | safe }}</p>
+        <p class="text_default subtitle">Time spent: {{ results['total_time'].values[0] | safe }} sec</p>
+        <p class="text_default subtitle">Result: {{ results['result'].values[0] | safe }}%</p>
+    </div>
+
+    <div id="layout_separator_02">
+        <div class="separator"></div>
+    </div>
+
+    <!-- Import from python -->
+    <div id='data' data-decisions='{{ data_json | safe }}'></div>
+
+    <!-- Show results pivot table -->
+    <div id="output"></div>
+
+    <script type="text/javascript">
+
+        /* Read data from python */
+        var dataset = document.querySelector('#data');
+        var data_decisions = dataset.dataset.decisions;
+        var data_json = JSON.parse(data_decisions);
+
+        var utils = $.pivotUtilities;
+        var renderers = $.extend(utils.renderers,
+                                 utils.plotly_renderers
+                                 );
+
+        $("#output").pivotUI(
+            data_json, {
+                renderers: renderers,
+                rendererName: "Line Chart",
+                // rendererName: "Stacked Bar Chart",
+                // rows: ["result"],
+                cols: ["session_id"],
+                vals: ["result"],
+                aggregatorName: "Sum",
+                rendererOptions: { plotly: {width: 724, height: 500} }
+        });
+    </script>
+
+</section>
+
+{% endblock %}

@@ -136,7 +136,7 @@
 
 .content_terminal {
     position: relative;
-    width: 800px;
+    width: 1200px;
     height: 100%;
     top: 40px;
     left: 0px;
@@ -144,6 +144,22 @@
 }
 
 .chart {
+    position: relative;
+    top: 40px;
+}
+
+/* Results page */
+
+.content_results {
+    position: relative;
+    width: 1200px;
+    height: 100%;
+    top: 40px;
+    left: 0px;
+    margin: auto;
+}
+
+#output {
     position: relative;
     top: 40px;
 }

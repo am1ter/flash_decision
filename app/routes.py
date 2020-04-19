@@ -48,7 +48,6 @@ def web_index_post():
 def web_terminal_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
-    # source = request.args.get('source', type=str, default='internet')
     iteration = request.args.get('iteration', type=int)
 
     # Get parameters for current session
@@ -94,7 +93,27 @@ def web_terminal_post():
     # Check: Is it last iteration?
     if iteration == total_iterations:
         functions.db_update_close_session(session_id)
-        return redirect(f'/index')
+        return redirect(f'/results?session_id={session_id}')
     else:
         iteration += 1
         return redirect(f'/terminal?session_id={session_id}&iteration={iteration}')
+
+
+@app.route('/results', methods=['GET'])
+def web_statistics_get():
+    # Get key parameters from url
+    session_id = request.args.get('session_id', type=int)
+
+    # Get results for current session
+    results = functions.get_session_result(session_id)
+
+    # Get username for current session
+    username = results['username'][0]
+
+    # Get all decisions by username
+    all_decisions = functions.get_all_decisions(username)
+
+    # Convert data to JSON to export to html
+    data_json = all_decisions.to_json(orient='records')
+
+    return render_template('results.html', results=results, data_json=data_json)

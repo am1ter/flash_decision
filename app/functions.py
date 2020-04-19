@@ -325,4 +325,82 @@ def db_insert_decision(decision):
     # Create df from dict
     df = pd.DataFrame(decision, index=[0])
 
+    # Insert into db
     sql_insert_from_pandas(df, config.SQL_TABLE_DECISIONS)
+
+
+# ==============================
+# == Terminal
+# ==============================
+
+
+def get_session_result(session_id):
+    """ Get dataframe with decision summary for current session """
+
+    # Select query:
+    query = \
+        f'''SELECT [sessions].[username] 
+                ,COUNT([decisions].[session_iteration]) as "total_iterations"
+                ,SUM([decisions].[decision_time]) as "total_time"
+                ,(SUM([decisions].[decision_result]))*100 as "result"
+            FROM {config.SQL_TABLE_DECISIONS} as "decisions"
+            INNER JOIN {config.SQL_TABLE_SESSIONS} as "sessions"
+                ON [decisions].[session_id] = [sessions].[session_id]
+            WHERE [sessions].[session_id] = {session_id}
+            GROUP BY [sessions].[username]
+        '''
+
+    # Get pandas df from query
+    df = sql_select_to_pandas(query)
+
+    # Return
+    if df['total_iterations'].values[0] >= 1:
+        return df
+    else:
+        raise ValueError('There is no results for this session')
+
+
+def get_all_decisions(username):
+    """ Get dataframe with all decisions """
+
+    # Select query:
+    query = \
+        f'''SELECT [decisions].[session_id]
+                ,[sessions].[username]
+                ,[sessions].[case_market]
+                ,[sessions].[case_ticker]
+                ,[sessions].[case_timeframe]
+                ,[sessions].[case_bars_number]
+                ,[sessions].[case_timer]
+                ,[sessions].[case_datetime]
+                ,[sessions].[case_iterations]
+                ,[sessions].[case_slippage]
+                ,[sessions].[case_fixing_bar]
+                ,COUNT([decisions].[session_iteration]) as "total_iterations"
+                ,SUM([decisions].[decision_time]) as "total_time"
+                ,(SUM([decisions].[decision_result]))*100 as "result"
+            FROM {config.SQL_TABLE_DECISIONS} as "decisions"
+            INNER JOIN {config.SQL_TABLE_SESSIONS} as "sessions"
+                ON [decisions].[session_id] = [sessions].[session_id]
+            WHERE [sessions].[username] = '{username}'
+            GROUP BY [decisions].[session_id]
+                ,[sessions].[username]
+                ,[sessions].[case_market]
+                ,[sessions].[case_ticker]
+                ,[sessions].[case_timeframe]
+                ,[sessions].[case_bars_number]
+                ,[sessions].[case_timer]
+                ,[sessions].[case_datetime]
+                ,[sessions].[case_iterations]
+                ,[sessions].[case_slippage]
+                ,[sessions].[case_fixing_bar]
+        '''
+
+    # Get pandas df from query
+    df = sql_select_to_pandas(query)
+
+    # Return
+    if len(df) >= 1:
+        return df
+    else:
+        raise ValueError('There are no decisions in the database')
