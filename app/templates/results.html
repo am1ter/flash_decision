@@ -2,7 +2,21 @@
 
 <!--Head-->
 
-{% block title %}Results{% endblock %}
+{% block title %}
+    Terminal
+{% endblock %}
+
+{% block scripts %}
+    <!-- Charts -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+
+    <!-- Pivot table -->
+    <link href="{{ url_for('static', filename='css/pivot.css') }}" rel="stylesheet" type="text/css">
+    <script src="{{ url_for('static', filename='js/pivot.min.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='js/plotly_renderers.js') }}" type="text/javascript"></script>
+{% endblock %}
 
 {% block head %}
     {{ super() }}

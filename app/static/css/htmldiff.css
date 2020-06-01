@@ -1,0 +1,16 @@
+
+ins {
+    background-color: rgb(210, 253, 206);
+}
+
+ins img {
+    border-color: rgb(210, 253, 206);
+}
+
+del {
+    background-color: #ffdddd;
+}
+
+del img {
+    border-color: #ffdddd;
+}

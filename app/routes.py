@@ -75,18 +75,27 @@ def web_terminal_post():
     session_id = request.form['session_id']
     ticker = request.form['ticker']
     total_iterations = int(request.form['total_iterations'])
+    slippage = float(request.form['slippage'])
     iteration = int(request.form['iteration'])
     decision_action = request.form['form_button']
-    decision_time = 1.9
+    decision_time = request.form['time_spent']
     chart_fixing_bar = request.form['fixing_bar']
     chart_cut_finish = pd.to_datetime(request.form['datetime'])
 
     # Get result
-    decision_result = functions.get_result_percent(session_id, ticker, chart_cut_finish, chart_fixing_bar)
+    if decision_action != 'skip':
+        # Raw result
+        decision_result = functions.get_result_percent(session_id, ticker, chart_cut_finish, chart_fixing_bar)
+        # Correct result by slippage
+        decision_result_corrected = decision_result - slippage
+    else:
+        decision_result = 0
+        decision_result_corrected = 0
 
     # Format decision parameters like dict
     decision = {'session_id': session_id, 'decision_action': decision_action, 'session_iteration': iteration,
-                'decision_time': decision_time, 'decision_result': decision_result}
+                'decision_time': decision_time, 'decision_result': decision_result,
+                'decision_result_corrected': decision_result_corrected}
 
     functions.db_insert_decision(decision)
 
@@ -103,6 +112,9 @@ def web_terminal_post():
 def web_statistics_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
+
+    if not session_id:
+        raise ValueError('You should start session before you will be able to look at results')
 
     # Get results for current session
     results = functions.get_session_result(session_id)

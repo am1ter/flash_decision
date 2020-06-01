@@ -4,6 +4,7 @@ import pyodbc
 import pandas as pd
 import datetime
 from sqlalchemy import create_engine
+import os
 
 import json
 import plotly
@@ -190,17 +191,20 @@ def download_data(session_id, market, ticker, timeframe, start, finish):
     # Set path to save/load downloaded ticker data
     save_path = get_filename_saved_data(session_id, ticker)
 
-    # Parse quotes with finam.export library
-    exporter = Exporter()
-    instrument = exporter.lookup(code=ticker, market=eval(market),
-                          code_comparator=LookupComparator.EQUALS)
-    assert len(instrument) == 1
-    df_full = exporter.download(id_=instrument.index[0], market=eval(market),
-                             start_date=start, end_date=finish,
-                             timeframe=eval(timeframe))
-
-    # Save full df to file
-    df_full.to_csv(save_path)
+    # Check: Has file for this session already downloaded?
+    if not os.path.exists(save_path):
+        # Parse quotes with finam.export library
+        exporter = Exporter()
+        instrument = exporter.lookup(code=ticker, market=eval(market),
+                              code_comparator=LookupComparator.EQUALS)
+        assert len(instrument) == 1
+        df_full = exporter.download(id_=instrument.index[0], market=eval(market),
+                                 start_date=start, end_date=finish,
+                                 timeframe=eval(timeframe))
+        # Save full df to file
+        df_full.to_csv(save_path)
+    else:
+        df_full = load_hdd_data(session_id, ticker)
 
     return df_full
 
@@ -342,7 +346,7 @@ def get_session_result(session_id):
         f'''SELECT [sessions].[username] 
                 ,COUNT([decisions].[session_iteration]) as "total_iterations"
                 ,SUM([decisions].[decision_time]) as "total_time"
-                ,(SUM([decisions].[decision_result]))*100 as "result"
+                ,(SUM([decisions].[decision_result_corrected]))*100 as "result"
             FROM {config.SQL_TABLE_DECISIONS} as "decisions"
             INNER JOIN {config.SQL_TABLE_SESSIONS} as "sessions"
                 ON [decisions].[session_id] = [sessions].[session_id]
@@ -378,7 +382,7 @@ def get_all_decisions(username):
                 ,[sessions].[case_fixing_bar]
                 ,COUNT([decisions].[session_iteration]) as "total_iterations"
                 ,SUM([decisions].[decision_time]) as "total_time"
-                ,(SUM([decisions].[decision_result]))*100 as "result"
+                ,(SUM([decisions].[decision_result_corrected]))*100 as "result"
             FROM {config.SQL_TABLE_DECISIONS} as "decisions"
             INNER JOIN {config.SQL_TABLE_SESSIONS} as "sessions"
                 ON [decisions].[session_id] = [sessions].[session_id]
