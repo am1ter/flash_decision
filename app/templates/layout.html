@@ -23,15 +23,30 @@
 </head>
 
 <body>
+
     {% block header %}
         <section class="header">
             <div class="header_container">
-                <a class="menu" href="/">Home</a>
-                <a class="menu" href="/terminal">Terminal</a>
-                <a class="menu" href="/results">Results</a>
+                <a class="menu" href="{{ url_for('web_index_get') }}">Home</a>
+                <a class="menu" href="{{ url_for('web_terminal_get') }}">Terminal</a>
+                <a class="menu" href="{{ url_for('web_results_get') }}">Results</a>
             </div>
         </section>
     {% endblock %}
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <section class="alerts">
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        </section>
+        {% endif %}
+    {% endwith %}
+
+
 
     {% block content %}{% endblock %}
 

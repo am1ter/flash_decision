@@ -1,7 +1,16 @@
-from app import app, config, functions
-from flask import render_template, request, redirect, Response
+from app import app, config, functions, forms
+from flask import render_template, request, redirect, flash, url_for
 
 import pandas as pd
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = forms.LoginForm()
+    if form.validate_on_submit():
+        flash('Login requested for user {}, remember_me={}'.format(form.username.data, form.remember_me.data))
+        return redirect(url_for('web_index_get'))
+    return render_template('login.html', form=form)
 
 
 @app.route('/', methods=['GET'])
@@ -109,7 +118,7 @@ def web_terminal_post():
 
 
 @app.route('/results', methods=['GET'])
-def web_statistics_get():
+def web_results_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
 

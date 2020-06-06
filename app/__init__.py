@@ -1,3 +1,5 @@
+from app import config
+
 from flask import Flask, jsonify
 from waitress import serve
 
@@ -6,6 +8,7 @@ import traceback
 
 # Создаем экземпляр класса Flask
 app = Flask(__name__, static_url_path='')
+app.config.from_object(config.FlaskConfig)
 
 # Create logger
 logger = logging.getLogger()

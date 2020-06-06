@@ -28,7 +28,7 @@ function setTime() {
     time_spent.value = getTimeSpent();
 
     // Check: Is time over?
-    if (time_spent.value > time_limit) {
+    if (time_spent.value > time_limit + 1) {
         // Check: Has been alert already shown?
         if (alert_show == false) {
             alert_show = true;
