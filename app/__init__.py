@@ -1,19 +1,29 @@
 from app import config
 
 from flask import Flask, jsonify
-from waitress import serve
 
 import logging
 import traceback
 
-# Создаем экземпляр класса Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+
+# Create Flask application and configure it
 app = Flask(__name__, static_url_path='')
 app.config.from_object(config.FlaskConfig)
 
-# Create logger
+
+# Create database and migrations
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+
+# Debug: Create logger
 logger = logging.getLogger()
 
-# Create exception route
+
+# Debug: Create exception route
 @app.errorhandler(code_or_exception=500)
 def handle_http_exception(error):
     error_dict = {
@@ -29,10 +39,15 @@ def handle_http_exception(error):
         response = jsonify(error_dict)
     return response
 
-# Загружаем блок с маршрутизацией
-# Экземпляр приложения Flask называется app и входит в пакет app
+
+# Load scripts to run flask app
 from app import routes
+from app.models import User, Session, Decision
 
 
-# Запуск production server с помощью waitress
-serve(app, host='0.0.0.0', port=8080)
+# Debug: flask shell
+@app.shell_context_processor
+def make_shell_context():
+    return {'db': db, 'User': User, 'Session': Session, 'Decision': Decision}
+
+

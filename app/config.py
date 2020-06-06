@@ -4,21 +4,8 @@ import os
 # Flask configuration
 class FlaskConfig(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'flashDecisionSecretKey'
-
-
-# SQL connection properties
-SQL_DRIVER_PYODBC = '{SQL Server}'
-SQL_SERVER = 'localhost'
-SQL_PORT = '1433'
-SQL_DB = 'flash'
-SQL_USER = 'flash'
-SQL_PASSWORD = '4C_vVizZ!'
-
-
-# SQL Alchemy options
-SQL_DRIVER_ALCHEMY = 'SQL Server'
-SQL_ENGINE = "mssql+pyodbc://%s:%s@%s:%s/%s?driver=%s" % \
-              (SQL_USER, SQL_PASSWORD, SQL_SERVER, SQL_PORT, SQL_DB, SQL_DRIVER_ALCHEMY)
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///../flash_decision.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 # SQL table names
