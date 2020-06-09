@@ -300,7 +300,7 @@ def draw_chart_plotly(current_session, source):
     data = [
         go.Figure(
             data=[go.Candlestick(
-                x=df.index,                             #x=df['df.index'] OR x=df.index,
+                x=df.id,                             #x=df.id OR x=df.index
                 open=df['<OPEN>'],
                 close=df['<CLOSE>'],
                 low=df['<LOW>'],
@@ -328,6 +328,11 @@ def close_session(session_id):
 
     # Write data to db
     db.session.commit()
+
+    # Delete file with downloaded data
+    save_path = get_filename_saved_data(current_session.session_id, current_session.case_ticker)
+    if save_path and os.path.exists(save_path):
+        os.remove(save_path)
 
 # ==============================
 # == Results
