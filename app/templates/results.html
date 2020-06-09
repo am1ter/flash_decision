@@ -40,9 +40,9 @@
     </div>
 
     <div id="layout_subtitle">
-        <p class="text_default subtitle">Iterations: {{ results['total_iterations'].values[0] | safe }}</p>
-        <p class="text_default subtitle">Time spent: {{ results['total_time'].values[0] | safe }} sec</p>
-        <p class="text_default subtitle">Result: {{ results['result'].values[0] | safe }}%</p>
+        <p class="text_default subtitle">Iterations: {{ summary['iterations'] | safe }}</p>
+        <p class="text_default subtitle">Time spent: {{ summary['time'] | safe }} sec</p>
+        <p class="text_default subtitle">Result: {{ summary['result'] | safe }}%</p>
     </div>
 
     <div id="layout_separator_02">
@@ -74,7 +74,7 @@
                 // rendererName: "Stacked Bar Chart",
                 // rows: ["result"],
                 cols: ["session_id"],
-                vals: ["result"],
+                vals: ["decision_result_corrected"],
                 aggregatorName: "Sum",
                 rendererOptions: { plotly: {width: 724, height: 500} }
         });

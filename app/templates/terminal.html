@@ -38,9 +38,9 @@
     </div>
 
     <div id="layout_subtitle">
-        <p class="text_default subtitle">Current ticker: {{ session_params['case_ticker'].values[0] | safe }}</p>
+        <p class="text_default subtitle">Current ticker: {{ session.case_ticker | safe }}</p>
         <p class="text_default subtitle">
-            Time limit: <label id="time_limit">{{ session_params['case_timer'].values[0] | safe }}</label> sec
+            Time limit: <label id="time_limit">{{ session.case_timer | safe }}</label> sec
         </p>
         <p class="text_default subtitle">
             Time spent: <label id="minutes">00</label>:<label id="seconds">00</label>
@@ -81,13 +81,10 @@
         <div class="layout_forms_right_input" id="layout_button_start">
             <div class="btn-group" role="group">
                 <form action="{{ url_for('web_terminal_post') }}" method="POST">
-                    <input type="hidden" name="session_id" value="{{ session_params['session_id'].values[0] }}">
-                    <input type="hidden" name="ticker" value="{{ session_params['case_ticker'].values[0] }}">
-                    <input type="hidden" name="fixing_bar" value="{{ session_params['case_fixing_bar'].values[0] }}">
-                    <input type="hidden" name="total_iterations" value="{{ session_params['case_iterations'].values[0] }}">
-                    <input type="hidden" name="slippage" value="{{ session_params['case_slippage'].values[0] }}">
-                    <input type="hidden" name="datetime" value="{{ session_params['case_datetime'].values[0] }}">
+                    <input type="hidden" name="session_id" value="{{ session.session_id }}">
+                    <input type="hidden" name="total_iterations" value="{{ session.case_iterations }}">
                     <input type="hidden" name="iteration" value="{{ iteration }}">
+                    <input type="hidden" name="datetime" value="{{ session.case_datetime }}">
                     <input type="hidden" name="time_spent" id="time_spent" value="0"> <!-- Updated by js timer -->
                     <button type="submit" class="btn btn-default" name="form_button" id="btn_buy" value="buy">Buy</button>
                     <button type="submit" class="btn btn-default" name="form_button" id="btn_sell" value="sell">Sell</button>

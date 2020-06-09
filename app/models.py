@@ -43,8 +43,9 @@ class Decision(db.Model):
     __tablename__ = 'decisions'
 
     decision_id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(db.Integer, db.ForeignKey('sessions.session_id'), index=True, nullable=False)
-    session_iteration = db.Column(db.Integer, nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey('sessions.session_id'), index=True)
+    iteration_id = db.Column(db.Integer)
+    iteration_finishbar_datetime = db.Column(db.DateTime)
     decision_action = db.Column(db.String)
     decision_time = db.Column(db.Float)
     decision_result_raw = db.Column(db.Float)
