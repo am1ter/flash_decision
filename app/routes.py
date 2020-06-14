@@ -3,29 +3,53 @@ from app.models import User, Session, Decision
 
 from datetime import timedelta
 from flask import render_template, request, redirect, flash, url_for
-
-import pandas as pd
+from flask_login import current_user, login_user, logout_user, login_required
+import json
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('web_index_get'))
     form = forms.LoginForm()
     if form.validate_on_submit():
-        flash('Login requested for user {}, remember_me={}'.format(form.username.data, form.remember_me.data))
+        user = User.query.filter(User.user_name == form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember_me.data)
         return redirect(url_for('web_index_get'))
     return render_template('login.html', form=form)
 
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+
 @app.route('/', methods=['GET'])
 @app.route('/index', methods=['GET'])
+@login_required
 def web_index_get():
     timeframes = functions.get_df_all_timeframes()
     markets = functions.get_df_all_markets()
     tickers = functions.get_df_all_tickers()
-    return render_template('index.html', markets=markets, timeframes=timeframes, tickers=tickers['code'])
+    securities = functions.get_security_list()
+
+    # Jsonify dict of pandas df
+    securities_no_pd = {
+        key: securities[key].to_dict(orient='records')
+        for key in securities.keys()
+    }
+    securities_json = json.dumps(securities_no_pd, ensure_ascii=False)
+
+    return render_template('index.html', markets=securities.keys(), timeframes=timeframes, securities=securities,
+                           securities_json=securities_json)
 
 
 @app.route('/index', methods=['POST'])
+@login_required
 def web_index_post():
     functions.create_session(form=request.form)
     session_id = functions.get_last_session_id()
@@ -33,6 +57,7 @@ def web_index_post():
 
 
 @app.route('/terminal', methods=['GET'])
+@login_required
 def web_terminal_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
@@ -60,6 +85,7 @@ def web_terminal_get():
 
 
 @app.route('/terminal', methods=['POST'])
+@login_required
 def web_terminal_post():
 
     session_id = int(request.form['session_id'])
@@ -79,6 +105,7 @@ def web_terminal_post():
 
 
 @app.route('/results', methods=['GET'])
+@login_required
 def web_results_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)

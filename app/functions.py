@@ -126,6 +126,18 @@ def get_df_all_timeframes():
     return all_timeframes
 
 
+def get_security_list():
+    """ Read all markets from finam module and enrich it by reading tickers """
+
+    exporter = Exporter()
+    security_list = {}
+
+    # Read markets and tickers to dict
+    for idx, market in enumerate(Market):
+        security_list[str(list(tuple(Market))[idx])] = exporter.lookup(market=[market])
+
+    return security_list
+
 def get_df_all_markets():
     """ Read markets from finam module """
 
@@ -150,7 +162,7 @@ def create_session(form):
     new_session.session_status = config.SESSION_STATUS_ACTIVE
 
     # Get form data from webpage
-    new_session.user_id = 1     # !!!
+    new_session.user_id = User.query.filter(User.user_name == form['form_username']).first().user_id
     new_session.case_market = form['form_market']
     new_session.case_ticker = form['form_ticker']
     new_session.case_timeframe = form['form_timeframe']

@@ -1,8 +1,11 @@
-from app import db
+from app import db, login
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from app.libs.mixins import UserMixin   # Module dulicated and modified because of usage "user_id" instead "id"
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     user_id = db.Column(db.Integer, primary_key=True)
@@ -14,6 +17,12 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User {}>'.format(self.user_name)
+
+    def set_password(self, password):
+        self.user_password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.user_password_hash, password)
 
 
 class Session(db.Model):
@@ -53,3 +62,8 @@ class Decision(db.Model):
 
     def __repr__(self):
         return '<Decision {} during session {}>'.format(self.decision_id, self.session_id)
+
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))

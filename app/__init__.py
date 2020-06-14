@@ -7,11 +7,14 @@ import traceback
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager
 
 
 # Create Flask application and configure it
 app = Flask(__name__, static_url_path='')
 app.config.from_object(config.FlaskConfig)
+login = LoginManager(app)
+login.login_view = 'login'
 
 
 # Create database and migrations
@@ -43,11 +46,3 @@ def handle_http_exception(error):
 # Load scripts to run flask app
 from app import routes
 from app.models import User, Session, Decision
-
-
-# Debug: flask shell
-@app.shell_context_processor
-def make_shell_context():
-    return {'db': db, 'User': User, 'Session': Session, 'Decision': Decision}
-
-

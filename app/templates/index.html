@@ -15,6 +15,9 @@
 {% endblock %}
 
 {% block content %}
+
+<script type="text/javascript">var data = {{ securities_json | safe }};</script>
+
 <section class="content_homepage">
 
     <div id="layout_title">
@@ -54,7 +57,7 @@
             <form action="{{ url_for('web_index_post') }}" method="POST">
 
                 <div class="layout_forms_right_input">
-                  <input type="text" class="form-control" name="form_username">
+                    <input type="text" class="form-control" name="form_username" value="{{ current_user.user_name }}" readonly>
                 </div>
 
                 <div class="layout_forms_right_input">
@@ -63,7 +66,7 @@
                         {% if market == 'Market.SHARES' %}
                         <option value="{{ market }}" selected="selected">{{ market }}</option>
                         {% else %}
-                        <option value="{{ macvxrket }}">{{ market }}</option>
+                        <option value="{{ market }}">{{ market }}</option>
                         {% endif %}
                         {% endfor %}
                     </select>
@@ -71,11 +74,15 @@
 
                 <div class="layout_forms_right_input">
                     <select class="form-control" name="form_ticker">
-                        {% for code in tickers %}
-                        {% if code == 'SBER' %}
-                        <option value="{{ code }}" selected="selected">{{ code }}</option>
-                        {% else %}
-                        <option value="{{ code }}">{{ code }}</option>
+                        {% for market in securities %}
+                        {% if market == 'Market.SHARES' %}
+                            {% for code in securities[market]['code'] %}
+                                {% if code == 'SBER' %}
+                                <option value="{{ securities[market]['code'].iloc[loop.index0] }}" selected="selected">{{ securities[market]['name'].iloc[loop.index0] }}</option>
+                                {% else %}
+                                <option value="{{ securities[market]['code'].iloc[loop.index0] }}">{{ securities[market]['name'].iloc[loop.index0] }}</option>
+                                {% endif %}
+                            {% endfor %}
                         {% endif %}
                         {% endfor %}
                     </select>

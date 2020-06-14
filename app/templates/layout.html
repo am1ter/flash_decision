@@ -26,10 +26,15 @@
 
     {% block header %}
         <section class="header">
-            <div class="header_container">
+            <div class="header_container_left">
                 <a class="menu" href="{{ url_for('web_index_get') }}">Home</a>
                 <a class="menu" href="{{ url_for('web_terminal_get') }}">Terminal</a>
                 <a class="menu" href="{{ url_for('web_results_get') }}">Results</a>
+            </div>
+            <div class="header_container_right">
+                {% if current_user.is_authenticated %}
+                <a class="menu" href="{{ url_for('logout') }}">{{ current_user.user_name }}, logout</a>
+                {% endif %}
             </div>
         </section>
     {% endblock %}
