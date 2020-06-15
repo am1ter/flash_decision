@@ -77,7 +77,10 @@ def web_terminal_get():
         # Duplicate session for modify during iteration
         current_session_iteration = current_session
         # Modify session by changing datetime for current iteration number
-        iteration_datetime_offset = current_session.case_datetime - timedelta(weeks=iteration - 1)
+        if current_session.case_timeframe == 'Timeframe.DAILY':
+            iteration_datetime_offset = current_session.case_datetime - timedelta(weeks=iteration - 1)
+        else:
+            iteration_datetime_offset = current_session.case_datetime - timedelta(days=iteration - 1)
         current_session_iteration.case_datetime = iteration_datetime_offset
         # Get chart
         chart = functions.draw_chart_plotly(current_session_iteration, source)

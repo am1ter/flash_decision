@@ -61,11 +61,11 @@
                 <div class="layout_forms_right_input">
                     <select class="form-control" name="form_market">
                         {% for market in markets %}
-                        {% if market == 'Market.SHARES' %}
-                        <option value="{{ market }}" selected="selected">{{ market }}</option>
-                        {% else %}
-                        <option value="{{ market }}">{{ market }}</option>
-                        {% endif %}
+                            {% if market == 'Market.SHARES' %}
+                            <option value="{{ market }}" selected="selected">{{ market }}</option>
+                            {% else %}
+                            <option value="{{ market }}">{{ market }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -77,11 +77,13 @@
                 <div class="layout_forms_right_input">
                     <select class="form-control" name="form_timeframe">
                         {% for timeframe in timeframes %}
-                        {% if timeframe == 'Timeframe.MINUTES1' %}
-                        <option value="{{ timeframe }}" selected="selected">{{ timeframe }}</option>
-                        {% else %}
-                        <option value="{{ timeframe }}">{{ timeframe }}</option>
-                        {% endif %}
+                            {% if timeframe == 'Timeframe.MINUTES1' %}
+                            <option value="{{ timeframe }}" selected="selected">{{ timeframe }}</option>
+                            {% elif timeframe == 'Timeframe.WEEKLY' %}
+                            {% elif timeframe == 'Timeframe.MONTHLY' %}
+                            {% else %}
+                            <option value="{{ timeframe }}">{{ timeframe }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>
