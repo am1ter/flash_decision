@@ -16,8 +16,6 @@
 
 {% block content %}
 
-<script type="text/javascript">var data = {{ securities_json | safe }};</script>
-
 <section class="content_homepage">
 
     <div id="layout_title">
@@ -73,19 +71,7 @@
                 </div>
 
                 <div class="layout_forms_right_input">
-                    <select class="form-control" name="form_ticker">
-                        {% for market in securities %}
-                        {% if market == 'Market.SHARES' %}
-                            {% for code in securities[market]['code'] %}
-                                {% if code == 'SBER' %}
-                                <option value="{{ securities[market]['code'].iloc[loop.index0] }}" selected="selected">{{ securities[market]['name'].iloc[loop.index0] }}</option>
-                                {% else %}
-                                <option value="{{ securities[market]['code'].iloc[loop.index0] }}">{{ securities[market]['name'].iloc[loop.index0] }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
-                        {% endfor %}
-                    </select>
+                    <select class="form-control" name="form_ticker"></select>
                 </div>
 
                 <div class="layout_forms_right_input">
@@ -163,4 +149,32 @@
     </div>
 
 </section>
+
+
+<script type="text/javascript">
+    let tickers = {{ securities_json | safe }};
+</script>
+
+<script type="text/javascript">
+    let select_market = document.getElementsByName('form_market')[0];
+    let select_ticker = document.getElementsByName('form_ticker')[0];
+
+    function fill_tickers() {
+        market = select_market.value;
+        let optionHTML = '';
+        for (let ticker of tickers[market]) {
+            optionHTML += '<option value="' + ticker['code'] + '">' + ticker['name'] + '</option>';
+        }
+        select_ticker.innerHTML = optionHTML;
+    }
+
+    select_market.onchange = function () {
+        fill_tickers();
+    };
+
+    fill_tickers();
+    select_ticker.value = 'SBER';
+</script>
+
+
 {% endblock %}
