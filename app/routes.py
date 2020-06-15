@@ -110,19 +110,15 @@ def web_results_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
 
-    if not session_id:
-        raise ValueError('You should start session before you will be able to look at results')
-
-    # Get results for current session
-    summary = functions.get_session_summary(session_id)
-
-    # Get username for current session
-    user_id = summary['user_id']
-
     # Get all decisions by username
-    all_decisions = functions.get_all_decisions(user_id)
+    all_decisions = functions.get_all_decisions(current_user.user_id)
 
     # Convert data to JSON to export to html
     data_json = all_decisions.to_json(orient='records')
 
-    return render_template('results.html', summary=summary, data_json=data_json)
+    # Get results for current session
+    if session_id:
+        summary = functions.get_session_summary(session_id)
+        return render_template('results.html', summary=summary, data_json=data_json)
+    else:
+        return render_template('results.html', data_json=data_json)
