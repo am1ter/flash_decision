@@ -168,7 +168,7 @@ def create_session(form):
     new_session.case_timeframe = form['form_timeframe']
     new_session.case_barsnumber = form['form_bars_number']
     new_session.case_timer = form['form_timer']
-    new_session.case_datetime = datetime.strptime(form['form_datetime_finish'], '%m/%d/%Y %I:%M %p')
+    new_session.case_datetime = datetime.strptime(form['form_datetime_finish'], '%d/%m/%Y %H:%M')
     new_session.case_iterations = form['form_iterations']
     new_session.case_slippage = form['form_slippage']
     new_session.case_fixingbar = form['form_fixing_bar']
