@@ -23,6 +23,7 @@ def login():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
@@ -78,9 +79,11 @@ def web_terminal_get():
         current_session_iteration = current_session
         # Modify session by changing datetime for current iteration number
         if current_session.case_timeframe == 'Timeframe.DAILY':
+            iteration_datetime_offset = current_session.case_datetime - timedelta(weeks=(iteration - 1)*4)
+        elif current_session.case_timeframe == 'Timeframe.HOURLY':
             iteration_datetime_offset = current_session.case_datetime - timedelta(weeks=iteration - 1)
         else:
-            iteration_datetime_offset = current_session.case_datetime - timedelta(days=iteration - 1)
+            iteration_datetime_offset = current_session.case_datetime - timedelta(days=(iteration - 1)*2)
         current_session_iteration.case_datetime = iteration_datetime_offset
         # Get chart
         chart = functions.draw_chart_plotly(current_session_iteration, source)

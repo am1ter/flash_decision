@@ -284,8 +284,15 @@ def create_decision(form):
 def get_chart(current_session, source):
     """ Get all data to draw chart """
     # Format session parameters
-    chart_start = current_session.case_datetime - timedelta(days=config.DF_DAYS_BEFORE)
-    chart_finish = datetime.now()
+    if current_session.case_timeframe == 'Timeframe.DAILY':
+        days_before = (current_session.case_iterations*31) + current_session.case_barsnumber
+    elif current_session.case_timeframe == 'Timeframe.HOURLY':
+        days_before = (current_session.case_iterations * 4) + current_session.case_barsnumber
+    else:
+        days_before = current_session.case_iterations + 15
+
+    chart_start = current_session.case_datetime - timedelta(days=days_before)
+    chart_finish = current_session.case_datetime + timedelta(days=current_session.case_fixingbar + 1)
 
     if source == 'internet':
         # Send parameters to parser and download data
