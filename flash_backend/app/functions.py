@@ -13,86 +13,14 @@ import plotly
 import plotly.graph_objs as go
 
 # Data readers
-from finam.export import Exporter, Market, LookupComparator, Timeframe # https://github.com/ffeast/finam-export
+from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
+from finam.const import Market, Timeframe     # https://github.com/ffeast/finam-export
 # import pandas_datareader as pdr
 
 
 # ==============================
 # == Service functions
 # ==============================
-
-
-def sqlalchemy_create_engine():
-    """ Create SQL engine for SQL Alchemy """
-    engine = create_engine(config.SQL_ENGINE, pool_size=10, max_overflow=20, convert_unicode=True)
-    return engine
-
-
-def sql_connect_to_db():
-    """ Connect to SQL Server """
-    try:
-        connection = pyodbc.connect(f'Driver={config.SQL_DRIVER_PYODBC};'
-                                    f'Server={config.SQL_SERVER};'
-                                    f'Port={config.SQL_PORT};'
-                                    f'Database={config.SQL_DB};'
-                                    f'UID={config.SQL_USER};'
-                                    f'PWD={config.SQL_PASSWORD}')
-    except Exception as error:
-        raise SystemError(f"Failed to connect to DB. {error.args}")
-    return connection
-
-
-def sql_select_to_value(query):
-    """ Execute sql query and export data to pandas """
-
-    # Connect to DB
-    connection = sql_connect_to_db()
-
-    # Create cursor
-    cursor = connection.cursor()
-
-    # Run query
-    cursor.execute(query)
-    value = cursor.fetchone()
-    value = value[0]
-
-    return value
-
-
-def sql_update(query):
-    """ Execute sql query and export data to pandas """
-
-    # Connect to DB
-    connection = sql_connect_to_db()
-
-    # Create cursor
-    cursor = connection.cursor()
-
-    # Run query
-    cursor.execute(query)
-    connection.commit()
-
-    return
-
-
-def sql_select_to_pandas(query):
-    """ Execute sql query and export data to pandas """
-
-    # Connect to DB
-    connection = sql_connect_to_db()
-
-    # Read sql data
-    df = pd.read_sql(query, connection)
-
-    return df
-
-
-def sql_insert_from_pandas(df, table):
-    """ Insert into SQL table pandas dataframe with SQL-Alchemy """
-    try:
-        df.to_sql(table, con=sqlalchemy_create_engine(), if_exists='append', index=False)
-    except Exception as error:
-        raise SystemError(f"Failed to insert DF into the table. {error.args}")
 
 
 def get_filename_saved_data(session_id, ticker):

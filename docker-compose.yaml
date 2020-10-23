@@ -1,0 +1,30 @@
+volumes:
+  flash_db:
+    name: flash_db
+
+services:
+  flash_db:
+    image: postgres:latest
+    container_name: flash_db
+    volumes:
+      - flash_db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=flash!Pass
+    restart: always
+
+  flash_backend:
+    build: flash_backend/
+    image: flash_backend
+    container_name: flash_backend
+    restart: "no"
+    ports:
+      - 8080:8080
+    environment:
+      - TZ=Europe/Moscow
+      - DATABASE_URL=flash_db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASS=flash!Pass
+
