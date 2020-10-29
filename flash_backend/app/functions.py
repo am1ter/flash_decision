@@ -25,7 +25,11 @@ from finam.const import Market, Timeframe     # https://github.com/ffeast/finam-
 
 def get_filename_saved_data(session_id, ticker):
     """ Get filename for current session_id and ticker """
-    save_path = config.PATH_UPLOAD_FOLDER + '\\' + str(session_id) + '_' + str(ticker) + '.csv'
+    if config.PLATFORM == 'win32':
+        save_path = config.PATH_UPLOAD_FOLDER + '\\' + str(session_id) + '_' + str(ticker) + '.csv'
+    else:
+        save_path = config.PATH_UPLOAD_FOLDER + '/' + str(session_id) + '_' + str(ticker) + '.csv'
+
     return save_path
 
 

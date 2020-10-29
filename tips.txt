@@ -1,0 +1,5 @@
+# Change python workdir
+sys.path.extend(['C:\\!Coding\\flash_decision\\flash_backend', 'C:/!Coding/flash_decision/flash_backend'])
+
+# Upgrade db with alembic
+flask db upgrade
