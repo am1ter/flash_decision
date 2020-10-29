@@ -142,7 +142,8 @@ def download_data(session, start, finish):
                                  start_date=start, end_date=finish,
                                  timeframe=eval(session.case_timeframe))
         # Save full df to file
-        df_full.to_csv(save_path)
+        df_full.index = pd.to_datetime(df_full['<DATE>'].astype(str) + ' ' + df_full['<TIME>'])
+        df_full.to_csv(save_path, index=True, index_label='index')
     else:
         df_full = load_hdd_data(session=session)
 
