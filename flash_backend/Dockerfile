@@ -1,4 +1,4 @@
-FROM flash_backend_baseimage
+FROM am1ter/flash_backend_baseimage:v1
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
