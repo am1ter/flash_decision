@@ -2,7 +2,7 @@ FROM am1ter/flash_backend_baseimage:v1
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-COPY . /usr/src/app
+COPY ./flash_backend /usr/src/app
 
 RUN apt-get update \
  && apt-get install unixodbc -y \
