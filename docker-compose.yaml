@@ -15,8 +15,8 @@ services:
     restart: always
 
   flash_backend:
-    build: flash_backend/
-    image: flash_backend
+#    build: flash_backend/
+    image: am1ter/flash_backend:latest
     container_name: flash_backend
     restart: "no"
     ports:
