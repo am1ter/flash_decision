@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <Header/>
-        <Title title="Flash decision v.0.3" :page_name='page_name'/>
+        <Title title="Flash decision v.0.3.3" :page_name='page_name'/>
         <router-view>
             <Start/>
             <Terminal/>
