@@ -1,28 +1,51 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+    <div id="app">
+        <Header/>
+        <Title title="Flash decision v.0.3" :page_name='page_name'/>
+        <router-view>
+            <Start/>
+            <Terminal/>
+            <Scoreboard/>
+        </router-view>
+    </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+    import Header from './components/Header.vue'
+    import Title from './components/Title.vue'
+    import Start from './components/Start.vue'
+    import Terminal from './components/Terminal.vue'
+    import Scoreboard from './components/Scoreboard.vue'
 
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+    export default {
+        name: 'App',
+        components: {
+            Header,
+            Title,
+            Start,
+            Terminal,
+            Scoreboard
+        },
+        computed: {
+            page_name() {
+                return this.$route.name
+            }
+        }
+    }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+
+    .text_default {
+        font-family: Roboto;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 14px;
+        color: #464646;
+    }
+
+    .router-link-active {
+        font-weight: bold;
+    }
+
 </style>
