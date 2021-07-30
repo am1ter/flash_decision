@@ -1,2 +1,27 @@
-/flash_backend/.idea
-/flash_backend/venv/
+# Backend: Main
+./flash_backend/.idea
+./flash_backend/venv/
+
+# Frontend: Main
+./flash_frontend/.DS_Store
+./flash_frontend/node_modules
+./flash_frontend/dist
+
+# Frontend: local env files
+./flash_frontend/.env.local
+./flash_frontend/.env.*.local
+
+# Frontend: Log files
+./flash_frontend/npm-debug.log*
+./flash_frontend/yarn-debug.log*
+./flash_frontend/yarn-error.log*
+./flash_frontend/pnpm-debug.log*
+
+# Frontend: Editor directories and files
+./flash_frontend/.idea
+./flash_frontend/.vscode
+./flash_frontend/*.suo
+./flash_frontend/*.ntvs*
+./flash_frontend/*.njsproj
+./flash_frontend/*.sln
+./flash_frontend/*.sw?
