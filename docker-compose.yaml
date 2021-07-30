@@ -1,11 +1,13 @@
-# DB-data is stored in volume
+# One click deployment
+
 volumes:
+  # local database is stored in volume
   flash_db:
     name: flash_db
 
 
 services:
-  # Run DB container
+  # Run container with database
   flash_db:
     image: postgres:latest
     container_name: flash_db
@@ -17,9 +19,9 @@ services:
       - POSTGRES_PASSWORD=flash!Pass
     restart: always
 
-  # Run web-server with backend
+  # Run webserver with backend (API)
   flash_backend:
-    # Uncomment it to use remote folder building
+    # Uncomment line below to build using remote image
     # image: am1ter/flash_backend:latest
     build: flash_backend/
     container_name: flash_backend
@@ -33,7 +35,7 @@ services:
       - DATABASE_USER=postgres
       - DATABASE_PASS=flash!Pass
 
-  # Run web-server with frontend
+  # Run webserver with frontend
   flash_frontend:
     build: flash_frontend/
     container_name: flash_frontend

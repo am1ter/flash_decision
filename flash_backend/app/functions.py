@@ -14,7 +14,7 @@ import plotly.graph_objs as go
 
 # Data readers
 from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
-from finam.const import Market, Timeframe     # https://github.com/ffeast/finam-export
+from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
 # import pandas_datareader as pdr
 
 
@@ -39,7 +39,7 @@ def get_filename_saved_data(session_id, ticker):
 
 
 def get_last_session_id():
-    """ Get: Last session_id in DB """
+    """Get: Last session_id in DB"""
 
     last_session = Session.query.order_by(Session.session_id.desc()).first()
 
@@ -50,7 +50,7 @@ def get_last_session_id():
 
 
 def get_df_all_timeframes():
-    """ Read timeframes from finam module """
+    """Read timeframes from finam module (hardcoded in external lib)"""
 
     all_timeframes = []
     for idx, tf in enumerate(Timeframe):
@@ -59,7 +59,7 @@ def get_df_all_timeframes():
 
 
 def get_security_list():
-    """ Read all markets from finam module and enrich it by reading tickers """
+    """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
 
     exporter = Exporter()
     security_list = {}
@@ -70,25 +70,26 @@ def get_security_list():
 
     return security_list
 
-def get_df_all_markets():
-    """ Read markets from finam module """
 
-    all_markets = []
-    for idx, market in enumerate(Market):
-        all_markets.append(str(list(tuple(Market))[idx]))
-    return all_markets
-
-
-def get_df_all_tickers():
-    """Get dataframe with all tickers by finam.export library https://www.finam.ru/profile/moex-akcii/gazprom/export/"""
-
-    exporter = Exporter()
-    tickers = exporter.lookup(market=[Market.SHARES])
-    return tickers
+# def get_df_all_markets():
+#     """Read markets from finam module (hardcoded in external lib)"""
+#
+#     all_markets = []
+#     for idx, market in enumerate(Market):
+#         all_markets.append(str(list(tuple(Market))[idx]))
+#     return all_markets
+#
+#
+# def get_df_all_tickers():
+#     """Get dataframe with all tickers by finam.export library"""
+#
+#     exporter = Exporter()
+#     tickers = exporter.lookup(market=[Market.SHARES])
+#     return tickers
 
 
 def create_session(form):
-    """ Create new session and write it to db """
+    """Create new session and write it to db"""
     new_session = Session()
 
     new_session.session_status = config.SESSION_STATUS_ACTIVE
@@ -115,7 +116,7 @@ def create_session(form):
 
 
 def get_session(session_id):
-    """ Get session parameters by id """
+    """Get session parameters by id"""
 
     current_session = Session.query.get(session_id)
 
@@ -126,7 +127,7 @@ def get_session(session_id):
 
 
 def download_data(session, start, finish):
-    """ Get dataframe with finance data and save it to file """
+    """Get dataframe with finance data and save it to file"""
 
     # Set path to save/load downloaded ticker data
     save_path = get_filename_saved_data(session.session_id, session.case_ticker)
@@ -151,7 +152,7 @@ def download_data(session, start, finish):
 
 
 def load_hdd_data(session):
-    """ Get dataframe by reading data from hdd file """
+    """Get dataframe by reading data from hdd file"""
     # Set path to save/load downloaded ticker data
     save_path = get_filename_saved_data(session.session_id, session.case_ticker)
 
@@ -165,7 +166,7 @@ def load_hdd_data(session):
 
 
 def create_decision(form):
-    """ Create new decision for current session and write it to db """
+    """Create new decision for current session and write it to db"""
 
     new_decision = Decision()
 
@@ -215,7 +216,7 @@ def create_decision(form):
 
 
 def get_chart(current_session, source):
-    """ Get all data to draw chart """
+    """Get all data to draw chart"""
     # Format session parameters
     if current_session.case_timeframe == 'Timeframe.DAILY':
         days_before = (current_session.case_iterations*31) + current_session.case_barsnumber
@@ -245,7 +246,7 @@ def get_chart(current_session, source):
 
 
 def draw_chart_plotly(current_session, source):
-    """ Prepare JSON with chart data to export to HTML """
+    """Prepare JSON with chart data to export into HTML-file"""
     df = get_chart(current_session, source)
     df['id'] = df.reset_index().index
 
@@ -270,7 +271,7 @@ def draw_chart_plotly(current_session, source):
 
 
 def close_session(session_id):
-    """ Close current session """
+    """Close current session"""
 
     # Get parameters for current session
     current_session = get_session(session_id)
@@ -292,7 +293,7 @@ def close_session(session_id):
 
 
 def get_session_summary(session_id):
-    """ Get list with decision summary for current session """
+    """Get list with decision summary for current session"""
 
     user_id = Session.query.filter(Session.session_id == session_id).first().user_id
     iterations = db.session.query(func.count(Decision.decision_id)).filter(Decision.session_id == session_id).first()[0]
@@ -309,7 +310,7 @@ def get_session_summary(session_id):
 
 
 def get_all_decisions(user_id):
-    """ Get dataframe with all decisions """
+    """Get dataframe with all decisions"""
 
     query = db.session.query(Session, Decision.decision_action, Decision.decision_time, Decision.iteration_id,
                              Decision.decision_result_corrected).outerjoin(Session).filter(Session.user_id == user_id)

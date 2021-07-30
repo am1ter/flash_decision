@@ -1,13 +1,12 @@
 from app import config
 
 from flask import Flask, jsonify
-
-import logging
-import traceback
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+
+import logging
+import traceback
 
 
 # Create Flask application and configure it

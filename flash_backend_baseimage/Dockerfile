@@ -1,9 +1,9 @@
 # Base image
 FROM python
 
-# Copy reqiurements list to container to install it
+# Copy requirements list to container to install it
 WORKDIR /var/tmp
-COPY ./requirements.txt /var/tmp
+COPY ../requirements.txt /var/tmp
 
 # Install all requirements
 RUN apt-get update \

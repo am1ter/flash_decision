@@ -2,7 +2,7 @@ from app import db, login
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app.libs.mixins import UserMixin   # Module dulicated and modified because of usage "user_id" instead "id"
+from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "user_id" instead "id"
 
 
 class User(UserMixin, db.Model):

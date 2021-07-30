@@ -9,6 +9,7 @@ import json
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Flask's authentication page"""
     if current_user.is_authenticated:
         return redirect(url_for('web_index_get'))
     form = forms.LoginForm()
@@ -25,6 +26,7 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    """Flask's logout page"""
     logout_user()
     return redirect(url_for('login'))
 
@@ -33,9 +35,12 @@ def logout():
 @app.route('/index', methods=['GET'])
 @login_required
 def web_index_get():
+    """Setting training session parameters"""
+    # Get lists of all available parameters of the training set to show them on the page
     timeframes = functions.get_df_all_timeframes()
-    markets = functions.get_df_all_markets()
-    tickers = functions.get_df_all_tickers()
+    # Securities is a combination of market + tickers
+    # markets = functions.get_df_all_markets()
+    # tickers = functions.get_df_all_tickers()
     securities = functions.get_security_list()
 
     # Jsonify dict of pandas df
@@ -52,6 +57,7 @@ def web_index_get():
 @app.route('/index', methods=['POST'])
 @login_required
 def web_index_post():
+    """Starting training session"""
     functions.create_session(form=request.form)
     session_id = functions.get_last_session_id()
     return redirect(f'/terminal?session_id={session_id}&iteration=1')
@@ -60,6 +66,7 @@ def web_index_post():
 @app.route('/terminal', methods=['GET'])
 @login_required
 def web_terminal_get():
+    """Showing traiding chart"""
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
     iteration = request.args.get('iteration', type=int)
@@ -93,7 +100,7 @@ def web_terminal_get():
 @app.route('/terminal', methods=['POST'])
 @login_required
 def web_terminal_post():
-
+    """Saving decision"""
     session_id = int(request.form['session_id'])
     iteration = int(request.form['iteration'])
     total_iterations = int(request.form['total_iterations'])
@@ -101,7 +108,7 @@ def web_terminal_post():
     # Create new decision
     functions.create_decision(form=request.form)
 
-    # Check: Is it last iteration?
+    # Check: Is it the last iteration?
     if iteration >= total_iterations:
         functions.close_session(session_id)
         return redirect(f'/results?session_id={session_id}')
@@ -113,6 +120,7 @@ def web_terminal_post():
 @app.route('/results', methods=['GET'])
 @login_required
 def web_results_get():
+    """Showing results"""
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
 
