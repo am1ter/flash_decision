@@ -1,3 +1,6 @@
+# Main
+./.idea/
+
 # Backend: Main
 ./flash_backend/.idea
 ./flash_backend/venv/
