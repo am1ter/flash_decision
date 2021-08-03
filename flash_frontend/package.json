@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "package": "^1.0.1",
     "vue": "^2.6.11",
+    "vue-marquee-text-component": "^1.2.0",
     "vue-router": "^2.8.1"
   },
   "devDependencies": {

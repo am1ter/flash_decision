@@ -1,50 +1,72 @@
 <template>
-    <div id="app">
-
-        <section class="header">
-            <div class="header_container_left">
-              <router-link to="/start" class="menu">Start</router-link>
-              <router-link to="/terminal" class="menu">Terminal</router-link>
-              <router-link to="/scoreboard" class="menu">Scoreboard</router-link>
-            </div>
-          <div class="header_container_right">
-              <a class="menu" href="#">Login</a>
-            </div>
-        </section>
-
-    </div>
+    <section class='header'>
+            <router-link to='/session' tag="div" class='menu_button'>
+                <img v-if='page == "/session"' src='../assets/icons/i_header_session_active.svg' alt='Icon'>
+                <img v-else src='../assets/icons/i_header_session_inactive.svg' alt='Icon'>
+                <p class='menu_text'>Session</p>
+            </router-link>
+            <router-link to='/decision' tag="div" class='menu_button'>
+                <img v-if='page == "/decision"' src='../assets/icons/i_header_decision_active.svg' alt='Icon'>
+                <img v-else src='../assets/icons/i_header_decision_inactive.svg' alt='Icon'>
+                <p class='menu_text' >Decision</p>
+            </router-link>
+            <router-link to='/scoreboard' tag="div" class='menu_button'>
+                <img v-if='page == "/scoreboard"' src='../assets/icons/i_header_scoreboard_active.svg' alt='Icon'>
+                <img v-else src='../assets/icons/i_header_scoreboard_inactive.svg' alt='Icon'>
+                <p class='menu_text'>Scoreboard</p>
+            </router-link>
+    </section>
 </template>
 
 <script>
 
+    export default {
+        name: 'Header',
+        props: {
+            page: {
+                type: String,
+                required: true,
+                default: ''
+            }
+        }
+    }
+
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
+<!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
 
     .header {
+        background: #E5E5E5;
+        width: 100%;
+        height: 50px;
+        text-align: center;
         display: flex;
-        /*height: 40px;*/
-        margin: -8px;
-        padding: 8px;
-
-        background: #464646;
+        flex-direction: row;
+        align-items: center;
+        border-bottom: 1px solid #0B5A73;
     }
 
-    .header_container_left {
-        flex: 50%;
-        text-align: left;
-    }
-
-    .header_container_right {
-        flex: 50%;
-        text-align: right;
-    }
-
-    .menu {
+    .menu_button {
+        flex: 1;
+        width: 100%;
+        height: 100%;
         font-family: Roboto;
+        color: #333333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .menu_text {
+        margin-left: 5px;
+        font-weight: bold;
+    }
+
+    .router-link-active {
+        background-color: #0B5A73;
         color: #ffffff;
-        margin: 0px 20px;
     }
 
 </style>

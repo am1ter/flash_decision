@@ -5,9 +5,9 @@ import App from './App.vue';
 Vue.use(VueRouter);
 
 const routes = [
-    {path: '/start', component: App.components.Start, name: 'Start page'},
-    {path: '/terminal', component: App.components.Terminal, name: 'Terminal page'},
-    {path: '/scoreboard', component: App.components.Scoreboard, name: 'Scoreboard page'}
+    { path: '/session', component: App.components.Session, name: 'Session page' },
+    { path: '/decision', component: App.components.Decision, name: 'Decision page' },
+    { path: '/scoreboard', component: App.components.Scoreboard, name: 'Scoreboard page' }
 ];
 
 const router = new VueRouter({
