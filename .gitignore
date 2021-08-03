@@ -1,9 +1,12 @@
 # Main
 /.idea/
+workspace.code-workspace
 
 # Backend: Main
 /flash_backend/.idea
 /flash_backend/venv/
+/flash_backend/app/__pycache__
+/flash_backend/app/libs/__pycache__
 
 # Frontend: Main
 /flash_frontend/.DS_Store

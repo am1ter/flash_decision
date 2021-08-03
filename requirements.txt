@@ -4,7 +4,7 @@ flask_sqlalchemy
 flask_migrate
 flask_login
 flask_wtf
-psycopg2
+psycopg2-binary
 wtforms
 
 pyodbc

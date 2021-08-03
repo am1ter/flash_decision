@@ -7,15 +7,46 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.sql import func
 import os
+from shutil import copyfile
 
 import json
 import plotly
 import plotly.graph_objs as go
 
-# Data readers
-from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
-from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
-# import pandas_datareader as pdr
+
+# ==============================
+# == Data readers
+# ==============================
+
+
+def import_datareaders() -> None:
+    """Fix bug in finam-export v.4.1.0 with ParserError"""
+    
+    path_lib_finamexport = './flash_backend/venv/lib/python3.8/site-packages/finam/export.py'
+    line_with_bug = 'from pandas.io.parsers import ParserError'
+    line_without_bug = 'from pandas.errors import ParserError # amiter bug fix'
+
+    # Read the file with the bug
+    with open(path_lib_finamexport, 'r') as file:
+        filedata = file.read()
+
+    if line_with_bug in filedata:
+        # Make backup of the file with the bug
+        copyfile(path_lib_finamexport, path_lib_finamexport[:-3] + '_backup.py')
+
+        # Replace the string with the bug
+        filedata = filedata.replace(line_with_bug, line_without_bug)
+
+        # Write the file with correct string
+        with open(path_lib_finamexport, 'w') as file:
+            file.write(filedata)
+
+    # import pandas_datareader as pdr # Reserved
+    from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
+    from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
+
+
+import_datareaders()                                   # Fix bug with finam-export lib v.4.1.0
 
 
 # ==============================
