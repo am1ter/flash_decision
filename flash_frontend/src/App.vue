@@ -6,7 +6,7 @@
         </div>
 
         <div id='header'>
-            <Header username='amiter'/>
+            <Header :username='username' :isAuth='isAuth'/>
         </div>
 
         <div id='content'>
@@ -20,7 +20,7 @@
         </div>
 
         <div id='credits'>
-            <Credits version='0.4.02'/>
+            <Credits :version='version'/>
         </div>
 
     </div>
@@ -50,6 +50,13 @@
             Decision,
             Scoreboard,
             Credits
+        },
+        data() {
+            return {
+                username: 'amiter',
+                isAuth: true,
+                version: '0.4.03'
+            }
         },
         computed: {
             page() {

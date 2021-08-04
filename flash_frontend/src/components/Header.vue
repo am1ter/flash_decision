@@ -1,10 +1,10 @@
 <template>
     <div id='header_layout'>
         <div id='header_left'>
-            <a class='header_button' href='#' >
+            <div class='header_button'>
                 <img class='icon_margin_right' src='..\assets\icons\i_header_user.svg'/>
                 <p class='text_no_margin'>{{ username }}</p>
-            </a>
+            </div>
         </div>
         <div id='header_right'>
             <a class='header_button' href='#'>
@@ -23,6 +23,11 @@ export default {
             type: String,
             required: true,
             default: 'username'
+        },
+        isAuth: {
+            type: Boolean,
+            required: true,
+            default: false
         }
     }
 }
@@ -54,6 +59,7 @@ export default {
     .header_button {
         display: flex;
         flex-direction: row;
+        cursor: pointer;
     }
 
     .icon_margin_right {
