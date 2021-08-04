@@ -1,18 +1,18 @@
 <template>
-    <section class='header'>
+    <section class='menu'>
             <router-link to='/session' tag="div" class='menu_button'>
-                <img v-if='page == "/session"' src='../assets/icons/i_header_session_active.svg' alt='Icon'>
-                <img v-else src='../assets/icons/i_header_session_inactive.svg' alt='Icon'>
+                <img v-if='page == "/session"' src='../assets/icons/i_Menu_session_active.svg' alt='Icon'>
+                <img v-else src='../assets/icons/i_Menu_session_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Session</p>
             </router-link>
             <router-link to='/decision' tag="div" class='menu_button'>
-                <img v-if='page == "/decision"' src='../assets/icons/i_header_decision_active.svg' alt='Icon'>
-                <img v-else src='../assets/icons/i_header_decision_inactive.svg' alt='Icon'>
+                <img v-if='page == "/decision"' src='../assets/icons/i_Menu_decision_active.svg' alt='Icon'>
+                <img v-else src='../assets/icons/i_Menu_decision_inactive.svg' alt='Icon'>
                 <p class='menu_text' >Decision</p>
             </router-link>
             <router-link to='/scoreboard' tag="div" class='menu_button'>
-                <img v-if='page == "/scoreboard"' src='../assets/icons/i_header_scoreboard_active.svg' alt='Icon'>
-                <img v-else src='../assets/icons/i_header_scoreboard_inactive.svg' alt='Icon'>
+                <img v-if='page == "/scoreboard"' src='../assets/icons/i_Menu_scoreboard_active.svg' alt='Icon'>
+                <img v-else src='../assets/icons/i_Menu_scoreboard_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Scoreboard</p>
             </router-link>
     </section>
@@ -21,7 +21,7 @@
 <script>
 
     export default {
-        name: 'Header',
+        name: 'Menu',
         props: {
             page: {
                 type: String,
@@ -36,7 +36,7 @@
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
 
-    .header {
+    .menu {
         background: #E5E5E5;
         width: 100%;
         height: 50px;

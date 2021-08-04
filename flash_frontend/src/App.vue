@@ -6,7 +6,7 @@
         </div>
 
         <div id='content'>
-            <Header :page='page'/>
+            <Menu :page='page'/>
             <Title :page='page'/>
             <router-view>
                 <Session/>
@@ -16,7 +16,7 @@
         </div>
 
         <div id='credits'>
-            <Credits version='0.4.01'/>
+            <Credits version='0.4.02'/>
         </div>
 
     </div>
@@ -25,7 +25,7 @@
 <script>
     // Service components
     import Background from './components/Background.vue'
-    import Header from './components/Header.vue'
+    import Menu from './components/Menu.vue'
     import Title from './components/Title.vue'
     import Credits from './components/Credits.vue'
     
@@ -38,7 +38,7 @@
         name: 'App',
         components: {
             Background,
-            Header,
+            Menu,
             Title,
             Session,
             Decision,
