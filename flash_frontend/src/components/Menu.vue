@@ -1,17 +1,17 @@
 <template>
     <section class='menu'>
             <router-link to='/session' tag="div" class='menu_button'>
-                <img v-if='page == "/session"' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
+                <img v-if='active_page == "/session"' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_session_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Session</p>
             </router-link>
             <router-link to='/decision' tag="div" class='menu_button'>
-                <img v-if='page == "/decision"' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
+                <img v-if='active_page == "/decision"' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_decision_inactive.svg' alt='Icon'>
                 <p class='menu_text' >Decision</p>
             </router-link>
             <router-link to='/scoreboard' tag="div" class='menu_button'>
-                <img v-if='page == "/scoreboard"' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
+                <img v-if='active_page == "/scoreboard"' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_scoreboard_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Scoreboard</p>
             </router-link>
@@ -22,11 +22,10 @@
 
     export default {
         name: 'Menu',
-        props: {
-            page: {
-                type: String,
-                required: true,
-                default: ''
+        props: {},
+        computed: {
+            active_page() {
+                return this.$route.path;
             }
         }
     }

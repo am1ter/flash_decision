@@ -10,8 +10,8 @@
         </div>
 
         <div id='content'>
-            <Menu :page='page'/>
-            <Title :page='page'/>
+            <Menu/>
+            <Title/>
             <router-view>
                 <page_Login/>
                 <page_Session/>
