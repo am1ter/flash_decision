@@ -5,6 +5,10 @@
             <Background/>
         </div>
 
+        <div id='header'>
+            <Header username='amiter'/>
+        </div>
+
         <div id='content'>
             <Menu :page='page'/>
             <Title :page='page'/>
@@ -25,6 +29,7 @@
 <script>
     // Service components
     import Background from './components/Background.vue'
+    import Header from './components/Header.vue'
     import Menu from './components/Menu.vue'
     import Title from './components/Title.vue'
     import Credits from './components/Credits.vue'
@@ -38,6 +43,7 @@
         name: 'App',
         components: {
             Background,
+            Header,
             Menu,
             Title,
             Session,
@@ -72,6 +78,11 @@
         margin: 0; 
     }
 
+    a {
+        color: #333333;
+        text-decoration-line: none;
+    }
+
     #pagebackgroundtext {
         font-size: 288px;
         color: #000000;
@@ -84,10 +95,16 @@
         text-align: center;
     }
 
+    #header {
+        width: 453px;
+        height: 100%;
+        margin: 15px auto 15px auto;
+    }
+
     #content {
         height: 500px;
         width: 453px;
-        margin: 50px auto 15px auto;
+        margin: 0px auto 15px auto;
         background-color: #E5E5E5;
         opacity: 0.8;
     }
@@ -97,6 +114,10 @@
         width: 453px;
         margin: 0px auto 0px auto;
         text-align: center;
+    }
+
+    .text_no_margin {
+        margin: 0px;
     }
 
 </style>

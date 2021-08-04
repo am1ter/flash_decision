@@ -19,9 +19,4 @@
 
 <style scoped>
 
-    a {
-        color: #333333;
-        text-decoration-line: none;
-    }
-
 </style>

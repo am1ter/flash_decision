@@ -101,9 +101,8 @@
 
     .subtitle {
         text-align: center;
-        font-size: 18px;
-        color: #464646;
-        margin: auto;
+        font-size: 14px;
+        font-weight: 500;
     }
 
 </style>
