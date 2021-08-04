@@ -28,6 +28,8 @@
         computed: {
             title() {
                 switch(this.page) {
+                    case '/login':
+                        return 'Login page'
                     case '/session':
                         return 'Training session parameters'
                     case '/decision':
@@ -40,6 +42,8 @@
             },
             instruction() {
                 switch(this.page) {
+                    case '/login':
+                        return 'Please login to start your training session'
                     case '/session':
                         return 'Set parameters of the session and press Start'
                     case '/decision':
@@ -65,7 +69,7 @@
         justify-content: center;
         align-items: center;
         background-color: #ffffff;
-        border-bottom: 1px solid #0B5A73;
+        border-bottom: 0.5px solid #0B5A73;
     }
 
     #layout_title_left {

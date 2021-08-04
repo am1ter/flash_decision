@@ -1,14 +1,14 @@
 <template>
     <div id='header_layout'>
         <div id='header_left'>
-            <div class='header_button'>
-                <img class='icon_margin_right' src='..\assets\icons\i_header_user.svg'/>
+            <div v-if='isAuth == true' class='header_button'>
+                <img class='icon_margin_right' src='../assets/icons/i_header_user.svg'/>
                 <p class='text_no_margin'>{{ username }}</p>
             </div>
         </div>
-        <div id='header_right'>
+        <div v-if='isAuth == true' id='header_right'>
             <a class='header_button' href='#'>
-                <img class='icon_margin_right' src='..\assets\icons\i_header_logout.svg'/>
+                <img class='icon_margin_right' src='../assets/icons/i_header_logout.svg'/>
                 <p class='text_no_margin'>logout</p>
             </a>
         </div>
@@ -38,6 +38,7 @@ export default {
         display: flex;
         flex-direction: row;
         width: 100%;
+        height: 17px;
     }
 
     #header_left {

@@ -1,12 +1,12 @@
 <template>
     <div>
-        <div>Decision</div>
+        <div>Session</div>
     </div>
 </template>
 
 <script>
     export default {
-        name: 'Decision'
+        name: 'page_Session'
     }
 </script>
 

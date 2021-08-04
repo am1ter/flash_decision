@@ -13,9 +13,10 @@
             <Menu :page='page'/>
             <Title :page='page'/>
             <router-view>
-                <Session/>
-                <Decision/>
-                <Scoreboard/>
+                <page_Login/>
+                <page_Session/>
+                <page_Decision/>
+                <page_Scoreboard/>
             </router-view>
         </div>
 
@@ -35,9 +36,10 @@
     import Credits from './components/Credits.vue'
     
     // Pages components
-    import Session from './components/Session.vue'
-    import Decision from './components/Decision.vue'
-    import Scoreboard from './components/Scoreboard.vue'
+    import page_Login from './components/page_Login.vue'
+    import page_Session from './components/page_Session.vue'
+    import page_Decision from './components/page_Decision.vue'
+    import page_Scoreboard from './components/page_Scoreboard.vue'
 
     export default {
         name: 'App',
@@ -46,16 +48,17 @@
             Header,
             Menu,
             Title,
-            Session,
-            Decision,
-            Scoreboard,
-            Credits
+            Credits,
+            page_Login,
+            page_Session,
+            page_Decision,
+            page_Scoreboard
         },
         data() {
             return {
                 username: 'amiter',
                 isAuth: true,
-                version: '0.4.03'
+                version: '0.4.04'
             }
         },
         computed: {

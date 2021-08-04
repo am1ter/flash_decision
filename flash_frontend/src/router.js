@@ -5,9 +5,10 @@ import App from './App.vue';
 Vue.use(VueRouter);
 
 const routes = [
-    { path: '/session', component: App.components.Session, name: 'Session page' },
-    { path: '/decision', component: App.components.Decision, name: 'Decision page' },
-    { path: '/scoreboard', component: App.components.Scoreboard, name: 'Scoreboard page' }
+    { path: '/login', component: App.components.page_Login, name: 'Login page' },
+    { path: '/session', component: App.components.page_Session, name: 'Session page' },
+    { path: '/decision', component: App.components.page_Decision, name: 'Decision page' },
+    { path: '/scoreboard', component: App.components.page_Scoreboard, name: 'Scoreboard page' }
 ];
 
 const router = new VueRouter({

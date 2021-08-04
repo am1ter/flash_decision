@@ -1,12 +1,12 @@
 <template>
     <div>
-        <div>Scoreboard</div>
+        <div>Decision</div>
     </div>
 </template>
 
 <script>
     export default {
-        name: 'Scoreboard'
+        name: 'page_Decision'
     }
 </script>
 
