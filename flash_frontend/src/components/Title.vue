@@ -3,12 +3,12 @@
 
         <section class="title">
             <div id="layout_title">
-                <div id="layout_title_left"><h1 id="title_letter">{{ title_text.title.charAt(0).toUpperCase() }}</h1></div>
-                <div id="layout_title_right"><h1 id="title">{{ title_text.title }}</h1></div>
+                <div id="layout_title_left"><h1 id="title_letter">{{ title.charAt(0).toUpperCase() }}</h1></div>
+                <div id="layout_title_right"><h1 id="title">{{ title }}</h1></div>
             </div>
 
             <div id="layout_subtitle">
-                <p class="subtitle">{{ title_text.instruction }}</p>
+                <p class="subtitle">{{ instruction }}</p>
             </div>
         </section>
 
@@ -20,16 +20,11 @@
         name: 'Title',
         props: {},
         computed: {
-            title_text() {
-                let active_page = this.$route.path;
-                let texts = {
-                    '/login': {title: 'Login page', instruction: 'Please login to start your training session'},
-                    '/session': {title: 'Training session parameters', instruction: 'Set parameters of the session and press Start'},
-                    '/decision': {title: 'Make a decision', instruction: 'You have 60 seconds to make a decision'},
-                    '/scoreboard': {title: 'Scoreboard', instruction: 'Analyze your progress'}
-                }
-
-                return texts[active_page]
+            title() {
+                return this.$route.meta.title
+            },
+            instruction() {
+                return this.$route.meta.instruction
             }
         }
     }
