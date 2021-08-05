@@ -57,13 +57,12 @@
         data() {
             return {
                 username: 'amiter',
-                isAuth: true,
                 version: '0.4.04'
             }
         },
         computed: {
-            page() {
-                return this.$route.path
+            isAuth() {
+                return true
             },
             page_name() {
                 return this.$route.name
