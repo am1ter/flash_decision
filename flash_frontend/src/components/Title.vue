@@ -1,18 +1,14 @@
 <template>
-    <div id="app">
+    <section id='title'>
+        <div id="layout_title" class="shadow">
+            <div id="layout_title_left"><h1 id="title_letter">{{ title.charAt(0).toUpperCase() }}</h1></div>
+            <div id="layout_title_right"><h1 id="title">{{ title }}</h1></div>
+        </div>
 
-        <section class="title">
-            <div id="layout_title">
-                <div id="layout_title_left"><h1 id="title_letter">{{ title.charAt(0).toUpperCase() }}</h1></div>
-                <div id="layout_title_right"><h1 id="title">{{ title }}</h1></div>
-            </div>
-
-            <div id="layout_subtitle">
-                <p class="subtitle">{{ instruction }}</p>
-            </div>
-        </section>
-
-    </div>
+        <div id="layout_subtitle">
+            <p class="subtitle">{{ instruction }}</p>
+        </div>
+    </section>
 </template>
 
 <script>
@@ -40,7 +36,7 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        background-color: #ffffff;
+        background-color: #FFFFFF;
         border-bottom: 0.5px solid #0B5A73;
     }
 
@@ -76,7 +72,7 @@
 
     .subtitle {
         text-align: center;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 500;
     }
 

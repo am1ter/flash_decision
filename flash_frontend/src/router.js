@@ -10,7 +10,7 @@ const routes = [{
         component: App.components.page_Login,
         meta: {
             title: 'Login page',
-            istruction: 'Please login to start your training session'
+            instruction: 'Please login to start your training session'
         }
     },
     {
@@ -22,7 +22,7 @@ const routes = [{
         },
         meta: {
             title: 'Training session parameters',
-            istruction: 'Set parameters of the session and press Start'
+            instruction: 'Set parameters of the session and press Start'
         }
     },
     {
@@ -34,7 +34,7 @@ const routes = [{
         },
         meta: {
             title: 'Make a decision',
-            istruction: 'You have 60 seconds to make a decision'
+            instruction: 'You have 60 seconds to make a decision'
         }
     },
     {
@@ -46,7 +46,7 @@ const routes = [{
         },
         meta: {
             title: 'Scoreboard',
-            istruction: 'Analyze your progress'
+            instruction: 'Analyze your progress'
         }
     }
 ];

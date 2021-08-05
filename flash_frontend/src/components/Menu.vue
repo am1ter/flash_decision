@@ -1,5 +1,5 @@
 <template>
-    <section class='menu'>
+    <section id='menu' :class='{ disabled: !isAuth }'>
             <router-link to='/session' tag="div" class='menu_button'>
                 <img v-if='active_page == "/session"' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_session_inactive.svg' alt='Icon'>
@@ -22,7 +22,13 @@
 
     export default {
         name: 'Menu',
-        props: {},
+        props: {
+            isAuth: {
+                type: Boolean,
+                required: true,
+                default: false
+            }
+        },
         computed: {
             active_page() {
                 return this.$route.path;
@@ -35,7 +41,7 @@
 <!-- Add 'scoped' attribute to limit CSS to this component only -->
 <style scoped>
 
-    .menu {
+    #menu {
         background: #E5E5E5;
         width: 100%;
         text-align: center;
@@ -58,7 +64,7 @@
     }
 
     .menu_text {
-        margin-left: 5px;
+        margin: 15px 5px;
         font-weight: bold;
     }
 

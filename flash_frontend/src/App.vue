@@ -9,8 +9,8 @@
             <Header :username='username' :isAuth='isAuth'/>
         </div>
 
-        <div id='content'>
-            <Menu/>
+        <div id='content' class="shadow">
+            <Menu class="shadow-sm" :isAuth='isAuth'/>
             <Title/>
             <router-view>
                 <page_Login/>
@@ -57,12 +57,12 @@
         data() {
             return {
                 username: 'amiter',
-                version: '0.4.04'
+                version: '0.4.05'
             }
         },
         computed: {
             isAuth() {
-                return true
+                return false
             },
             page_name() {
                 return this.$route.name
@@ -78,7 +78,7 @@
     body {
         font-family: 'Roboto', sans-serif;
         font-weight: 400;
-        font-size: 14px;
+        font-size: 16px;
         color: #333333;
         background-color: #ffffff;
         overflow: hidden;
@@ -92,6 +92,18 @@
         text-decoration-line: none;
     }
 
+    h1 {
+        margin: auto;
+    }
+
+    p {
+        margin: auto;
+    }
+
+    .form-control {
+        font-size: 16px;
+    }
+
     #pagebackgroundtext {
         font-size: 288px;
         color: #000000;
@@ -100,7 +112,7 @@
         position: absolute;
         display: block;
         width: 100%;
-        top: -20%;
+        top: 0%;
         text-align: center;
     }
 
@@ -114,7 +126,7 @@
         height: 500px;
         width: 453px;
         margin: 0px auto 15px auto;
-        background-color: #E5E5E5;
+        background-color: #ffffff;
         opacity: 0.8;
     }
 
@@ -125,8 +137,9 @@
         text-align: center;
     }
 
-    .text_no_margin {
-        margin: 0px;
+    .disabled {
+        opacity: 25%;
+        pointer-events: none;
     }
 
 </style>

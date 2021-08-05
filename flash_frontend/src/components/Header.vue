@@ -3,13 +3,13 @@
         <div id='header_left'>
             <div v-if='isAuth == true' class='header_button'>
                 <img class='icon_margin_right' src='../assets/icons/i_header_user.svg'/>
-                <p class='text_no_margin'>{{ username }}</p>
+                <p>{{ username }}</p>
             </div>
         </div>
         <div v-if='isAuth == true' id='header_right'>
             <a class='header_button' href='#'>
                 <img class='icon_margin_right' src='../assets/icons/i_header_logout.svg'/>
-                <p class='text_no_margin'>logout</p>
+                <p>logout</p>
             </a>
         </div>
     </div>
