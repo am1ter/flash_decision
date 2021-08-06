@@ -7,14 +7,16 @@
                 </b-col>
                 <b-col class="my-auto" sm="8">
                      <Dropdown 
-                        name="market"
-                        :options="[{ id: 1, name: 'Bonds'}, { id: 2, name: 'Shares'}]"
-                        v-on:selected="validateSelection"
-                        v-on:filter="getDropdownValues"
+                        name="markets"
+                        :options=markets
                         :disabled="false"
                         :maxItem="10"
                         placeholder="Select a securities market">
                     </Dropdown>
+                    <!-- <Dropdown 
+                        v-on:selected="validateSelection"
+                        v-on:filter="getDropdownValues">
+                    </Dropdown> -->
                 </b-col>
 
                 <div class="w-100 my-1"></div>
@@ -23,7 +25,8 @@
                     <label>Ticker</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown 
+                        name="ticker"
                         :options="[{ id: 1, name: 'AFLT'}, { id: 2, name: 'AMD'}]"
                         placeholder="Select a security">
                     </Dropdown>
@@ -35,7 +38,8 @@
                     <label>Timeframe</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown
+                        name="timeframe"
                         :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                         placeholder="Select a timeframe">
                     </Dropdown>
@@ -47,7 +51,8 @@
                     <label>Bars number</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown 
+                        name="barsnumber"
                         :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                         placeholder="Select a number of bars">
                     </Dropdown>
@@ -59,7 +64,8 @@
                     <label>Time limit</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown 
+                        name="timelimit"
                         :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                         placeholder="Select a session time limit">
                     </Dropdown>
@@ -71,7 +77,8 @@
                     <label>Date</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown 
+                        name="date"
                         :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                         placeholder="Select start date">
                     </Dropdown>
@@ -83,7 +90,8 @@
                     <label>Iterations</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown 
+                        name="iterations"
                         :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                         placeholder="Select a number of iterations">
                     </Dropdown>
@@ -95,7 +103,8 @@
                     <label>Slippage</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown 
+                        name="slippage"
                         :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                         placeholder="Select a slippage level">
                     </Dropdown>
@@ -107,7 +116,8 @@
                     <label>Fixing bar</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                                         <Dropdown 
+                    <Dropdown 
+                        name="fixingbar"
                         :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                         placeholder="Select a result fixing bar">
                     </Dropdown>
@@ -119,8 +129,19 @@
 </template>
 
 <script>
+    import { fetchMarkets } from '@/api'
     export default {
-        name: 'page_Session'
+        name: 'page_Session',
+        data() {
+            return {
+                markets: []
+                }
+        },
+        beforeMount() {
+            fetchMarkets().then(response => {
+                this.markets = response
+                })
+        }
     }
 </script>
 
