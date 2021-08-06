@@ -47,6 +47,7 @@ export default {
         display: flex;
         flex-direction: row;
         justify-content: flex-start;
+        align-items: center;
     }
 
     #header_right {
@@ -55,6 +56,7 @@ export default {
         display: flex;
         flex-direction: row;
         justify-content: flex-end;
+        align-items: center;
     }
 
     .header_button {

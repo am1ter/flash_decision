@@ -113,9 +113,10 @@
     }
 
     #content {
-        height: 85vh;
+        min-height: 85vh;
         width: 453px;
         margin: 0px auto;
+        padding-bottom: 15px;
         background-color: #ffffff;
         opacity: 0.85;
     }
