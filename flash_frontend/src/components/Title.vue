@@ -46,7 +46,7 @@
         align-items: center;
         height: 100%;
         width: 64px;
-        background-color: #0B5A73;
+        background: linear-gradient(to right, #271238, #113763, #0B5A73);
         color: #ffffff;
     }
 

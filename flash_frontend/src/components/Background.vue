@@ -1,5 +1,5 @@
 <template>
-        <div id='Marquee'>
+        <div id='background'>
             <marquee-text :duration="60">
                 <p># flash_decision</p>
             </marquee-text>
@@ -13,5 +13,15 @@
 
 
 <style scoped>
-
+    #background {
+        font-size: 288px;
+        color: #000000;
+        opacity: 0.05;
+        z-index: -1;
+        position: absolute;
+        display: block;
+        width: 100%;
+        top: 0%;
+        text-align: center;
+    }
 </style>

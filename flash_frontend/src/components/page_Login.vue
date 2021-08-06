@@ -9,6 +9,8 @@
                 <b-col class="my-auto" sm="9"><b-form-input id="input-password" placeholder="Enter your password"/></b-col>
             </b-row>
         </b-container>
+        <b-button class="col-12 mt-3 gradient">Sign in</b-button>
+        <b-button variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
     </section>
 </template>
 
@@ -21,7 +23,7 @@
 <style scoped>
     #page {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         margin: 15px 25px;

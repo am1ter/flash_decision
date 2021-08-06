@@ -20,6 +20,8 @@
             </router-view>
         </div>
 
+        <div id='content_border_bottom'/>
+
         <div id='credits'>
             <Credits :version='version'/>
         </div>
@@ -104,18 +106,6 @@
         font-size: 16px;
     }
 
-    #pagebackgroundtext {
-        font-size: 288px;
-        color: #000000;
-        opacity: 0.05;
-        z-index: -1;
-        position: absolute;
-        display: block;
-        width: 100%;
-        top: 0%;
-        text-align: center;
-    }
-
     #header {
         width: 453px;
         height: 100%;
@@ -123,11 +113,18 @@
     }
 
     #content {
-        height: 500px;
+        height: 85vh;
         width: 453px;
-        margin: 0px auto 15px auto;
+        margin: 0px auto;
         background-color: #ffffff;
-        opacity: 0.8;
+        opacity: 0.85;
+    }
+
+    #content_border_bottom {
+        height: 5px;
+        width: 453px;
+        background: linear-gradient(to right, #271238, #113763, #0B5A73);
+        margin: 0px auto 15px auto;
     }
 
     #credits {
@@ -140,6 +137,14 @@
     .disabled {
         opacity: 25%;
         pointer-events: none;
+    }
+
+    .gradient {
+        background: linear-gradient(to right, #271238, #113763, #0B5A73);
+    }
+
+    .gradient:focus, .gradient:hover {
+        background: linear-gradient(to right, #280B3F, #0E4280, #076583);
     }
 
 </style>
