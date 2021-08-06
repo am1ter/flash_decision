@@ -6,7 +6,7 @@
                 <b-col class="my-auto" sm="9"><b-form-input id="input-login" placeholder="Enter your login"/></b-col>
                 <div class="w-100 my-1"></div>
                 <b-col class="my-auto" sm="3"><label>Password</label></b-col>
-                <b-col class="my-auto" sm="9"><b-form-input id="input-password" placeholder="Enter your password"/></b-col>
+                <b-col class="my-auto" sm="9"><b-form-input type='password' id="input-password" placeholder="Enter your password"/></b-col>
             </b-row>
         </b-container>
         <b-button class="col-12 mt-3 gradient">Sign in</b-button>

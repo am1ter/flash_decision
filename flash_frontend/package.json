@@ -15,7 +15,8 @@
     "package": "^1.0.1",
     "vue": "^2.6.11",
     "vue-marquee-text-component": "^1.2.0",
-    "vue-router": "^2.8.1"
+    "vue-router": "^2.8.1",
+    "vue-simple-search-dropdown": "^1.0.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

@@ -59,12 +59,12 @@
         data() {
             return {
                 username: 'amiter',
-                version: '0.4.05'
+                version: '0.4.06'
             }
         },
         computed: {
             isAuth() {
-                return false
+                return true
             },
             page_name() {
                 return this.$route.name
@@ -145,6 +145,13 @@
 
     .gradient:focus, .gradient:hover {
         background: linear-gradient(to right, #280B3F, #0E4280, #076583);
+    }
+
+    .dropdown, .dropdown-input, .dropdown-content, .dropdown-item {
+    /* Override custom Vue dropdown plugin style */
+        font-size: 16px!important;
+        min-width: 100%!important;
+        max-width: 100%!important;
     }
 
 </style>
