@@ -3,33 +3,26 @@
         <div id='header_left'>
             <div v-if='isAuth == true' class='header_button'>
                 <img class='icon_margin_right' src='../assets/icons/i_header_user.svg'/>
-                <p>{{ username }}</p>
+                <p class='header_text'>{{ username }}</p>
             </div>
         </div>
         <div v-if='isAuth == true' id='header_right'>
             <a class='header_button' href='#'>
                 <img class='icon_margin_right' src='../assets/icons/i_header_logout.svg'/>
-                <p>logout</p>
+                <p class='header_text'>logout</p>
             </a>
         </div>
     </div>
 </template>
 
 <script>
-export default {
-    name: 'Header',
-    props: {
-        username: {
-            type: String,
-            required: true,
-            default: 'username'
-        },
-        isAuth: {
-            type: Boolean,
-            required: true,
-            default: false
+    import { mapState } from 'vuex'
+    export default {
+        name: 'Header',
+        props: {},
+        computed: {
+            ...mapState(['isAuth', 'username'])
         }
-    }
 }
 </script>
 
@@ -67,6 +60,10 @@ export default {
 
     .icon_margin_right {
         margin: 0px 5px 0px 0px;
+    }
+
+    .header_text {
+        margin: 0px auto;
     }
 
 </style>

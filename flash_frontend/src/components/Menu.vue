@@ -19,23 +19,17 @@
 </template>
 
 <script>
-
+    import { mapState } from 'vuex'
     export default {
         name: 'Menu',
-        props: {
-            isAuth: {
-                type: Boolean,
-                required: true,
-                default: false
-            }
-        },
+        props: {},
         computed: {
             active_page() {
                 return this.$route.path;
-            }
+            },
+            ...mapState(['isAuth'])
         }
     }
-
 </script>
 
 <!-- Add 'scoped' attribute to limit CSS to this component only -->

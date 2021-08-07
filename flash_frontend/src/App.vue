@@ -6,11 +6,11 @@
         </div>
 
         <div id='header'>
-            <Header :username='username' :isAuth='isAuth'/>
+            <Header/>
         </div>
 
         <div id='content' class="shadow">
-            <Menu class="shadow-sm" :isAuth='isAuth'/>
+            <Menu class="shadow-sm"/>
             <Title/>
             <router-view>
                 <page_Login/>
@@ -23,13 +23,15 @@
         <div id='content_border_bottom'/>
 
         <div id='credits'>
-            <Credits :version='version'/>
+            <Credits/>
         </div>
 
     </div>
 </template>
 
 <script>
+    import { mapState } from 'vuex'
+
     // Service components
     import Background from './components/Background.vue'
     import Header from './components/Header.vue'
@@ -56,19 +58,11 @@
             page_Decision,
             page_Scoreboard
         },
-        data() {
-            return {
-                username: 'amiter',
-                version: '0.4.06'
-            }
-        },
         computed: {
-            isAuth() {
-                return true
-            },
-            page_name() {
-                return this.$route.name
-            }
+            ...mapState(['sessions', 'isAuth'])
+        },
+        beforeMount() {
+            this.$store.dispatch('loadSessions')
         }
     }
 
@@ -92,14 +86,6 @@
     a {
         color: #333333;
         text-decoration-line: none;
-    }
-
-    h1 {
-        margin: auto;
-    }
-
-    p {
-        margin: auto;
     }
 
     .form-control {

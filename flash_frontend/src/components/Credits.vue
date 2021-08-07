@@ -5,14 +5,12 @@
 </template>
 
 <script>
+    import { mapState } from 'vuex'
     export default {
         name: 'Credits',
-        props: {
-            version: {
-                type: String,
-                required: true,
-                default: '0.1.00'
-                }
+        props: {},
+        computed: {
+            ...mapState(['version'])
         }
     }
 </script>

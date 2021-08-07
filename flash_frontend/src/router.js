@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import store from './store'
 import VueRouter from "vue-router";
 import App from './App.vue';
 
@@ -18,7 +19,7 @@ const routes = [{
         name: 'Session page',
         component: App.components.page_Session,
         beforeEnter(to, from, next) {
-            if (App.computed.isAuth()) { next() } else { next('/login') }
+            if (store.state.isAuth) { next() } else { next('/login') }
         },
         meta: {
             title: 'Training session parameters',
@@ -30,7 +31,7 @@ const routes = [{
         name: 'Decision page',
         component: App.components.page_Decision,
         beforeEnter(to, from, next) {
-            if (App.computed.isAuth()) { next() } else { next('/login') }
+            if (store.state.isAuth) { next() } else { next('/login') }
         },
         meta: {
             title: 'Make a decision',
@@ -42,7 +43,7 @@ const routes = [{
         name: 'Scoreboard page',
         component: App.components.page_Scoreboard,
         beforeEnter(to, from, next) {
-            if (App.computed.isAuth()) { next() } else { next('/login') }
+            if (store.state.isAuth) { next() } else { next('/login') }
         },
         meta: {
             title: 'Scoreboard',
