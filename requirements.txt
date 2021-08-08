@@ -13,4 +13,4 @@ sqlalchemy
 plotly
 werkzeug
 
-finam-export
+finam-export=4.1.0

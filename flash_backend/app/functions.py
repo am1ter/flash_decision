@@ -1,12 +1,13 @@
 from app import config, db
 from app.models import User, Session, Decision
 
+import os
+import sys
 import pyodbc
 import pandas as pd
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.sql import func
-import os
 from shutil import copyfile
 
 import json
@@ -19,34 +20,34 @@ import plotly.graph_objs as go
 # ==============================
 
 
-def import_datareaders() -> None:
+def fix_lib_finamexport() -> None:
     """Fix bug in finam-export v.4.1.0 with ParserError"""
     
-    path_lib_finamexport = './flash_backend/venv/lib/python3.8/site-packages/finam/export.py'
+    path_lib_finamexport = f'./flash_backend/venv/lib/python{ sys.version[:3] }/site-packages/finam/export.py'
     line_with_bug = 'from pandas.io.parsers import ParserError'
     line_without_bug = 'from pandas.errors import ParserError # amiter bug fix'
 
     # Read the file with the bug
-    with open(path_lib_finamexport, 'r') as file:
-        filedata = file.read()
+    if os.path.isfile(path_lib_finamexport):
+        with open(path_lib_finamexport, 'r') as file:
+            filedata = file.read()
 
-    if line_with_bug in filedata:
-        # Make backup of the file with the bug
-        copyfile(path_lib_finamexport, path_lib_finamexport[:-3] + '_backup.py')
+        if line_with_bug in filedata:
+            # Make backup of the file with the bug
+            copyfile(path_lib_finamexport, path_lib_finamexport[:-3] + '_backup.py')
 
-        # Replace the string with the bug
-        filedata = filedata.replace(line_with_bug, line_without_bug)
+            # Replace the string with the bug
+            filedata = filedata.replace(line_with_bug, line_without_bug)
 
-        # Write the file with correct string
-        with open(path_lib_finamexport, 'w') as file:
-            file.write(filedata)
+            # Write the file with correct string
+            with open(path_lib_finamexport, 'w') as file:
+                file.write(filedata)
 
-    # import pandas_datareader as pdr # Reserved
-    from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
-    from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
+fix_lib_finamexport()                                           # Fix bug with finam-export lib v.4.1.0
 
-
-import_datareaders()                                   # Fix bug with finam-export lib v.4.1.0
+from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
+from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
+# import pandas_datareader as pdr                               # Reserved datareader
 
 
 # ==============================
