@@ -1,7 +1,6 @@
 from app.config import FlaskConfig
-from app.api import api
 
-from flask import Flask, jsonify, Blueprint
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -13,7 +12,6 @@ import traceback
 # Create Flask application and configure it
 app = Flask(__name__, static_url_path='')
 app.config.from_object(FlaskConfig)
-app.register_blueprint(api, url_prefix='/api')
 
 login = LoginManager(app)
 login.login_view = 'login'
@@ -48,3 +46,6 @@ def handle_http_exception(error):
 # Load scripts to run flask app
 from app import routes
 from app.models import User, Session, Decision
+
+from app.api import api
+app.register_blueprint(api, url_prefix='/api')

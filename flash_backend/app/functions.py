@@ -1,4 +1,5 @@
-from app import config, db
+from app import db
+import app.config as config
 from app.models import User, Session, Decision
 
 import os
@@ -101,23 +102,6 @@ def get_security_list():
         security_list[str(list(tuple(Market))[idx])] = exporter.lookup(market=[market])
 
     return security_list
-
-
-# def get_df_all_markets():
-#     """Read markets from finam module (hardcoded in external lib)"""
-#
-#     all_markets = []
-#     for idx, market in enumerate(Market):
-#         all_markets.append(str(list(tuple(Market))[idx]))
-#     return all_markets
-#
-#
-# def get_df_all_tickers():
-#     """Get dataframe with all tickers by finam.export library"""
-#
-#     exporter = Exporter()
-#     tickers = exporter.lookup(market=[Market.SHARES])
-#     return tickers
 
 
 def create_session(form):
