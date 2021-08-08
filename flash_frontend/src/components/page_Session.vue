@@ -124,7 +124,7 @@
                 </b-col>
             </b-row>
         </b-container>
-        <b-button class="col-12 mt-3 gradient">Start</b-button>
+        <b-button class="col-12 mt-3 gradient rounded-1">Start</b-button>
     </section>
 </template>
 

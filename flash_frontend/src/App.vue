@@ -84,8 +84,12 @@
     }
 
     a {
-        color: #333333;
-        text-decoration-line: none;
+        color: #333333!important;
+        text-decoration-line: none!important;
+    }
+
+    a:hover {
+        color: #271238!important;
     }
 
     .form-control {
@@ -95,7 +99,7 @@
     #header {
         width: 453px;
         height: 100%;
-        margin: 15px auto 15px auto;
+        margin: 15px auto 10px auto;
     }
 
     #content {
@@ -111,7 +115,7 @@
         height: 5px;
         width: 453px;
         background: linear-gradient(to right, #271238, #113763, #0B5A73);
-        margin: 0px auto 15px auto;
+        margin: 0px auto 10px auto;
     }
 
     #credits {

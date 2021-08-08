@@ -7,10 +7,10 @@ Vue.use(Vuex)
 
 const state = {
     // single source of data
-    sessions: [],
+    version: '0.4.07',
     isAuth: true,
     username: 'amiter',
-    version: 'v.0.4.06'
+    sessions: []
 }
 
 const actions = {

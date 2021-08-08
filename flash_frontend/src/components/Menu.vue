@@ -42,7 +42,6 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        border-bottom: 0.5px solid #0B5A73;
     }
 
     .menu_button {
@@ -55,16 +54,31 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
+        border-bottom: 1px solid #0B5A73;
     }
+
+    .menu_button:hover {
+        box-shadow: 0px -1px 0px #271238 inset;
+    }
+
+    .menu_button.router-link-active:hover {
+        background-color: #0c4e63;
+    }
+
+    .menu_button:hover:not(.router-link-active) {
+        background-color: #ffffff;
+    }
+
 
     .menu_text {
         margin: 15px 5px;
-        font-weight: bold;
+        font-weight: 500;
     }
 
     .router-link-active {
         background-color: #0B5A73;
         color: #ffffff;
+        box-shadow: 0px -1px 0px #333333 inset;
     }
 
 </style>
