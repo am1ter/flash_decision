@@ -91,6 +91,19 @@ def get_df_all_timeframes():
     return all_timeframes
 
 
+def get_markets_list():
+    """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
+
+    exporter = Exporter()
+    markets_list = []
+
+    # Read markets and tickers to dict
+    for idx, market in enumerate(Market):
+        markets_list.append(str(list(tuple(Market))[idx]))
+
+    return markets_list
+
+
 def get_security_list():
     """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
 

@@ -1,6 +1,6 @@
 <template>
     <section id='page'>
-        <b-container class="g-0 text-center" fluid>
+        <b-container class="g-0" fluid>
             <b-row cols="2">
                 <b-col class="my-auto" sm="4">
                     <label>Market</label>
@@ -8,7 +8,8 @@
                 <b-col class="my-auto" sm="8">
                      <Dropdown 
                         name="markets"
-                        :options="sessionOptions.fixing_bar"
+                        :options="sessionOptions.markets"
+                        :maxItem="sessionOptions.markets.length"
                         placeholder="Select a securities market">
                     </Dropdown>
                     <!-- <Dropdown 
@@ -27,7 +28,8 @@
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
                         name="ticker"
-                        :options="[{ id: 1, name: 'AFLT'}, { id: 2, name: 'AMD'}]"
+                        :options="sessionOptions.securities['Market.' + selectedMarket]"
+                        :maxItem="sessionOptions.securities['Market.' + selectedMarket].length"
                         placeholder="Select a security">
                     </Dropdown>
                 </b-col>
@@ -40,7 +42,7 @@
                 <b-col class="my-auto" sm="8">
                     <Dropdown
                         name="timeframe"
-                        :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
+                        :options="sessionOptions.timeframes"
                         placeholder="Select a timeframe">
                     </Dropdown>
                 </b-col>
@@ -52,8 +54,8 @@
                 </b-col>
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
-                        name="barsnumber"
-                        :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
+                        name="bars_number"
+                        :options="sessionOptions.bars_number"
                         placeholder="Select a number of bars">
                     </Dropdown>
                 </b-col>
@@ -61,12 +63,12 @@
                 <div class="w-100 my-1"></div>
                 
                 <b-col class="my-auto" sm="4">
-                    <label>Time limit</label>
+                    <label>Time limit, sec.</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
-                        name="timelimit"
-                        :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
+                        name="time_limit"
+                        :options="sessionOptions.time_limit"
                         placeholder="Select a session time limit">
                     </Dropdown>
                 </b-col>
@@ -77,11 +79,16 @@
                     <label>Date</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                    <Dropdown 
-                        name="date"
-                        :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
-                        placeholder="Select start date">
-                    </Dropdown>
+                    <b-form-datepicker id="datepicker" size="sm"
+                        placeholder="Select a start date"
+                        :date-format-options="{ 
+                            year: 'numeric', month: 'numeric', day: 'numeric',
+                            hour: 'numeric', minute: 'numeric', weekday: 'short'
+                        }"
+                        :date-disabled-fn="dateDisabled"
+                        start-weekday=1
+                        locale="ru">
+                    </b-form-datepicker>
                 </b-col>
                 
                 <div class="w-100 my-1"></div>
@@ -92,7 +99,7 @@
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
                         name="iterations"
-                        :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
+                        :options="sessionOptions.iterations"
                         placeholder="Select a number of iterations">
                     </Dropdown>
                 </b-col>
@@ -100,12 +107,12 @@
                 <div class="w-100 my-1"></div>
                 
                 <b-col class="my-auto" sm="4">
-                    <label>Slippage</label>
+                    <label>Slippage, %</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
                         name="slippage"
-                        :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
+                        :options="sessionOptions.slippage"
                         placeholder="Select a slippage level">
                     </Dropdown>
                 </b-col>
@@ -117,8 +124,8 @@
                 </b-col>
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
-                        name="fixingbar"
-                        :options="[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
+                        name="fixing_bar"
+                        :options="sessionOptions.fixing_bar"
                         placeholder="Select a result fixing bar">
                     </Dropdown>
                 </b-col>
@@ -134,7 +141,16 @@
         name: 'page_Session',
         data() {
             return {
-                sessionOptions: "[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
+                sessionOptions: [],
+                selectedMarket: 'USA'
+                }
+        },
+        methods: {
+            dateDisabled(ymd, date) {
+                // Disable weekends
+                const weekday = date.getDay()
+                // Return `true` if the date should be disabled
+                return weekday === 0 || weekday === 6
                 }
         },
         beforeMount() {
@@ -154,6 +170,11 @@
         align-items: center;
         margin: 15px 25px;
         width: auto;
+    }
+
+    label {
+        display: flex;
+        justify-content: center;
     }
 
 </style>
