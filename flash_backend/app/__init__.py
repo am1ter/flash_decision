@@ -1,6 +1,7 @@
 from app.config import FlaskConfig
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -12,6 +13,7 @@ import traceback
 # Create Flask application and configure it
 app = Flask(__name__, static_url_path='')
 app.config.from_object(FlaskConfig)
+cors = CORS(app, resources={r'/api/*': {'origins': '*'}})
 
 login = LoginManager(app)
 login.login_view = 'login'

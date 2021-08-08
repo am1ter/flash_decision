@@ -8,12 +8,12 @@
                 <b-col class="my-auto" sm="8">
                      <Dropdown 
                         name="markets"
-                        :options=markets
-                        :disabled="false"
-                        :maxItem="10"
+                        :options="sessionOptions.fixing_bar"
                         placeholder="Select a securities market">
                     </Dropdown>
                     <!-- <Dropdown 
+                        :disabled="false"
+                        :maxItem="10"
                         v-on:selected="validateSelection"
                         v-on:filter="getDropdownValues">
                     </Dropdown> -->
@@ -129,17 +129,17 @@
 </template>
 
 <script>
-    import { fetchMarkets } from '@/api'
+    import { fetchSessionOptions } from '@/api'
     export default {
         name: 'page_Session',
         data() {
             return {
-                markets: []
+                sessionOptions: "[{ id: 1, name: '5'}, { id: 2, name: '10'}]"
                 }
         },
         beforeMount() {
-            fetchMarkets().then(response => {
-                this.markets = response
+            fetchSessionOptions().then(response => {
+                this.sessionOptions = response.data
                 })
         }
     }

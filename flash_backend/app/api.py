@@ -33,7 +33,12 @@ def api_get_session_options():
     slippage = [0, 0.1, 0.5, 1]
 
     # Option: Fixing bar
-    fixing_bar = [10, 15, 20, 50]
+    fixing_bar = [
+        {'id': 1, 'name': '10'},
+        {'id': 2, 'name': '15'},
+        {'id': 3, 'name': '20'},
+        {'id': 4, 'name': '50'}
+        ]
 
     # Dict with session options
     session_options = {
@@ -41,7 +46,7 @@ def api_get_session_options():
         'timeframes': timeframes,
         'bars_number': bars_number,
         'time_limit': time_limit,
-        'iteration': iterations,
+        'iterations': iterations,
         'slippage': slippage,
         'fixing_bar': fixing_bar
     }

@@ -1,18 +1,6 @@
-const MARKETS = [
-    {name: 'Bonds', id: '2'},
-    {name: 'Commodities', id: '24'},
-    {name: 'Currencies', id: '45'},
-    {name: 'ETF', id: '28'},
-    {name: 'Shares', id: '1'},
-    {name: 'USA', id: '25'}
-]
+import axios from 'axios'
 
-// const TICKERS = [
-//     {ticker: 'AFLT', name: 'Аэрофлот'},
-//     {ticker: 'SBER', name: 'Сбербанк'},
-//     {ticker: 'GAZP', name: 'Газпром'},
-//     {ticker: 'YNDX', name: 'Яндекс'}
-// ]
+const API_URL = 'http://127.0.0.1:8001/api'
 
 let Sessions = [
     {
@@ -47,12 +35,8 @@ let Sessions = [
     }
   ]
 
-export function fetchMarkets() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(MARKETS)
-        }, 300)
-    })
+export function fetchSessionOptions() {
+    return axios.get(API_URL + '/get-session-options/')
 }
 
 export function fetchSessions() {
