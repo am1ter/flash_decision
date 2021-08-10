@@ -9,7 +9,8 @@
                      <Dropdown 
                         name="markets"
                         :options="sessionOptions.markets"
-                        :maxItem="sessionOptions.markets.length"
+                        :maxItem="sessionOptionsMarketsLen"
+                        v-on:filter="getSecurities"
                         placeholder="Select a securities market">
                     </Dropdown>
                     <!-- <Dropdown 
@@ -28,8 +29,8 @@
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
                         name="ticker"
-                        :options="sessionOptions.securities['Market.' + selectedMarket]"
-                        :maxItem="sessionOptions.securities['Market.' + selectedMarket].length"
+                        :options="sessionOptionsSecurities"
+                        :maxItem="sessionOptionsSecuritiesLen"
                         placeholder="Select a security">
                     </Dropdown>
                 </b-col>
@@ -142,7 +143,10 @@
         data() {
             return {
                 sessionOptions: [],
-                selectedMarket: 'USA'
+                sessionOptionsSecurities: [],
+                sessionOptionsMarketsLen: 10,
+                sessionOptionsSecuritiesLen: 10,
+                selectedMarket: 'Market.SHARES'
                 }
         },
         methods: {
@@ -151,12 +155,22 @@
                 const weekday = date.getDay()
                 // Return `true` if the date should be disabled
                 return weekday === 0 || weekday === 6
-                }
+                },
+            getSecurities() {
+                // Get value from markets dropdown
+                this.selectedMarket = 'Market.' + this.$children[0].searchFilter
+                // Clean selected value in securities dropdown
+                this.$children[1].searchFilter = ''
+                // Set securities dropdown list length
+                this.sessionOptionsSecuritiesLen = this.$children[0].searchFilter != '' ? this.sessionOptions.securities[this.selectedMarket].length : 0
+                // Add options in securities dropdown
+                this.sessionOptionsSecurities = this.sessionOptions.securities[this.selectedMarket]
+            }
         },
         beforeMount() {
-            fetchSessionOptions().then(response => {
-                this.sessionOptions = response.data
-                })
+            fetchSessionOptions()
+                .then(response => {this.sessionOptions = response.data})
+                .then(() => {this.sessionOptionsMarketsLen = this.sessionOptions.markets.length})
         }
     }
 </script>

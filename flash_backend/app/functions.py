@@ -110,9 +110,11 @@ def get_security_list():
     exporter = Exporter()
     security_list = {}
 
-    # Read markets and tickers to dict
+    # Read tickers for every market and convert it to dict
     for idx, market in enumerate(Market):
-        security_list[str(list(tuple(Market))[idx])] = exporter.lookup(market=[market])
+        tickers = exporter.lookup(market=[market])
+        tickers['id'] = tickers.index
+        security_list[str(list(tuple(Market))[idx])] = tickers
 
     return security_list
 
