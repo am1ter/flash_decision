@@ -4,6 +4,7 @@ flask_sqlalchemy
 flask_migrate
 flask_login
 flask_wtf
+flask_cors
 psycopg2-binary
 wtforms
 
@@ -13,4 +14,4 @@ sqlalchemy
 plotly
 werkzeug
 
-finam-export=4.1.0
+finam-export==4.1.0
