@@ -3,7 +3,7 @@
         <div id='header_left'>
             <div v-if='isAuth == true' class='header_button'>
                 <img class='icon_margin_right' src='../assets/icons/i_header_user.svg'/>
-                <p class='header_text'>{{ username }}</p>
+                <p class='header_text'>{{ user.name }}</p>
             </div>
         </div>
         <div v-if='isAuth == true' id='header_right'>
@@ -21,7 +21,7 @@
         name: 'Header',
         props: {},
         computed: {
-            ...mapState(['isAuth', 'username'])
+            ...mapState(['isAuth', 'user'])
         }
 }
 </script>

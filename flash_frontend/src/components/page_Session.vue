@@ -2,22 +2,21 @@
     <section id='page'>
         <b-container class="g-0" fluid>
             <b-row cols="2">
+                <!-- Parameters -->
                 <b-col class="my-auto" sm="4">
                     <label>Market</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
                      <Dropdown 
-                        name="markets"
+                        name="market"
                         :options="sessionOptions.markets"
                         :maxItem="sessionOptionsMarketsLen"
-                        v-on:filter="getSecurities"
+                        v-on:filter="getOptionsSecurities"
                         placeholder="Select a securities market">
                     </Dropdown>
                     <!-- <Dropdown 
                         :disabled="false"
-                        :maxItem="10"
                         v-on:selected="validateSelection"
-                        v-on:filter="getDropdownValues">
                     </Dropdown> -->
                 </b-col>
 
@@ -55,8 +54,8 @@
                 </b-col>
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
-                        name="bars_number"
-                        :options="sessionOptions.bars_number"
+                        name="barsNumber"
+                        :options="sessionOptions.barsNumber"
                         placeholder="Select a number of bars">
                     </Dropdown>
                 </b-col>
@@ -68,8 +67,8 @@
                 </b-col>
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
-                        name="time_limit"
-                        :options="sessionOptions.time_limit"
+                        name="timeLimit"
+                        :options="sessionOptions.timeLimit"
                         placeholder="Select a session time limit">
                     </Dropdown>
                 </b-col>
@@ -80,7 +79,7 @@
                     <label>Date</label>
                 </b-col>
                 <b-col class="my-auto" sm="8">
-                    <b-form-datepicker id="datepicker" size="sm"
+                    <b-form-datepicker id="date" size="sm"
                         placeholder="Select a start date"
                         :date-format-options="{ 
                             year: 'numeric', month: 'numeric', day: 'numeric',
@@ -125,18 +124,20 @@
                 </b-col>
                 <b-col class="my-auto" sm="8">
                     <Dropdown 
-                        name="fixing_bar"
-                        :options="sessionOptions.fixing_bar"
+                        name="fixingBar"
+                        :options="sessionOptions.fixingBar"
                         placeholder="Select a result fixing bar">
                     </Dropdown>
                 </b-col>
             </b-row>
         </b-container>
-        <b-button class="col-12 mt-3 gradient rounded-1">Start</b-button>
+        <!-- Start button -->
+        <b-button class="col-12 mt-3 gradient rounded-1" v-on:click="startSession">Start</b-button>
     </section>
 </template>
 
 <script>
+    import { mapState } from 'vuex'
     import { fetchSessionOptions } from '@/api'
     export default {
         name: 'page_Session',
@@ -146,8 +147,12 @@
                 sessionOptionsSecurities: [],
                 sessionOptionsMarketsLen: 10,
                 sessionOptionsSecuritiesLen: 10,
-                selectedMarket: 'Market.SHARES'
+                selectedMarket: 'Market.SHARES',
+                currentSessionParams: []
                 }
+        },
+        computed: {
+            ...mapState(['isAuth', 'user'])
         },
         methods: {
             dateDisabled(ymd, date) {
@@ -156,7 +161,7 @@
                 // Return `true` if the date should be disabled
                 return weekday === 0 || weekday === 6
                 },
-            getSecurities() {
+            getOptionsSecurities() {
                 // Get value from markets dropdown
                 this.selectedMarket = 'Market.' + this.$children[0].searchFilter
                 // Clean selected value in securities dropdown
@@ -165,6 +170,19 @@
                 this.sessionOptionsSecuritiesLen = this.$children[0].searchFilter != '' ? this.sessionOptions.securities[this.selectedMarket].length : 0
                 // Add options in securities dropdown
                 this.sessionOptionsSecurities = this.sessionOptions.securities[this.selectedMarket]
+            },
+            startSession() {
+                // Get selected session options and send it via API
+                this.currentSessionParams['userId'] = this.user.id
+                // Get values from dropdowns
+                for (let i = 0; i <= 8; i++) {
+                    if (this.$children[i].id == "date") {
+                        this.currentSessionParams[this.$children[i].id] = this.$children[i].activeYMD
+                    } else {
+                        this.currentSessionParams[this.$children[i].name] = this.$children[i].searchFilter
+                    }
+                }
+                console.log(this.currentSessionParams)
             }
         },
         beforeMount() {

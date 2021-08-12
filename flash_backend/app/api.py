@@ -32,7 +32,7 @@ def api_get_session_options():
     ]
 
     # Option: Bars number
-    bars_number = [
+    barsNumber = [
         {'id': 1, 'name': '10'},
         {'id': 2, 'name': '15'},
         {'id': 3, 'name': '50'},
@@ -40,7 +40,7 @@ def api_get_session_options():
         ]
 
     # Option: Time limit
-    time_limit = [
+    timeLimit = [
         {'id': 1, 'name': '5'},
         {'id': 2, 'name': '10'},
         {'id': 3, 'name': '30'},
@@ -65,7 +65,7 @@ def api_get_session_options():
         ]
 
     # Option: Fixing bar
-    fixing_bar = [
+    fixingBar = [
         {'id': 1, 'name': '10'},
         {'id': 2, 'name': '15'},
         {'id': 3, 'name': '20'},
@@ -77,11 +77,11 @@ def api_get_session_options():
         'markets': markets,
         'securities': securities,
         'timeframes': timeframes,
-        'bars_number': bars_number,
-        'time_limit': time_limit,
+        'barsNumber': barsNumber,
+        'timeLimit': timeLimit,
         'iterations': iterations,
         'slippage': slippage,
-        'fixing_bar': fixing_bar
+        'fixingBar': fixingBar
     }
 
     return jsonify(session_options)

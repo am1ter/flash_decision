@@ -9,7 +9,7 @@ const state = {
     // single source of data
     version: '0.5.01',
     isAuth: true,
-    username: 'amiter',
+    user: { id: 1, name: 'amiter' },
     sessions: []
 }
 
@@ -17,7 +17,7 @@ const actions = {
     // asynchronous operations
     loadSessions(context) {
         return fetchSessions()
-            .then((respone) => context.commit('setSessions', {sessions: respone}))
+            .then((respone) => context.commit('setSessions', { sessions: respone }))
     }
 }
 
