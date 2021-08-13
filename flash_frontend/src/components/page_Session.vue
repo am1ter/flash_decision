@@ -11,7 +11,8 @@
                         name="market"
                         :options="sessionOptions.markets"
                         :maxItem="sessionOptionsMarketsLen"
-                        v-on:filter="getOptionsSecurities"
+                        v-on:selected="getOptionsSecurities"
+                        autocomplete="off"
                         placeholder="Select a securities market">
                     </Dropdown>
                     <!-- <Dropdown 
@@ -85,6 +86,8 @@
                             year: 'numeric', month: 'numeric', day: 'numeric',
                             hour: 'numeric', minute: 'numeric', weekday: 'short'
                         }"
+                        :min="dateMin"
+                        :max="dateMax"
                         :date-disabled-fn="dateDisabled"
                         start-weekday=1
                         locale="ru">
@@ -148,7 +151,9 @@
                 sessionOptionsMarketsLen: 10,
                 sessionOptionsSecuritiesLen: 10,
                 selectedMarket: 'Market.SHARES',
-                currentSessionParams: []
+                currentSessionParams: [],
+                dateMax: new Date(),
+                dateMin: new Date(2019, 0, 1)
                 }
         },
         computed: {
@@ -159,17 +164,19 @@
                 // Disable weekends
                 const weekday = date.getDay()
                 // Return `true` if the date should be disabled
-                return weekday === 0 || weekday === 6
+                return weekday == 0 || weekday == 6
                 },
             getOptionsSecurities() {
-                // Get value from markets dropdown
-                this.selectedMarket = 'Market.' + this.$children[0].searchFilter
-                // Clean selected value in securities dropdown
-                this.$children[1].searchFilter = ''
-                // Set securities dropdown list length
-                this.sessionOptionsSecuritiesLen = this.$children[0].searchFilter != '' ? this.sessionOptions.securities[this.selectedMarket].length : 0
-                // Add options in securities dropdown
-                this.sessionOptionsSecurities = this.sessionOptions.securities[this.selectedMarket]
+                if (this.$children[1] != null) {
+                    // Get value from markets dropdown
+                    this.selectedMarket = 'Market.' + this.$children[0].selected.name
+                    // Clean selected value in securities dropdown
+                    this.$children[1].searchFilter = ''
+                    // Set securities dropdown list length
+                    this.sessionOptionsSecuritiesLen = this.$children[0].selected.name != '' ? this.sessionOptions.securities[this.selectedMarket].length : 0
+                    // Add options in securities dropdown
+                    this.sessionOptionsSecurities = this.sessionOptions.securities[this.selectedMarket]
+                }
             },
             startSession() {
                 // Get selected session options and send it via API
