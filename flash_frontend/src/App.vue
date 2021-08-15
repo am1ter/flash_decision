@@ -84,12 +84,12 @@
     }
 
     a {
-        color: #333333!important;
-        text-decoration-line: none!important;
+        color: #333333 !important;
+        text-decoration-line: none !important;
     }
 
     a:hover {
-        color: #271238!important;
+        color: #271238 !important;
     }
 
     .form-control {
@@ -138,11 +138,42 @@
         background: linear-gradient(to right, #280B3F, #0E4280, #076583);
     }
 
-    .dropdown, .dropdown-input, .dropdown-content, .dropdown-item {
+    *:focus {
+        outline: none;
+    }
+   
+    .dropdown {
     /* Override custom Vue dropdown plugin style */
-        font-size: 16px!important;
-        min-width: 100%!important;
-        max-width: 100%!important;
+        border: 1px solid #ced4da;
+        border-radius: 3px;
+    }
+    
+    .dropdown:hover, .dropdown:focus, .dropdown:active {
+    /* Override custom Vue dropdown plugin style */
+        min-width: 100% !important;
+        max-width: 100% !important;
+        border: 1px solid #076583;
+        border-radius: 3px;
+    }
+
+    .dropdown-input {
+    /* Override custom Vue dropdown plugin style */
+        min-width: 100% !important;
+        max-width: 100% !important;
+        font-size: 14px !important;
+        color: #6c757d !important;
+    }
+
+    .dropdown-content, .dropdown-item {
+    /* Override custom Vue dropdown plugin style */
+        min-width: calc(100% + 2px) !important;
+        max-width: calc(100% + 2px) !important;
+        font-size: 16px !important;
+        left: -1px;
+        margin-top: 1px;
+        margin-right: -1px;
+        overflow-x: hidden !important;
+        font-size: 14px !important;
     }
 
 </style>

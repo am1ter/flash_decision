@@ -1,6 +1,6 @@
 <template>
     <section id='page'>
-        <form @submit="checkForm">
+        <form @submit="checkForm" method="post">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
                     <!-- Parameters -->
@@ -254,8 +254,9 @@
     .isInputInvalid {
         border: 1px solid #dc3545;
         border-radius: 3px;
+        font-size: 14px;
         padding-right: calc(1.5em + .75rem)!important;
-        background-image: url('../assets/icons/i_formvalidation_error.svg')!important;
+        background-image: url('../assets/icons/i_formvalidation_error.svg') !important;
         background-position: right calc(.375em + .1875rem) center;
         background-repeat: no-repeat;
         background-size: calc(.75em + .375rem) calc(.75em + .375rem);

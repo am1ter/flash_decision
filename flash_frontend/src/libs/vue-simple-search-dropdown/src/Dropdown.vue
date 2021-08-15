@@ -134,8 +134,8 @@
     .dropdown-input {
       background: #fff;
       cursor: pointer;
-      border: 1px solid #e7ecf5;
-      border-radius: 3px;
+      // border: 1px solid #e7ecf5;
+      // border-radius: 3px;
       color: #333;
       display: block;
       font-size: .8em;
