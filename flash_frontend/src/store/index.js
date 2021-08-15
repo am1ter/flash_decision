@@ -10,7 +10,8 @@ const state = {
     version: '0.5.01',
     isAuth: true,
     user: { id: 1, name: 'amiter' },
-    sessions: []
+    sessions: [],
+    currentSession: {}
 }
 
 const actions = {

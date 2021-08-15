@@ -11,7 +11,7 @@
                         <Dropdown 
                             name="market"
                             :class="checkClassIsInputInvalid('market')"
-                            :options="sessionOptions.markets"
+                            :options="sessionOptionsAll.markets"
                             :maxItem="sessionOptionsMarketsLen"
                             v-on:selected="getOptionsSecurities"
                             autocomplete="off"
@@ -47,7 +47,7 @@
                         <Dropdown
                             name="timeframe"
                             :class="checkClassIsInputInvalid('timeframe')"
-                            :options="sessionOptions.timeframes"
+                            :options="sessionOptionsAll.timeframes"
                             placeholder="Select a timeframe">
                         </Dropdown>
                     </b-col>
@@ -61,7 +61,7 @@
                         <Dropdown 
                             name="barsNumber"
                             :class="checkClassIsInputInvalid('barsNumber')"
-                            :options="sessionOptions.barsNumber"
+                            :options="sessionOptionsAll.barsNumber"
                             placeholder="Select a number of bars">
                         </Dropdown>
                     </b-col>
@@ -75,7 +75,7 @@
                         <Dropdown 
                             name="timeLimit"
                             :class="checkClassIsInputInvalid('timeLimit')"
-                            :options="sessionOptions.timeLimit"
+                            :options="sessionOptionsAll.timeLimit"
                             placeholder="Select a session time limit">
                         </Dropdown>
                     </b-col>
@@ -112,7 +112,7 @@
                         <Dropdown 
                             name="iterations"
                             :class="checkClassIsInputInvalid('iterations')"
-                            :options="sessionOptions.iterations"
+                            :options="sessionOptionsAll.iterations"
                             placeholder="Select a number of iterations">
                         </Dropdown>
                     </b-col>
@@ -126,7 +126,7 @@
                         <Dropdown 
                             name="slippage"
                             :class="checkClassIsInputInvalid('slippage')"
-                            :options="sessionOptions.slippage"
+                            :options="sessionOptionsAll.slippage"
                             placeholder="Select a slippage level">
                         </Dropdown>
                     </b-col>
@@ -140,7 +140,7 @@
                         <Dropdown 
                             name="fixingBar"
                             :class="checkClassIsInputInvalid('fixingBar')"
-                            :options="sessionOptions.fixingBar"
+                            :options="sessionOptionsAll.fixingBar"
                             placeholder="Select a result fixing bar">
                         </Dropdown>
                     </b-col>
@@ -159,19 +159,18 @@
         name: 'page_Session',
         data() {
             return {
-                sessionOptions: [],
-                sessionOptionsSecurities: [],
+                sessionOptionsAll: [],
                 sessionOptionsMarketsLen: 10,
+                sessionOptionsSecurities: [],
                 sessionOptionsSecuritiesLen: 10,
                 selectedMarket: 'Market.SHARES',
-                currentSessionParams: [],
                 dateMax: new Date(),
                 dateMin: new Date(2019, 0, 1),
                 formErrors: []
                 }
         },
         computed: {
-            ...mapState(['isAuth', 'user'])
+            ...mapState(['isAuth', 'user', 'currentSession'])
         },
         methods: {
             dateDisabled(ymd, date) {
@@ -187,9 +186,9 @@
                     // Clean selected value in securities dropdown
                     this.$children[1].searchFilter = ''
                     // Set securities dropdown list length
-                    this.sessionOptionsSecuritiesLen = this.$children[0].selected.name != '' ? this.sessionOptions.securities[this.selectedMarket].length : 0
+                    this.sessionOptionsSecuritiesLen = this.$children[0].selected.name != '' ? this.sessionOptionsAll.securities[this.selectedMarket].length : 0
                     // Add options in securities dropdown
-                    this.sessionOptionsSecurities = this.sessionOptions.securities[this.selectedMarket]
+                    this.sessionOptionsSecurities = this.sessionOptionsAll.securities[this.selectedMarket]
                 }
             },
             checkForm(e) {
@@ -197,29 +196,30 @@
                 // Clean list of validation errors
                 this.formErrors = []
                 // Add userid to object
-                this.currentSessionParams['userId'] = this.user.id
+                this.currentSession['options'] = {'userId': this.user.id}
                 // Get values from form and validate them
                 for (let i = 0; i <= 8; i++) {
-                    // Check datepicker
+                    // Check datepicker and vue-simple-search-dropdowns
                     if (this.$children[i].id == "date") {
                         if (this.$children[i].formattedValue == "No date selected") {
                             this.formErrors.push(this.$children[i].id)
                         } else {
-                            this.currentSessionParams[this.$children[i].id] = this.$children[i].activeYMD
+                            this.currentSession['options'][this.$children[i].id] = this.$children[i].activeYMD
                         }
                     } else {
                         if (this.$children[i].searchFilter == '') {
                             this.formErrors.push(this.$children[i].name)
                         } else {
-                            this.currentSessionParams[this.$children[i].name] = this.$children[i].searchFilter
+                            this.currentSession['options'][this.$children[i].name] = this.$children[i].searchFilter
                         }
                     }
                 }
-                console.log(this.currentSessionParams)
-                // If validation hasn't been passed than preventDefault form submit
+                console.log(this.currentSession)
+                // If validation has failed than decline form submit (preventDefault)
                 return this.formErrors.length == 0 ? true : e.preventDefault()
             },
             checkClassIsInputInvalid(element) {
+                // Change class of dropdown if validation has failed
                 let hasError = false
                 if (this.formErrors.length > 0) {
                     hasError = this.formErrors.indexOf(element) >= 0 ? true : false
@@ -229,8 +229,8 @@
         },
         beforeMount() {
             fetchSessionOptions()
-                .then(response => {this.sessionOptions = response.data})
-                .then(() => {this.sessionOptionsMarketsLen = this.sessionOptions.markets.length})
+                .then(response => {this.sessionOptionsAll = response.data})
+                .then(() => {this.sessionOptionsMarketsLen = this.sessionOptionsAll.markets.length})
         }
     }
 </script>
