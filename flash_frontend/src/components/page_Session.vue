@@ -1,141 +1,154 @@
 <template>
     <section id='page'>
-        <b-container class="g-0" fluid>
-            <b-row cols="2">
-                <!-- Parameters -->
-                <b-col class="my-auto" sm="4">
-                    <label>Market</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                     <Dropdown 
-                        name="market"
-                        :options="sessionOptions.markets"
-                        :maxItem="sessionOptionsMarketsLen"
-                        v-on:selected="getOptionsSecurities"
-                        autocomplete="off"
-                        placeholder="Select a securities market">
-                    </Dropdown>
-                    <!-- <Dropdown 
-                        :disabled="false"
-                        v-on:selected="validateSelection"
-                    </Dropdown> -->
-                </b-col>
+        <form @submit="checkForm">
+            <b-container class="g-0" fluid>
+                <b-row cols="2">
+                    <!-- Parameters -->
+                    <b-col class="my-auto" sm="4">
+                        <label>Market</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown 
+                            name="market"
+                            :class="classisInputInvalid('market')"
+                            :options="sessionOptions.markets"
+                            :maxItem="sessionOptionsMarketsLen"
+                            v-on:selected="getOptionsSecurities"
+                            autocomplete="off"
+                            placeholder="Select a securities market">
+                        </Dropdown>
+                        <!-- <Dropdown 
+                            :disabled="false"
+                            v-on:selected="validateSelection"
+                        </Dropdown> -->
+                    </b-col>
 
-                <div class="w-100 my-1"></div>
+                    <div class="w-100 my-1"></div>
 
-                <b-col class="my-auto" sm="4">
-                    <label>Ticker</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <Dropdown 
-                        name="ticker"
-                        :options="sessionOptionsSecurities"
-                        :maxItem="sessionOptionsSecuritiesLen"
-                        placeholder="Select a security">
-                    </Dropdown>
-                </b-col>
-                
-                <div class="w-100 my-1"></div>
-                
-                <b-col class="my-auto" sm="4">
-                    <label>Timeframe</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <Dropdown
-                        name="timeframe"
-                        :options="sessionOptions.timeframes"
-                        placeholder="Select a timeframe">
-                    </Dropdown>
-                </b-col>
-                
-                <div class="w-100 my-1"></div>
-                
-                <b-col class="my-auto" sm="4">
-                    <label>Bars number</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <Dropdown 
-                        name="barsNumber"
-                        :options="sessionOptions.barsNumber"
-                        placeholder="Select a number of bars">
-                    </Dropdown>
-                </b-col>
-                
-                <div class="w-100 my-1"></div>
-                
-                <b-col class="my-auto" sm="4">
-                    <label>Time limit, sec.</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <Dropdown 
-                        name="timeLimit"
-                        :options="sessionOptions.timeLimit"
-                        placeholder="Select a session time limit">
-                    </Dropdown>
-                </b-col>
-                
-                <div class="w-100 my-1"></div>
-                
-                <b-col class="my-auto" sm="4">
-                    <label>Date</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <b-form-datepicker id="date" size="sm"
-                        placeholder="Select a start date"
-                        :date-format-options="{ 
-                            year: 'numeric', month: 'numeric', day: 'numeric',
-                            hour: 'numeric', minute: 'numeric', weekday: 'short'
-                        }"
-                        :min="dateMin"
-                        :max="dateMax"
-                        :date-disabled-fn="dateDisabled"
-                        start-weekday=1
-                        locale="ru">
-                    </b-form-datepicker>
-                </b-col>
-                
-                <div class="w-100 my-1"></div>
-                
-                <b-col class="my-auto" sm="4">
-                    <label>Iterations</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <Dropdown 
-                        name="iterations"
-                        :options="sessionOptions.iterations"
-                        placeholder="Select a number of iterations">
-                    </Dropdown>
-                </b-col>
-                
-                <div class="w-100 my-1"></div>
-                
-                <b-col class="my-auto" sm="4">
-                    <label>Slippage, %</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <Dropdown 
-                        name="slippage"
-                        :options="sessionOptions.slippage"
-                        placeholder="Select a slippage level">
-                    </Dropdown>
-                </b-col>
-                
-                <div class="w-100 my-1"></div>
-                
-                <b-col class="my-auto" sm="4">
-                    <label>Fixing bar</label>
-                </b-col>
-                <b-col class="my-auto" sm="8">
-                    <Dropdown 
-                        name="fixingBar"
-                        :options="sessionOptions.fixingBar"
-                        placeholder="Select a result fixing bar">
-                    </Dropdown>
-                </b-col>
-            </b-row>
-        </b-container>
-        <!-- Start button -->
-        <b-button class="col-12 mt-3 gradient rounded-1" v-on:click="startSession">Start</b-button>
+                    <b-col class="my-auto" sm="4">
+                        <label>Ticker</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown 
+                            name="ticker"
+                            :class="classisInputInvalid('ticker')"
+                            :options="sessionOptionsSecurities"
+                            :maxItem="sessionOptionsSecuritiesLen"
+                            placeholder="Select a security">
+                        </Dropdown>
+                    </b-col>
+                    
+                    <div class="w-100 my-1"></div>
+                    
+                    <b-col class="my-auto" sm="4">
+                        <label>Timeframe</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown
+                            name="timeframe"
+                            :class="classisInputInvalid('timeframe')"
+                            :options="sessionOptions.timeframes"
+                            placeholder="Select a timeframe">
+                        </Dropdown>
+                    </b-col>
+                    
+                    <div class="w-100 my-1"></div>
+                    
+                    <b-col class="my-auto" sm="4">
+                        <label>Bars number</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown 
+                            name="barsNumber"
+                            :class="classisInputInvalid('barsNumber')"
+                            :options="sessionOptions.barsNumber"
+                            placeholder="Select a number of bars">
+                        </Dropdown>
+                    </b-col>
+                    
+                    <div class="w-100 my-1"></div>
+                    
+                    <b-col class="my-auto" sm="4">
+                        <label>Time limit, sec.</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown 
+                            name="timeLimit"
+                            :class="classisInputInvalid('timeLimit')"
+                            :options="sessionOptions.timeLimit"
+                            placeholder="Select a session time limit">
+                        </Dropdown>
+                    </b-col>
+                    
+                    <div class="w-100 my-1"></div>
+                    
+                    <b-col class="my-auto" sm="4">
+                        <label>Date</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <b-form-datepicker 
+                            id="date" 
+                            size="sm"
+                            placeholder="Select a start date"
+                            :class="classisInputInvalid('date')"
+                            :date-format-options="{ 
+                                year: 'numeric', month: 'numeric', day: 'numeric',
+                                hour: 'numeric', minute: 'numeric', weekday: 'short'
+                            }"
+                            :min="dateMin"
+                            :max="dateMax"
+                            :date-disabled-fn="dateDisabled"
+                            start-weekday=1
+                            locale="ru">
+                        </b-form-datepicker>
+                    </b-col>
+                    
+                    <div class="w-100 my-1"></div>
+                    
+                    <b-col class="my-auto" sm="4">
+                        <label>Iterations</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown 
+                            name="iterations"
+                            :class="classisInputInvalid('iterations')"
+                            :options="sessionOptions.iterations"
+                            placeholder="Select a number of iterations">
+                        </Dropdown>
+                    </b-col>
+                    
+                    <div class="w-100 my-1"></div>
+                    
+                    <b-col class="my-auto" sm="4">
+                        <label>Slippage, %</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown 
+                            name="slippage"
+                            :class="classisInputInvalid('slippage')"
+                            :options="sessionOptions.slippage"
+                            placeholder="Select a slippage level">
+                        </Dropdown>
+                    </b-col>
+                    
+                    <div class="w-100 my-1"></div>
+                    
+                    <b-col class="my-auto" sm="4">
+                        <label>Fixing bar</label>
+                    </b-col>
+                    <b-col class="my-auto" sm="8">
+                        <Dropdown 
+                            name="fixingBar"
+                            :class="classisInputInvalid('fixingBar')"
+                            :options="sessionOptions.fixingBar"
+                            placeholder="Select a result fixing bar">
+                        </Dropdown>
+                    </b-col>
+                </b-row>
+            </b-container>
+            <!-- Start button -->
+            <b-button v-on:click="checkForm" class="col-12 mt-3 gradient rounded-1">Start</b-button>
+        </form>
     </section>
 </template>
 
@@ -153,7 +166,8 @@
                 selectedMarket: 'Market.SHARES',
                 currentSessionParams: [],
                 dateMax: new Date(),
-                dateMin: new Date(2019, 0, 1)
+                dateMin: new Date(2019, 0, 1),
+                formErrors: []
                 }
         },
         computed: {
@@ -178,18 +192,38 @@
                     this.sessionOptionsSecurities = this.sessionOptions.securities[this.selectedMarket]
                 }
             },
-            startSession() {
+            checkForm() {
                 // Get selected session options and send it via API
+                // Clean list of validation errors
+                this.formErrors = []
+                // Add userid to object
                 this.currentSessionParams['userId'] = this.user.id
-                // Get values from dropdowns
+                // Get values from form and validate them
                 for (let i = 0; i <= 8; i++) {
+                    // Check datepicker
                     if (this.$children[i].id == "date") {
-                        this.currentSessionParams[this.$children[i].id] = this.$children[i].activeYMD
+                        if (this.$children[i].formattedValue == "No date selected") {
+                            this.formErrors.push(this.$children[i].id)
+                        } else {
+                            this.currentSessionParams[this.$children[i].id] = this.$children[i].activeYMD
+                        }
                     } else {
-                        this.currentSessionParams[this.$children[i].name] = this.$children[i].searchFilter
+                        if (this.$children[i].searchFilter == '') {
+                            this.formErrors.push(this.$children[i].name)
+                        } else {
+                            this.currentSessionParams[this.$children[i].name] = this.$children[i].searchFilter
+                        }
                     }
                 }
-                console.log(this.currentSessionParams)
+                // false == preventDefault 
+                return this.formErrors.length == 0 ? this.currentSessionParams : false
+            },
+            classisInputInvalid(element) {
+                let hasError = false
+                if (this.formErrors.length > 0) {
+                    hasError = this.formErrors.indexOf(element) >= 0 ? true : false
+                }
+                return {isInputInvalid: hasError}
             }
         },
         beforeMount() {
@@ -214,6 +248,16 @@
     label {
         display: flex;
         justify-content: center;
+    }
+
+    .isInputInvalid {
+        border: 1px solid #dc3545;
+        border-radius: 3px;
+        padding-right: calc(1.5em + .75rem)!important;
+        background-image: url('../assets/icons/i_formvalidation_error.svg')!important;
+        background-position: right calc(.375em + .1875rem) center;
+        background-repeat: no-repeat;
+        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
     }
 
 </style>
