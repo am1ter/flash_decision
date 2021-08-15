@@ -112,8 +112,12 @@ def get_security_list():
 
     # Read tickers for every market and convert it to dict
     for idx, market in enumerate(Market):
-        tickers = exporter.lookup(market=[market])
+        tickers = exporter.lookup(market=[market]).copy(deep=True)
+        # Copy index to column
         tickers.reset_index(inplace=True)
+        # Replace special symbols in ticker's names
+        tickers['name'] = tickers.loc[:, 'name'].apply(lambda str: str.replace('(', ' - ').replace(')', ''))
+        # Create dict
         security_list[str(list(tuple(Market))[idx])] = tickers
 
     return security_list

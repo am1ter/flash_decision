@@ -10,7 +10,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
                             name="market"
-                            :class="classisInputInvalid('market')"
+                            :class="checkClassIsInputInvalid('market')"
                             :options="sessionOptions.markets"
                             :maxItem="sessionOptionsMarketsLen"
                             v-on:selected="getOptionsSecurities"
@@ -19,7 +19,7 @@
                         </Dropdown>
                         <!-- <Dropdown 
                             :disabled="false"
-                            v-on:selected="validateSelection"
+                            v-on:filter="validateSelection"
                         </Dropdown> -->
                     </b-col>
 
@@ -31,7 +31,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
                             name="ticker"
-                            :class="classisInputInvalid('ticker')"
+                            :class="checkClassIsInputInvalid('ticker')"
                             :options="sessionOptionsSecurities"
                             :maxItem="sessionOptionsSecuritiesLen"
                             placeholder="Select a security">
@@ -46,7 +46,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown
                             name="timeframe"
-                            :class="classisInputInvalid('timeframe')"
+                            :class="checkClassIsInputInvalid('timeframe')"
                             :options="sessionOptions.timeframes"
                             placeholder="Select a timeframe">
                         </Dropdown>
@@ -60,7 +60,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
                             name="barsNumber"
-                            :class="classisInputInvalid('barsNumber')"
+                            :class="checkClassIsInputInvalid('barsNumber')"
                             :options="sessionOptions.barsNumber"
                             placeholder="Select a number of bars">
                         </Dropdown>
@@ -74,7 +74,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
                             name="timeLimit"
-                            :class="classisInputInvalid('timeLimit')"
+                            :class="checkClassIsInputInvalid('timeLimit')"
                             :options="sessionOptions.timeLimit"
                             placeholder="Select a session time limit">
                         </Dropdown>
@@ -90,7 +90,7 @@
                             id="date" 
                             size="sm"
                             placeholder="Select a start date"
-                            :class="classisInputInvalid('date')"
+                            :class="checkClassIsInputInvalid('date')"
                             :date-format-options="{ 
                                 year: 'numeric', month: 'numeric', day: 'numeric',
                                 hour: 'numeric', minute: 'numeric', weekday: 'short'
@@ -111,7 +111,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
                             name="iterations"
-                            :class="classisInputInvalid('iterations')"
+                            :class="checkClassIsInputInvalid('iterations')"
                             :options="sessionOptions.iterations"
                             placeholder="Select a number of iterations">
                         </Dropdown>
@@ -125,7 +125,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
                             name="slippage"
-                            :class="classisInputInvalid('slippage')"
+                            :class="checkClassIsInputInvalid('slippage')"
                             :options="sessionOptions.slippage"
                             placeholder="Select a slippage level">
                         </Dropdown>
@@ -139,7 +139,7 @@
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
                             name="fixingBar"
-                            :class="classisInputInvalid('fixingBar')"
+                            :class="checkClassIsInputInvalid('fixingBar')"
                             :options="sessionOptions.fixingBar"
                             placeholder="Select a result fixing bar">
                         </Dropdown>
@@ -147,7 +147,7 @@
                 </b-row>
             </b-container>
             <!-- Start button -->
-            <b-button v-on:click="checkForm" class="col-12 mt-3 gradient rounded-1">Start</b-button>
+            <b-button type="submit" class="col-12 mt-3 gradient rounded-1">Start</b-button>
         </form>
     </section>
 </template>
@@ -192,7 +192,7 @@
                     this.sessionOptionsSecurities = this.sessionOptions.securities[this.selectedMarket]
                 }
             },
-            checkForm() {
+            checkForm(e) {
                 // Get selected session options and send it via API
                 // Clean list of validation errors
                 this.formErrors = []
@@ -215,10 +215,11 @@
                         }
                     }
                 }
-                // false == preventDefault 
-                return this.formErrors.length == 0 ? this.currentSessionParams : false
+                console.log(this.currentSessionParams)
+                // If validation hasn't been passed than preventDefault form submit
+                return this.formErrors.length == 0 ? true : e.preventDefault()
             },
-            classisInputInvalid(element) {
+            checkClassIsInputInvalid(element) {
                 let hasError = false
                 if (this.formErrors.length > 0) {
                     hasError = this.formErrors.indexOf(element) >= 0 ? true : false
