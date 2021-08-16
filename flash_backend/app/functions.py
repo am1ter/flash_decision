@@ -1,15 +1,14 @@
 from app import db
 import app.config as config
+import app.service as service
 from app.models import User, Session, Decision
 
 import os
-import sys
 import pyodbc
 import pandas as pd
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.sql import func
-from shutil import copyfile
 
 import json
 import plotly
@@ -21,30 +20,7 @@ import plotly.graph_objs as go
 # ==============================
 
 
-def fix_lib_finamexport() -> None:
-    """Fix bug in finam-export v.4.1.0 with ParserError"""
-    
-    path_lib_finamexport = f'./flash_backend/venv/lib/python{ sys.version[:3] }/site-packages/finam/export.py'
-    line_with_bug = 'from pandas.io.parsers import ParserError'
-    line_without_bug = 'from pandas.errors import ParserError # amiter bug fix'
-
-    # Read the file with the bug
-    if os.path.isfile(path_lib_finamexport):
-        with open(path_lib_finamexport, 'r') as file:
-            filedata = file.read()
-
-        if line_with_bug in filedata:
-            # Make backup of the file with the bug
-            copyfile(path_lib_finamexport, path_lib_finamexport[:-3] + '_backup.py')
-
-            # Replace the string with the bug
-            filedata = filedata.replace(line_with_bug, line_without_bug)
-
-            # Write the file with correct string
-            with open(path_lib_finamexport, 'w') as file:
-                file.write(filedata)
-
-fix_lib_finamexport()                                           # Fix bug with finam-export lib v.4.1.0
+service.fix_lib_finamexport()                                           # Fix bug with finam-export lib v.4.1.0
 
 from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
@@ -82,7 +58,7 @@ def get_last_session_id():
         return 1
 
 
-def get_df_all_timeframes():
+def get_df_all_timeframes() -> list:
     """Read timeframes from finam module (hardcoded in external lib)"""
 
     all_timeframes = []
@@ -91,7 +67,7 @@ def get_df_all_timeframes():
     return all_timeframes
 
 
-def get_markets_list():
+def get_markets_list() -> list:
     """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
 
     exporter = Exporter()
@@ -104,7 +80,7 @@ def get_markets_list():
     return markets_list
 
 
-def get_security_list():
+def get_security_list() -> dict:
     """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
 
     exporter = Exporter()
@@ -123,7 +99,7 @@ def get_security_list():
     return security_list
 
 
-def create_session(form):
+def create_session(form) -> None:
     """Create new session and write it to db"""
     new_session = Session()
 

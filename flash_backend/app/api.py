@@ -1,13 +1,14 @@
 from app import app
 import app.functions as fn
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
+from flask.wrappers import Response
 
 api = Blueprint('api', __name__)
 
 
 @api.route('/get-session-options/', methods=['GET'])
-def api_get_session_options():
+def api_get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
     
     # Option: Markets
@@ -85,3 +86,15 @@ def api_get_session_options():
     }
 
     return jsonify(session_options)
+
+
+@api.route('/start-new-session/', methods=['POST'])
+def api_start_new_session() -> Response:
+    """Start training session"""
+    print(request.data)
+
+    # fn.create_session(form=request.data)
+    # session_id = fn.get_last_session_id()
+    # return redirect(f'/terminal?session_id={session_id}&iteration=1')
+    
+    return jsonify(True)

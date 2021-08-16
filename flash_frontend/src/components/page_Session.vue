@@ -1,9 +1,11 @@
 <template>
     <section id='page'>
+        <!-- Show error if there is any errors -->
         <div id='errors' v-if="apiErrors.length > 0">
             <p>{{apiErrors[0]}}</p>
         </div>
-        <form @submit="checkForm" method="post" v-if="apiErrors == 0">
+        <!-- Get session option via API, wait for user input and then submit it back to API -->
+        <form v-if="apiErrors == 0" @submit.prevent="checkForm">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
                     <!-- Parameters -->
@@ -157,7 +159,8 @@
 
 <script>
     import { mapState } from 'vuex'
-    import { fetchSessionOptions } from '@/api'
+    import { fetchSessionOptions, postStartNewSession } from '@/api'
+
     export default {
         name: 'page_Session',
         data() {
@@ -178,17 +181,21 @@
         },
         methods: {
             dateDisabled(ymd, date) {
-                // Disable weekends
+                // Disable weekends in date input
+
                 const weekday = date.getDay()
                 // Return `true` if the date should be disabled
                 return weekday == 0 || weekday == 6
                 },
             getOptionsSecurities() {
-                if (this.$children[1] != null) {
-                    // Get value from markets dropdown
-                    this.selectedMarket = 'Market.' + this.$children[0].selected.name
+                // If market dropdown value changed then filter securities dropdown with market value
+                if (this.$children[1]) {
+                    // Condition alse used for prevent exec after loading
+
                     // Clean selected value in securities dropdown
                     this.$children[1].searchFilter = ''
+                    // Get value from markets dropdown
+                    this.selectedMarket = 'Market.' + this.$children[0].selected.name
                     // Set securities dropdown list length
                     this.sessionOptionsSecuritiesLen = this.$children[0].selected.name != '' ? this.sessionOptionsAll.securities[this.selectedMarket].length : 0
                     // Add options in securities dropdown
@@ -197,10 +204,13 @@
             },
             checkForm(e) {
                 // Get selected session options and send it via API
+                
                 // Clean list of validation errors
                 this.formErrors = []
+
                 // Add userid to object
                 this.currentSession['options'] = {'userId': this.user.id}
+
                 // Get values from form and validate them
                 for (let i = 0; i <= 8; i++) {
                     // Check datepicker and vue-simple-search-dropdowns
@@ -218,9 +228,17 @@
                         }
                     }
                 }
-                console.log(this.currentSession)
+
                 // If validation has failed than decline form submit (preventDefault)
-                return this.formErrors.length == 0 ? true : e.preventDefault()
+                if (this.formErrors.length == 0) {
+                    postStartNewSession(this.currentSession)
+                        .then(
+                            () => {this.$router.push('/decision')},
+                            reject => {this.apiErrors.push(reject)}
+                            )
+                } else {
+                   e.preventDefault()
+                }
             },
             checkClassIsInputInvalid(element) {
                 // Change class of dropdown if validation has failed
@@ -242,7 +260,6 @@
     }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
     #page {
         display: flex;

@@ -39,6 +39,11 @@ export function fetchSessionOptions() {
     return axios.get(API_URL + '/get-session-options/')
 }
 
+export function postStartNewSession(form) {
+    console.log(form)
+    return axios.post(API_URL + '/start-new-session/', form)
+}
+
 export function fetchSessions() {
     return new Promise((resolve) => {
         setTimeout(() => {
