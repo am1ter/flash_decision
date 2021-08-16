@@ -1,6 +1,9 @@
 <template>
     <section id='page'>
-        <form @submit="checkForm" method="post">
+        <div id='errors' v-if="apiErrors.length > 0">
+            <p>{{apiErrors[0]}}</p>
+        </div>
+        <form @submit="checkForm" method="post" v-if="apiErrors == 0">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
                     <!-- Parameters -->
@@ -166,7 +169,8 @@
                 selectedMarket: 'Market.SHARES',
                 dateMax: new Date(),
                 dateMin: new Date(2019, 0, 1),
-                formErrors: []
+                formErrors: [],
+                apiErrors: []
                 }
         },
         computed: {
@@ -229,7 +233,10 @@
         },
         beforeMount() {
             fetchSessionOptions()
-                .then(response => {this.sessionOptionsAll = response.data})
+                .then(
+                    response => {this.sessionOptionsAll = response.data},
+                    reject => {this.apiErrors.push(reject)}
+                )
                 .then(() => {this.sessionOptionsMarketsLen = this.sessionOptionsAll.markets.length})
         }
     }
@@ -244,6 +251,19 @@
         align-items: center;
         margin: 15px 25px;
         width: auto;
+    }
+
+    #errors {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        top: 0px;
+        font-size: 24px;
+        font-weight: 700;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(255,255,255,0.7);
     }
 
     label {
