@@ -2,68 +2,84 @@ from app import db, login
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "user_id" instead "id"
+from sqlalchemy.exc import SQLAlchemyError 
+from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "UserId" instead "id"
 
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+    __tablename__ = 'User'
 
-    user_id = db.Column(db.Integer, primary_key=True)
-    user_name = db.Column(db.String, index=True, unique=True)
-    user_email = db.Column(db.String, index=True, unique=True)
-    user_password_hash = db.Column(db.String(128))
+    UserId = db.Column(db.Integer, primary_key=True, index=True)
+    UserName = db.Column(db.String, index=True, unique=True)
+    UserEmail = db.Column(db.String, index=True, unique=True)
+    UserPassword = db.Column(db.String(128))
 
-    sessions = db.relationship('Session', backref='user', lazy='dynamic')
+    sessions = db.relationship('Session', backref='User', lazy='dynamic', passive_deletes=True)
 
     def __repr__(self):
-        return '<User {}>'.format(self.user_name)
+        return '<User {}>'.format(self.UserName)
 
     def set_password(self, password):
-        self.user_password_hash = generate_password_hash(password)
+        self.UserPassword = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.user_password_hash, password)
+        return check_password_hash(self.UserPassword, password)
 
 
 class Session(db.Model):
-    __tablename__ = 'sessions'
+    __tablename__ = 'Session'
 
-    session_id = db.Column(db.Integer, primary_key=True, index=True)
-    session_status = db.Column(db.String)
-    session_datetime = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
-    case_market = db.Column(db.String)
-    case_ticker = db.Column(db.String)
-    case_timeframe = db.Column(db.String)
-    case_barsnumber = db.Column(db.Integer)
-    case_timelimit = db.Column(db.Integer)
-    case_datetime = db.Column(db.DateTime)
-    case_iterations = db.Column(db.Integer)
-    case_slippage = db.Column(db.Float)
-    case_fixingbar = db.Column(db.Integer)
+    SessionId = db.Column(db.Integer, primary_key=True, index=True)
+    CreateDatetime = db.Column(db.DateTime, default=datetime.utcnow)
+    Status = db.Column(db.String)
+    UserId = db.Column(db.Integer, db.ForeignKey('User.UserId', ondelete='CASCADE'), index=True)
+    Market = db.Column(db.String)
+    Ticker = db.Column(db.String)
+    Timeframe = db.Column(db.String)
+    Barsnumber = db.Column(db.Integer)
+    Timelimit = db.Column(db.Integer)
+    SetFinishDatetime = db.Column(db.DateTime)
+    Iterations = db.Column(db.Integer)
+    Slippage = db.Column(db.Float)
+    Fixingbar = db.Column(db.Integer)
 
-    decisions = db.relationship('Decision', backref='session', lazy='dynamic')
+    decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
 
     def __repr__(self):
-        return '<Session {}>'.format(self.session_id)
+        return '<Session {}>'.format(self.SessionId)
 
 
 class Decision(db.Model):
-    __tablename__ = 'decisions'
+    __tablename__ = 'Decision'
 
-    decision_id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(db.Integer, db.ForeignKey('sessions.session_id'), index=True)
-    iteration_id = db.Column(db.Integer)
-    iteration_finishbar_datetime = db.Column(db.DateTime)
-    decision_action = db.Column(db.String)
-    decision_time = db.Column(db.Float)
-    decision_result_raw = db.Column(db.Float)
-    decision_result_corrected = db.Column(db.Float)
+    DecisionId = db.Column(db.Integer, primary_key=True, index=True)
+    SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)
+    IterationNum = db.Column(db.Integer)
+    IterationFixingBarDatetime = db.Column(db.DateTime)
+    DecisionAction = db.Column(db.String)
+    DecisionTime = db.Column(db.Float)
+    DecisionResultRaw = db.Column(db.Float)
+    DecisionResultFinal = db.Column(db.Float)
 
     def __repr__(self):
-        return '<Decision {} during session {}>'.format(self.decision_id, self.session_id)
+        return '<Decision {} during session {}>'.format(self.DecisionId, self.SessionId)
 
 
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
+
+def create_new_user(name: str, email: str, password: str) -> None:
+    """Create new user with hashed password"""
+    new_user = User()
+    new_user.UserName = name
+    new_user.UserEmail = email
+    User.set_password(new_user, password)
+
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return error

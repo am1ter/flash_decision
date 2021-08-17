@@ -36,7 +36,7 @@ class UserMixin(object):
     def get_id(self):
         try:
             # return text_type(self.id)     # Source
-            return text_type(self.user_id)  # Modified by amiter
+            return text_type(self.UserId)  # Modified by amiter
         except AttributeError:
             raise NotImplementedError('No `user_id` attribute - override `get_id`')
 

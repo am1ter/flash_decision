@@ -88,19 +88,19 @@ def create_session(form) -> None:
     new_session = Session()
 
     # Set session's status to active
-    new_session.session_status = config.SESSION_STATUS_ACTIVE
+    new_session.Status = config.SESSION_STATUS_ACTIVE
 
     # Get form data from webpage
-    new_session.user_id = form['userId']
-    new_session.case_market = form['market']
-    new_session.case_ticker = form['ticker']
-    new_session.case_timeframe = form['timeframe']
-    new_session.case_barsnumber = form['barsnumber']
-    new_session.case_timelimit = form['timelimit']
-    new_session.case_datetime = datetime.strptime(form['date'], '%Y-%m-%d')
-    new_session.case_iterations = form['iterations']
-    new_session.case_slippage = form['slippage']
-    new_session.case_fixingbar = form['fixingbar']
+    new_session.UserId = form['userId']
+    new_session.Market = form['market']
+    new_session.Ticker = form['ticker']
+    new_session.Timeframe = form['timeframe']
+    new_session.Barsnumber = form['barsnumber']
+    new_session.Timelimit = form['timelimit']
+    new_session.SetFinishDatetime = datetime.strptime(form['date'], '%Y-%m-%d')
+    new_session.Iterations = form['iterations']
+    new_session.Slippage = form['slippage']
+    new_session.Fixingbar = form['fixingbar']
 
     # Write data to db
     db.session.add(new_session)
