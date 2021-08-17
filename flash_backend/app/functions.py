@@ -16,30 +16,15 @@ import plotly.graph_objs as go
 
 
 # ==============================
-# == Data readers
+# == Import data readers
 # ==============================
 
 
-service.fix_lib_finamexport()                                           # Fix bug with finam-export lib v.4.1.0
+service.fix_lib_finamexport()                                   # Fix bug with finam-export lib v.4.1.0
 
 from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
 # import pandas_datareader as pdr                               # Reserved datareader
-
-
-# ==============================
-# == Service functions
-# ==============================
-
-
-def get_filename_saved_data(session_id, ticker):
-    """ Get filename for current session_id and ticker """
-    if config.PLATFORM == 'win32':
-        save_path = config.PATH_UPLOAD_FOLDER + '\\' + str(session_id) + '_' + str(ticker) + '.csv'
-    else:
-        save_path = config.PATH_UPLOAD_FOLDER + '/' + str(session_id) + '_' + str(ticker) + '.csv'
-
-    return save_path
 
 
 # ==============================
@@ -58,64 +43,64 @@ def get_last_session_id():
         return 1
 
 
-def get_df_all_timeframes() -> list:
+def read_session_options_timeframes() -> list:
     """Read timeframes from finam module (hardcoded in external lib)"""
 
-    all_timeframes = []
+    options_timeframes = []
     for idx, tf in enumerate(Timeframe):
-        all_timeframes.append(str(list(tuple(Timeframe))[idx]))
-    return all_timeframes
+        options_timeframes.append(str(list(tuple(Timeframe))[idx]))
+    return options_timeframes
 
 
-def get_markets_list() -> list:
-    """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
+def read_session_options_markets() -> list:
+    """Read all markets from finam module (hardcoded in external lib)"""
 
-    exporter = Exporter()
-    markets_list = []
-
-    # Read markets and tickers to dict
+    options_markets = []
     for idx, market in enumerate(Market):
-        markets_list.append(str(list(tuple(Market))[idx]))
+        options_markets.append(str(list(tuple(Market))[idx]))
 
-    return markets_list
+    return options_markets
 
 
-def get_security_list() -> dict:
+def collect_session_options_securities() -> dict:
     """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
 
     exporter = Exporter()
-    security_list = {}
+    options_securities = {}
 
     # Read tickers for every market and convert it to dict
     for idx, market in enumerate(Market):
-        tickers = exporter.lookup(market=[market]).copy(deep=True)
+        tickers = exporter.lookup(market=[market])
+        # Copy df to avoid chained assignation below
+        tickers = tickers.copy(deep=True)
         # Copy index to column
         tickers.reset_index(inplace=True)
         # Replace special symbols in ticker's names
         tickers['name'] = tickers.loc[:, 'name'].apply(lambda str: str.replace('(', ' - ').replace(')', ''))
         # Create dict
-        security_list[str(list(tuple(Market))[idx])] = tickers
+        options_securities[str(list(tuple(Market))[idx])] = tickers
 
-    return security_list
+    return options_securities
 
 
 def create_session(form) -> None:
     """Create new session and write it to db"""
     new_session = Session()
 
+    # Set session's status to active
     new_session.session_status = config.SESSION_STATUS_ACTIVE
 
     # Get form data from webpage
-    new_session.user_id = User.query.filter(User.user_name == form['form_username']).first().user_id
-    new_session.case_market = form['form_market']
-    new_session.case_ticker = form['form_ticker']
-    new_session.case_timeframe = form['form_timeframe']
-    new_session.case_barsnumber = form['form_bars_number']
-    new_session.case_timer = form['form_timer']
-    new_session.case_datetime = datetime.strptime(form['form_datetime_finish'], '%d/%m/%Y %H:%M')
-    new_session.case_iterations = form['form_iterations']
-    new_session.case_slippage = form['form_slippage']
-    new_session.case_fixingbar = form['form_fixing_bar']
+    new_session.user_id = User.query.filter(User.user_name == form['userId']).first().user_id
+    new_session.case_market = form['market']
+    new_session.case_ticker = form['ticker']
+    new_session.case_timeframe = form['timeframe']
+    new_session.case_barsnumber = form['barsNumber']
+    new_session.case_timer = form['timeLimit']
+    new_session.case_datetime = datetime.strptime(form['date'], '%d/%m/%Y %H:%M')
+    new_session.case_iterations = form['iterations']
+    new_session.case_slippage = form['slippage']
+    new_session.case_fixingbar = form['fixingBar']
 
     # Write data to db
     db.session.add(new_session)
@@ -141,7 +126,7 @@ def download_data(session, start, finish):
     """Get dataframe with finance data and save it to file"""
 
     # Set path to save/load downloaded ticker data
-    save_path = get_filename_saved_data(session.session_id, session.case_ticker)
+    save_path = service.get_filename_saved_data(session.session_id, session.case_ticker)
 
     # Check: Has file for this session already downloaded?
     if not os.path.exists(save_path):
@@ -165,7 +150,7 @@ def download_data(session, start, finish):
 def load_hdd_data(session):
     """Get dataframe by reading data from hdd file"""
     # Set path to save/load downloaded ticker data
-    save_path = get_filename_saved_data(session.session_id, session.case_ticker)
+    save_path = service.get_filename_saved_data(session.session_id, session.case_ticker)
 
     # Load dataframe from hdd
     try:
@@ -294,7 +279,7 @@ def close_session(session_id):
     db.session.commit()
 
     # Delete file with downloaded data
-    save_path = get_filename_saved_data(current_session.session_id, current_session.case_ticker)
+    save_path = service.get_filename_saved_data(current_session.session_id, current_session.case_ticker)
     if save_path and os.path.exists(save_path):
         os.remove(save_path)
 

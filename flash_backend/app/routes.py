@@ -30,28 +30,28 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# DELETE IT
+# @app.route('/', methods=['GET'])
+# @app.route('/index', methods=['GET'])
+# @login_required
+# def web_index_get():
+#     """Setting training session parameters"""
+#     # Get lists of all available parameters of the training set to show them on the page
+#     timeframes = functions.read_session_options_timeframes()
+#     # Securities is a combination of market + tickers
+#     # markets = functions.get_df_all_markets()
+#     # tickers = functions.get_df_all_tickers()
+#     securities = functions.collect_session_options_securities()
 
-@app.route('/', methods=['GET'])
-@app.route('/index', methods=['GET'])
-@login_required
-def web_index_get():
-    """Setting training session parameters"""
-    # Get lists of all available parameters of the training set to show them on the page
-    timeframes = functions.get_df_all_timeframes()
-    # Securities is a combination of market + tickers
-    # markets = functions.get_df_all_markets()
-    # tickers = functions.get_df_all_tickers()
-    securities = functions.get_security_list()
+#     # Jsonify dict of pandas df
+#     securities_no_pd = {
+#         key: securities[key].to_dict(orient='records')
+#         for key in securities.keys()
+#     }
+#     securities_json = json.dumps(securities_no_pd, ensure_ascii=False)
 
-    # Jsonify dict of pandas df
-    securities_no_pd = {
-        key: securities[key].to_dict(orient='records')
-        for key in securities.keys()
-    }
-    securities_json = json.dumps(securities_no_pd, ensure_ascii=False)
-
-    return render_template('index.html', markets=securities.keys(), timeframes=timeframes, securities=securities,
-                           securities_json=securities_json)
+#     return render_template('index.html', markets=securities.keys(), timeframes=timeframes, securities=securities,
+#                            securities_json=securities_json)
 
 
 @app.route('/index', methods=['POST'])

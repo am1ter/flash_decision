@@ -12,24 +12,24 @@ def api_get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
     
     # Option: Markets
-    markets = fn.get_markets_list()
+    markets = fn.read_session_options_markets()
     # Conver list of strings to list of objects (+1 for idx because of vue-simple-search-dropdown)
     markets = [
-        {'id': idx+1, 'name': market.replace('Market.', '')} for idx, market in enumerate(markets)
+        {'id': idx+1, 'name': market.replace('Market.', ''), 'code': market} for idx, market in enumerate(markets)
     ]
 
     # Option: Securities
-    securities = fn.get_security_list()
-    # Convert pandas dfs to dicts (key = market)
+    securities = fn.collect_session_options_securities()
+    # Convert dict filled with pandas' dfs to dict of dicts (key = market)
     securities = {
         key: securities[key].to_dict(orient='records') for key in securities.keys()
     }
     
     # Option: Timeframes
-    timeframes = fn.get_df_all_timeframes()
-    # Conver list of strings to list of objects (+1 for idx because of vue-simple-search-dropdown)
+    timeframes = fn.read_session_options_timeframes()
+    # Conver list of strings to list of dicts (+1 for idx because of vue-simple-search-dropdown)
     timeframes = [
-        {'id': idx+1, 'name': tf.replace('Timeframe.', '')} for idx, tf in enumerate(timeframes)
+        {'id': idx+1, 'name': tf.replace('Timeframe.', ''), 'code': tf} for idx, tf in enumerate(timeframes)
     ]
 
     # Option: Bars number

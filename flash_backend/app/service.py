@@ -1,3 +1,5 @@
+import app.config as config
+
 import os
 import sys
 from shutil import copyfile
@@ -9,7 +11,7 @@ from shutil import copyfile
 
 
 def fix_lib_finamexport() -> None:
-    """Fix bug in finam-export v.4.1.0 with ParserError"""
+    """Fix bug in finam-export v.4.1.0 with ParserError / This fix should be runned only once"""
     
     path_lib_finamexport = f'./flash_backend/venv/lib/python{ sys.version[:3] }/site-packages/finam/export.py'
     line_with_bug = 'from pandas.io.parsers import ParserError'
@@ -30,3 +32,13 @@ def fix_lib_finamexport() -> None:
             # Write the file with correct string
             with open(path_lib_finamexport, 'w') as file:
                 file.write(filedata)
+
+
+def get_filename_saved_data(session_id, ticker):
+    """ Get filename for current session_id and ticker """
+    if config.PLATFORM == 'win32':
+        save_path = config.PATH_UPLOAD_FOLDER + '\\' + str(session_id) + '_' + str(ticker) + '.csv'
+    else:
+        save_path = config.PATH_UPLOAD_FOLDER + '/' + str(session_id) + '_' + str(ticker) + '.csv'
+
+    return save_path
