@@ -40,7 +40,7 @@
     <div id="layout_subtitle">
         <p class="text_default subtitle">Current ticker: {{ session.case_ticker | safe }}</p>
         <p class="text_default subtitle">
-            Time limit: <label id="time_limit">{{ session.case_timer | safe }}</label> sec
+            Time limit: <label id="time_limit">{{ session.case_timelimit | safe }}</label> sec
         </p>
         <p class="text_default subtitle">
             Time spent: <label id="minutes">00</label>:<label id="seconds">00</label>

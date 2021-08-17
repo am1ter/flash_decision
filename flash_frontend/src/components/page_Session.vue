@@ -64,9 +64,9 @@
                     </b-col>
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
-                            name="barsNumber"
-                            :class="checkClassIsInputInvalid('barsNumber')"
-                            :options="sessionOptionsAll.barsNumber"
+                            name="barsnumber"
+                            :class="checkClassIsInputInvalid('barsnumber')"
+                            :options="sessionOptionsAll.barsnumber"
                             placeholder="Select a number of bars">
                         </Dropdown>
                     </b-col>
@@ -74,13 +74,13 @@
                     <div class="w-100 my-1"></div>
                     
                     <b-col class="my-auto" sm="4">
-                        <label>Time limit, sec.</label>
+                        <label>Time limit</label>
                     </b-col>
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
-                            name="timeLimit"
-                            :class="checkClassIsInputInvalid('timeLimit')"
-                            :options="sessionOptionsAll.timeLimit"
+                            name="timelimit"
+                            :class="checkClassIsInputInvalid('timelimit')"
+                            :options="sessionOptionsAll.timelimit"
                             placeholder="Select a session time limit">
                         </Dropdown>
                     </b-col>
@@ -125,7 +125,7 @@
                     <div class="w-100 my-1"></div>
                     
                     <b-col class="my-auto" sm="4">
-                        <label>Slippage, %</label>
+                        <label>Slippage</label>
                     </b-col>
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
@@ -143,9 +143,9 @@
                     </b-col>
                     <b-col class="my-auto" sm="8">
                         <Dropdown 
-                            name="fixingBar"
-                            :class="checkClassIsInputInvalid('fixingBar')"
-                            :options="sessionOptionsAll.fixingBar"
+                            name="fixingbar"
+                            :class="checkClassIsInputInvalid('fixingbar')"
+                            :options="sessionOptionsAll.fixingbar"
                             placeholder="Select a result fixing bar">
                         </Dropdown>
                     </b-col>
@@ -195,9 +195,9 @@
                     // Clean selected value in securities dropdown
                     this.$children[1].searchFilter = ''
                     // Get value from markets dropdown
-                    this.selectedMarket = 'Market.' + this.$children[0].selected.name
+                    this.selectedMarket = this.$children[0].selected.code
                     // Set securities dropdown list length
-                    this.sessionOptionsSecuritiesLen = this.$children[0].selected.name != '' ? this.sessionOptionsAll.securities[this.selectedMarket].length : 0
+                    this.sessionOptionsSecuritiesLen = this.$children[0].selected.name ? this.sessionOptionsAll.securities[this.selectedMarket].length : 0
                     // Add options in securities dropdown
                     this.sessionOptionsSecurities = this.sessionOptionsAll.securities[this.selectedMarket]
                 }
@@ -221,17 +221,17 @@
                             this.currentSession['options'][this.$children[i].id] = this.$children[i].activeYMD
                         }
                     } else {
-                        if (this.$children[i].searchFilter == '') {
+                        if (this.$children[i].selected.length == 0) {
                             this.formErrors.push(this.$children[i].name)
                         } else {
-                            this.currentSession['options'][this.$children[i].name] = this.$children[i].searchFilter
+                            this.currentSession['options'][this.$children[i].name] = this.$children[i].selected.code
                         }
                     }
                 }
 
                 // If validation has failed than decline form submit (preventDefault)
                 if (this.formErrors.length == 0) {
-                    postStartNewSession(this.currentSession)
+                    postStartNewSession(this.currentSession['options'])
                         .then(
                             () => {this.$router.push('/decision')},
                             reject => {this.apiErrors.push(reject)}

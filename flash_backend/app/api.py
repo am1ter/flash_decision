@@ -33,44 +33,44 @@ def api_get_session_options() -> Response:
     ]
 
     # Option: Bars number
-    barsNumber = [
-        {'id': 1, 'name': '10'},
-        {'id': 2, 'name': '15'},
-        {'id': 3, 'name': '50'},
-        {'id': 4, 'name': '100'}
+    barsnumber = [
+        {'id': 1, 'name': '10 bars', 'code': '10'},
+        {'id': 2, 'name': '15 bars', 'code': '15'},
+        {'id': 3, 'name': '50 bars', 'code': '50'},
+        {'id': 4, 'name': '100 bars', 'code': '100'}
         ]
 
     # Option: Time limit
-    timeLimit = [
-        {'id': 1, 'name': '5'},
-        {'id': 2, 'name': '10'},
-        {'id': 3, 'name': '30'},
-        {'id': 4, 'name': '60'},
-        {'id': 5, 'name': '120'}
+    timelimit = [
+        {'id': 1, 'name': '5 sec.', 'code': '5'},
+        {'id': 2, 'name': '10 sec.', 'code': '10'},
+        {'id': 3, 'name': '30 sec.', 'code': '30'},
+        {'id': 4, 'name': '60 sec.', 'code': '30'},
+        {'id': 5, 'name': '120 sec.', 'code': '120'}
         ]
 
     # Option: Iterations
     iterations = [
-        {'id': 1, 'name': '5'},
-        {'id': 2, 'name': '10'},
-        {'id': 3, 'name': '20'},
-        {'id': 4, 'name': '50'}
+        {'id': 1, 'name': '5', 'code': '5'},
+        {'id': 2, 'name': '10', 'code': '10'},
+        {'id': 3, 'name': '20', 'code': '20'},
+        {'id': 4, 'name': '50', 'code': '50'}
         ]
     
     # Option: Slippage
     slippage = [
-        {'id': 1, 'name': '0'},
-        {'id': 2, 'name': '0.1'},
-        {'id': 3, 'name': '0.5'},
-        {'id': 4, 'name': '1'}
+        {'id': 1, 'name': '0%', 'code': '0'},
+        {'id': 2, 'name': '0.1%', 'code': '0.1'},
+        {'id': 3, 'name': '0.5%', 'code': '0.5'},
+        {'id': 4, 'name': '1%', 'code': '1'}
         ]
 
     # Option: Fixing bar
-    fixingBar = [
-        {'id': 1, 'name': '10'},
-        {'id': 2, 'name': '15'},
-        {'id': 3, 'name': '20'},
-        {'id': 4, 'name': '50'}
+    fixingbar = [
+        {'id': 1, 'name': '10', 'code': '10'},
+        {'id': 2, 'name': '15', 'code': '15'},
+        {'id': 3, 'name': '20', 'code': '20'},
+        {'id': 4, 'name': '50', 'code': '50'}
         ]
 
     # Dict with session options
@@ -78,11 +78,11 @@ def api_get_session_options() -> Response:
         'markets': markets,
         'securities': securities,
         'timeframes': timeframes,
-        'barsNumber': barsNumber,
-        'timeLimit': timeLimit,
+        'barsnumber': barsnumber,
+        'timelimit': timelimit,
         'iterations': iterations,
         'slippage': slippage,
-        'fixingBar': fixingBar
+        'fixingbar': fixingbar
     }
 
     return jsonify(session_options)
@@ -91,9 +91,9 @@ def api_get_session_options() -> Response:
 @api.route('/start-new-session/', methods=['POST'])
 def api_start_new_session() -> Response:
     """Start training session"""
-    print(request.data)
+    print(request.json)
 
-    # fn.create_session(form=request.data)
+    fn.create_session(form=request.json)
     # session_id = fn.get_last_session_id()
     # return redirect(f'/terminal?session_id={session_id}&iteration=1')
     

@@ -28,15 +28,15 @@ class User(UserMixin, db.Model):
 class Session(db.Model):
     __tablename__ = 'sessions'
 
-    session_id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, primary_key=True, index=True)
     session_status = db.Column(db.String)
-    session_datetime = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+    session_datetime = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
     case_market = db.Column(db.String)
     case_ticker = db.Column(db.String)
     case_timeframe = db.Column(db.String)
     case_barsnumber = db.Column(db.Integer)
-    case_timer = db.Column(db.Integer)
+    case_timelimit = db.Column(db.Integer)
     case_datetime = db.Column(db.DateTime)
     case_iterations = db.Column(db.Integer)
     case_slippage = db.Column(db.Float)
