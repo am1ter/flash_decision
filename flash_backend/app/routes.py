@@ -30,7 +30,7 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# DELETE IT
+# TODO: Delete before release
 # @app.route('/', methods=['GET'])
 # @app.route('/index', methods=['GET'])
 # @login_required
@@ -54,13 +54,14 @@ def logout():
 #                            securities_json=securities_json)
 
 
-@app.route('/index', methods=['POST'])
-@login_required
-def web_index_post():
-    """Starting training session"""
-    functions.create_session(form=request.form)
-    session_id = functions.get_last_session_id()
-    return redirect(f'/terminal?session_id={session_id}&iteration=1')
+# TODO: Delete before release
+# @app.route('/index', methods=['POST'])
+# @login_required
+# def web_index_post():
+#     """Starting training session"""
+#     functions.create_session(form=request.form)
+#     session_id = functions.get_last_session_id()
+#     return redirect(f'/terminal?session_id={session_id}&iteration=1')
 
 
 @app.route('/terminal', methods=['GET'])

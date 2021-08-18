@@ -1,3 +1,4 @@
+from pandas.core.frame import DataFrame
 from app import db
 import app.config as config
 import app.service as service
@@ -15,9 +16,8 @@ import plotly
 import plotly.graph_objs as go
 
 
-# ==============================
-# == Import data readers
-# ==============================
+# Import data readers
+# ===================
 
 
 service.fix_lib_finamexport()                                   # Fix bug with finam-export lib v.4.1.0
@@ -27,20 +27,19 @@ from finam.const import Market, Timeframe                       # https://github
 # import pandas_datareader as pdr                               # Reserved datareader
 
 
-# ==============================
-# == Index
-# ==============================
+# Session page
+# ============
 
+# TODO: Delete before release
+# def get_last_session_id():
+#     """Get: Last session_id in DB"""
 
-def get_last_session_id():
-    """Get: Last session_id in DB"""
+#     last_session = Session.query.order_by(Session.session_id.desc()).first()
 
-    last_session = Session.query.order_by(Session.session_id.desc()).first()
-
-    if last_session:
-        return last_session.session_id
-    else:
-        return 1
+#     if last_session:
+#         return last_session.session_id
+#     else:
+#         return 1
 
 
 def read_session_options_timeframes() -> list:
@@ -83,7 +82,7 @@ def collect_session_options_securities() -> dict:
     return options_securities
 
 
-def create_session(form) -> None:
+def create_session_sql(form) -> None:
     """Create new session and write it to db"""
     new_session = Session()
 
@@ -106,9 +105,47 @@ def create_session(form) -> None:
     db.session.add(new_session)
     db.session.commit()
 
-# ==============================
-# == Terminal
-# ==============================
+    return new_session
+
+
+def download_security_quotes(session) -> None:
+    """Download qoutes data using finam.export lib and save it to HDD"""
+
+    # Set path to save/load downloaded quotes data
+    save_path = service.get_filename_saved_data(session.SessionId, session.Ticker)
+
+    # Determine required  period of quotes data according current session parameters
+    if session.Timeframe == 'Timeframe.DAILY':
+        days_before = (session.Iterations*31) + session.Barsnumber
+    elif session.Timeframe == 'Timeframe.HOURLY':
+        days_before = (session.Iterations * 4) + session.Barsnumber
+    else:
+        days_before = session.Iterations + 15
+
+    period_start = session.SetFinishDatetime - timedelta(days=days_before)
+    period_finish = session.SetFinishDatetime + timedelta(days=session.Fixingbar + 1)
+
+    # Download data
+    # Check: File for this session hasn't downloaded yet or it's size is smaller than 48 bytes (title row size)
+    if not os.path.exists(save_path) or os.stat(save_path).st_size <= 48:
+        # Parse quotes with finam.export lib
+        exporter = Exporter()
+        security = exporter.lookup(code=session.Ticker, market=eval(session.Market),
+                              code_comparator=LookupComparator.EQUALS)
+        assert len(security) == 1, 'System could not found correct security for this ticker'
+        try:
+            df_full = exporter.download(id_=security.index[0], market=eval(session.Market),
+                                    start_date=period_start, end_date=period_finish,
+                                    timeframe=eval(session.Timeframe))
+        except:
+            raise RuntimeError
+        # Save full df to file
+        df_full.index = pd.to_datetime(df_full['<DATE>'].astype(str) + ' ' + df_full['<TIME>'])
+        df_full.to_csv(save_path, index=True, index_label='index')
+
+
+# Decision page
+# =============
 
 
 def get_session(session_id):
@@ -126,18 +163,18 @@ def download_data(session, start, finish):
     """Get dataframe with finance data and save it to file"""
 
     # Set path to save/load downloaded ticker data
-    save_path = service.get_filename_saved_data(session.session_id, session.case_ticker)
+    save_path = service.get_filename_saved_data(session.SessionId, session.Ticker)
 
     # Check: Has file for this session already downloaded?
     if not os.path.exists(save_path):
         # Parse quotes with finam.export library
         exporter = Exporter()
-        instrument = exporter.lookup(code=session.case_ticker, market=eval(session.case_market),
+        instrument = exporter.lookup(code=session.Ticker, market=eval(session.Market),
                               code_comparator=LookupComparator.EQUALS)
         assert len(instrument) == 1
-        df_full = exporter.download(id_=instrument.index[0], market=eval(session.case_market),
+        df_full = exporter.download(id_=instrument.index[0], market=eval(session.Market),
                                  start_date=start, end_date=finish,
-                                 timeframe=eval(session.case_timeframe))
+                                 timeframe=eval(session.Timeframe))
         # Save full df to file
         df_full.index = pd.to_datetime(df_full['<DATE>'].astype(str) + ' ' + df_full['<TIME>'])
         df_full.to_csv(save_path, index=True, index_label='index')
@@ -150,7 +187,7 @@ def download_data(session, start, finish):
 def load_hdd_data(session):
     """Get dataframe by reading data from hdd file"""
     # Set path to save/load downloaded ticker data
-    save_path = service.get_filename_saved_data(session.session_id, session.case_ticker)
+    save_path = service.get_filename_saved_data(session.SessionId, session.Ticker)
 
     # Load dataframe from hdd
     try:
@@ -211,18 +248,18 @@ def create_decision(form):
     db.session.commit()
 
 
-def get_chart(current_session, source):
+def get_chart(current_session, source) -> DataFrame:
     """Get all data to draw chart"""
     # Format session parameters
-    if current_session.case_timeframe == 'Timeframe.DAILY':
-        days_before = (current_session.case_iterations*31) + current_session.case_barsnumber
-    elif current_session.case_timeframe == 'Timeframe.HOURLY':
-        days_before = (current_session.case_iterations * 4) + current_session.case_barsnumber
+    if current_session.Timeframe == 'Timeframe.DAILY':
+        days_before = (current_session.Iterations*31) + current_session.Barsnumber
+    elif current_session.Timeframe == 'Timeframe.HOURLY':
+        days_before = (current_session.Iterations * 4) + current_session.Barsnumber
     else:
-        days_before = current_session.case_iterations + 15
+        days_before = current_session.Iterations + 15
 
-    chart_start = current_session.case_datetime - timedelta(days=days_before)
-    chart_finish = current_session.case_datetime + timedelta(days=current_session.case_fixingbar + 1)
+    chart_start = current_session.SetFinishDatetime - timedelta(days=days_before)
+    chart_finish = current_session.SetFinishDatetime + timedelta(days=current_session.Fixingbar + 1)
 
     if source == 'internet':
         # Send parameters to parser and download data
@@ -231,19 +268,19 @@ def get_chart(current_session, source):
         df_full = load_hdd_data(session=current_session)
 
     # Parameters to cut dataframe
-    chart_value_finishbar = pd.to_datetime(current_session.case_datetime)
+    chart_value_finishbar = pd.to_datetime(current_session.SetFinishDatetime)
 
     # Cut df to selected finish date
     df_cut = df_full[:(df_full.index.get_loc(str(chart_value_finishbar), method='nearest'))+1]
     # Cut df with selected bars_number
-    df_final = df_cut.iloc[-current_session.case_barsnumber:]
+    df_final = df_cut.iloc[-current_session.Barsnumber:]
 
     return df_final
 
 
-def draw_chart_plotly(current_session, source):
+def draw_chart_plotly(session, source):
     """Prepare JSON with chart data to export into HTML-file"""
-    df = get_chart(current_session, source)
+    df = get_chart(session, source)
     df['id'] = df.reset_index().index
 
     data = [
@@ -261,9 +298,9 @@ def draw_chart_plotly(current_session, source):
         )
     ]
 
-    graphJSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+    chart_JSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
 
-    return graphJSON
+    return chart_JSON
 
 
 def close_session(session_id):
@@ -273,13 +310,13 @@ def close_session(session_id):
     current_session = get_session(session_id)
 
     # Update session status
-    current_session.session_status = config.SESSION_STATUS_CLOSED
+    current_session.Status = config.SESSION_STATUS_CLOSED
 
     # Write data to db
     db.session.commit()
 
     # Delete file with downloaded data
-    save_path = service.get_filename_saved_data(current_session.session_id, current_session.case_ticker)
+    save_path = service.get_filename_saved_data(current_session.SessionId, current_session.Ticker)
     if save_path and os.path.exists(save_path):
         os.remove(save_path)
 

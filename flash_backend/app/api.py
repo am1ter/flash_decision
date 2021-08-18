@@ -1,3 +1,6 @@
+import re
+
+from flask.scaffold import F
 from app import app
 import app.functions as fn
 
@@ -12,6 +15,7 @@ def api_get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
     
     # Option: Markets
+    # ---------------
     markets = fn.read_session_options_markets()
     # Conver list of strings to list of objects (+1 for idx because of vue-simple-search-dropdown)
     markets = [
@@ -19,6 +23,7 @@ def api_get_session_options() -> Response:
     ]
 
     # Option: Securities
+    # ------------------
     securities = fn.collect_session_options_securities()
     # Convert dict filled with pandas' dfs to dict of dicts (key = market)
     securities = {
@@ -26,6 +31,7 @@ def api_get_session_options() -> Response:
     }
     
     # Option: Timeframes
+    # ------------------
     timeframes = fn.read_session_options_timeframes()
     # Conver list of strings to list of dicts (+1 for idx because of vue-simple-search-dropdown)
     timeframes = [
@@ -33,6 +39,7 @@ def api_get_session_options() -> Response:
     ]
 
     # Option: Bars number
+    # -------------------
     barsnumber = [
         {'id': 1, 'name': '10 bars', 'code': '10'},
         {'id': 2, 'name': '15 bars', 'code': '15'},
@@ -41,6 +48,7 @@ def api_get_session_options() -> Response:
         ]
 
     # Option: Time limit
+    # ------------------
     timelimit = [
         {'id': 1, 'name': '5 sec.', 'code': '5'},
         {'id': 2, 'name': '10 sec.', 'code': '10'},
@@ -50,6 +58,7 @@ def api_get_session_options() -> Response:
         ]
 
     # Option: Iterations
+    # ------------------
     iterations = [
         {'id': 1, 'name': '5', 'code': '5'},
         {'id': 2, 'name': '10', 'code': '10'},
@@ -58,6 +67,7 @@ def api_get_session_options() -> Response:
         ]
     
     # Option: Slippage
+    # ----------------
     slippage = [
         {'id': 1, 'name': '0%', 'code': '0'},
         {'id': 2, 'name': '0.1%', 'code': '0.1'},
@@ -66,6 +76,7 @@ def api_get_session_options() -> Response:
         ]
 
     # Option: Fixing bar
+    # ------------------
     fixingbar = [
         {'id': 1, 'name': '10', 'code': '10'},
         {'id': 2, 'name': '15', 'code': '15'},
@@ -74,6 +85,7 @@ def api_get_session_options() -> Response:
         ]
 
     # Dict with session options
+    # -------------------------
     session_options = {
         'markets': markets,
         'securities': securities,
@@ -90,11 +102,15 @@ def api_get_session_options() -> Response:
 
 @api.route('/start-new-session/', methods=['POST'])
 def api_start_new_session() -> Response:
-    """Start training session"""
-    print(request.json)
-
-    fn.create_session(form=request.json)
-    # session_id = fn.get_last_session_id()
-    # return redirect(f'/terminal?session_id={session_id}&iteration=1')
-    
-    return jsonify(True)
+    """Start training session: Get json-object, create SQL record and download quotes data"""
+    request.get_json({'userId': 1, 'market': 'Market.SHARES', 'ticker': 'SBER', 'timeframe': 'Timeframe.MINUTES5', 'barsnumber': '10', 'timelimit': '10', 'date': '2021-08-13', 'iterations': '10', 'slippage': '0.1', 'fixingbar': '15'}) #TODO: Delete when debug will be finished
+    if request.json:
+        print(request.json) #TODO: Delete when debug will be finished
+        try:
+            current_session = fn.create_session_sql(form=request.json)
+            fn.download_security_quotes(session=current_session)        
+            return jsonify(True)
+        except:
+            return jsonify(False)
+    else:
+        return jsonify(False)
