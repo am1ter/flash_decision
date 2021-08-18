@@ -11,8 +11,8 @@ Every service runs in a personal docker container.
 ### Setup
 Use `docker-compose` to setup the solution
 
-### Used cases
-Backend: snake_case
-Frontend: camelCase
-SQL: PascalCase
-API urls: kebab-case
+### Code cases
+- Backend: snake_case
+- Frontend: camelCase
+- SQL: PascalCase
+- API urls: kebab-case
