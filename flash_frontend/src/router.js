@@ -27,7 +27,7 @@ const routes = [{
         }
     },
     {
-        path: '/decision',
+        path: '/decision/:session_id/:iteration_num',
         name: 'Decision page',
         component: App.components.page_Decision,
         beforeEnter(to, from, next) {

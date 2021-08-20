@@ -12,7 +12,7 @@ api = Blueprint('api', __name__)
 
 
 @api.route('/get-session-options/', methods=['GET'])
-def api_get_session_options() -> Response:
+def get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
     
     # Option: Markets
@@ -102,7 +102,7 @@ def api_get_session_options() -> Response:
 
 
 @api.route('/start-new-session/', methods=['POST'])
-def api_start_new_session() -> Response:
+def start_new_session() -> Response:
     """Start training session: Get json-object, create SQL record and download quotes data"""
     request.get_json({'userId': 1, 'market': 'Market.SHARES', 'ticker': 'SBER', 'timeframe': 'Timeframe.MINUTES5', 'barsnumber': '10', 'timelimit': '10', 'date': '2021-08-13', 'iterations': '10', 'slippage': '0.1', 'fixingbar': '15'}) #TODO: Delete when debug will be finished
     if request.json:
@@ -119,7 +119,10 @@ def api_start_new_session() -> Response:
         return jsonify(False)
 
 
-@api.route('/get-chart/<int:sessionId>/<int:iterationId>/', methods=['GET'])
-def api_get_chart() -> Response:
-    chart = fn.draw_chart_plotly()
-    return chart
+@api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
+def get_chart(session_id, iteration_num) -> Response:
+    print('get request received')
+    print(session_id, iteration_num)
+    return jsonify(True)
+    #chart = fn.draw_chart_plotly()
+    #return chart

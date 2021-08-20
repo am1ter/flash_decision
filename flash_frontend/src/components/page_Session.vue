@@ -230,16 +230,25 @@
                 }
 
                 // Send POST request and save response to vuex state
-                // If validation has failed than decline form submit (preventDefault)
+                // If validation has failed (formErrors.length > 0) than decline form submit (preventDefault)
+                // If validation has passed sens POST request, check the response and go to the next page
                 if (this.formErrors.length == 0) {
                     postStartNewSession(this.currentSession['options'])
                         .then(
                             response => {
-                                this.currentSession['options']['sessionId'] = response.data
-                                this.$router.push('/decision')
-                                },
+                                if (String(response.data).includes('Error') || String(response.data).includes('error')) {
+                                    this.apiErrors.push(response.data)
+                                } else {
+                                    // Add session id from response to the object
+                                    this.currentSession['options']['sessionId'] = response.data
+                                    // Create first iteration in the current session
+                                    this.currentSession['iterations'] = {'iterationNum': 1}
+                                    // Go to the decision making page
+                                    this.$router.push('/decision/' + response.data + '/' + 1)
+                                }
+                            },
                             reject => {this.apiErrors.push(reject)}
-                            )
+                        )
                 } else {
                    e.preventDefault()
                 }

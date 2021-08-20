@@ -62,7 +62,7 @@
             ...mapState(['sessions', 'isAuth'])
         },
         beforeMount() {
-            this.$store.dispatch('loadSessions')
+            // this.$store.dispatch('loadSessions')
         }
     }
 
