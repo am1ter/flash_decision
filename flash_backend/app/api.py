@@ -1,11 +1,12 @@
 import re
 
-from flask.scaffold import F
 from app import app
 import app.functions as fn
+from app.models import Session, Decision
 
 from flask import Blueprint, jsonify, request
 from flask.wrappers import Response
+
 
 api = Blueprint('api', __name__)
 
@@ -107,10 +108,18 @@ def api_start_new_session() -> Response:
     if request.json:
         print(request.json) #TODO: Delete when debug will be finished
         try:
-            current_session = fn.create_session_sql(form=request.json)
-            fn.download_security_quotes(session=current_session)        
-            return jsonify(True)
-        except:
+            current_session = Session(mode='custom', form=request.json)
+            current_session.download_quotes() 
+            return jsonify(current_session.SessionId)
+        except RuntimeError as e:
+            error = str(e.__dict__['orig'])
+            print(error)
             return jsonify(False)
     else:
         return jsonify(False)
+
+
+@api.route('/get-chart/<int:sessionId>/<int:iterationId>/', methods=['GET'])
+def api_get_chart() -> Response:
+    chart = fn.draw_chart_plotly()
+    return chart

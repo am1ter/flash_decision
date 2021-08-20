@@ -5,8 +5,12 @@
 </template>
 
 <script>
+    import { mapState } from 'vuex'
     export default {
-        name: 'page_Decision'
+        name: 'page_Decision',
+        computed: {
+            ...mapState(['isAuth', 'user', 'currentSession'])
+        }
     }
 </script>
 

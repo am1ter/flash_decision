@@ -15,31 +15,12 @@ import json
 import plotly
 import plotly.graph_objs as go
 
-
-# Import data readers
-# ===================
-
-
-service.fix_lib_finamexport()                                   # Fix bug with finam-export lib v.4.1.0
-
 from finam.export import Exporter, LookupComparator             # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe                       # https://github.com/ffeast/finam-export
-# import pandas_datareader as pdr                               # Reserved datareader
 
 
 # Session page
 # ============
-
-# TODO: Delete before release
-# def get_last_session_id():
-#     """Get: Last session_id in DB"""
-
-#     last_session = Session.query.order_by(Session.session_id.desc()).first()
-
-#     if last_session:
-#         return last_session.session_id
-#     else:
-#         return 1
 
 
 def read_session_options_timeframes() -> list:
@@ -80,68 +61,6 @@ def collect_session_options_securities() -> dict:
         options_securities[str(list(tuple(Market))[idx])] = tickers
 
     return options_securities
-
-
-def create_session_sql(form) -> None:
-    """Create new session and write it to db"""
-    new_session = Session()
-
-    # Set session's status to active
-    new_session.Status = config.SESSION_STATUS_ACTIVE
-
-    # Get form data from webpage
-    new_session.UserId = form['userId']
-    new_session.Market = form['market']
-    new_session.Ticker = form['ticker']
-    new_session.Timeframe = form['timeframe']
-    new_session.Barsnumber = form['barsnumber']
-    new_session.Timelimit = form['timelimit']
-    new_session.SetFinishDatetime = datetime.strptime(form['date'], '%Y-%m-%d')
-    new_session.Iterations = form['iterations']
-    new_session.Slippage = form['slippage']
-    new_session.Fixingbar = form['fixingbar']
-
-    # Write data to db
-    db.session.add(new_session)
-    db.session.commit()
-
-    return new_session
-
-
-def download_security_quotes(session) -> None:
-    """Download qoutes data using finam.export lib and save it to HDD"""
-
-    # Set path to save/load downloaded quotes data
-    save_path = service.get_filename_saved_data(session.SessionId, session.Ticker)
-
-    # Determine required  period of quotes data according current session parameters
-    if session.Timeframe == 'Timeframe.DAILY':
-        days_before = (session.Iterations*31) + session.Barsnumber
-    elif session.Timeframe == 'Timeframe.HOURLY':
-        days_before = (session.Iterations * 4) + session.Barsnumber
-    else:
-        days_before = session.Iterations + 15
-
-    period_start = session.SetFinishDatetime - timedelta(days=days_before)
-    period_finish = session.SetFinishDatetime + timedelta(days=session.Fixingbar + 1)
-
-    # Download data
-    # Check: File for this session hasn't downloaded yet or it's size is smaller than 48 bytes (title row size)
-    if not os.path.exists(save_path) or os.stat(save_path).st_size <= 48:
-        # Parse quotes with finam.export lib
-        exporter = Exporter()
-        security = exporter.lookup(code=session.Ticker, market=eval(session.Market),
-                              code_comparator=LookupComparator.EQUALS)
-        assert len(security) == 1, 'System could not found correct security for this ticker'
-        try:
-            df_full = exporter.download(id_=security.index[0], market=eval(session.Market),
-                                    start_date=period_start, end_date=period_finish,
-                                    timeframe=eval(session.Timeframe))
-        except:
-            raise RuntimeError
-        # Save full df to file
-        df_full.index = pd.to_datetime(df_full['<DATE>'].astype(str) + ' ' + df_full['<TIME>'])
-        df_full.to_csv(save_path, index=True, index_label='index')
 
 
 # Decision page
@@ -248,7 +167,62 @@ def create_decision(form):
     db.session.commit()
 
 
-def get_chart(current_session, source) -> DataFrame:
+# def get_chart(current_session, source) -> DataFrame:
+#     """Get all data to draw chart"""
+#     # Format session parameters
+#     if current_session.Timeframe == 'Timeframe.DAILY':
+#         days_before = (current_session.Iterations*31) + current_session.Barsnumber
+#     elif current_session.Timeframe == 'Timeframe.HOURLY':
+#         days_before = (current_session.Iterations * 4) + current_session.Barsnumber
+#     else:
+#         days_before = current_session.Iterations + 15
+
+#     chart_start = current_session.SetFinishDatetime - timedelta(days=days_before)
+#     chart_finish = current_session.SetFinishDatetime + timedelta(days=current_session.Fixingbar + 1)
+
+#     if source == 'internet':
+#         # Send parameters to parser and download data
+#         df_full = download_data(session=current_session, start=chart_start, finish=chart_finish)
+#     elif source == 'hdd':
+#         df_full = load_hdd_data(session=current_session)
+
+#     # Parameters to cut dataframe
+#     chart_value_finishbar = pd.to_datetime(current_session.SetFinishDatetime)
+
+#     # Cut df to selected finish date
+#     df_cut = df_full[:(df_full.index.get_loc(str(chart_value_finishbar), method='nearest'))+1]
+#     # Cut df with selected bars_number
+#     df_final = df_cut.iloc[-current_session.Barsnumber:]
+
+#     return df_final
+
+
+# def draw_chart_plotly(session, source):
+#     """Prepare JSON with chart data to export into HTML-file"""
+#     df = get_chart(session, source)
+#     df['id'] = df.reset_index().index
+
+#     data = [
+#         go.Figure(
+#             data=[go.Candlestick(
+#                 x=df.id,                             #x=df.id OR x=df.index
+#                 open=df['<OPEN>'],
+#                 close=df['<CLOSE>'],
+#                 low=df['<LOW>'],
+#                 high=df['<HIGH>'],
+
+#                 increasing_line_color='#59a14f',
+#                 decreasing_line_color='#e15759'
+#             )]
+#         )
+#     ]
+
+#     chart_JSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+
+#     return chart_JSON
+
+
+def get_chart(current_session) -> DataFrame:
     """Get all data to draw chart"""
     # Format session parameters
     if current_session.Timeframe == 'Timeframe.DAILY':
@@ -261,11 +235,7 @@ def get_chart(current_session, source) -> DataFrame:
     chart_start = current_session.SetFinishDatetime - timedelta(days=days_before)
     chart_finish = current_session.SetFinishDatetime + timedelta(days=current_session.Fixingbar + 1)
 
-    if source == 'internet':
-        # Send parameters to parser and download data
-        df_full = download_data(session=current_session, start=chart_start, finish=chart_finish)
-    elif source == 'hdd':
-        df_full = load_hdd_data(session=current_session)
+    df_full = load_hdd_data(session=current_session)
 
     # Parameters to cut dataframe
     chart_value_finishbar = pd.to_datetime(current_session.SetFinishDatetime)
@@ -278,9 +248,9 @@ def get_chart(current_session, source) -> DataFrame:
     return df_final
 
 
-def draw_chart_plotly(session, source):
+def draw_chart_plotly(session):
     """Prepare JSON with chart data to export into HTML-file"""
-    df = get_chart(session, source)
+    df = get_chart(session)
     df['id'] = df.reset_index().index
 
     data = [
@@ -299,7 +269,6 @@ def draw_chart_plotly(session, source):
     ]
 
     chart_JSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
-
     return chart_JSON
 
 

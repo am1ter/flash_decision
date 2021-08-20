@@ -7,7 +7,7 @@ Vue.use(Vuex)
 
 const state = {
     // single source of data
-    version: '0.5.01',
+    version: '0.5.02',
     isAuth: true,
     user: { id: 1, name: 'amiter' },
     sessions: [],
@@ -19,6 +19,9 @@ const actions = {
     loadSessions(context) {
         return fetchSessions()
             .then((respone) => context.commit('setSessions', { sessions: respone }))
+    },
+    addIdToSession(context) {
+        console.log(context)
     }
 }
 

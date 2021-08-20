@@ -229,11 +229,15 @@
                     }
                 }
 
+                // Send POST request and save response to vuex state
                 // If validation has failed than decline form submit (preventDefault)
                 if (this.formErrors.length == 0) {
                     postStartNewSession(this.currentSession['options'])
                         .then(
-                            () => {this.$router.push('/decision')},
+                            response => {
+                                this.currentSession['options']['sessionId'] = response.data
+                                this.$router.push('/decision')
+                                },
                             reject => {this.apiErrors.push(reject)}
                             )
                 } else {
