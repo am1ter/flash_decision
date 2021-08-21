@@ -72,7 +72,7 @@ class Session(db.Model):
     Slippage = db.Column(db.Float)
     Fixingbar = db.Column(db.Integer)
 
-    decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
+    iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', passive_deletes=True)
     
     def __repr__(self):
         """Return the session id"""
@@ -165,20 +165,20 @@ class Session(db.Model):
         return Session.query.get(int(session_id))
 
 
-class Decision(db.Model):
-    __tablename__ = 'Decision'
+class Iteration(db.Model):
+    __tablename__ = 'Iteration'
 
-    DecisionId = db.Column(db.Integer, primary_key=True, index=True)
+    IterationId = db.Column(db.Integer, primary_key=True, index=True)
     SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)
     IterationNum = db.Column(db.Integer)
-    IterationFixingBarDatetime = db.Column(db.DateTime)
-    DecisionAction = db.Column(db.String)
-    DecisionTime = db.Column(db.Float)
-    DecisionResultRaw = db.Column(db.Float)
-    DecisionResultFinal = db.Column(db.Float)
+    FixingBarDatetime = db.Column(db.DateTime)
+    Action = db.Column(db.String)
+    TimeSpent = db.Column(db.Float)
+    ResultRaw = db.Column(db.Float)
+    ResultFinal = db.Column(db.Float)
 
     def __repr__(self):
-        return f'<Decision {self.DecisionId} during session {self.SessionId}>'
+        return f'<Iteration {self.IterationNum} during session {self.SessionId}>'
 
 
 @login.user_loader

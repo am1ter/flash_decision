@@ -2,7 +2,7 @@ from pandas.core.frame import DataFrame
 from app import db
 import app.config as config
 import app.service as service
-from app.models import User, Session, Decision
+from app.models import User, Session, Iteration
 
 import os
 import pyodbc
@@ -63,8 +63,8 @@ def collect_session_options_securities() -> dict:
     return options_securities
 
 
-# Decision page
-# =============
+# Iterations page
+# ==============
 
 
 def get_session(session_id):
@@ -117,26 +117,26 @@ def load_hdd_data(session):
     return df_full
 
 
-def create_decision(form):
-    """Create new decision for current session and write it to db"""
+def create_iteration(form):
+    """Create new iteration for current session and write it to db"""
 
-    new_decision = Decision()
+    new_iteration = Iteration()
 
     # Get parameters for current session
     current_session = get_session(form['session_id'])
 
     # Fill parameters by reading hidden form
-    new_decision.session_id = form['session_id']
-    new_decision.iteration_id = form['iteration']
-    new_decision.iteration_finishbar_datetime = pd.to_datetime(form['datetime'])
-    new_decision.decision_action = form['form_button']
-    new_decision.decision_time = form['time_spent']
+    new_iteration.SessionId = form['session_id']
+    new_iteration.IterationId = form['iteration']
+    new_iteration.FixingBarDatetime = pd.to_datetime(form['datetime'])
+    new_iteration.Action = form['form_button']
+    new_iteration.TimeSpent = form['time_spent']
 
     # Get result
-    if new_decision.decision_action != 'skip':
+    if new_iteration.Action != 'skip':
         # Raw result
         df_full = load_hdd_data(session=current_session)
-        chart_value_finishbar = pd.to_datetime(new_decision.iteration_finishbar_datetime)
+        chart_value_finishbar = pd.to_datetime(new_iteration.iteration_finishbar_datetime)
 
         # Get value of the object in last bar of the case chart
         finish_df_shift = df_full.index.get_loc(str(chart_value_finishbar), method='nearest')
@@ -152,18 +152,18 @@ def create_decision(form):
             raise ValueError('Fixing bar is not exist yet. Choose an earlier date')
 
         # Get percent change
-        new_decision.decision_result_raw = round(((val_fixing - val_finish) / val_finish), 4)
+        new_iteration.ResultRaw = round(((val_fixing - val_finish) / val_finish), 4)
 
         # Correct result by slippage
-        new_decision.decision_result_corrected = new_decision.decision_result_raw - current_session.case_slippage
-        new_decision.decision_result_corrected = round(new_decision.decision_result_corrected, 4)
+        new_iteration.ResultFinal = new_iteration.ResultRaw - current_session.case_slippage
+        new_iteration.ResultFinal = round(new_iteration.ResultFinal, 4)
     else:
         # Write nulls if there is no decision
-        new_decision.decision_result_raw = 0
-        new_decision.decision_result_corrected = 0
+        new_iteration.ResultRaw = 0
+        new_iteration.ResultFinal = 0
 
     # Write data to db
-    db.session.add(new_decision)
+    db.session.add(new_iteration)
     db.session.commit()
 
 
@@ -295,12 +295,12 @@ def close_session(session_id):
 
 
 def get_session_summary(session_id):
-    """Get list with decision summary for current session"""
+    """Get list with iterations summary for current session"""
 
     user_id = Session.query.filter(Session.session_id == session_id).first().user_id
-    iterations = db.session.query(func.count(Decision.decision_id)).filter(Decision.session_id == session_id).first()[0]
-    time = db.session.query(func.sum(Decision.decision_time)).filter(Decision.session_id == session_id).first()[0]
-    result = db.session.query(func.sum(Decision.decision_result_corrected)).filter(Decision.session_id == session_id).first()[0]
+    iterations = db.session.query(func.count(Iteration.IterationId)).filter(Iteration.SessionId == session_id).first()[0]
+    time = db.session.query(func.sum(Iteration.TimeSpent)).filter(Iteration.SessionId == session_id).first()[0]
+    result = db.session.query(func.sum(Iteration.ResultFinal)).filter(Iteration.SessionId == session_id).first()[0]
 
     summary = {'user_id': user_id, 'iterations': iterations, 'time': time, 'result': result}
 
@@ -311,15 +311,15 @@ def get_session_summary(session_id):
         raise ValueError('There is no results for this session')
 
 
-def get_all_decisions(user_id):
-    """Get dataframe with all decisions"""
+def get_all_iterations(user_id):
+    """Get dataframe with all iterations"""
 
-    query = db.session.query(Session, Decision.decision_action, Decision.decision_time, Decision.iteration_id,
-                             Decision.decision_result_corrected).outerjoin(Session).filter(Session.user_id == user_id)
+    query = db.session.query(Session, Iteration.Action, Iteration.TimeSpent, Iteration.IterationId,
+                             Iteration.ResultFinal).outerjoin(Session).filter(Session.UserId == user_id)
     df = pd.read_sql(query.statement, db.session.bind)
 
     # Return
     if len(df) >= 1:
         return df
     else:
-        raise ValueError('There are no decisions in the database')
+        raise ValueError('There are no iterations in the database')

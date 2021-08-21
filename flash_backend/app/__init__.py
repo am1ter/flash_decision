@@ -52,7 +52,7 @@ def handle_http_exception(error):
 
 # Load scripts to run flask app
 from app import routes
-from app.models import User, Session, Decision
+from app.models import User, Session, Iteration
 
 from app.api import api
 app.register_blueprint(api, url_prefix='/api')

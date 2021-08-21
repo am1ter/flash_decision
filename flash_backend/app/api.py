@@ -2,7 +2,7 @@ import re
 
 from app import app
 import app.functions as fn
-from app.models import Session, Decision
+from app.models import Session, Iteration
 
 from flask import Blueprint, jsonify, request
 from flask.wrappers import Response
@@ -123,6 +123,8 @@ def start_new_session() -> Response:
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
 def get_chart(session_id, iteration_num) -> Response:
     print('get request received')
-    #chart = fn.draw_chart_plotly()
-    #return chart
-    return jsonify(True)
+    current_session = Session()
+    current_session = current_session.get_from_db(session_id)
+    chart = fn.draw_chart_plotly(session=current_session)
+    return jsonify(chart)
+    #return jsonify(True)

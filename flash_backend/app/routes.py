@@ -1,5 +1,5 @@
 from app import app, functions, forms
-from app.models import User, Session, Decision
+from app.models import User, Session, Iteration
 
 from datetime import timedelta
 from flask import render_template, request, redirect, flash, url_for, jsonify
@@ -106,8 +106,8 @@ def web_terminal_post():
     iteration = int(request.form['iteration'])
     total_iterations = int(request.form['total_iterations'])
 
-    # Create new decision
-    functions.create_decision(form=request.form)
+    # Create new iteration
+    functions.create_iteration(form=request.form)
 
     # Check: Is it the last iteration?
     if iteration >= total_iterations:
@@ -125,11 +125,11 @@ def web_results_get():
     # Get key parameters from url
     session_id = request.args.get('session_id', type=int)
 
-    # Get all decisions by username
-    all_decisions = functions.get_all_decisions(current_user.user_id)
+    # Get all iterations by username
+    all_iterations = functions.get_all_iterations(current_user.user_id)
 
     # Convert data to JSON to export to html
-    data_json = all_decisions.to_json(orient='records')
+    data_json = all_iterations.to_json(orient='records')
 
     # Get results for current session
     if session_id:

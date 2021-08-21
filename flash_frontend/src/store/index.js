@@ -1,7 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-import { fetchSessions } from '../api'
+// TODO: Remove before release
+// import { fetchSessions } from '../api'
 
 Vue.use(Vuex)
 
@@ -16,10 +17,11 @@ const state = {
 
 const actions = {
     // asynchronous operations
-    loadSessions(context) {
-        return fetchSessions()
-            .then((respone) => context.commit('setSessions', { sessions: respone }))
-    },
+    // TODO: Remove before release
+    // loadSessions(context) {
+    //     return fetchSessions()
+    //         .then((respone) => context.commit('setSessions', { sessions: respone }))
+    // },
     addIdToSession(context) {
         console.log(context)
     }
