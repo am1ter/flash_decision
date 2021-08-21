@@ -26,7 +26,11 @@ class User(UserMixin, db.Model):
 
     sessions = db.relationship('Session', backref='User', lazy='dynamic', passive_deletes=True)
 
-    def __init__(self, name: str, email: str, password: str) -> None:
+    def __repr__(self):
+        """Return the user name"""
+        return '<User {self.UserName}>'
+
+    def new(self, name: str, email: str, password: str) -> None:
         """Create new user instance with hashed password and save it to DB"""
         self.UserName = name
         self.set_email(email)
@@ -37,10 +41,6 @@ class User(UserMixin, db.Model):
         except SQLAlchemyError as e:
             error = str(e.__dict__['orig'])
             print(error)
-
-    def __repr__(self):
-        """Return the user name"""
-        return '<User {self.UserName}>'
 
     def set_email(self, email):
         """Set new email for the user"""
@@ -73,25 +73,28 @@ class Session(db.Model):
     Fixingbar = db.Column(db.Integer)
 
     decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
+    
+    def __repr__(self):
+        """Return the session id"""
+        return f'<Session {self.SessionId}>'
 
-    def __init__(self, mode: str, form: dict) -> None:
+    def new(self, mode: str, options: dict) -> None:
         """Create new session and write it to db"""
-
         # Custom session with manual specific options
-        if mode == 'custom' and form is not None:
+        if mode == 'custom':
             # Set session's status to active
             self.Status = config.SESSION_STATUS_ACTIVE
-            # Get form data from webpage
-            self.UserId = form['userId']
-            self.Market = form['market']
-            self.Ticker = form['ticker']
-            self.Timeframe = form['timeframe']
-            self.Barsnumber = form['barsnumber']
-            self.Timelimit = form['timelimit']
-            self.SetFinishDatetime = datetime.strptime(form['date'], '%Y-%m-%d')
-            self.Iterations = form['iterations']
-            self.Slippage = form['slippage']
-            self.Fixingbar = form['fixingbar']
+            # Get options data from webpage
+            self.UserId = options['userId']
+            self.Market = options['market']
+            self.Ticker = options['ticker']
+            self.Timeframe = options['timeframe']
+            self.Barsnumber = options['barsnumber']
+            self.Timelimit = options['timelimit']
+            self.SetFinishDatetime = datetime.strptime(options['date'], '%Y-%m-%d')
+            self.Iterations = options['iterations']
+            self.Slippage = options['slippage']
+            self.Fixingbar = options['fixingbar']
             # Write data to db
             try:
                 db.session.add(self)
@@ -99,10 +102,6 @@ class Session(db.Model):
             except SQLAlchemyError as e:
                 error = str(e.__dict__['orig'])
                 print(error)
-
-    def __repr__(self):
-        """Return the session id"""
-        return f'<Session {self.SessionId}>'
 
     def download_quotes(self) -> None:
         """Download qoutes data using finam.export lib and save it to HDD"""
@@ -143,7 +142,6 @@ class Session(db.Model):
             # Save full df to file
             df_quotes.to_csv(save_path, index=True, index_label='index')
 
-
     def load_csv(self) -> DataFrame:
         """Get dataframe by reading data from hdd file"""
         # Set path to save/load downloaded ticker data
@@ -156,8 +154,15 @@ class Session(db.Model):
 
     def remove_csv(self) -> None:
         """Delete downloaded file with quotes"""
-        save_path = service.get_filename_saved_data(self.SessionId, self.Ticker)
-        os.remove(save_path)
+        if self.SessionId and self.Ticker:
+            save_path = service.get_filename_saved_data(self.SessionId, self.Ticker)
+            os.remove(save_path)
+        else:
+            raise FileNotFoundError('No information about id and ticker of the current session')
+
+    def get_from_db(self, session_id: int):
+        """Get session's options from DB and fill with them the object"""
+        return Session.query.get(int(session_id))
 
 
 class Decision(db.Model):

@@ -108,7 +108,8 @@ def start_new_session() -> Response:
     if request.json:
         print(request.json) #TODO: Delete when debug will be finished
         try:
-            current_session = Session(mode='custom', form=request.json)
+            current_session = Session()
+            current_session.new(mode='custom', options=request.json)
             current_session.download_quotes() 
             return jsonify(current_session.SessionId)
         except RuntimeError as e:
@@ -122,7 +123,6 @@ def start_new_session() -> Response:
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
 def get_chart(session_id, iteration_num) -> Response:
     print('get request received')
-    print(session_id, iteration_num)
-    return jsonify(True)
     #chart = fn.draw_chart_plotly()
     #return chart
+    return jsonify(True)
