@@ -67,7 +67,7 @@ class Session(db.Model):
     Timeframe = db.Column(db.String)
     Barsnumber = db.Column(db.Integer)
     Timelimit = db.Column(db.Integer)
-    SetFinishDatetime = db.Column(db.DateTime)
+    LastFixingBarDatetime = db.Column(db.DateTime)
     Iterations = db.Column(db.Integer)
     Slippage = db.Column(db.Float)
     Fixingbar = db.Column(db.Integer)
@@ -91,7 +91,7 @@ class Session(db.Model):
             self.Timeframe = options['timeframe']
             self.Barsnumber = options['barsnumber']
             self.Timelimit = options['timelimit']
-            self.SetFinishDatetime = datetime.strptime(options['date'], '%Y-%m-%d')
+            self.LastFixingBarDatetime = datetime.strptime(options['date'], '%Y-%m-%d')
             self.Iterations = options['iterations']
             self.Slippage = options['slippage']
             self.Fixingbar = options['fixingbar']
@@ -109,16 +109,20 @@ class Session(db.Model):
         # Set path to save/load downloaded quotes data
         save_path = service.get_filename_saved_data(self.SessionId, self.Ticker)
 
-        # Determine required  period of quotes data according current session parameters
-        if self.Timeframe == 'Timeframe.DAILY':
-            days_before = (self.Iterations*31) + self.Barsnumber
-        elif self.Timeframe == 'Timeframe.HOURLY':
-            days_before = (self.Iterations * 4) + self.Barsnumber
-        else:
-            days_before = self.Iterations + 15
+        # # Determine required  period of quotes data according current session parameters
+        # if self.Timeframe == 'Timeframe.DAILY':
+        #     days_before = (self.Iterations*31) + self.Barsnumber
+        # elif self.Timeframe == 'Timeframe.HOURLY':
+        #     days_before = (self.Iterations * 4) + self.Barsnumber
+        # else:
+        #     days_before = self.Iterations + 15
+        # period_start = self.LastFixingBarDatetime - timedelta(days=days_before)
+        # period_finish = self.LastFixingBarDatetime + timedelta(days=self.Fixingbar + 1)
+        
+        days_before = (self.Fixingbar + (self.BarsNumber * self.Iterations)) * 2
 
-        period_start = self.SetFinishDatetime - timedelta(days=days_before)
-        period_finish = self.SetFinishDatetime + timedelta(days=self.Fixingbar + 1)
+        period_start = self.LastFixingBarDatetime - timedelta(days=days_before)
+        period_finish = self.LastFixingBarDatetime
 
         # Download data
         # Check: File for this session hasn't downloaded yet or it's size is smaller than 48 bytes (title row size)
@@ -169,16 +173,33 @@ class Iteration(db.Model):
     __tablename__ = 'Iteration'
 
     IterationId = db.Column(db.Integer, primary_key=True, index=True)
+    CreateDatetime = db.Column(db.DateTime, default=datetime.utcnow)
     SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)
     IterationNum = db.Column(db.Integer)
+    StartBarDatetime = db.Column(db.DateTime)
+    FinalBarDatetime = db.Column(db.DateTime)
     FixingBarDatetime = db.Column(db.DateTime)
+
+    decision = db.relationship('Decision', backref='Iteration', lazy='dynamic', passive_deletes=True)
+
+    def __repr__(self):
+        return f'<Iteration {self.IterationNum} of the session {self.SessionId}>'
+
+
+class Decision(db.Model):
+    __tablename__ = 'Decision'
+
+    DecisionId = db.Column(db.Integer, primary_key=True, index=True)
+    CreateDatetime = db.Column(db.DateTime, default=datetime.utcnow)
+    SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)
+    IterationId = db.Column(db.Integer, db.ForeignKey('Iteration.IterationId', ondelete='CASCADE'), index=True)
     Action = db.Column(db.String)
     TimeSpent = db.Column(db.Float)
     ResultRaw = db.Column(db.Float)
     ResultFinal = db.Column(db.Float)
 
     def __repr__(self):
-        return f'<Iteration {self.IterationNum} during session {self.SessionId}>'
+        return f'<Decision {self.DecisionId} during session {self.SessionId}>'
 
 
 @login.user_loader

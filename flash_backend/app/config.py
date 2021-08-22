@@ -32,6 +32,12 @@ SESSION_STATUS_ACTIVE = 'active'
 SESSION_STATUS_CLOSED = 'closed'
 
 
+# # Timeframe mapping
+# tf_mapping = [{
+#     name: 'Timeframe.MINUTES1'
+# }, {}, {}]
+
+
 # Chart parameters
 DF_DAYS_BEFORE = 90
 COLUMN_RESULT = '<CLOSE>'
