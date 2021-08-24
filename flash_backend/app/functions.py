@@ -1,8 +1,8 @@
 from pandas.core.frame import DataFrame
-from app import db
-import app.config as config
-import app.service as service
-from app.models import User, Session, Iteration
+# from app import db
+# import app.config as config
+# import app.service as service
+# from app.models import User, Session, Iteration
 
 import os
 import pyodbc
@@ -23,15 +23,6 @@ from finam.const import Market, Timeframe                       # https://github
 # ============
 
 
-def read_session_options_timeframes() -> list:
-    """Read timeframes from finam module (hardcoded in external lib)"""
-
-    options_timeframes = []
-    for idx, tf in enumerate(Timeframe):
-        options_timeframes.append(str(list(tuple(Timeframe))[idx]))
-    return options_timeframes
-
-
 def read_session_options_markets() -> list:
     """Read all markets from finam module (hardcoded in external lib)"""
 
@@ -39,6 +30,11 @@ def read_session_options_markets() -> list:
     for idx, market in enumerate(Market):
         options_markets.append(str(list(tuple(Market))[idx]))
 
+    # Convert list of strings to list of objects (+1 for idx because of vue-simple-search-dropdown)   
+    options_markets = [
+        {'id': idx+1, 'name': market.replace('Market.', ''), 'code': market} for idx, market in enumerate(options_markets)
+    ]
+    
     return options_markets
 
 
@@ -60,7 +56,27 @@ def collect_session_options_securities() -> dict:
         # Create dict
         options_securities[str(list(tuple(Market))[idx])] = tickers
 
+    # Convert dict filled with pandas' dfs to dict of dicts (key = market)
+    options_securities = {
+        key: options_securities[key].to_dict(orient='records') for key in options_securities.keys()
+    }
+
     return options_securities
+
+
+def read_session_options_timeframes() -> list:
+    """Read timeframes from finam module (hardcoded in external lib)"""
+
+    options_timeframes = []
+    for idx, tf in enumerate(Timeframe):
+        options_timeframes.append(str(list(tuple(Timeframe))[idx]))
+    
+    # Conver list of strings to list of dicts (+1 for idx because of vue-simple-search-dropdown)
+    options_timeframes = [
+        {'id': idx+1, 'name': tf.replace('Timeframe.', ''), 'code': tf} for idx, tf in enumerate(options_timeframes)
+    ]
+
+    return options_timeframes
 
 
 # Iterations page

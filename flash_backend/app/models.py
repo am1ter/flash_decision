@@ -1,5 +1,4 @@
 from pandas.core.frame import DataFrame
-from sqlalchemy import exc
 from app import db, login
 import app.config as config
 import app.service as service
@@ -15,6 +14,9 @@ from finam.const import Market, Timeframe           # https://github.com/ffeast/
 
 from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "UserId" instead "id"
 
+
+# DB related classes
+# ==================
 
 class User(UserMixin, db.Model):
     __tablename__ = 'User'

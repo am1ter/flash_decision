@@ -1,7 +1,7 @@
 import app.service as service
 from app.config import FlaskConfig
 
-from flask import Flask, jsonify
+from flask import Flask, config, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -51,8 +51,7 @@ def handle_http_exception(error):
 
 
 # Load scripts to run flask app
-from app import routes
+# from app import routes # TODO: Delete before release
 from app.models import User, Session, Iteration
-
 from app.api import api
 app.register_blueprint(api, url_prefix='/api')
