@@ -14,7 +14,6 @@ session_options = collect_session_options()
 @api.route('/get-session-options/', methods=['GET'])
 def get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
-    print('test')
     return jsonify(session_options)
 
 

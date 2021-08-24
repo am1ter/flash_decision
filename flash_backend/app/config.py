@@ -43,8 +43,29 @@ COLUMN_RESULT = '<CLOSE>'
 # Session options
 # ===============
 
+DOWNLOAD_SAFETY_FACTOR = 2                  # Enlarge time period for quotes downloading
+TRADINGDAY_DURATION_MINS = (9*60) - 15 - 5   # Standart trading day duration in minutes
 
-def collect_session_options():
+
+def convert_timeframe_to_mintues(tf: str) -> int:
+    """Map timeframe names with their duration in minutes"""
+    minutes_in_timeframe = {
+        'Timeframe.TICKS': 0,
+        'Timeframe.MINUTES1': 1,
+        'Timeframe.MINUTES5': 5,
+        'Timeframe.MINUTES10': 10,
+        'Timeframe.MINUTES15': 15,
+        'Timeframe.MINUTES30': 30,
+        'Timeframe.HOURLY': 60,
+        'Timeframe.DAILY': 24*60,
+        'Timeframe.WEEKLY': 7*24*60,
+        'Timeframe.MONTHLY': 31*24*60
+    }
+    return minutes_in_timeframe[tf]
+
+
+def collect_session_options() -> dict:
+    """Collect all session options in a single object"""
 
     # Option: Timeframes
     timeframes = fn.read_session_options_timeframes()
@@ -77,7 +98,7 @@ def collect_session_options():
         {'id': 1, 'name': '5', 'code': '5'},
         {'id': 2, 'name': '10', 'code': '10'},
         {'id': 3, 'name': '20', 'code': '20'},
-        {'id': 4, 'name': '50', 'code': '50'}
+        {'id': 4, 'name': '30', 'code': '30'}
     ]
     
     # Option: Slippage

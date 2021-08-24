@@ -1,7 +1,8 @@
 import app.service as service
 from app.config import FlaskConfig
 
-from flask import Flask, config, jsonify
+# from flask import Flask, config, jsonify
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate

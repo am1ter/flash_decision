@@ -1,6 +1,6 @@
 from pandas.core.frame import DataFrame
 from app import db, login
-import app.config as config
+import app.config as cfg
 import app.service as service
 
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import os
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError 
+from math import ceil
 
 from finam.export import Exporter, LookupComparator # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe           # https://github.com/ffeast/finam-export
@@ -73,6 +74,8 @@ class Session(db.Model):
     Iterations = db.Column(db.Integer)
     Slippage = db.Column(db.Float)
     Fixingbar = db.Column(db.Integer)
+    TradingType = db.Column(db.String)
+    FirstBarDatetime = db.Column(db.DateTime)
 
     iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', passive_deletes=True)
     
@@ -85,18 +88,20 @@ class Session(db.Model):
         # Custom session with manual specific options
         if mode == 'custom':
             # Set session's status to active
-            self.Status = config.SESSION_STATUS_ACTIVE
+            self.Status = cfg.SESSION_STATUS_ACTIVE
             # Get options data from webpage
-            self.UserId = options['userId']
+            self.UserId = int(options['userId'])
             self.Market = options['market']
             self.Ticker = options['ticker']
             self.Timeframe = options['timeframe']
-            self.Barsnumber = options['barsnumber']
-            self.Timelimit = options['timelimit']
+            self.Barsnumber = int(options['barsnumber'])
+            self.Timelimit = int(options['timelimit'])
             self.LastFixingBarDatetime = datetime.strptime(options['date'], '%Y-%m-%d')
-            self.Iterations = options['iterations']
-            self.Slippage = options['slippage']
-            self.Fixingbar = options['fixingbar']
+            self.Iterations = int(options['iterations'])
+            self.Slippage = float(options['slippage'])
+            self.Fixingbar = int(options['fixingbar'])
+            self.TradingType = self.determine_trading_type()
+            self.FirstBarDatetime = self.calc_first_bar_datetime()
             # Write data to db
             try:
                 db.session.add(self)
@@ -105,26 +110,45 @@ class Session(db.Model):
                 error = str(e.__dict__['orig'])
                 print(error)
 
+    def determine_trading_type(self) -> str:
+        """Determine how long trader will keep the security: <day, <week or >week"""
+        tf_in_mins = cfg.convert_timeframe_to_mintues(self.Timeframe)
+        iteration_period_bars = self.Barsnumber + self.Fixingbar
+        iteration_period_mins = iteration_period_bars * tf_in_mins
+
+        if iteration_period_mins < cfg.TRADINGDAY_DURATION_MINS:
+            trading_type = 'daytrading'
+        elif iteration_period_mins < cfg.TRADINGDAY_DURATION_MINS * 5:
+            trading_type = 'swingtrading'
+        elif iteration_period_mins < cfg.TRADINGDAY_DURATION_MINS * 20:
+            trading_type = 'shortinvesting'
+        else:
+            trading_type = 'longinvesting'
+
+        return trading_type
+
+    def calc_first_bar_datetime(self) -> datetime:
+        """Calculate datetime of the first bar in downloaded quotes dataset"""
+        if self.TradingType == 'daytrading':
+            # One iteration per day
+            days_before = ceil(self.Iterations / 5) * 7 
+        elif self.TradingType == 'swingtrading':
+            # One iteration per week
+            days_before = self.Iterations * 7
+        elif self.TradingType == 'shortinvesting':
+            # One iteration per month
+            days_before = self.Iterations * 31
+        else:
+            # One iteration per 3 months
+            days_before = self.Iterations * 31 * 3
+
+        return self.LastFixingBarDatetime - timedelta(days=days_before)
+
     def download_quotes(self) -> None:
         """Download qoutes data using finam.export lib and save it to HDD"""
 
         # Set path to save/load downloaded quotes data
         save_path = service.get_filename_saved_data(self.SessionId, self.Ticker)
-
-        # # Determine required  period of quotes data according current session parameters
-        # if self.Timeframe == 'Timeframe.DAILY':
-        #     days_before = (self.Iterations*31) + self.Barsnumber
-        # elif self.Timeframe == 'Timeframe.HOURLY':
-        #     days_before = (self.Iterations * 4) + self.Barsnumber
-        # else:
-        #     days_before = self.Iterations + 15
-        # period_start = self.LastFixingBarDatetime - timedelta(days=days_before)
-        # period_finish = self.LastFixingBarDatetime + timedelta(days=self.Fixingbar + 1)
-        
-        days_before = (self.Fixingbar + (self.BarsNumber * self.Iterations)) * 2
-
-        period_start = self.LastFixingBarDatetime - timedelta(days=days_before)
-        period_finish = self.LastFixingBarDatetime
 
         # Download data
         # Check: File for this session hasn't downloaded yet or it's size is smaller than 48 bytes (title row size)
@@ -139,7 +163,7 @@ class Session(db.Model):
             # Download quotes
             try:
                 df_quotes = exporter.download(id_=security.index[0], market=eval(self.Market),
-                                        start_date=period_start, end_date=period_finish,
+                                        start_date=self.FirstBarDatetime, end_date=self.LastFixingBarDatetime,
                                         timeframe=eval(self.Timeframe))
                 df_quotes.index = pd.to_datetime(df_quotes['<DATE>'].astype(str) + ' ' + df_quotes['<TIME>'])
             except:

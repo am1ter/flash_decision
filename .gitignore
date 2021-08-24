@@ -7,6 +7,8 @@ workspace.code-workspace
 /flash_backend/venv/
 /flash_backend/app/__pycache__
 /flash_backend/app/libs/__pycache__
+/flash_backend/migrations/__pycache__
+/flash_backend/migrations/versions/__pycache__
 /flash_backend/upload_folder/*.*
 
 # Frontend: Main
