@@ -39,6 +39,7 @@
                             :class="checkClassIsInputInvalid('ticker')"
                             :options="sessionOptionsSecurities"
                             :maxItem="sessionOptionsSecuritiesLen"
+                            v-on:selected="test"
                             placeholder="Select a security">
                         </Dropdown>
                     </b-col>
@@ -180,6 +181,9 @@
             ...mapState(['isAuth', 'user', 'currentSession'])
         },
         methods: {
+            test() {
+                console.log(this.$children[1])
+            },
             dateDisabled(ymd, date) {
                 // Disable weekends in date input
 
@@ -189,9 +193,8 @@
                 },
             getOptionsSecurities() {
                 // If market dropdown value changed then filter securities dropdown with market value
+                // Condition alse used for prevent exec after loading
                 if (this.$children[1]) {
-                    // Condition alse used for prevent exec after loading
-
                     // Clean selected value in securities dropdown
                     this.$children[1].searchFilter = ''
                     // Get value from markets dropdown
@@ -221,7 +224,8 @@
                             this.currentSession['options'][this.$children[i].id] = this.$children[i].activeYMD
                         }
                     } else {
-                        if (this.$children[i].selected.length == 0) {
+                        console.log(this.$children[i])
+                        if (this.$children[i].selected.id == undefined) {
                             this.formErrors.push(this.$children[i].name)
                         } else {
                             this.currentSession['options'][this.$children[i].name] = this.$children[i].selected.code

@@ -54,6 +54,8 @@ def collect_session_options_securities() -> dict:
         tickers.reset_index(inplace=True)
         # Replace special symbols in ticker's names
         tickers['name'] = tickers.loc[:, 'name'].apply(lambda str: str.replace('(', ' - ').replace(')', ''))
+        # Add ticker's code to displayed name
+        tickers['name'] = tickers['name'] + ' - ' + tickers['code']
         # Create dict filled dict of dicts instead of pandas df
         options_securities[market_name] = tickers.to_dict(orient='records')
 

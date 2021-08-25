@@ -163,7 +163,7 @@
         font-size: 14px !important;
         color: #6c757d !important;
     }
-
+    
     .dropdown-content, .dropdown-item {
     /* Override custom Vue dropdown plugin style */
         min-width: calc(100% + 2px) !important;
