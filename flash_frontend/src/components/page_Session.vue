@@ -39,7 +39,6 @@
                             :class="checkClassIsInputInvalid('ticker')"
                             :options="sessionOptionsSecurities"
                             :maxItem="sessionOptionsSecuritiesLen"
-                            v-on:selected="test"
                             placeholder="Select a security">
                         </Dropdown>
                     </b-col>
@@ -181,9 +180,6 @@
             ...mapState(['isAuth', 'user', 'currentSession'])
         },
         methods: {
-            test() {
-                console.log(this.$children[1])
-            },
             dateDisabled(ymd, date) {
                 // Disable weekends in date input
 
@@ -224,7 +220,6 @@
                             this.currentSession['options'][this.$children[i].id] = this.$children[i].activeYMD
                         }
                     } else {
-                        console.log(this.$children[i])
                         if (this.$children[i].selected.id == undefined) {
                             this.formErrors.push(this.$children[i].name)
                         } else {

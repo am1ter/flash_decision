@@ -9,7 +9,7 @@ workspace.code-workspace
 /flash_backend/app/libs/__pycache__
 /flash_backend/migrations/__pycache__
 /flash_backend/migrations/versions/__pycache__
-/flash_backend/upload_folder/*.*
+/flash_backend/downloads/
 
 # Frontend: Main
 /flash_frontend/.DS_Store

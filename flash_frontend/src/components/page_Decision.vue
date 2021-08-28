@@ -10,6 +10,11 @@
 
     export default {
         name: 'page_Decision',
+        data() {
+            return {
+                iterationChart: {}
+            }
+        },
         computed: {
             ...mapState(['isAuth', 'user', 'currentSession'])
         },
@@ -17,6 +22,10 @@
             console.log('mounted decision page')
             console.log(this.currentSession)
             getIterationChart(this.currentSession.options.sessionId, this.currentSession.iterations.iterationNum)
+                .then(response => {
+                    this.iterationChart = response.data
+                })
+            console.log(this.iterationChart)
         }
     }
 </script>

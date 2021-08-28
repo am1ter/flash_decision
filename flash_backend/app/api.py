@@ -1,5 +1,5 @@
 from app import app
-from app.config import collect_session_options
+import app.config as cfg
 import app.functions as fn
 from app.models import Session, Iteration
 
@@ -8,7 +8,7 @@ from flask.wrappers import Response
 import json
 
 api = Blueprint('api', __name__)
-session_options = collect_session_options()
+session_options = cfg.collect_session_options()
 
 
 @api.route('/get-session-options/', methods=['GET'])
@@ -26,7 +26,6 @@ def start_new_session() -> Response:
         try:
             current_session = Session()
             current_session.new(mode='custom', options=request.json)
-            current_session.download_quotes() 
             return json.dumps(current_session.SessionId)
         except RuntimeError as e:
             error = str(e.__dict__['orig'])
@@ -38,9 +37,20 @@ def start_new_session() -> Response:
 
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
 def get_chart(session_id, iteration_num) -> Response:
-    print('get request received')
+    # Load session from db
     current_session = Session()
     current_session = current_session.get_from_db(session_id)
-    chart = fn.draw_chart_plotly(session=current_session)
+    # Check if iteration number from API request is correct
+    assert 1 <= iteration_num <= current_session.Iterations, 'Error: Wrong iteration number'
+    # Check if session is still active
+    assert current_session.Status == cfg.SESSION_STATUS_ACTIVE, 'Error: Session is closed'
+
+    # Get iteration from db and read data file
+    loaded_iteration = Iteration()
+    loaded_iteration = loaded_iteration.get_from_db(session_id, iteration_num)
+
+    # Format data to draw it with plotly
+    chart = loaded_iteration.prepare_chart_plotly()
+
     return json.dumps(chart)
-    #return jsonify(True)
+    # return json.dumps(True)

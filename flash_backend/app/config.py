@@ -23,11 +23,9 @@ PLATFORM = platform
 
 
 # Files
+SAVE_FORMAT = 'json' # Options: 'json' or 'csv'
 PATH_APP = os.path.dirname(os.path.abspath(__file__))
-PATH_UPLOAD_FOLDER = os.path.join(os.path.dirname(PATH_APP), 'upload_folder')
-# Check if PATH_UPLOAD_FOLDER exists or we need to make it
-if not os.path.exists(PATH_UPLOAD_FOLDER):
-    os.mkdir(PATH_UPLOAD_FOLDER)
+PATH_DOWNLOADS = os.path.join(os.path.dirname(PATH_APP), 'downloads')
 
 
 # Session parameters

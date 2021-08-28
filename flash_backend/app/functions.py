@@ -82,57 +82,6 @@ def read_session_options_timeframes() -> list:
 # Iterations page
 # ==============
 
-
-def get_session(session_id):
-    """Get session parameters by id"""
-
-    current_session = Session.query.get(session_id)
-
-    if current_session.session_status == config.SESSION_STATUS_ACTIVE:
-        return current_session
-    else:
-        raise ValueError('This session is not active. Return to home page and try again.')
-
-
-def download_data(session, start, finish):
-    """Get dataframe with finance data and save it to file"""
-
-    # Set path to save/load downloaded ticker data
-    save_path = service.get_filename_saved_data(session.SessionId, session.Ticker)
-
-    # Check: Has file for this session already downloaded?
-    if not os.path.exists(save_path):
-        # Parse quotes with finam.export library
-        exporter = Exporter()
-        instrument = exporter.lookup(code=session.Ticker, market=eval(session.Market),
-                              code_comparator=LookupComparator.EQUALS)
-        assert len(instrument) == 1
-        df_full = exporter.download(id_=instrument.index[0], market=eval(session.Market),
-                                 start_date=start, end_date=finish,
-                                 timeframe=eval(session.Timeframe))
-        # Save full df to file
-        df_full.index = pd.to_datetime(df_full['<DATE>'].astype(str) + ' ' + df_full['<TIME>'])
-        df_full.to_csv(save_path, index=True, index_label='index')
-    else:
-        df_full = load_hdd_data(session=session)
-
-    return df_full
-
-
-def load_hdd_data(session):
-    """Get dataframe by reading data from hdd file"""
-    # Set path to save/load downloaded ticker data
-    save_path = service.get_filename_saved_data(session.SessionId, session.Ticker)
-
-    # Load dataframe from hdd
-    try:
-        df_full = pd.read_csv(save_path, parse_dates=True, index_col='index')
-    except FileNotFoundError:
-        raise FileNotFoundError('File not found: ' + save_path)
-
-    return df_full
-
-
 def create_iteration(form):
     """Create new iteration for current session and write it to db"""
 
@@ -236,56 +185,6 @@ def create_iteration(form):
 #     chart_JSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
 
 #     return chart_JSON
-
-
-def get_chart(current_session) -> DataFrame:
-    """Get all data to draw chart"""
-    # Format session parameters
-    if current_session.Timeframe == 'Timeframe.DAILY':
-        days_before = (current_session.Iterations*31) + current_session.Barsnumber
-    elif current_session.Timeframe == 'Timeframe.HOURLY':
-        days_before = (current_session.Iterations * 4) + current_session.Barsnumber
-    else:
-        days_before = current_session.Iterations + 15
-
-    chart_start = current_session.SetFinishDatetime - timedelta(days=days_before)
-    chart_finish = current_session.SetFinishDatetime + timedelta(days=current_session.Fixingbar + 1)
-
-    df_full = load_hdd_data(session=current_session)
-
-    # Parameters to cut dataframe
-    chart_value_finishbar = pd.to_datetime(current_session.SetFinishDatetime)
-
-    # Cut df to selected finish date
-    df_cut = df_full[:(df_full.index.get_loc(str(chart_value_finishbar), method='nearest'))+1]
-    # Cut df with selected bars_number
-    df_final = df_cut.iloc[-current_session.Barsnumber:]
-
-    return df_final
-
-
-def draw_chart_plotly(session):
-    """Prepare JSON with chart data to export into HTML-file"""
-    df = get_chart(session)
-    df['id'] = df.reset_index().index
-
-    data = [
-        go.Figure(
-            data=[go.Candlestick(
-                x=df.id,                             #x=df.id OR x=df.index
-                open=df['<OPEN>'],
-                close=df['<CLOSE>'],
-                low=df['<LOW>'],
-                high=df['<HIGH>'],
-
-                increasing_line_color='#59a14f',
-                decreasing_line_color='#e15759'
-            )]
-        )
-    ]
-
-    chart_JSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
-    return chart_JSON
 
 
 def close_session(session_id):

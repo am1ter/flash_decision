@@ -1,5 +1,4 @@
-import app.config as config
-
+import app.config as cfg
 import os
 import sys
 from shutil import copyfile
@@ -34,11 +33,49 @@ def fix_lib_finamexport() -> None:
                 file.write(filedata)
 
 
-def get_filename_saved_data(session_id, ticker):
-    """ Get filename for current session_id and ticker """
-    if config.PLATFORM == 'win32':
-        save_path = config.PATH_UPLOAD_FOLDER + '\\' + str(session_id) + '_' + str(ticker) + '.csv'
-    else:
-        save_path = config.PATH_UPLOAD_FOLDER + '/' + str(session_id) + '_' + str(ticker) + '.csv'
+def generate_filename_session(session):
+    """ Get filename for current session """
 
-    return save_path
+    # Generate dirname
+    if cfg.PLATFORM == 'win32':
+        dir_path = cfg.PATH_DOWNLOADS + '\\' + str(session.SessionId) + '_' + str(session.Ticker) + '\\'
+    else:
+        dir_path = cfg.PATH_DOWNLOADS + '/' + str(session.SessionId) + '_' + str(session.Ticker) + '/'
+
+    # Create dirs if not exist
+    for dir in [cfg.PATH_DOWNLOADS, dir_path]:
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+
+    # Generate filename
+    if cfg.SAVE_FORMAT == 'csv':
+        filename = 'session_' + str(session.SessionId) + '.csv'
+    elif cfg.SAVE_FORMAT == 'json':
+        filename = 'session_' + str(session.SessionId) + '.json'
+
+    # Return full path
+    return dir_path + filename
+    
+    
+def generate_filename_iteration(iteration):
+    """ Get filename for current iteration """
+
+    # Generate dirname
+    if cfg.PLATFORM == 'win32':
+        dir_path = cfg.PATH_DOWNLOADS + '\\' + str(iteration.SessionId) + '_' + str(iteration.Session.Ticker) + '\\'
+    else:
+        dir_path = cfg.PATH_DOWNLOADS + '/' + str(iteration.SessionId) + '_' + str(iteration.Session.Ticker) + '/'
+
+    # Create dirs if not exist
+    for dir in [cfg.PATH_DOWNLOADS, dir_path]:
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+    
+    # Generate filename
+    if cfg.SAVE_FORMAT == 'csv':
+        filename = 'iteration_' + str(iteration.SessionId) + '_' + str(iteration.IterationNum) + '.csv'
+    elif cfg.SAVE_FORMAT == 'json':
+        filename = 'iteration_' + str(iteration.SessionId) + '_' + str(iteration.IterationNum) + '.json'
+
+    # Return full path
+    return dir_path + filename
