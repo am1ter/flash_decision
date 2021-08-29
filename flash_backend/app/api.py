@@ -52,5 +52,5 @@ def get_chart(session_id, iteration_num) -> Response:
     # Format data to draw it with plotly
     chart = loaded_iteration.prepare_chart_plotly()
 
-    return json.dumps(chart)
+    return json.dumps(chart, ensure_ascii=False)
     # return json.dumps(True)

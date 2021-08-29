@@ -322,22 +322,25 @@ class Iteration(db.Model):
     def prepare_chart_plotly(self) -> json:
         """Prepare JSON with chart data to export into HTML-file"""
 
-        # Read df
+        # Read iteration df
         df = self._read_data_file()
+        # Show bars only between Start and Final (hide bars between Final and Fixing)
+        df = df.iloc[:self.Session.Barsnumber]
+        # Add numerical id instead date
         df['id'] = df.reset_index().index
 
         # Convert it to plotly formatted json
         data = [
             graph_objs.Figure(
                 data=[graph_objs.Candlestick(
-                    x=df.id,                             #x=df.id OR x=df.index
+                    x=df.id + 1,                             #x=df.id OR x=df.index
                     open=df['<OPEN>'],
                     close=df['<CLOSE>'],
                     low=df['<LOW>'],
                     high=df['<HIGH>'],
 
-                    increasing_line_color='#59a14f',
-                    decreasing_line_color='#e15759'
+                    increasing_line_color='#3c996e',
+                    decreasing_line_color='#e15361'
                 )]
             )
         ]

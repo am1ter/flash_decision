@@ -17,6 +17,5 @@ export function postStartNewSession(form) {
 
 export function getIterationChart(sessionId, iterationNum) {
     console.log('Run getIterationChart')
-    console.log(API_URL + `/get-chart/${sessionId}/${iterationNum}/`)
     return axios.get(API_URL + `/get-chart/${sessionId}/${iterationNum}/`)
 }
