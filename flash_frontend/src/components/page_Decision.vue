@@ -22,9 +22,9 @@
         data() {
             return {
                 // TODO: Delete before release
-                currentSession: {'options': {'sessionId': 63},
-                            'iterations': {'iterationNum': 1}
-                },
+                // currentSession: {'options': {'sessionId': 63},
+                //             'iterations': {'iterationNum': 1}
+                // },
                 iterationChart: {},
                 // Chart layout properties
                 layout: {
@@ -51,9 +51,11 @@
             ...mapState(['isAuth', 'user', 'currentSession'])
         },
         mounted() {
-            getIterationChart(this.currentSession.options.sessionId, this.currentSession.iterations.iterationNum)
+            getIterationChart(this.currentSession.options.sessionId, this.currentSession.currentIterationNum)
                 .then(response => {
-                    this.iterationChart = JSON.parse(response.data)[0]
+                    // Chart data to display, iteration data to vuex storage
+                    this.iterationChart = JSON.parse(response.data)[0];
+                    this.currentSession['iterations']['1'] = JSON.parse(response.data)[1]
                 })
         }
     }

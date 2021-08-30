@@ -1,7 +1,7 @@
 from app import app
 import app.config as cfg
 import app.functions as fn
-from app.models import Session, Iteration
+from app.models import Decision, Session, Iteration
 
 from flask import Blueprint, request
 from flask.wrappers import Response
@@ -20,9 +20,7 @@ def get_session_options() -> Response:
 @api.route('/start-new-session/', methods=['POST'])
 def start_new_session() -> Response:
     """Start training session: Get json-object, create SQL record and download quotes data"""
-    request.get_json({'userId': 1, 'market': 'Market.SHARES', 'ticker': 'SBER', 'timeframe': 'Timeframe.MINUTES5', 'barsnumber': '10', 'timelimit': '10', 'date': '2021-08-13', 'iterations': '10', 'slippage': '0.1', 'fixingbar': '15'}) #TODO: Delete when debug will be finished
     if request.json:
-        print(request.json) #TODO: Delete when debug will be finished
         try:
             current_session = Session()
             current_session.new(mode='custom', options=request.json)
@@ -53,4 +51,20 @@ def get_chart(session_id, iteration_num) -> Response:
     chart = loaded_iteration.prepare_chart_plotly()
 
     return json.dumps(chart, ensure_ascii=False)
-    # return json.dumps(True)
+
+
+@api.route('/record-decision/', methods=['POST'])
+def record_decision() -> Response:
+    """Start training session: Get json-object, create SQL record and download quotes data"""
+    if request.json:
+        try:
+            new_decision = Decision()
+            new_decision.new(action=request.json)
+            # return json.dumps(new_decision.SessionId)
+            return True
+        except RuntimeError as e:
+            error = str(e.__dict__['orig'])
+            print(error)
+            return json.dumps(False)
+    else:
+        return json.dumps(False)

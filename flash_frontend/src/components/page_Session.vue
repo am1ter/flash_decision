@@ -240,8 +240,9 @@
                                 } else {
                                     // Add session id from response to the object
                                     this.currentSession['options']['sessionId'] = response.data
-                                    // Create first iteration in the current session
-                                    this.currentSession['iterations'] = {'iterationNum': 1}
+                                    // Create first iteration in the current session (counter and storage)
+                                    this.currentSession['currentIterationNum'] = 1
+                                    this.currentSession["iterations"] = {1: {}}
                                     // Go to the decision making page
                                     this.$router.push('/decision/' + response.data + '/' + 1)
                                 }

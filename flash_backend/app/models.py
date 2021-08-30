@@ -153,11 +153,34 @@ class Session(db.Model):
             days_before = self.Iterations * 31 * 3
         return self.LastFixingBarDatetime - timedelta(days=days_before)
 
+    def _generate_filename_session(self):
+        """ Get filename for current session """
+
+        # Generate dirname
+        if cfg.PLATFORM == 'win32':
+            dir_path = cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Ticker) + '\\'
+        else:
+            dir_path = cfg.PATH_DOWNLOADS + '/' + str(self.SessionId) + '_' + str(self.Ticker) + '/'
+
+        # Create dirs if not exist
+        for dir in [cfg.PATH_DOWNLOADS, dir_path]:
+            if not os.path.exists(dir):
+                os.mkdir(dir)
+
+        # Generate filename
+        if cfg.SAVE_FORMAT == 'csv':
+            filename = 'session_' + str(self.SessionId) + '.csv'
+        elif cfg.SAVE_FORMAT == 'json':
+            filename = 'session_' + str(self.SessionId) + '.json'
+
+        # Return full path
+        return dir_path + filename
+
     def _download_quotes(self) -> DataFrame:
         """Download qoutes data using finam.export lib and save it to HDD"""
 
         # Set path to save/load downloaded quotes data
-        save_path = service.generate_filename_session(self)
+        save_path = self._generate_filename_session()
 
         # Check: Pass if file for this session hasn't downloaded yet or it's size is smaller than 48 bytes
         assert not os.path.exists(save_path) or os.stat(save_path).st_size <= 48, 'Error: Quotes has already downloaded'   
@@ -210,7 +233,7 @@ class Session(db.Model):
     def load_csv(self) -> DataFrame:
         """Get dataframe by reading data from hdd file"""
         # Set path to save/load downloaded ticker data
-        save_path = service.generate_filename_session(self)
+        save_path = self._generate_filename_session()
         # Load dataframe from hdd
         try:
             return pd.read_csv(save_path, parse_dates=True, index_col='index')
@@ -220,7 +243,7 @@ class Session(db.Model):
     def remove_csv(self) -> None:
         """Delete downloaded file with quotes"""
         if self.SessionId and self.Ticker:
-            save_path = service.generate_filename_session(self)
+            save_path = self._generate_filename_session()
             os.remove(save_path)
         else:
             raise FileNotFoundError('No information about id and ticker of the current session')
@@ -277,7 +300,7 @@ class Iteration(db.Model):
 
         # Save iteration quotes df to file
         df_quotes_cut = df_quotes.iloc[self.StartBarNum + 1:self.FixingBarNum + 1]
-        save_path = service.generate_filename_iteration(self)
+        save_path = self._generate_filename_iteration()
         if cfg.SAVE_FORMAT == 'csv':
             df_quotes_cut.to_csv(save_path, index=True, index_label='index')
         elif cfg.SAVE_FORMAT == 'json':
@@ -306,10 +329,33 @@ class Iteration(db.Model):
         """Get iterations's options from DB and fill with them the object"""
         return Iteration.query.filter(Iteration.SessionId == session_id, Iteration.IterationNum == iteration_num).first()
 
+    def _generate_filename_iteration(self):
+        """ Get filename for current iteration """
+
+        # Generate dirname
+        if cfg.PLATFORM == 'win32':
+            dir_path = cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '\\'
+        else:
+            dir_path = cfg.PATH_DOWNLOADS + '/' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '/'
+
+        # Create dirs if not exist
+        for dir in [cfg.PATH_DOWNLOADS, dir_path]:
+            if not os.path.exists(dir):
+                os.mkdir(dir)
+        
+        # Generate filename
+        if cfg.SAVE_FORMAT == 'csv':
+            filename = 'iteration_' + str(self.SessionId) + '_' + str(self.IterationNum) + '.csv'
+        elif cfg.SAVE_FORMAT == 'json':
+            filename = 'iteration_' + str(self.SessionId) + '_' + str(self.IterationNum) + '.json'
+
+        # Return full path
+        return dir_path + filename
+
     def _read_data_file(self) -> DataFrame:
         """Get dataframe by reading data from hdd file"""
         # Set path to save/load downloaded ticker data
-        save_path = service.generate_filename_iteration(self)
+        save_path = self._generate_filename_iteration()
         # Load dataframe from hdd
         try:
             if cfg.SAVE_FORMAT == 'csv':
@@ -318,6 +364,11 @@ class Iteration(db.Model):
                 return pd.read_json(save_path, orient='records')
         except FileNotFoundError:
             raise FileNotFoundError('File not found: ' + save_path)
+
+    def _convert_to_dict(self) -> dict:
+        """Convet SQLAlchemy object to dict"""
+        as_dict = {i.name: str(getattr(self, i.name)) for i in self.__table__.columns}
+        return as_dict
 
     def prepare_chart_plotly(self) -> json:
         """Prepare JSON with chart data to export into HTML-file"""
@@ -330,20 +381,23 @@ class Iteration(db.Model):
         df['id'] = df.reset_index().index
 
         # Convert it to plotly formatted json
-        data = [
-            graph_objs.Figure(
-                data=[graph_objs.Candlestick(
-                    x=df.id + 1,                             #x=df.id OR x=df.index
-                    open=df['<OPEN>'],
-                    close=df['<CLOSE>'],
-                    low=df['<LOW>'],
-                    high=df['<HIGH>'],
+        chart_data = graph_objs.Figure(
+                        data=[graph_objs.Candlestick(
+                        x=df.id + 1,                    #x=df.id OR x=df.index
+                        open=df['<OPEN>'],
+                        close=df['<CLOSE>'],
+                        low=df['<LOW>'],
+                        high=df['<HIGH>'],
 
-                    increasing_line_color='#3c996e',
-                    decreasing_line_color='#e15361'
-                )]
-            )
-        ]
+                        increasing_line_color='#3c996e',
+                        decreasing_line_color='#e15361'
+                    )]
+        )
+
+        # Export chart and iteration in one JSON
+        data = []
+        data.append(chart_data)
+        data.append(self._convert_to_dict())
 
         chart_JSON = json.dumps(data, cls=PlotlyJSONEncoder)
         return chart_JSON
@@ -363,6 +417,10 @@ class Decision(db.Model):
 
     def __repr__(self):
         return f'<Decision {self.DecisionId} during session {self.SessionId}>'
+
+    def new(self, iteration: Iteration, action: str) -> None:
+        """Create new session and write it to db"""
+
 
 
 @login.user_loader
