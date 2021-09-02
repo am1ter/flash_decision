@@ -34,8 +34,8 @@ const routes = [{
             if (store.state.isAuth) { next() } else { next('/login') }
         },
         meta: {
-            title: 'Make a decision',
-            instruction: 'You have 60 seconds to make a decision'
+            title: 'Make your decision',
+            instruction: 'We will close your position in 15 bars. Choose wisely!'
         }
     },
     {

@@ -7,6 +7,7 @@ import { BootstrapVue, IconsPlugin } from 'bootstrap-vue' // Bootstrap
 import 'bootstrap/dist/css/bootstrap.css' // Bootstrap
 import 'bootstrap-vue/dist/bootstrap-vue.css' // Bootstrap
 import Dropdown from './libs/vue-simple-search-dropdown' // Custom Vue dropdown with search
+import vueAwesomeCountdown from 'vue-awesome-countdown'
 
 import App from './App.vue'
 
@@ -17,6 +18,7 @@ Vue.component('marquee-text', MarqueeText)
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 Vue.component('Dropdown', Dropdown)
+Vue.use(vueAwesomeCountdown, 'vac')
 
 new Vue({
     router,
