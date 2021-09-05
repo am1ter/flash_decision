@@ -26,31 +26,34 @@ def start_new_session() -> Response:
             current_session.new(mode='custom', options=request.json)
             return json.dumps(current_session.SessionId)
         except RuntimeError as e:
-            error = str(e.__dict__['orig'])
-            print(error)
-            return json.dumps(False)
+            raise RuntimeError('Error: No connection to DB')
     else:
-        return json.dumps(False)
+        raise RuntimeError('Error: Wrong POST request has been received')
 
 
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
 def get_chart(session_id, iteration_num) -> Response:
-    # Load session from db
-    current_session = Session()
-    current_session = current_session.get_from_db(session_id)
-    # Check if iteration number from API request is correct
-    assert 1 <= iteration_num <= current_session.Iterations, 'Error: Wrong iteration number'
-    # Check if session is still active
-    assert current_session.Status == cfg.SESSION_STATUS_ACTIVE, 'Error: Session is closed'
+    """Send json with chart data to frontend"""
+    try:
+        # Load session from db
+        current_session = Session()
+        current_session = current_session.get_from_db(session_id)
+        # Check if iteration number from API request is correct
+        assert 1 <= iteration_num <= current_session.Iterations, 'Error: Wrong iteration number'
+        # Check if session is still active
+        assert current_session.Status == cfg.SESSION_STATUS_ACTIVE, 'Error: Session is closed'
 
-    # Get iteration from db and read data file
-    loaded_iteration = Iteration()
-    loaded_iteration = loaded_iteration.get_from_db(session_id, iteration_num)
+        # Get iteration from db and read data file
+        loaded_iteration = Iteration()
+        loaded_iteration = loaded_iteration.get_from_db(session_id, iteration_num)
 
-    # Format data to draw it with plotly
-    chart = loaded_iteration.prepare_chart_plotly()
+        # Format data to draw it with plotly
+        chart = loaded_iteration.prepare_chart_plotly()
 
-    return json.dumps(chart, ensure_ascii=False)
+        return json.dumps(chart, ensure_ascii=False)
+    except RuntimeError as e:
+        raise RuntimeError('Error: No connection to DB')
+
 
 
 @api.route('/record-decision/', methods=['POST'])
@@ -63,8 +66,6 @@ def record_decision() -> Response:
             # return json.dumps(new_decision.SessionId)
             return True
         except RuntimeError as e:
-            error = str(e.__dict__['orig'])
-            print(error)
-            return json.dumps(False)
+            raise RuntimeError('Error: No connection to DB')
     else:
-        return json.dumps(False)
+        raise RuntimeError('Error: Wrong POST request has been received')

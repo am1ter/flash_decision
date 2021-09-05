@@ -250,7 +250,10 @@ class Session(db.Model):
 
     def get_from_db(self, session_id: int) -> db.Model:
         """Get session's options from DB and fill with them the object"""
-        return Session.query.get(int(session_id))
+        try:
+            return Session.query.get(int(session_id))
+        except:
+            raise SQLAlchemyError('Error: No connection to DB')
 
 
 class Iteration(db.Model):
@@ -422,7 +425,6 @@ class Decision(db.Model):
         """Create new session and write it to db"""
 
 
-
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -434,5 +436,4 @@ def write_object_to_db(object):
         db.session.add(object)
         db.session.commit()
     except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        print(error)
+        raise SQLAlchemyError('Error: No connection to DB')
