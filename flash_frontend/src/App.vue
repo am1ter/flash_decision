@@ -125,6 +125,28 @@
         text-align: center;
     }
 
+    #page {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 15px 25px;
+        width: auto;
+    }
+
+    #errors {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        top: 0px;
+        font-size: 24px;
+        font-weight: 700;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(255,255,255,0.7);
+    }
+
     .disabled {
         opacity: 25%;
         pointer-events: none;

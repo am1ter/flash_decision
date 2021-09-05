@@ -17,21 +17,10 @@ const state = {
 
 const actions = {
     // asynchronous operations
-    // TODO: Remove before release
-    // loadSessions(context) {
-    //     return fetchSessions()
-    //         .then((respone) => context.commit('setSessions', { sessions: respone }))
-    // },
-    addIdToSession(context) {
-        console.log(context)
-    }
 }
 
 const mutations = {
     // isolated data mutations
-    setSessions(state, payload) {
-        state.sessions = payload.sessions
-    }
 }
 
 const getters = {
