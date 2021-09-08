@@ -5,7 +5,11 @@
         </div>
         <div id='content' v-if="apiErrors == 0">
             <b-alert show variant="success" class="ms-4 me-4 mb-0 p-1 text-center">
-                <countdown ref="pageTimer" :autoStart="true" :end-time="new Date().getTime() + 60000" @finish="(vac) => saveDecision(vac)">
+                <countdown 
+                    ref="pageTimer" 
+                    :autoStart="false" 
+                    :left-time="Number(currentSession.options.timelimit) * 1000"
+                    @finish="(vac) => saveDecision(vac)">
                     <template v-slot:process="pageTimer">
                         <span>{{ `Time left: ${pageTimer.timeObj.ceil.s}` }} sec. </span>
                     </template>
@@ -41,6 +45,7 @@
                 //             'iterations': {'iterationNum': 1}
                 // },
                 // Current iteration chart data
+                temp: 15000,
                 iterationChart: {},
                 // Chart layout properties
                 layout: {
@@ -79,6 +84,8 @@
             this.createBlankDecision()
             // Load first chart
             this.updateChart()
+            // Start countdown
+            this.$refs.pageTimer.startCountdown()
         },
         methods: {
             // Create blank decision
@@ -142,8 +149,8 @@
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['action'] = action
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['timeSpent'] = timeSpent
 
-                // Pause countdown
-                this.$refs.pageTimer.pauseCountdown()
+                // Finish countdown
+                this.$refs.pageTimer.finishCountdown()
 
                 // Send post request
                 // TODO
@@ -165,6 +172,8 @@
                 this.createBlankDecision()
                 // Load new chart
                 this.updateChart()
+                // Restart countdown
+                this.$refs.pageTimer.startCountdown(true)
             }
         }
     }

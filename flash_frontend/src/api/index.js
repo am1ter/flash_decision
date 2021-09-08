@@ -10,7 +10,6 @@ export function fetchSessionOptions() {
 
 
 export function postStartNewSession(form) {
-    console.log('POST request sended') //TODO: Delete before release
     return axios.post(API_URL + '/start-new-session/', form)
 }
 
