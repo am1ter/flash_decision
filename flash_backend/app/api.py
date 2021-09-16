@@ -58,11 +58,11 @@ def get_chart(session_id, iteration_num) -> Response:
 
 @api.route('/record-decision/', methods=['POST'])
 def record_decision() -> Response:
-    """Start training session: Get json-object, create SQL record and download quotes data"""
+    """Start training session: Get json-object, create SQL record, score results"""
     if request.json:
         try:
             new_decision = Decision()
-            new_decision.new(action=request.json)
+            new_decision.new(props=request.json)
             # return json.dumps(new_decision.SessionId)
             return True
         except RuntimeError as e:

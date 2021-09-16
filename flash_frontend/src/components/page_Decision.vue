@@ -31,7 +31,7 @@
 <script>
     import { mapState } from 'vuex'
     import { Plotly } from 'vue-plotly'
-    import { getIterationChart } from '@/api'
+    import { getIterationChart, postRecordDecision } from '@/api'
 
     export default {
         name: 'page_Decision',
@@ -146,6 +146,8 @@
                 }
 
                 // Save decision to the vuex object
+                this.currentSession['decisions'][this.currentSession.currentIterationNum]['sessionId'] = this.currentSession.options.sessionId
+                this.currentSession['decisions'][this.currentSession.currentIterationNum]['iterationNum'] = this.currentSession.currentIterationNum
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['action'] = action
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['timeSpent'] = timeSpent
 
@@ -153,7 +155,11 @@
                 this.$refs.pageTimer.finishCountdown()
 
                 // Send post request
-                // TODO
+                postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum]).then(
+                    () => {
+                        console.log('Request has sent successfully')
+                    }
+                )
 
                 // Go to the next iteration
                 if (this.currentSession.currentIterationNum < Number(this.currentSession.options.iterations)) {

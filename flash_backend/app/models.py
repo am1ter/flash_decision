@@ -225,7 +225,7 @@ class Session(db.Model):
         write_object_to_db(self)
 
     def _create_iterations(self, df_quotes) -> None:
-        """Create all iterations"""
+        """Create all iterations for current session (self)"""
         for i in range (1, self.Iterations + 1):
             iteration = Iteration()
             iteration.new(session=self, iteration_num=i, df_quotes=df_quotes)
@@ -421,8 +421,15 @@ class Decision(db.Model):
     def __repr__(self):
         return f'<Decision {self.DecisionId} during session {self.SessionId}>'
 
-    def new(self, iteration: Iteration, action: str) -> None:
+    def new(self, props: dict) -> None:
         """Create new session and write it to db"""
+        current_iter = Iteration()
+        current_iter = current_iter.get_from_db(session_id=props['sessionId'], iteration_num=props['iterationNum'])
+        self.SessionId = current_iter.SessionId
+        self.SessionId = current_iter.IterationId
+        self.SessionId = props['action']
+        self.TimeSpent = props['timeSpent']
+        # TODO Add new method to Iteration class - score results
 
 
 @login.user_loader

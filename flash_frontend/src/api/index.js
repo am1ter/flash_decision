@@ -18,3 +18,10 @@ export function getIterationChart(sessionId, iterationNum) {
     console.log('Run getIterationChart')
     return axios.get(API_URL + `/get-chart/${sessionId}/${iterationNum}/`)
 }
+
+
+export function postRecordDecision(decision) {
+    console.log('post Record Decision')
+    console.log(decision)
+    return axios.post(API_URL + '/record-decision/', decision)
+}
