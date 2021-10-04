@@ -3,7 +3,7 @@
         <div id='errors' v-if="apiErrors.length > 0">
             <p>{{apiErrors[0]}}</p>
         </div>
-        <div id='content' v-if="apiErrors == 0">
+        <div id='bars' v-if="apiErrors == 0">
             <b-alert show variant="success" class="ms-4 me-4 mb-0 p-1 text-center">
                 <countdown 
                     ref="pageTimer" 
@@ -187,5 +187,10 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+#bars {
+        width: 453px;
+        padding-bottom: 15px;
+    }
 
 </style>
