@@ -267,6 +267,9 @@ class Iteration(db.Model):
     FinalBarNum = db.Column(db.Integer)
     FixingBarNum = db.Column(db.Integer)
     FixingBarDatetime = db.Column(db.DateTime)
+    StartBarPrice = db.Column(db.Float)
+    FinalBarPrice = db.Column(db.Float)
+    FixingBarPrice = db.Column(db.Float)
 
     decision = db.relationship('Decision', backref='Iteration', lazy='dynamic', passive_deletes=True)
 
@@ -310,6 +313,14 @@ class Iteration(db.Model):
             df_quotes_cut.to_json(save_path, index=True, orient='records')
         else:
             raise RuntimeError('Error: Unsupported export file format')
+
+        # Save iterations' prices
+        self.StartBarPrice = df_quotes_cut.iloc[:1]['<CLOSE>'].values[0]
+        self.FinalBarPrice = df_quotes_cut.iloc[session.Barsnumber-1:session.Barsnumber]['<CLOSE>'].values[0]
+        self.FixingBarPrice = df_quotes_cut.iloc[-1:]['<CLOSE>'].values[0]
+        
+        # Update db object
+        write_object_to_db(self)
 
     def _calc_new_iteration_fixbardatetime(self) -> datetime:
         """Calculate datetime of the previous bar in downloaded quotes dataset"""
@@ -426,10 +437,24 @@ class Decision(db.Model):
         current_iter = Iteration()
         current_iter = current_iter.get_from_db(session_id=props['sessionId'], iteration_num=props['iterationNum'])
         self.SessionId = current_iter.SessionId
-        self.SessionId = current_iter.IterationId
-        self.SessionId = props['action']
+        self.IterationId = current_iter.IterationId
+        self.Action = props['action']
         self.TimeSpent = props['timeSpent']
-        # TODO Add new method to Iteration class - score results
+        
+        # Calc results taking into account the slippage level
+        price_change = round((current_iter.FixingBarPrice - current_iter.FinalBarPrice) / current_iter.StartBarPrice, 6)
+        if self.Action == 'Buy':
+            self.ResultRaw = price_change * 1
+        elif self.Action == 'Skip':
+            self.ResultRaw = price_change * 0
+        elif self.Action == 'Sell':
+            self.ResultRaw = price_change * -1
+        else:
+            raise RuntimeError('Unsupported action')
+        self.ResultFinal = round(self.ResultRaw - current_iter.Session.Slippage, 6)
+
+        # Write data to db
+        write_object_to_db(self)
 
 
 @login.user_loader

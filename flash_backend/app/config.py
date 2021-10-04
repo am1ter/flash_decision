@@ -102,9 +102,9 @@ def collect_session_options() -> dict:
     # Option: Slippage
     slippage = [
         {'id': 1, 'name': '0%', 'code': '0'},
-        {'id': 2, 'name': '0.1%', 'code': '0.1'},
-        {'id': 3, 'name': '0.5%', 'code': '0.5'},
-        {'id': 4, 'name': '1%', 'code': '1'}
+        {'id': 2, 'name': '0.1%', 'code': '0.001'},
+        {'id': 3, 'name': '0.5%', 'code': '0.005'},
+        {'id': 4, 'name': '1%', 'code': '0.01'}
     ]
 
     # Option: Fixing bar
