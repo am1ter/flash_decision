@@ -1,6 +1,7 @@
 import app.config as cfg
 import os
 import sys
+import time
 from shutil import copyfile
 
 
@@ -31,3 +32,8 @@ def fix_lib_finamexport() -> None:
             # Write the file with correct string
             with open(path_lib_finamexport, 'w') as file:
                 file.write(filedata)  
+
+
+def print_log(string: str) -> str:
+    """Print formatted string with local time"""
+    print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ': ' + string)

@@ -1,12 +1,41 @@
 <template>
     <div>
-        <div>Scoreboard</div>
+        <div id='errors' v-if="apiErrors.length > 0">
+            <p>{{apiErrors[0]}}</p>
+        </div>
+        <div class="text-center">You have earned <b>{{currentSession.sessionResult * 100}}%</b> during this session</div>
     </div>
 </template>
 
 <script>
+    import { mapState } from 'vuex'
+    import { getScoreboard } from '@/api'
+
     export default {
-        name: 'page_Scoreboard'
+        name: 'page_Scoreboard',
+        data() {
+            return {
+                apiErrors: []
+            }
+        },
+        computed: {
+            ...mapState(['isAuth', 'user', 'currentSession'])
+        },
+        mounted() {
+            // Load first chart
+            this.loadScoreboard()
+        },
+        methods: {
+            loadScoreboard() {
+            // Get iteration chart over API
+            return getScoreboard(this.user.id, this.currentSession.options.sessionId)
+                    .then(response => {
+                        this.currentSession['sessionResult'] = response.data
+                    },
+                    reject => {this.apiErrors.push(reject)}
+                    )
+            }
+        }
     }
 </script>
 

@@ -40,11 +40,6 @@
         },
         data() {
             return {
-                // TODO: Delete before release
-                // currentSession: {'options': {'sessionId': 63},
-                //             'iterations': {'iterationNum': 1}
-                // },
-                // Current iteration chart data
                 temp: 15000,
                 iterationChart: {},
                 // Chart layout properties
@@ -114,7 +109,7 @@
                     )
             },
             // Decision has been made
-            saveDecision(event) {
+            async saveDecision(event) {
 
                 // Check that current iteration is okay
                 if (this.currentSession['decisions'].length < this.currentSession.currentIterationNum) {
@@ -146,6 +141,7 @@
                 }
 
                 // Save decision to the vuex object
+                console.log(this.currentSession.currentIterationNum)
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['sessionId'] = this.currentSession.options.sessionId
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['iterationNum'] = this.currentSession.currentIterationNum
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['action'] = action
@@ -155,17 +151,15 @@
                 this.$refs.pageTimer.finishCountdown()
 
                 // Send post request
-                postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum]).then(
-                    () => {
-                        console.log('Request has sent successfully')
-                    }
+                await postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum]).catch(
+                    reject => {this.apiErrors.push(reject)}
                 )
 
                 // Go to the next iteration
                 if (this.currentSession.currentIterationNum < Number(this.currentSession.options.iterations)) {
                     this.goNextIteration()
                 } else {
-                    this.$router.push('/scoreboard/' + this.currentSession.options.sessionId)
+                    this.$router.push('/scoreboard/' + this.user.id + '/' + this.currentSession.options.sessionId)
                 }
             },
             goNextIteration() {

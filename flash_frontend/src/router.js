@@ -39,7 +39,7 @@ const routes = [{
         }
     },
     {
-        path: '/scoreboard',
+        path: '/scoreboard/:user_id/:session_id',
         name: 'Scoreboard page',
         component: App.components.page_Scoreboard,
         beforeEnter(to, from, next) {

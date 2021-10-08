@@ -5,11 +5,13 @@ const API_URL = 'http://127.0.0.1:8000/api'
 
 
 export function fetchSessionOptions() {
+    console.log('Run fetchSessionOptions')
     return axios.get(API_URL + '/get-session-options/')
 }
 
 
 export function postStartNewSession(form) {
+    console.log('Run postStartNewSession')
     return axios.post(API_URL + '/start-new-session/', form)
 }
 
@@ -22,6 +24,10 @@ export function getIterationChart(sessionId, iterationNum) {
 
 export function postRecordDecision(decision) {
     console.log('post Record Decision')
-    console.log(decision)
     return axios.post(API_URL + '/record-decision/', decision)
+}
+
+export function getScoreboard(userId, sessionId) {
+    console.log('Run getScoreboard')
+    return axios.get(API_URL + `/get-scoreboard/${userId}/${sessionId}/`)
 }

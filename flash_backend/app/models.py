@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import os
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError 
+from sqlalchemy.sql import func
 from math import ceil
 import json
 from plotly.utils import PlotlyJSONEncoder
@@ -79,6 +80,7 @@ class Session(db.Model):
     TotalSessionBars = db.Column(db.Integer)
 
     iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', passive_deletes=True)
+    decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
     
     def __repr__(self):
         """Return the session id"""
@@ -255,6 +257,14 @@ class Session(db.Model):
         except:
             raise SQLAlchemyError('Error: No connection to DB')
 
+    def calc_result(self):
+        """Calc current session's result"""
+        try:
+            result = db.session.query(func.sum(Decision.ResultFinal)).filter(Decision.SessionId == self.SessionId).all()[0][0]
+            return round(result, 6)
+        except:
+            raise SQLAlchemyError('Error: No connection to DB')
+
 
 class Iteration(db.Model):
     __tablename__ = 'Iteration'
@@ -271,7 +281,7 @@ class Iteration(db.Model):
     FinalBarPrice = db.Column(db.Float)
     FixingBarPrice = db.Column(db.Float)
 
-    decision = db.relationship('Decision', backref='Iteration', lazy='dynamic', passive_deletes=True)
+    decisions = db.relationship('Decision', backref='Iteration', lazy='dynamic', passive_deletes=True)
 
     def __repr__(self):
         return f'<Iteration {self.IterationNum} of the session {self.SessionId}>'

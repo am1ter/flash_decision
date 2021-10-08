@@ -8,7 +8,7 @@ Vue.use(Vuex)
 
 const state = {
     // single source of data
-    version: '0.5.05',
+    version: '0.5.06',
     isAuth: true,
     user: { id: 1, name: 'amiter' },
     sessions: [],
