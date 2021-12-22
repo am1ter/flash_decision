@@ -10,6 +10,7 @@ import json
 
 api = Blueprint('api', __name__)
 session_options = cfg.collect_session_options()
+srv.print_log(f'Flask has been started')
 
 
 @api.route('/get-session-options/', methods=['GET'])

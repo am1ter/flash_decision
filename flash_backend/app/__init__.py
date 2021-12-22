@@ -13,7 +13,7 @@ import traceback
 
 
 # Fix bug with finam-export lib v.4.1.0
-service.fix_lib_finamexport()
+# service.fix_lib_finamexport()
 
 
 # Create Flask application and configure it

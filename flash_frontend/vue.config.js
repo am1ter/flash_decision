@@ -1,1 +1,4 @@
-module.exports = { runtimeCompiler: true }
+module.exports = { 
+    runtimeCompiler: false,
+    parallel: true
+}

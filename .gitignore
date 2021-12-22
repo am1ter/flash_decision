@@ -4,11 +4,11 @@ workspace.code-workspace
 
 # Backend: Main
 /flash_backend/.idea
-/flash_backend/venv/
-/flash_backend/app/__pycache__
-/flash_backend/app/libs/__pycache__
-/flash_backend/migrations/__pycache__
-/flash_backend/migrations/versions/__pycache__
+/flash_backend/.venv/
+/flash_backend/app/__pycache__/
+/flash_backend/app/libs/__pycache__/
+/flash_backend/migrations/__pycache__/
+/flash_backend/migrations/versions/__pycache__/
 /flash_backend/downloads/
 
 # Frontend: Main
@@ -34,3 +34,4 @@ workspace.code-workspace
 /flash_frontend/*.njsproj
 /flash_frontend/*.sln
 /flash_frontend/*.sw?
+.gitignore

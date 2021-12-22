@@ -1,4 +1,5 @@
 from re import S
+from flask_sqlalchemy import BaseQuery
 from pandas.core.frame import DataFrame
 from app import db, login
 import app.config as cfg
@@ -34,9 +35,9 @@ class User(UserMixin, db.Model):
 
     sessions = db.relationship('Session', backref='User', lazy='dynamic', passive_deletes=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the user name"""
-        return '<User {self.UserName}>'
+        return f'<User {self.UserName}>'
 
     def new(self, name: str, email: str, password: str) -> None:
         """Create new user instance with hashed password and save it to DB"""
@@ -46,15 +47,23 @@ class User(UserMixin, db.Model):
         # Write to db
         write_object_to_db(self)
 
-    def set_email(self, email):
+    def get_user_by_id(id: int) -> BaseQuery:
+        """Return object by id"""
+        return User.query.get(int(id))
+
+    def get_user_by_name(name: str) -> BaseQuery:
+        """Return object by name"""
+        return User.query.filter(User.UserName == name).first()
+
+    def set_email(self, email: str) -> None:
         """Set new email for the user"""
         self.UserEmail = email
     
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
         """Set new password for the user"""
         self.UserPassword = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> None:
         """Check the password against stored hashed password """
         return check_password_hash(self.UserPassword, password)
 
@@ -467,11 +476,6 @@ class Decision(db.Model):
         write_object_to_db(self)
 
 
-@login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
-
-
 def write_object_to_db(object):
     """Default way to write SQLAlchemy object to DB"""
     try:
@@ -479,3 +483,11 @@ def write_object_to_db(object):
         db.session.commit()
     except SQLAlchemyError as e:
         raise SQLAlchemyError('Error: No connection to DB')
+
+
+def create_def_user() -> None:
+    """Create default user during first run of the script"""
+    if User.get_user_by_name('admin') is None:
+        def_user = User()
+        def_user.new(name='admin', email='admin@localhost', password='admin')
+        service.print_log('Default user "admin" has been created')

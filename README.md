@@ -9,7 +9,7 @@ Application use microservice architecture and splitted into 2 services:
 Every service runs in a personal docker container.
 
 ### Setup
-Use `docker-compose` to setup the solution
+Use `docker-compose up -d` to setup the solution
 
 ### Code cases
 - Backend: snake_case

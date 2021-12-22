@@ -6,7 +6,7 @@ import MarqueeText from 'vue-marquee-text-component' // Marquee: Lib for backgro
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue' // Bootstrap
 import 'bootstrap/dist/css/bootstrap.css' // Bootstrap
 import 'bootstrap-vue/dist/bootstrap-vue.css' // Bootstrap
-import Dropdown from './libs/vue-simple-search-dropdown' // Custom Vue dropdown with search
+import Dropdown from 'vue-simple-search-dropdown' // Custom Vue dropdown with search
 import vueAwesomeCountdown from 'vue-awesome-countdown'
 
 import App from './App.vue'

@@ -6,12 +6,11 @@ RUN npm install -g http-server
 # Create app folder and copy files
 WORKDIR /usr/src/app
 
-# Install project dependencies
-COPY package*.json ./
-RUN npm install
-
 # Copy app
 COPY . .
+
+# Install project dependencies
+RUN npm install
 
 # Build app for production with minification
 RUN npm run build

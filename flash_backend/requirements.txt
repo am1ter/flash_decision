@@ -1,3 +1,4 @@
+wheel
 waitress
 flask
 flask_sqlalchemy
@@ -14,4 +15,5 @@ sqlalchemy
 plotly
 werkzeug
 
-finam-export==4.1.0
+finam-export
+# finam-export==4.1.0

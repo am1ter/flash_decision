@@ -1,4 +1,4 @@
-FROM python
+FROM python:3.8
 
 # Copy requirements list to container to install it
 WORKDIR /var/tmp
@@ -10,18 +10,18 @@ RUN apt-get update \
  && apt-get install unixodbc-dev -y
 
 # Create app folder and copy app's files
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
-# Install required python's libs
-COPY ./requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN mkdir -p /usr/src/flash_backend
+WORKDIR /usr/src/flash_backend
 
 # Copy app files
 COPY . .
 
+# Install required python's libs
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Open port
 EXPOSE 8001
 
-# Run app
-CMD ["python", "flash_decision.py"]
+# Use db migrations and create default user
+RUN chmod 777 ./entrypoint.sh
+ENTRYPOINT ./entrypoint.sh
