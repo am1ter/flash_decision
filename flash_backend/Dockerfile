@@ -1,9 +1,5 @@
 FROM python:3.8
 
-# Copy requirements list to container to install it
-WORKDIR /var/tmp
-COPY ../requirements.txt /var/tmp
-
 # Install all requirements
 RUN apt-get update \
  && apt-get install unixodbc -y \
