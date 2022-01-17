@@ -183,7 +183,7 @@
         min-width: 100% !important;
         max-width: 100% !important;
         font-size: 14px !important;
-        color: #6c757d !important;
+        color: #000000 !important;
     }
     
     .dropdown-content, .dropdown-item {
