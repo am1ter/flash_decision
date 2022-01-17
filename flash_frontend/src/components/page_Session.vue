@@ -5,7 +5,7 @@
             <p>{{apiErrors[0]}}</p>
         </div>
         <!-- Get session option via API, wait for user input and then submit it back to API -->
-        <form v-if="apiErrors == 0" @submit.prevent="checkForm">
+        <form v-if="apiErrors == 0" @submit.prevent="checkForm" autocomplete="off">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
                     <!-- Parameters -->
