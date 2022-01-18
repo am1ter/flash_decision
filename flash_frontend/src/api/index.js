@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 
-const API_URL = window.location.protocol + '//' + 'it1.nemanadvisors.com' + ':8001/api'
+const API_URL = window.location.protocol + '//' + window.location.hostname + ':8001/api'
 
 
 export function fetchSessionOptions() {
