@@ -109,7 +109,7 @@
                     )
             },
             // Decision has been made
-            async saveDecision(event) {
+            saveDecision(event) {
 
                 // Check that current iteration is okay
                 if (this.currentSession['decisions'].length < this.currentSession.currentIterationNum) {
@@ -151,7 +151,7 @@
                 this.$refs.pageTimer.finishCountdown()
 
                 // Send post request
-                await postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum]).catch(
+                postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum]).catch(
                     reject => {this.apiErrors.push(reject)}
                 )
 

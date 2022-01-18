@@ -3,7 +3,7 @@
         <div id='errors' v-if="apiErrors.length > 0">
             <p>{{apiErrors[0]}}</p>
         </div>
-        <div class="text-center">You have earned <b>{{currentSession.sessionResult * 100}}%</b> during this session</div>
+        <div class="text-center">You have earned <b>{{ currentSession.sessionResult }}%</b> during this session</div>
     </div>
 </template>
 
@@ -22,15 +22,14 @@
             ...mapState(['isAuth', 'user', 'currentSession'])
         },
         mounted() {
-            // Load first chart
             this.loadScoreboard()
         },
         methods: {
             loadScoreboard() {
-            // Get iteration chart over API
-            return getScoreboard(this.user.id, this.currentSession.options.sessionId)
+                // Load last session results
+                getScoreboard(this.user.id, this.currentSession.options.sessionId)
                     .then(response => {
-                        this.currentSession['sessionResult'] = response.data
+                        this.currentSession['sessionResult'] = Math.round(response.data * 100 * 10**5) / 10**5
                     },
                     reject => {this.apiErrors.push(reject)}
                     )

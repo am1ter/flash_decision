@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 
-const API_URL = window.location.protocol + '//' + window.location.hostname + ':8001/api'
+const API_URL = window.location.protocol + '//' + 'it1.nemanadvisors.com' + ':8001/api'
 
 
 export function fetchSessionOptions() {
@@ -22,12 +22,12 @@ export function getIterationChart(sessionId, iterationNum) {
 }
 
 
-export function postRecordDecision(decision) {
+export async function postRecordDecision(decision) {
     console.log('post Record Decision')
-    return axios.post(API_URL + '/record-decision/', decision)
+    return await axios.post(API_URL + '/record-decision/', decision)
 }
 
-export function getScoreboard(userId, sessionId) {
+export async function getScoreboard(userId, sessionId) {
     console.log('Run getScoreboard')
-    return axios.get(API_URL + `/get-scoreboard/${userId}/${sessionId}/`)
+    return await axios.get(API_URL + `/get-scoreboard/${userId}/${sessionId}/`)
 }
