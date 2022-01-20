@@ -1,17 +1,17 @@
 <template>
     <section id='menu' :class='{ disabled: !isAuth }'>
-            <router-link to='/session' tag="div" class='menu_button'>
-                <img v-if='active_page == "/session"' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
+            <router-link to='/session' tag="div" class='menu_button' :class='{ "menu-active": check_is_page_active("session") }'>
+                <img v-if='check_is_page_active("session")' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_session_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Session</p>
             </router-link>
-            <router-link to='/decision' tag="div" class='menu_button'>
-                <img v-if='active_page == "/decision"' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
+            <router-link to='/decision' tag="div" class='menu_button' :class='{ "menu-active": check_is_page_active("decision") }'>
+                <img v-if='check_is_page_active("decision")' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_decision_inactive.svg' alt='Icon'>
                 <p class='menu_text' >Decision</p>
             </router-link>
-            <router-link to='/scoreboard' tag="div" class='menu_button'>
-                <img v-if='active_page == "/scoreboard"' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
+            <router-link to='/scoreboard' tag="div" class='menu_button' :class='{ "menu-active": check_is_page_active("scoreboard") }'>
+                <img v-if='check_is_page_active("scoreboard")' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_scoreboard_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Scoreboard</p>
             </router-link>
@@ -24,10 +24,18 @@
         name: 'Menu',
         props: {},
         computed: {
-            active_page() {
-                return this.$route.path;
-            },
             ...mapState(['isAuth'])
+        },
+        methods: {
+            check_is_page_active(menu_element) {
+                let menu_paths = {
+                    'session': ['session'],
+                    'decision': ['decision', 'sessions-results'],
+                    'scoreboard': ['scoreboard']
+                }
+                let current_page = this.$route.path.split('/')[1]
+                return menu_paths[menu_element].indexOf(current_page) >= 0
+            }
         }
     }
 </script>
@@ -76,6 +84,12 @@
     }
 
     .router-link-active {
+        background-color: #0B5A73;
+        color: #ffffff;
+        box-shadow: 0px -1px 0px #333333 inset;
+    }
+    
+    .menu-active {
         background-color: #0B5A73;
         color: #ffffff;
         box-shadow: 0px -1px 0px #333333 inset;

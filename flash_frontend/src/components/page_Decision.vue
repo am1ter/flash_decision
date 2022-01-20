@@ -155,11 +155,11 @@
                     reject => {this.apiErrors.push(reject)}
                 )
 
-                // Go to the next iteration
+                // Go to the next iteration or to the results page
                 if (this.currentSession.currentIterationNum < Number(this.currentSession.options.iterations)) {
                     this.goNextIteration()
                 } else {
-                    this.$router.push('/scoreboard/' + this.user.id + '/' + this.currentSession.options.sessionId)
+                    this.$router.push('/sessions-results/' + this.currentSession.options.sessionId)
                 }
             },
             goNextIteration() {
