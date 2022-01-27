@@ -1,5 +1,3 @@
-# Go to backend folder
-cd /flash_backend/
 # Use db migrations
 flask db upgrade
 # Create default user

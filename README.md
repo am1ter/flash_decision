@@ -24,7 +24,11 @@ Every service runs in a personal docker container.
     ```
     cd flash_decision
     ```
-4. Use docker-compose command to setup the solution
+4. Change default network settings: ports and custom nginx routing options
+    ```
+    nano .env
+    ```
+5. Use docker-compose command to setup the solution
     ```
     docker-compose up -d
     ```

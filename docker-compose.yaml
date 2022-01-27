@@ -14,20 +14,18 @@ services:
     volumes:
       - flash_db:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - ${PORT_DB}:5432
     environment:
       - POSTGRES_PASSWORD=flash!Pass
     restart: always
 
   # Run webserver with backend (API)
   flash_backend:
-    # Uncomment line below to build using remote image
-    # image: am1ter/flash_backend:latest
     build: flash_backend/
     container_name: flash_backend
     restart: "no"
     ports:
-      - 8001:8001
+      - ${PORT_BACKEND}:8001
     environment:
       - TZ=Europe/Moscow
       - DATABASE_URL=flash_db
@@ -37,8 +35,12 @@ services:
 
   # Run webserver with frontend
   flash_frontend:
-    build: flash_frontend/
+    build: 
+      context: ./flash_frontend/
+      args:
+        - PORT_BACKEND=${PORT_BACKEND}
+        - FORCE_AJAX_API_DEF_PORT=${FORCE_AJAX_API_DEF_PORT}
     container_name: flash_frontend
     restart: "no"
     ports:
-      - 8000:8000
+      - ${PORT_FRONTEND}:8000
