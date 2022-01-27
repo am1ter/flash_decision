@@ -22,10 +22,6 @@
                             autocomplete="off"
                             placeholder="Select a securities market">
                         </Dropdown>
-                        <!-- <Dropdown 
-                            :disabled="false"
-                            v-on:filter="validateSelection"
-                        </Dropdown> -->
                     </b-col>
 
                     <div class="w-100 my-1"></div>

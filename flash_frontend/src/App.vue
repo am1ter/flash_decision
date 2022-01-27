@@ -16,6 +16,7 @@
                 <page_Login/>
                 <page_Session/>
                 <page_Decision/>
+                <page_Results/>
                 <page_Scoreboard/>
             </router-view>
         </div>
@@ -43,6 +44,7 @@
     import page_Login from './components/page_Login.vue'
     import page_Session from './components/page_Session.vue'
     import page_Decision from './components/page_Decision.vue'
+    import page_Results from './components/page_Results.vue'
     import page_Scoreboard from './components/page_Scoreboard.vue'
 
     export default {
@@ -56,6 +58,7 @@
             page_Login,
             page_Session,
             page_Decision,
+            page_Results,
             page_Scoreboard
         },
         computed: {

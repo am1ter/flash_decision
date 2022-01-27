@@ -1,10 +1,10 @@
 <template>
-    <div>
+    <section id='page'>
         <div id='errors' v-if="apiErrors.length > 0">
             <p>{{apiErrors[0]}}</p>
         </div>
         <div class="text-center">You have earned <b>{{ currentSession.sessionResult }}%</b> during this session</div>
-    </div>
+    </section>
 </template>
 
 <script>
