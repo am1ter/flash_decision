@@ -1,5 +1,6 @@
 from re import S
 from flask_sqlalchemy import BaseQuery
+from numpy import average
 from pandas.core.frame import DataFrame
 from app import db, login
 import app.config as cfg
@@ -15,6 +16,7 @@ from math import ceil
 import json
 from plotly.utils import PlotlyJSONEncoder
 from plotly import graph_objs
+from statistics import median
 
 from finam.export import Exporter, LookupComparator # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe           # https://github.com/ffeast/finam-export
@@ -266,11 +268,34 @@ class Session(db.Model):
         except:
             raise SQLAlchemyError('Error: No connection to DB')
 
-    def calc_result(self):
-        """Calc current session's result"""
+    def calc_sessions_summary(self) -> float:
+        """Collect all session attributes in one object"""
         try:
-            result = db.session.query(func.sum(Decision.ResultFinal)).filter(Decision.SessionId == self.SessionId).all()[0][0]
-            return round(result, 6)
+            decisions = self.decisions.all()
+            total_result = round(sum([d.ResultFinal for d in decisions]) * 100, 4)
+            total_decisions = len(decisions)
+            profitable_decisions = len([d for d in decisions if d.ResultFinal>0])
+            unprofitable_decisions = len([d for d in decisions if d.ResultFinal<=0 and d.Action!='Skip'])
+            skipped_decisions = len([d for d in decisions if d.Action=='Skip'])
+            median_decisions_result = round(median([d.ResultFinal for d in decisions]), 4)
+            best_decisions_result = round(max([d.ResultFinal for d in decisions]) * 100, 4)
+            worst_decisions_result = round(min([d.ResultFinal for d in decisions]) * 100, 4)
+            total_time_spent = sum([d.TimeSpent for d in decisions])
+            total_time_spent = str(timedelta(seconds=total_time_spent))
+
+            session_summary = {
+                'totalResult': total_result,
+                'totalDecisions': total_decisions,
+                'profitableDecisions': profitable_decisions,
+                'unprofitableDecisions': unprofitable_decisions,
+                'skippedDecisions': skipped_decisions,
+                'medianDecisionsResult': median_decisions_result,
+                'bestDecisionsResult': best_decisions_result,
+                'worstDecisionsResult': worst_decisions_result,
+                'totalTimeSpent': total_time_spent
+                }
+
+            return session_summary
         except:
             raise SQLAlchemyError('Error: No connection to DB')
 

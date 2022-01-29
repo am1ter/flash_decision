@@ -36,7 +36,7 @@ def start_new_session() -> Response:
 
 
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
-def get_chart(session_id, iteration_num) -> Response:
+def get_chart(session_id: int, iteration_num: int) -> Response:
     """Send json with chart data to frontend"""
     try:
         # Load session from db
@@ -75,16 +75,17 @@ def record_decision() -> Response:
         raise RuntimeError('Error: Wrong POST request has been received')
 
 
-@api.route('/get-scoreboard/<int:user_id>/<int:session_id>/', methods=['GET'])
-def get_scoreboard_user(user_id, session_id) -> Response:
+@api.route('/get-sessions-results/<int:session_id>/', methods=['GET'])
+def get_sessions_results(session_id: int) -> Response:
     """Start training session: Get json-object, create SQL record, score results"""
     try:
         # Load session from db
         current_session = Session()
         current_session = current_session.get_from_db(session_id)
-        # Calc session's result
-        current_session_result = current_session.calc_result()
-        srv.print_log(f'Session {current_session} has been finished with result {round(current_session_result * 100, 2)}%')
-        return json.dumps(current_session_result, ensure_ascii=False)
+        # Get session's summary
+        current_session_summary = current_session.calc_sessions_summary()
+        current_session_result = round(current_session_summary['totalResult'] * 100, 2)
+        srv.print_log(f'Session {current_session} has been finished with result {current_session_result}%')
+        return json.dumps(current_session_summary, ensure_ascii=False)
     except Exception:
         raise RuntimeError('Error: No connection to DB')

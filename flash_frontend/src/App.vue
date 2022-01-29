@@ -157,11 +157,14 @@
 
     .gradient {
         background: linear-gradient(to right, #271238, #113763, #0B5A73);
+        color: #FFFFFF !important;
     }
 
     .gradient:focus, .gradient:hover {
         background: linear-gradient(to right, #280B3F, #0E4280, #076583);
+        color: #FFFFFF !important;
     }
+
 
     *:focus {
         outline: none;

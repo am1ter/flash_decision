@@ -60,6 +60,12 @@ export async function postRecordDecision(decision) {
 }
 
 
+export async function getSessionsResults(sessionId) {
+    console.log('Run getSessionsResults')
+    return await axios.get(API_URL + `/get-sessions-results/${sessionId}/`)
+}
+
+
 export async function getScoreboard(userId, sessionId) {
     console.log('Run getScoreboard')
     return await axios.get(API_URL + `/get-scoreboard/${userId}/${sessionId}/`)

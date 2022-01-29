@@ -151,16 +151,20 @@
                 this.$refs.pageTimer.finishCountdown()
 
                 // Send post request
-                postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum]).catch(
-                    reject => {this.apiErrors.push(reject)}
-                )
+                postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum])
+                    .then(() => {
+                        // When post request has been processed go to the next iteration or to the results page
+                        if (this.currentSession.currentIterationNum < Number(this.currentSession.options.iterations)) {
+                            this.goNextIteration()
+                        } else {
+                            this.$router.push('/sessions-results/' + this.currentSession.options.sessionId)
+                        }
+                    })
+                    .catch(
+                        reject => {this.apiErrors.push(reject)}
+                    )
 
-                // Go to the next iteration or to the results page
-                if (this.currentSession.currentIterationNum < Number(this.currentSession.options.iterations)) {
-                    this.goNextIteration()
-                } else {
-                    this.$router.push('/sessions-results/' + this.currentSession.options.sessionId)
-                }
+
             },
             goNextIteration() {
                 // New iteration processing

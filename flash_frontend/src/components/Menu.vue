@@ -93,6 +93,10 @@
         background-color: #0B5A73;
         color: #ffffff;
         box-shadow: 0px -1px 0px #333333 inset;
+    }   
+
+    .menu-active:hover {
+        background-color: #0c4e63 !important;
     }
 
 </style>

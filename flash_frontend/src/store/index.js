@@ -12,7 +12,7 @@ const state = {
     isAuth: true,
     user: { id: 1, name: 'amiter' },
     sessions: [],
-    currentSession: { sessionResult: 0 },
+    currentSession: {},
     copyright_year: new Date().getFullYear()
 }
 
