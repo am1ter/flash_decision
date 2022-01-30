@@ -28,7 +28,7 @@ const routes = [{
     },
     {
         path: '/decision/:session_id/:iteration_num',
-        name: 'Decision page',
+        name: 'Decision’s page',
         component: App.components.page_Decision,
         beforeEnter(to, from, next) {
             if (store.state.isAuth) { next() } else { next('/login') }
@@ -40,14 +40,14 @@ const routes = [{
     },
     {
         path: '/sessions-results/:session_id',
-        name: 'Session\'s results page',
+        name: 'Session’s results page',
         component: App.components.page_Results,
         beforeEnter(to, from, next) {
             if (store.state.isAuth) { next() } else { next('/login') }
         },
         meta: {
             title: 'Explore your results',
-            instruction: 'Session\'s summary'
+            instruction: 'Session’s summary'
         }
     },
     {

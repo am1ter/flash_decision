@@ -1,17 +1,17 @@
 <template>
     <section id='menu' :class='{ disabled: !isAuth }'>
-            <router-link to='/session' tag="div" class='menu_button' :class='{ "menu-active": check_is_page_active("session") }'>
-                <img v-if='check_is_page_active("session")' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
+            <router-link to='/session' tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("session") }'>
+                <img v-if='checkPageIsActive("session")' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_session_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Session</p>
             </router-link>
-            <router-link to='/decision' tag="div" class='menu_button' :class='{ "menu-active": check_is_page_active("decision") }'>
-                <img v-if='check_is_page_active("decision")' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
+            <router-link :to="{name: 'Session’s results page', params: {'session_id': sessionsResultsLink()}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("decision"), "disabled": checkIsSessionBank()}'>
+                <img v-if='checkPageIsActive("decision")' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_decision_inactive.svg' alt='Icon'>
                 <p class='menu_text' >Decision</p>
             </router-link>
-            <router-link to='/scoreboard' tag="div" class='menu_button' :class='{ "menu-active": check_is_page_active("scoreboard") }'>
-                <img v-if='check_is_page_active("scoreboard")' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
+            <router-link to='/scoreboard' tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("scoreboard") }'>
+                <img v-if='checkPageIsActive("scoreboard")' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_scoreboard_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Scoreboard</p>
             </router-link>
@@ -24,10 +24,10 @@
         name: 'Menu',
         props: {},
         computed: {
-            ...mapState(['isAuth'])
+            ...mapState(['isAuth', 'currentSession'])
         },
         methods: {
-            check_is_page_active(menu_element) {
+            checkPageIsActive(menu_element) {
                 let menu_paths = {
                     'session': ['session'],
                     'decision': ['decision', 'sessions-results'],
@@ -35,6 +35,14 @@
                 }
                 let current_page = this.$route.path.split('/')[1]
                 return menu_paths[menu_element].indexOf(current_page) >= 0
+            },
+            checkIsSessionBank() {
+                let ses_started = !('options' in this.currentSession)
+                return ses_started
+            },
+            sessionsResultsLink() {
+                let link_postfix = ('options' in this.currentSession) ? this.currentSession.options.sessionId : 0
+                return link_postfix
             }
         }
     }
@@ -50,6 +58,7 @@
         display: flex;
         flex-direction: row;
         align-items: center;
+        border-bottom: 1px solid #0B5A73;
     }
 
     .menu_button {
@@ -62,7 +71,6 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
-        border-bottom: 1px solid #0B5A73;
     }
 
     .menu_button:hover {

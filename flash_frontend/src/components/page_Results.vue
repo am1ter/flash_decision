@@ -1,11 +1,13 @@
 <template>
-    <section id='page' v-if="isLoaded">
+    <section id='page'>
         <div id='errors' v-if="apiErrors.length > 0">
             <p>{{apiErrors[0]}}</p>
         </div>
-        <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
-        </b-table>
-        <b-button type="submit" class="col-12 gradient rounded-1" href="/#/scoreboard">Go to the leaderboard</b-button>
+        <div v-if="isLoaded" class="col-12">
+            <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
+            </b-table>
+            <b-button type="submit" class="col-12 gradient rounded-1" href="/#/scoreboard">Go to the leaderboard</b-button>
+        </div>
     </section>
 </template>
 

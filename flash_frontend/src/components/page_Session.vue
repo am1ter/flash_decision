@@ -5,7 +5,7 @@
             <p>{{apiErrors[0]}}</p>
         </div>
         <!-- Get session option via API, wait for user input and then submit it back to API -->
-        <form v-if="apiErrors == 0" @submit.prevent="checkForm" autocomplete="off">
+        <form v-if="apiErrors == 0 & isLoaded" @submit.prevent="checkForm" autocomplete="off">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
                     <!-- Parameters -->
@@ -161,6 +161,7 @@
         name: 'page_Session',
         data() {
             return {
+                isLoaded: false,
                 sessionOptionsAll: [],
                 sessionOptionsMarketsLen: 10,
                 sessionOptionsSecurities: [],
@@ -261,7 +262,10 @@
         beforeMount() {
             fetchSessionOptions()
                 .then(
-                    response => {this.sessionOptionsAll = response.data},
+                    response => {
+                        this.sessionOptionsAll = response.data
+                        this.isLoaded = true
+                        },
                     reject => {this.apiErrors.push(reject)}
                 )
                 .then(() => {this.sessionOptionsMarketsLen = this.sessionOptionsAll.markets.length})
