@@ -5,12 +5,12 @@
                 <img v-else src='../assets/icons/i_menu_session_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Session</p>
             </router-link>
-            <router-link :to="{name: 'Session’s results page', params: {'session_id': sessionsResultsLink()}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("decision"), "disabled": checkIsSessionBank()}'>
+            <router-link :to="{name: 'Session’s results page', params: {'session_id': sessionsResultsLink()}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("decision"), "disabled": checkIsSessionBlank()}'>
                 <img v-if='checkPageIsActive("decision")' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_decision_inactive.svg' alt='Icon'>
                 <p class='menu_text' >Decision</p>
             </router-link>
-            <router-link to='/scoreboard' tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("scoreboard") }'>
+            <router-link :to="{name: 'Scoreboard page', params: {'user_id': this.user.id}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("scoreboard") }'>
                 <img v-if='checkPageIsActive("scoreboard")' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_scoreboard_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Scoreboard</p>
@@ -24,10 +24,12 @@
         name: 'Menu',
         props: {},
         computed: {
-            ...mapState(['isAuth', 'currentSession'])
+            ...mapState(['isAuth', 'user', 'currentSession'])
         },
         methods: {
             checkPageIsActive(menu_element) {
+                // Change styles for menu elements
+                // Required as decision's tab used for 2 pages (decisions and session results)
                 let menu_paths = {
                     'session': ['session'],
                     'decision': ['decision', 'sessions-results'],
@@ -36,11 +38,14 @@
                 let current_page = this.$route.path.split('/')[1]
                 return menu_paths[menu_element].indexOf(current_page) >= 0
             },
-            checkIsSessionBank() {
+            checkIsSessionBlank() {
+                // Apply class 'disabled' if session hasn't started yet
                 let ses_started = !('options' in this.currentSession)
                 return ses_started
             },
             sessionsResultsLink() {
+                // Used for return to the session's results page
+                // Check if session has been started and there is sessionId
                 let link_postfix = ('options' in this.currentSession) ? this.currentSession.options.sessionId : 0
                 return link_postfix
             }

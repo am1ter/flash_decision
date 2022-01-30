@@ -8,6 +8,7 @@ from flask import Blueprint, request
 from flask.wrappers import Response
 import json
 
+
 api = Blueprint('api', __name__)
 session_options = cfg.collect_session_options()
 srv.print_log(f'Flask has been started')
@@ -62,7 +63,7 @@ def get_chart(session_id: int, iteration_num: int) -> Response:
 
 @api.route('/record-decision/', methods=['POST'])
 def record_decision() -> Response:
-    """Start training session: Get json-object, create SQL record with decision, score results"""
+    """Save user's decision in db and score results for it"""
     if request.json:
         try:
             new_decision = Decision()
@@ -77,7 +78,7 @@ def record_decision() -> Response:
 
 @api.route('/get-sessions-results/<int:session_id>/', methods=['GET'])
 def get_sessions_results(session_id: int) -> Response:
-    """Start training session: Get json-object, create SQL record, score results"""
+    """When session is finished collect it's summary in one object and send it back to frontend"""
     try:
         # Load session from db
         current_session = Session()
@@ -87,5 +88,15 @@ def get_sessions_results(session_id: int) -> Response:
         current_session_result = round(current_session_summary['totalResult'] * 100, 2)
         srv.print_log(f'Session {current_session} has been finished with result {current_session_result}%')
         return json.dumps(current_session_summary, ensure_ascii=False)
+    except Exception:
+        raise RuntimeError('Error: No connection to DB')
+
+
+@api.route('/get-scoreboard/<int:user_id>/', methods=['GET'])
+def get_scoreboard(user_id: int) -> Response:
+    """Show global scoreboard and current user's results"""
+    try:
+        srv.print_log(f'Generated scoreboard for user #{user_id}')
+        return json.dumps(True, ensure_ascii=False)
     except Exception:
         raise RuntimeError('Error: No connection to DB')

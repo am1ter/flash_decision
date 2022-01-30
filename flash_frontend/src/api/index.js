@@ -66,7 +66,7 @@ export async function getSessionsResults(sessionId) {
 }
 
 
-export async function getScoreboard(userId, sessionId) {
+export async function getScoreboard(userId) {
     console.log('Run getScoreboard')
-    return await axios.get(API_URL + `/get-scoreboard/${userId}/${sessionId}/`)
+    return await axios.get(API_URL + `/get-scoreboard/${userId}/`)
 }
