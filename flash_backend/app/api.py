@@ -1,6 +1,5 @@
 from app import app
 import app.config as cfg
-import app.functions as fn
 import app.service as srv
 from app.models import Decision, Session, Iteration
 

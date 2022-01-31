@@ -1,6 +1,5 @@
 from re import S
 from flask_sqlalchemy import BaseQuery
-from numpy import average
 from pandas.core.frame import DataFrame
 from app import db, login
 import app.config as cfg
@@ -18,8 +17,8 @@ from plotly.utils import PlotlyJSONEncoder
 from plotly import graph_objs
 from statistics import median
 
-from finam.export import Exporter, LookupComparator # https://github.com/ffeast/finam-export
-from finam.const import Market, Timeframe           # https://github.com/ffeast/finam-export
+from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
+from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
 
 from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "UserId" instead "id"
 

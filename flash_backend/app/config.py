@@ -1,9 +1,9 @@
-import app.functions as fn
-
 import os
 from sys import platform
-from flask import jsonify
-from flask.wrappers import Response
+
+from finam.export import Exporter           # https://github.com/ffeast/finam-export
+from finam.const import Market, Timeframe   # https://github.com/ffeast/finam-export
+
 
 # Flask configuration
 class FlaskConfig(object):
@@ -62,17 +62,73 @@ def convert_timeframe_to_mintues(tf: str) -> int:
     return minutes_in_timeframe[tf]
 
 
+def read_session_options_markets() -> list:
+    """Read all markets from finam module (hardcoded in external lib)"""
+
+    options_markets = []
+    for idx, market in enumerate(Market):
+        market = str(market)
+        # Convert list of strings to list of objects (+1 for idx because of vue-simple-search-dropdown)   
+        options = {'id': idx+1, 'name': market.replace('Market.', ''), 'code': market}
+        options_markets.append(options)
+    
+    return options_markets
+
+
+def collect_session_options_securities() -> dict:
+    """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
+
+    exporter = Exporter()
+    options_securities = {}
+
+    # Read tickers for every market and convert it to dict
+    for market in Market:
+        # Find tickers by market name
+        tickers = exporter.lookup(market=[market])
+        # Use market name instead of market object
+        market_name = str(market)
+        # Copy df to avoid chained assignation below
+        tickers = tickers.copy(deep=True)
+        # Copy index to column
+        tickers.reset_index(inplace=True)
+        # Replace special symbols in ticker's names
+        tickers['name'] = tickers.loc[:, 'name'].apply(lambda str: str.replace('(', ' - ').replace(')', ''))
+        # Add ticker's code to displayed name
+        tickers['name'] = tickers['name'] + ' - ' + tickers['code']
+        # Create dict filled dict of dicts instead of pandas df
+        options_securities[market_name] = tickers.to_dict(orient='records')
+
+    return options_securities
+
+
+def read_session_options_timeframes() -> list:
+    """Read timeframes from finam module (hardcoded in external lib)"""
+
+    options_timeframes = []
+
+    for idx, tf in enumerate(Timeframe):
+        tf = str(tf)
+
+        # Drop some timeframes from the session's options list
+        if tf not in ['Timeframe.TICKS', 'Timeframe.WEEKLY', 'Timeframe.MONTHLY'] :
+            # Convert list of strings to list of dicts (+1 for idx because of vue-simple-search-dropdown)
+            option = {'id': idx+1, 'name': tf.replace('Timeframe.', ''), 'code': tf}
+            options_timeframes.append(option)
+
+    return options_timeframes
+
+
 def collect_session_options() -> dict:
     """Collect all session options in a single object"""
 
     # Option: Timeframes
-    timeframes = fn.read_session_options_timeframes()
+    timeframes = read_session_options_timeframes()
     
     # Option: Markets
-    markets = fn.read_session_options_markets()
+    markets = read_session_options_markets()
     
     # Option: Securities
-    securities = fn.collect_session_options_securities()
+    securities = collect_session_options_securities()
 
     # Option: Bars number
     barsnumber = [

@@ -6,7 +6,7 @@
         <div v-if="isLoaded" class="col-12">
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
-            <b-button type="submit" class="col-12 gradient rounded-1" href="/#/scoreboard">Go to the leaderboard</b-button>
+            <b-button type="submit" class="col-12 gradient rounded-1" :href="scoreboardLink()">Go to the scoreboard</b-button>
         </div>
     </section>
 </template>
@@ -68,6 +68,9 @@
                     return 'text-success'
                 else if(firstChar === '-')
                     return 'text-danger'
+            },
+            scoreboardLink() {
+                return '/#/scoreboard' + '/' + this.user.id
             }
         }
     }

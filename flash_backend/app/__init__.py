@@ -1,7 +1,5 @@
-import app.service as service
 from app.config import FlaskConfig
 
-# from flask import Flask, config, jsonify
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -10,10 +8,6 @@ from flask_login import LoginManager
 
 import logging
 import traceback
-
-
-# Fix bug with finam-export lib v.4.1.0
-# service.fix_lib_finamexport()
 
 
 # Create Flask application and configure it
