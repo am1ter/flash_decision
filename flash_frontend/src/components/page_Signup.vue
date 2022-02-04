@@ -64,7 +64,7 @@
                 let input_value = this.$children[i].localValue
                 if ((input_id == "input-email" & input_value.indexOf('@') > -1) ||
                     (input_id == "input-name" & input_value.length >= 2) ||
-                    (input_id == "input-password" & input_value.length >= 8)) {
+                    (input_id == "input-password" & input_value.length >= 6)) {
                         this.registrationForm[input_id.replace('input-', '')] = input_value
                 } else {
                     this.formErrors.push(input_id)

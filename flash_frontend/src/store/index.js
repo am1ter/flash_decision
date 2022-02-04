@@ -7,9 +7,10 @@ Vue.use(Vuex)
 const state = {
     // single source of data
     version: '0.6.01',
+    // isAuth: true,
     isAuth: false,
-    // user: { id: 1, email: 'amiter@yandex.ru' },
-    user: {},
+    user: { id: 53, email: 'demo@alekseisemenov.ru' },
+    // user: {},
     registrationForm: {},
     apiErrors: apiErrors,
     sessions: [],
@@ -29,7 +30,6 @@ const mutations = {
       },
     setUser (state, user) {
         state.user = user
-        console.log(state.user)
     }
 }
 

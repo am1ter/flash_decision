@@ -1,4 +1,3 @@
-from re import S
 from flask_sqlalchemy import BaseQuery
 from pandas.core.frame import DataFrame
 from app import db, login
@@ -513,6 +512,6 @@ def create_def_user() -> None:
     """Create default user during first run of the script"""
     if User.get_user_by_email('admin@locahost') is None:
         def_user = User()
-        creds = {'name': 'admin', 'email': 'admin@localhost', 'password': 'admin'}
+        creds = {'name': 'demo', 'email': 'demo@alekseisemenov.ru', 'password': 'demo'}
         def_user.new(creds=creds)
         service.print_log('Default user "admin@localhost" has been created')

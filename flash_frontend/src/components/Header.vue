@@ -7,7 +7,7 @@
             </div>
         </div>
         <div v-if='isAuth == true' id='header_right'>
-            <a class='header_button' href='#'>
+            <a class='header_button' v-on:click="logout()">
                 <img class='icon_margin_right' src='../assets/icons/i_header_logout.svg'/>
                 <p class='header_text'>logout</p>
             </a>
@@ -16,12 +16,22 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapState, mapMutations } from 'vuex'
+
     export default {
         name: 'Header',
         props: {},
         computed: {
             ...mapState(['isAuth', 'user'])
+        },
+        methods: {
+            ...mapMutations(['setAuth']),
+            logout() {
+                console.log('Logout')
+                this.$store.commit('setAuth', false)
+                // Go to the login page
+                this.$router.push('/sign-in/')
+            }
         }
 }
 </script>
