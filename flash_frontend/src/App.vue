@@ -14,6 +14,7 @@
             <Title/>
             <router-view>
                 <page_Login/>
+                <page_Signup/>
                 <page_Session/>
                 <page_Decision/>
                 <page_Results/>
@@ -42,6 +43,7 @@
     
     // Pages components
     import page_Login from './components/page_Login.vue'
+    import page_Signup from './components/page_Signup.vue'
     import page_Session from './components/page_Session.vue'
     import page_Decision from './components/page_Decision.vue'
     import page_Results from './components/page_Results.vue'
@@ -56,6 +58,7 @@
             Title,
             Credits,
             page_Login,
+            page_Signup,
             page_Session,
             page_Decision,
             page_Results,
@@ -63,9 +66,6 @@
         },
         computed: {
             ...mapState(['sessions', 'isAuth'])
-        },
-        beforeMount() {
-            // this.$store.dispatch('loadSessions')
         }
     }
 
@@ -202,6 +202,17 @@
         margin-right: -1px;
         overflow-x: hidden !important;
         font-size: 14px !important;
+    }
+
+    .isInputInvalid {
+        border: 1px solid #dc3545;
+        border-radius: 3px;
+        font-size: 14px;
+        padding-right: calc(1.5em + .75rem)!important;
+        background-image: url('./assets/icons/i_formvalidation_error.svg') !important;
+        background-position: right calc(.375em + .1875rem) center;
+        background-repeat: no-repeat;
+        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
     }
 
 </style>

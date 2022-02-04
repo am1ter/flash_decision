@@ -3,7 +3,7 @@
         <div id='errors' v-if="apiErrors.length > 0">
             <p>{{apiErrors[0]}}</p>
         </div>
-        <div v-if="apiErrors == 0 & isLoaded" class="text-center shadow col-12 pt-2">
+        <div v-if="apiErrors.length == 0 & isLoaded" class="text-center shadow col-12 pt-2">
             <h1>N/A</h1>
             <p>
                 Nobody has tried this mode yet<br>

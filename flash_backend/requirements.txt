@@ -6,8 +6,8 @@ flask_migrate
 flask_login
 flask_wtf
 flask_cors
+PyJWT
 psycopg2-binary
-wtforms
 
 pyodbc
 pandas
@@ -16,4 +16,3 @@ plotly
 werkzeug
 
 finam-export
-# finam-export==4.1.0

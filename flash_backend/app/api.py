@@ -1,7 +1,7 @@
 from app import app
 import app.config as cfg
 import app.service as srv
-from app.models import Decision, Session, Iteration
+from app.models import User, Decision, Session, Iteration
 
 from flask import Blueprint, request
 from flask.wrappers import Response
@@ -9,8 +9,29 @@ import json
 
 
 api = Blueprint('api', __name__)
-session_options = cfg.collect_session_options()
+
+# Run during application initialization
 srv.print_log(f'Flask has been started')
+session_options = cfg.collect_session_options()
+
+
+@api.route('/create-user/', methods=['POST'])
+def sign_up() -> Response:
+    """Get registration form and create user's record in db for it"""
+    if request.json:
+        current_user = User()
+        current_user.new(creds=request.json)
+        srv.print_log(f'User {current_user} has been created')
+        resp = {'id': current_user.UserId, 'email': current_user.UserEmail}
+        return json.dumps(resp)
+    else:
+        raise RuntimeError('Error: Wrong POST request has been received')
+
+
+@api.route('/login/', methods=['POST'])
+def sign_in() -> Response:
+    """Get filled login form and run authentication procedure"""
+    srv.print_log(f'User has been authentificated')
 
 
 @api.route('/get-session-options/', methods=['GET'])

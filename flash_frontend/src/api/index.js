@@ -21,7 +21,6 @@ if ("process.env.VUE_APP_PORT_BACKEND" in window) {
     PORT_BACKEND = 8001
 }
 
-
 // Override API PORT to 443 (https) or 80 (http) if there is a following option in docker-compose .env file
 if (FORCE_AJAX_API_DEF_PORT == 1) {
     if (window.location.protocol == 'https:') {
@@ -34,7 +33,47 @@ if (FORCE_AJAX_API_DEF_PORT == 1) {
 let API_URL = window.location.protocol + '//' + window.location.hostname + ':' + PORT_BACKEND + '/api'
 
 
+// API errors handling
+
+// export let apiErrors = []
+// function handleResponse(req) {
+//     req.then(
+//         response => {
+//             // Check if response is correct or contains errors
+//             if (String(response.data).toLowerCase().includes('error')) {
+//                 apiErrors.push(response.data)
+//                 return false
+//             } else {
+//                 console.log(response)
+//                 return response
+//             }
+//         },
+//         reject => {apiErrors.push(reject)}
+//     )
+// }
+
+export let apiErrors = []
+function handleResponse(req) {
+    try {
+        // Check if response is correct or contains errors
+        if (String(req.data).toLowerCase().includes('error')) {
+            apiErrors.push(req.data)
+            return false
+        } else {
+            return req
+        }
+    } catch(err) {
+        apiErrors.push(err)
+    }
+}
+
 // API functions
+
+export function postCreateUser(form) {
+    console.log('Run postCreateUser')
+    let req = axios.post(API_URL + '/create-user/', form)
+    return handleResponse(req)
+}
 
 export function fetchSessionOptions() {
     console.log('Run fetchSessionOptions')

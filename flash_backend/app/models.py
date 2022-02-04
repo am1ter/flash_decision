@@ -37,14 +37,14 @@ class User(UserMixin, db.Model):
     sessions = db.relationship('Session', backref='User', lazy='dynamic', passive_deletes=True)
 
     def __repr__(self) -> str:
-        """Return the user name"""
-        return f'<User {self.UserName}>'
+        """Return the user email"""
+        return f'<User {self.UserEmail}>'
 
-    def new(self, name: str, email: str, password: str) -> None:
+    def new(self, creds: dict) -> None:
         """Create new user instance with hashed password and save it to DB"""
-        self.UserName = name
-        self.set_email(email)
-        self.set_password(password)
+        self.set_email(creds['email'])
+        self.UserName = creds['name']
+        self.set_password(creds['password'])
         # Write to db
         write_object_to_db(self)
 
@@ -52,9 +52,9 @@ class User(UserMixin, db.Model):
         """Return object by id"""
         return User.query.get(int(id))
 
-    def get_user_by_name(name: str) -> BaseQuery:
-        """Return object by name"""
-        return User.query.filter(User.UserName == name).first()
+    def get_user_by_email(email: str) -> BaseQuery:
+        """Return object by email"""
+        return User.query.filter(User.UserEmail == email).first()
 
     def set_email(self, email: str) -> None:
         """Set new email for the user"""
@@ -506,12 +506,13 @@ def write_object_to_db(object):
         db.session.add(object)
         db.session.commit()
     except SQLAlchemyError as e:
-        raise SQLAlchemyError('Error: No connection to DB')
+        raise SQLAlchemyError('Error: DB transaction has failed')
 
 
 def create_def_user() -> None:
     """Create default user during first run of the script"""
-    if User.get_user_by_name('admin') is None:
+    if User.get_user_by_email('admin@locahost') is None:
         def_user = User()
-        def_user.new(name='admin', email='admin@localhost', password='admin')
-        service.print_log('Default user "admin" has been created')
+        creds = {'name': 'admin', 'email': 'admin@localhost', 'password': 'admin'}
+        def_user.new(creds=creds)
+        service.print_log('Default user "admin@localhost" has been created')

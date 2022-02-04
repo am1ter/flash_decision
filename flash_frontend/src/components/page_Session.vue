@@ -19,7 +19,6 @@
                             :options="sessionOptionsAll.markets"
                             :maxItem="sessionOptionsMarketsLen"
                             v-on:selected="getOptionsSecurities"
-                            autocomplete="off"
                             placeholder="Select a securities market">
                         </Dropdown>
                     </b-col>
@@ -169,12 +168,11 @@
                 selectedMarket: 'Market.SHARES',
                 dateMax: new Date(),
                 dateMin: new Date(2019, 0, 1),
-                formErrors: [],
-                apiErrors: []
+                formErrors: []
                 }
         },
         computed: {
-            ...mapState(['isAuth', 'user', 'currentSession'])
+            ...mapState(['isAuth', 'user', 'currentSession', 'apiErrors'])
         },
         methods: {
             dateDisabled(ymd, date) {
@@ -227,7 +225,7 @@
 
                 // Send POST request and save response to vuex state
                 // If validation has failed (formErrors.length > 0) than decline form submit (preventDefault)
-                // If validation has passed sens POST request, check the response and go to the next page
+                // If validation has passed send POST request, check the response and go to the next page
                 if (this.formErrors.length == 0) {
                     postStartNewSession(this.currentSession['options'])
                         .then(
@@ -278,16 +276,4 @@
         display: flex;
         justify-content: center;
     }
-
-    .isInputInvalid {
-        border: 1px solid #dc3545;
-        border-radius: 3px;
-        font-size: 14px;
-        padding-right: calc(1.5em + .75rem)!important;
-        background-image: url('../assets/icons/i_formvalidation_error.svg') !important;
-        background-position: right calc(.375em + .1875rem) center;
-        background-repeat: no-repeat;
-        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
-    }
-
 </style>

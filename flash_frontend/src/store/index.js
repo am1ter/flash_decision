@@ -1,16 +1,17 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-
-// TODO: Remove before release
-// import { fetchSessions } from '../api'
+import { apiErrors } from '@/api'
 
 Vue.use(Vuex)
 
 const state = {
     // single source of data
     version: '0.6.01',
-    isAuth: true,
-    user: { id: 1, name: 'amiter' },
+    isAuth: false,
+    // user: { id: 1, email: 'amiter@yandex.ru' },
+    user: {},
+    registrationForm: {},
+    apiErrors: apiErrors,
     sessions: [],
     currentSession: {},
     // currentSession: {"options": {'sessionId': 14}},
@@ -23,6 +24,13 @@ const actions = {
 
 const mutations = {
     // isolated data mutations
+    setAuth (state, authStatus) {
+        state.isAuth = authStatus;
+      },
+    setUser (state, user) {
+        state.user = user
+        console.log(state.user)
+    }
 }
 
 const getters = {
