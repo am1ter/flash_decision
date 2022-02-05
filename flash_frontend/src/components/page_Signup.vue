@@ -53,7 +53,7 @@
                     </b-col>                    
                     <b-col class="my-auto" sm="9" v-if="formErrors.indexOf('input-password') > -1">
                         <p class="text-danger text-left mb-0">
-                            <small>Password must contain at least 8 symbols</small>
+                            <small>Password must contain at least 6 symbols</small>
                         </p>
                     </b-col>
                 </b-row>
@@ -90,7 +90,6 @@
 
             // Check if email is free
             this.emailIsFree = await checkEmailIsFree(this.$children[0].localValue)
-            this.emailIsFree = this.emailIsFree.data
 
             // Get values from form and validate them
             for (let i = 0; i <= 2; i++) {
@@ -111,9 +110,8 @@
             // If validation has failed (formErrors.length > 0) than decline form submit (preventDefault)
             // If validation has passed send POST request, check the response and go to the next page
             if (this.formErrors.length == 0) {
-                let response = await postCreateUser(this.registrationForm)
-                if (response) {
-                    let user = {'id': response.data.id, 'email': response.data.email}
+                let user = await postCreateUser(this.registrationForm)
+                if (user) {
                     this.$store.commit('setUser', user)
                     this.$store.commit('setAuth', true)
                 }

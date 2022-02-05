@@ -30,7 +30,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'User'
 
     UserId = db.Column(db.Integer, primary_key=True, index=True)
-    UserName = db.Column(db.String, index=True, unique=True)
+    UserName = db.Column(db.String, index=True)
     UserEmail = db.Column(db.String, index=True, unique=True)
     UserPassword = db.Column(db.String(128))
 

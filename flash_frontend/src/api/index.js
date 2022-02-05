@@ -54,6 +54,7 @@ let API_URL = window.location.protocol + '//' + window.location.hostname + ':' +
 
 export let apiErrors = []
 function handleResponse(req) {
+    console.log(req)
     try {
         // Check if response is correct or contains errors
         if (String(req.data).toLowerCase().includes('error')) {
@@ -69,17 +70,23 @@ function handleResponse(req) {
 
 // API functions
 
-export function postCreateUser(form) {
+export async function postCreateUser(form) {
     console.log('Run postCreateUser')
-    let req = axios.post(API_URL + '/create-user/', form)
-    return handleResponse(req)
+    let req = await axios.post(API_URL + '/create-user/', form)
+    return handleResponse(req).data
 }
 
-export function checkEmailIsFree(email) {
+export async function checkEmailIsFree(email) {
     console.log('Run checkEmailIsFree')
     let email_obj = {"email": email}
-    let req = axios.post(API_URL + '/check-email/', email_obj)
-    return handleResponse(req)
+    let req = await axios.post(API_URL + '/check-email/', email_obj)
+    return handleResponse(req).data
+}
+
+export async function postLogin(form) {
+    console.log('Run postLogin')
+    let req = await axios.post(API_URL + '/login/', form)
+    return handleResponse(req).data
 }
 
 export function fetchSessionOptions() {

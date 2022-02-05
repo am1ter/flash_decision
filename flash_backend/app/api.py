@@ -43,13 +43,15 @@ def check_email() -> Response:
 def sign_in() -> Response:
     """Get filled login form and run authentication procedure"""
     if request.json:
-        current_user = User()
-        current_user = current_user.get_user_by_email(request.json['email'])
+        current_user = User.get_user_by_email(request.json['email'])
         is_password_correct = current_user.check_password(request.json['password'])
         if current_user and is_password_correct:
             resp = {'id': current_user.UserId, 'email': current_user.UserEmail}
-            return json.dumps(resp)
-        srv.print_log(f'User has been authentificated')
+            srv.print_log(f'User {current_user} has been authentificated')
+        else:
+            resp = False
+            srv.print_log(f'Authentication faild for email {request.json["email"]}')
+        return json.dumps(resp)
     else:
         raise RuntimeError('Error: Wrong POST request has been received')
 

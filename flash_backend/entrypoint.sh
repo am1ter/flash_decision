@@ -1,4 +1,4 @@
-# Use db migrations
+# Apply db migrations
 flask db upgrade
 # Create default user
 python3 -c "import app.models as md;md.create_def_user()"
