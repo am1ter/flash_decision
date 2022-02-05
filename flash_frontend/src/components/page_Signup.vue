@@ -59,7 +59,7 @@
                 </b-row>
             </b-container>
             <b-button type="submit" class="col-12 mt-3 gradient">Sign up</b-button>
-            <b-button href="/#/sign-in" variant="outline-secondary" class="col-12 my-2">Back</b-button>
+            <b-button v-on:click="goToSignIn()" variant="outline-secondary" class="col-12 my-2">Back</b-button>
         </form>
     </section>
 </template>
@@ -130,6 +130,10 @@
                     hasError = this.formErrors.indexOf(element) >= 0 ? true : false
                 }
                 return {isInputInvalid: hasError}
+            },
+            goToSignIn() {
+                // Go to the login page
+                this.$router.push('/sign-in/')
             }
         }
     }

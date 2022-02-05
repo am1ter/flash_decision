@@ -10,13 +10,33 @@
             </b-row>
         </b-container>
         <b-button class="col-12 mt-3 gradient">Sign in</b-button>
-        <b-button href="/#/sign-up" variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
+        <b-button v-on:click="goToSignUp()" variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
+        <b-button v-on:click="useDemoAccount()" variant="outline-secondary" class="col-12">Sign in with demo account</b-button>
     </section>
 </template>
 
 <script>
+    import { mapState, mapMutations } from 'vuex'
+
     export default {
-        name: 'page_Login'
+        name: 'page_Login',
+        computed: {
+            ...mapState(['isAuth', 'user', 'registrationForm', 'apiErrors'])
+        },
+        methods: {
+            ...mapMutations(['setAuth', 'setUser']),
+            goToSignUp() {
+                // Go to the sign up page
+                this.$router.push('/sign-up/')
+            },
+            useDemoAccount() {
+                let user = {'id': 1, 'email': 'demo@alekseisemenov.ru'}
+                this.$store.commit('setUser', user)
+                this.$store.commit('setAuth', true)
+                // Go to the main page
+                this.$router.push('/session/')
+            }
+        }
     }
 </script>
 
