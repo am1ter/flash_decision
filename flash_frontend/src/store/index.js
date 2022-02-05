@@ -7,7 +7,6 @@ Vue.use(Vuex)
 const state = {
     // single source of data
     version: '0.6.01',
-    // isAuth: true,
     isAuth: false,
     user: { id: 53, email: 'demo@alekseisemenov.ru' },
     // user: {},
@@ -15,7 +14,6 @@ const state = {
     apiErrors: apiErrors,
     sessions: [],
     currentSession: {},
-    // currentSession: {"options": {'sessionId': 14}},
     copyright_year: new Date().getFullYear()
 }
 

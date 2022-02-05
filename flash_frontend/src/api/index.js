@@ -75,6 +75,13 @@ export function postCreateUser(form) {
     return handleResponse(req)
 }
 
+export function checkEmailIsFree(email) {
+    console.log('Run checkEmailIsFree')
+    let email_obj = {"email": email}
+    let req = axios.post(API_URL + '/check-email/', email_obj)
+    return handleResponse(req)
+}
+
 export function fetchSessionOptions() {
     console.log('Run fetchSessionOptions')
     return axios.get(API_URL + '/get-session-options/')

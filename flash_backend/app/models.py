@@ -1,5 +1,6 @@
 from flask_sqlalchemy import BaseQuery
 from pandas.core.frame import DataFrame
+from sqlalchemy import false
 from app import db, login
 import app.config as cfg
 import app.service as service
@@ -66,6 +67,13 @@ class User(UserMixin, db.Model):
     def check_password(self, password: str) -> None:
         """Check the password against stored hashed password """
         return check_password_hash(self.UserPassword, password)
+
+    def check_is_email_free(email):
+        """Check if email is free"""
+        if User.get_user_by_email(email):
+            return False
+        else:
+            return True
 
 
 class Session(db.Model):
@@ -295,7 +303,7 @@ class Session(db.Model):
 
             return session_summary
         except:
-            raise SQLAlchemyError('Error: No connection to DB')
+            raise SQLAlchemyError('Error: No connection to DB')            
 
 
 class Iteration(db.Model):

@@ -1,3 +1,4 @@
+from urllib import response
 from app import app
 import app.config as cfg
 import app.service as srv
@@ -24,6 +25,16 @@ def sign_up() -> Response:
         srv.print_log(f'User {current_user} has been created')
         resp = {'id': current_user.UserId, 'email': current_user.UserEmail}
         return json.dumps(resp)
+    else:
+        raise RuntimeError('Error: Wrong POST request has been received')
+
+
+@api.route('/check-email/', methods=['GET', 'POST'])
+def check_email() -> Response:
+    """Check if email is free"""
+    if request.json:
+        email_is_free = User.check_is_email_free(request.json['email'])
+        return json.dumps(email_is_free)
     else:
         raise RuntimeError('Error: Wrong POST request has been received')
 
