@@ -1,16 +1,14 @@
-from flask_sqlalchemy import BaseQuery
-from pandas.core.frame import DataFrame
-from sqlalchemy import false
 from app import db, login
 import app.config as cfg
 import app.service as service
 
+from flask_sqlalchemy import BaseQuery
+from sqlalchemy.exc import SQLAlchemyError 
+import pandas as pd
+from pandas.core.frame import DataFrame
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
-import pandas as pd
-from sqlalchemy.exc import SQLAlchemyError 
-from sqlalchemy.sql import func
 from math import ceil
 import json
 from plotly.utils import PlotlyJSONEncoder
@@ -159,7 +157,7 @@ class Session(db.Model):
     def _calc_first_bar_datetime(self) -> datetime:
         """Calculate datetime of the first bar in downloaded quotes dataset"""
         if self.TradingType == 'daytrading':
-            # One iteration per day
+            # One iteration per day (round up)
             days_before = ceil(self.Iterations / 5) * 7 
         elif self.TradingType == 'swingtrading':
             # One iteration per week
@@ -518,7 +516,7 @@ def write_object_to_db(object):
 
 def create_def_user() -> None:
     """Create default user during first run of the script"""
-    if User.get_user_by_email('admin@locahost') is None:
+    if User.get_user_by_email('demo@alekseisemenov.ru') is None:
         def_user = User()
         creds = {'name': 'demo', 'email': 'demo@alekseisemenov.ru', 'password': 'demo'}
         def_user.new(creds=creds)

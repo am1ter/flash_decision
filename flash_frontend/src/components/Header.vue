@@ -27,7 +27,6 @@
         methods: {
             ...mapMutations(['setAuth']),
             logout() {
-                console.log('Logout')
                 this.$store.commit('setAuth', false)
                 // Go to the login page
                 this.$router.push('/sign-in/')

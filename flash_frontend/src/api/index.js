@@ -35,26 +35,8 @@ let API_URL = window.location.protocol + '//' + window.location.hostname + ':' +
 
 // API errors handling
 
-// export let apiErrors = []
-// function handleResponse(req) {
-//     req.then(
-//         response => {
-//             // Check if response is correct or contains errors
-//             if (String(response.data).toLowerCase().includes('error')) {
-//                 apiErrors.push(response.data)
-//                 return false
-//             } else {
-//                 console.log(response)
-//                 return response
-//             }
-//         },
-//         reject => {apiErrors.push(reject)}
-//     )
-// }
-
 export let apiErrors = []
 function handleResponse(req) {
-    console.log(req)
     try {
         // Check if response is correct or contains errors
         if (String(req.data).toLowerCase().includes('error')) {
@@ -67,6 +49,7 @@ function handleResponse(req) {
         apiErrors.push(err)
     }
 }
+
 
 // API functions
 

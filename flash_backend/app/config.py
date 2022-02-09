@@ -8,7 +8,6 @@ from finam.const import Market, Timeframe   # https://github.com/ffeast/finam-ex
 # Flask configuration
 class FlaskConfig(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'flashDecisionSecretKey'
-    # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///../flash_decision.db' # SQLITE
     SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ.get('DATABASE_USER') + ":" \
                               + os.environ.get('DATABASE_PASS') + "@" \
                               + os.environ.get('DATABASE_URL') + ":" \
