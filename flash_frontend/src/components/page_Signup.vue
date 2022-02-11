@@ -17,7 +17,7 @@
                         <!-- Empty cell -->
                     </b-col>                    
                     <b-col class="my-auto" sm="9" v-if="formErrors.indexOf('input-email') > -1">
-                        <p class="text-danger text-left mb-0">
+                        <p class="text-danger text-left mb-0" v-if="emailIsFree == true">
                             <small>Please enter a valid email</small>
                         </p>
                         <p class="text-danger text-left mb-0" v-if="emailIsFree == false">
@@ -66,7 +66,7 @@
 
 <script>
     import { mapState, mapMutations } from 'vuex'
-    import { postCreateUser, checkEmailIsFree } from '@/api'
+    import { apiPostCreateUser, apiGetCheckEmailIsFree } from '@/api'
 
     export default {
         name: 'page_Signup',
@@ -78,10 +78,10 @@
                 }
         },
         computed: {
-            ...mapState(['isAuth', 'user', 'registrationForm', 'apiErrors'])
+            ...mapState(['user', 'registrationForm', 'apiErrors'])
         },
         methods: {
-            ...mapMutations(['setAuth', 'setUser']),
+            ...mapMutations(['setUser']),
             async checkForm(e) {
             // Get data from inputs and send it via API
             
@@ -89,7 +89,7 @@
             this.formErrors = []
 
             // Check if email is free
-            this.emailIsFree = await checkEmailIsFree(this.$children[0].localValue)
+            this.emailIsFree = await apiGetCheckEmailIsFree(this.$children[0].localValue)
 
             // Get values from form and validate them
             for (let i = 0; i <= 2; i++) {
@@ -97,7 +97,7 @@
                 let input_id = this.$children[i].id
                 let input_value = this.$children[i].localValue
                
-                if ((input_id == "input-email" & input_value.indexOf('@') > -1 & this.emailIsFree) ||
+                if ((input_id == "input-email" & input_value.indexOf('@') > -1 & input_value.indexOf('.') > -1 & this.emailIsFree) ||
                     (input_id == "input-name" & input_value.length >= 2) ||
                     (input_id == "input-password" & input_value.length >= 6)) {
                         this.registrationForm[input_id.replace('input-', '')] = input_value
@@ -110,10 +110,9 @@
             // If validation has failed (formErrors.length > 0) than decline form submit (preventDefault)
             // If validation has passed send POST request, check the response and go to the next page
             if (this.formErrors.length == 0) {
-                let user = await postCreateUser(this.registrationForm)
+                let user = await apiPostCreateUser(this.registrationForm)
                 if (user) {
                     this.$store.commit('setUser', user)
-                    this.$store.commit('setAuth', true)
                 }
                 // Go to the main page
                 this.$router.push('/session/')

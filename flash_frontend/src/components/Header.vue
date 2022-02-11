@@ -22,12 +22,15 @@
         name: 'Header',
         props: {},
         computed: {
-            ...mapState(['isAuth', 'user'])
+            ...mapState(['user']),
+            isAuth() {
+                return this.$store.getters.isAuth
+            }
         },
         methods: {
-            ...mapMutations(['setAuth']),
+            ...mapMutations(['setNoUser']),
             logout() {
-                this.$store.commit('setAuth', false)
+                this.$store.commit('setNoUser')
                 // Go to the login page
                 this.$router.push('/sign-in/')
             }

@@ -13,14 +13,13 @@
 
 <script>
     import { mapState } from 'vuex'
-    import { getSessionsResults } from '@/api'
+    import { apiGetSessionsResults } from '@/api'
 
     export default {
         name: 'page_Results',
         data() {
             return {
                 isLoaded: false,
-                apiErrors: [],
                 fields: [
                     { key: 'column' },
                     { key: 'value', tdClass: 'setValueTdClass' }
@@ -28,27 +27,22 @@
             }
         },
         computed: {
-            ...mapState(['isAuth', 'user', 'currentSession'])
+            ...mapState(['user', 'currentSession', 'apiErrors'])
         },
         async mounted() {
             await this.loadSessionsResults()
         },
         methods: {
-            loadSessionsResults() {
+            async loadSessionsResults() {
                 // Load last session results
-                getSessionsResults(this.currentSession.options.sessionId)
-                    .then(response => {
-                        this.currentSession['sessionsResults'] = response.data
-                        this.isLoaded = true
-                    },
-                    reject => {this.apiErrors.push(reject)}
-                    )
+                let response = await apiGetSessionsResults(this.currentSession.options.sessionId)
+                this.currentSession['sessionsResults'] = response
+                this.isLoaded = true
             },
             formatFigures(x) {
                 return (x > 0) ? '+' + x + '%': x + '%'
             },
             calcSessionsSummary() {
-                console.log('Table shown')
                 let sesRes = this.currentSession.sessionsResults
                 return [
                     { column: 'Total result', value: this.formatFigures(sesRes.totalResult)},

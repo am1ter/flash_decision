@@ -154,7 +154,7 @@
 
 <script>
     import { mapState } from 'vuex'
-    import { fetchSessionOptions, postStartNewSession } from '@/api'
+    import { apiGetSessionOptions, apiPostStartNewSession } from '@/api'
 
     export default {
         name: 'page_Session',
@@ -175,6 +175,12 @@
             ...mapState(['isAuth', 'user', 'currentSession', 'apiErrors'])
         },
         methods: {
+            async loadPage() {
+                let response = await apiGetSessionOptions()
+                this.sessionOptionsAll = response
+                this.sessionOptionsMarketsLen = this.sessionOptionsAll.markets.length
+                this.isLoaded = true
+            },
             dateDisabled(ymd, date) {
                 // Disable weekends in date input
 
@@ -196,8 +202,9 @@
                     this.sessionOptionsSecurities = this.sessionOptionsAll.securities[this.selectedMarket]
                 }
             },
-            checkForm(e) {
+            async checkForm(e) {
                 // Get selected session options and send it via API
+                e.preventDefault()
                 
                 // Clean list of validation errors
                 this.formErrors = []
@@ -227,25 +234,14 @@
                 // If validation has failed (formErrors.length > 0) than decline form submit (preventDefault)
                 // If validation has passed send POST request, check the response and go to the next page
                 if (this.formErrors.length == 0) {
-                    postStartNewSession(this.currentSession['options'])
-                        .then(
-                            response => {
-                                if (String(response.data).includes('Error') || String(response.data).includes('error')) {
-                                    this.apiErrors.push(response.data)
-                                } else {
-                                    // Add session id from response to the object
-                                    this.currentSession['options']['sessionId'] = response.data
-                                    // Create first iteration in the current session (counter and storage)
-                                    this.currentSession['currentIterationNum'] = 1
-                                    this.currentSession["iterations"] = {1: {}}
-                                    // Go to the decision making page
-                                    this.$router.push('/decision/' + response.data + '/' + 1)
-                                }
-                            },
-                            reject => {this.apiErrors.push(reject)}
-                        )
-                } else {
-                   e.preventDefault()
+                    let response = await apiPostStartNewSession(this.currentSession['options'])
+                    // Add session id from response to the object
+                    this.currentSession['options']['sessionId'] = response
+                    // Create first iteration in the current session (counter and storage)
+                    this.currentSession['currentIterationNum'] = 1
+                    this.currentSession["iterations"] = {1: {}}
+                    // Go to the decision making page
+                    this.$router.push('/decision/' + response + '/' + 1)
                 }
             },
             checkClassIsInputInvalid(element) {
@@ -258,15 +254,7 @@
             }
         },
         beforeMount() {
-            fetchSessionOptions()
-                .then(
-                    response => {
-                        this.sessionOptionsAll = response.data
-                        this.isLoaded = true
-                        },
-                    reject => {this.apiErrors.push(reject)}
-                )
-                .then(() => {this.sessionOptionsMarketsLen = this.sessionOptionsAll.markets.length})
+            this.loadPage()
         }
     }
 </script>

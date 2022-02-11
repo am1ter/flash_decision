@@ -33,7 +33,7 @@
 
 <script>
     import { mapState, mapMutations } from 'vuex'
-    import { postLogin } from '@/api'
+    import { apiPostLogin } from '@/api'
 
     export default {
         name: 'page_Login',
@@ -44,20 +44,24 @@
                 }
         },
         computed: {
-            ...mapState(['isAuth', 'user', 'registrationForm', 'apiErrors'])
+            ...mapState(['user', 'registrationForm', 'apiErrors'])
         },
         methods: {
-            ...mapMutations(['setAuth', 'setUser']),
+            ...mapMutations(['setUser']),
             goToSignUp() {
                 // Go to the sign up page
                 this.$router.push('/sign-up/')
             },
-            useDemoAccount() {
-                let user = {'id': 1, 'email': 'demo@alekseisemenov.ru'}
-                this.$store.commit('setUser', user)
-                this.$store.commit('setAuth', true)
-                // Go to the main page
-                this.$router.push('/session/')
+            async useDemoAccount() {
+                let creds = {'email': 'demo@alekseisemenov.ru', 'password': 'demo'}
+                let user = await apiPostLogin(creds)
+                if (user) {
+                    this.$store.commit('setUser', user)
+                    // Go to the main page
+                    this.$router.push('/session/')
+                } else {
+                    this.formErrors.push('input-password')
+                }
             },
             async checkForm() {
                 // Get data from inputs and send it via API
@@ -71,10 +75,9 @@
                 }
 
                 // Check form via api (authenticated or not)
-                let user = await postLogin(form)
+                let user = await apiPostLogin(form)
                 if (user) {
                     this.$store.commit('setUser', user)
-                    this.$store.commit('setAuth', true)
                     // Go to the main page
                     this.$router.push('/session/')
                 } else {

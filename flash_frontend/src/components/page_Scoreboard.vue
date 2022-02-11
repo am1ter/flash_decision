@@ -15,32 +15,27 @@
 
 <script>
     import { mapState } from 'vuex'
-    import { getScoreboard } from '@/api'
+    import { apiGetScoreboard } from '@/api'
 
     export default {
         name: 'page_Scoreboard',
         data() {
             return {
                 isLoaded: false,
-                apiErrors: []
             }
         },
         computed: {
-            ...mapState(['isAuth', 'user', 'currentSession'])
+            ...mapState(['user', 'currentSession', 'apiErrors'])
         },
         mounted() {
             this.loadScoreboard()
         },
         methods: {
-            loadScoreboard() {
+            async loadScoreboard() {
                 // Load last session results
-                getScoreboard(this.user.id)
-                    .then(response => {
-                        console.log(response)
-                        this.isLoaded = true
-                    },
-                    reject => {this.apiErrors.push(reject)}
-                    )
+                let response = await apiGetScoreboard(this.user.id)
+                console.log(response)
+                this.isLoaded = true
             }
         }
     }

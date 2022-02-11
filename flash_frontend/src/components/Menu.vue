@@ -24,7 +24,10 @@
         name: 'Menu',
         props: {},
         computed: {
-            ...mapState(['isAuth', 'user', 'currentSession'])
+            ...mapState(['user', 'currentSession']),
+            isAuth() {
+                return this.$store.getters.isAuth
+            }
         },
         methods: {
             checkPageIsActive(menu_element) {

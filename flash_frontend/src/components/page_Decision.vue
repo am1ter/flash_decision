@@ -31,7 +31,7 @@
 <script>
     import { mapState } from 'vuex'
     import { Plotly } from 'vue-plotly'
-    import { getIterationChart, postRecordDecision } from '@/api'
+    import { apiGetIterationChart, apiPostRecordDecision } from '@/api'
 
     export default {
         name: 'page_Decision',
@@ -60,12 +60,11 @@
                         title: {visible: false},
                         showticklabels: false
                         }
-                },
-                apiErrors: []
+                }
             }
         },
         computed: {
-            ...mapState(['isAuth', 'user', 'currentSession'])
+            ...mapState(['user', 'currentSession', 'apiErrors'])
         },
         mounted() {
             // Declare hotkeys (listen to keyboard input)
@@ -83,33 +82,23 @@
             this.$refs.pageTimer.startCountdown()
         },
         methods: {
-            // Create blank decision
             createBlankDecision() {
+                // Create blank decision
                 if (this.currentSession.currentIterationNum == 1) {
                     this.currentSession['decisions'] = {1: {'action': null, 'timeSpent': null}}}
                 else {
                     this.currentSession['decisions'][this.currentSession.currentIterationNum] = {'action': null, 'timeSpent': null}
                 }
             },
-            updateChart() {
-            // Get iteration chart over API
-            return getIterationChart(this.currentSession.options.sessionId, this.currentSession.currentIterationNum)
-                    .then(response => {
-                        // Check that all iterations exists
-                        try {
-                            // Chart data to display [0], iteration data to vuex storage [1]
-                            this.iterationChart = JSON.parse(response.data)[0];
-                            this.currentSession['iterations'][this.currentSession.currentIterationNum] = JSON.parse(response.data)[1]
-                        }
-                        catch (error) {
-                            this.apiErrors.push(error)
-                        }
-                    },
-                    reject => {this.apiErrors.push(reject)}
-                    )
+            async updateChart() {
+                // Get iteration chart over API
+                let response = await apiGetIterationChart(this.currentSession.options.sessionId, this.currentSession.currentIterationNum)
+                // Chart data to display [0], iteration data to vuex storage [1]
+                this.iterationChart = JSON.parse(response)[0];
+                this.currentSession['iterations'][this.currentSession.currentIterationNum] = JSON.parse(response)[1]
             },
-            // Decision has been made
-            saveDecision(event) {
+            async saveDecision(event) {
+                // Decision has been made
 
                 // Check that current iteration is okay
                 if (this.currentSession['decisions'].length < this.currentSession.currentIterationNum) {
@@ -141,7 +130,6 @@
                 }
 
                 // Save decision to the vuex object
-                console.log(this.currentSession.currentIterationNum)
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['sessionId'] = this.currentSession.options.sessionId
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['iterationNum'] = this.currentSession.currentIterationNum
                 this.currentSession['decisions'][this.currentSession.currentIterationNum]['action'] = action
@@ -151,20 +139,13 @@
                 this.$refs.pageTimer.finishCountdown()
 
                 // Send post request
-                postRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum])
-                    .then(() => {
-                        // When post request has been processed go to the next iteration or to the results page
-                        if (this.currentSession.currentIterationNum < Number(this.currentSession.options.iterations)) {
-                            this.goNextIteration()
-                        } else {
-                            this.$router.push('/sessions-results/' + this.currentSession.options.sessionId)
-                        }
-                    })
-                    .catch(
-                        reject => {this.apiErrors.push(reject)}
-                    )
-
-
+                await apiPostRecordDecision(this.currentSession['decisions'][this.currentSession.currentIterationNum])
+                // When post request has been processed go to the next iteration or to the results page
+                if (this.currentSession.currentIterationNum < Number(this.currentSession.options.iterations)) {
+                    this.goNextIteration()
+                } else {
+                    this.$router.push('/sessions-results/' + this.currentSession.options.sessionId)
+                }
             },
             goNextIteration() {
                 // New iteration processing

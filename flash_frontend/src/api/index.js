@@ -1,4 +1,6 @@
+import store from '../store'
 import axios from 'axios'
+
 
 
 // In some cases it is neccessary to change AJAX API requests port to 80 or 443 manually.
@@ -35,74 +37,90 @@ let API_URL = window.location.protocol + '//' + window.location.hostname + ':' +
 
 // API errors handling
 
-export let apiErrors = []
-function handleResponse(req) {
+async function handleResponse(req) {
     try {
-        // Check if response is correct or contains errors
-        if (String(req.data).toLowerCase().includes('error')) {
-            apiErrors.push(req.data)
-            return false
+        // Make api request and get response
+        let response
+        if (req['type'] == 'get') {
+            response = await axios.get(req['url'], { headers: { Authorization: `Bearer: ${store.state.user.token}` } })
+        } else if (req['type'] == 'post') {
+            response = await axios.post(req['url'], req['args'], { headers: { Authorization: `Bearer: ${store.state.user.token}` } })
+        }
+        // Check if response is not empty
+        if (response) {
+            return response.data
         } else {
-            return req
+            store.commit('newApiError', 'Error: Empty API response')
+            return false
         }
     } catch(err) {
-        apiErrors.push(err)
+        store.commit('newApiError', err.response.data)
     }
 }
 
 
 // API functions
 
-export async function postCreateUser(form) {
-    console.log('Run postCreateUser')
-    let req = await axios.post(API_URL + '/create-user/', form)
-    return handleResponse(req).data
+export function apiPostCreateUser(form) {
+    console.log('Run apiPostCreateUser')
+    let req = {'type': 'post', 'url': API_URL + '/create-user/', 'args': form}
+    return handleResponse(req)
 }
 
-export async function checkEmailIsFree(email) {
-    console.log('Run checkEmailIsFree')
+
+export function apiGetCheckEmailIsFree(email) {
+    console.log('Run apiGetCheckEmailIsFree')
     let email_obj = {"email": email}
-    let req = await axios.post(API_URL + '/check-email/', email_obj)
-    return handleResponse(req).data
-}
-
-export async function postLogin(form) {
-    console.log('Run postLogin')
-    let req = await axios.post(API_URL + '/login/', form)
-    return handleResponse(req).data
-}
-
-export function fetchSessionOptions() {
-    console.log('Run fetchSessionOptions')
-    return axios.get(API_URL + '/get-session-options/')
+    let req = {'type': 'post', 'url': API_URL + '/check-email/', 'args': email_obj}
+    return handleResponse(req)
 }
 
 
-export function postStartNewSession(form) {
-    console.log('Run postStartNewSession')
-    return axios.post(API_URL + '/start-new-session/', form)
+export function apiPostLogin(form) {
+    console.log('Run apiPostLogin')
+    let req = {'type': 'post', 'url': API_URL + '/login/', 'args': form}
+    return handleResponse(req)
 }
 
 
-export function getIterationChart(sessionId, iterationNum) {
-    console.log('Run getIterationChart')
-    return axios.get(API_URL + `/get-chart/${sessionId}/${iterationNum}/`)
+export function apiGetSessionOptions() {
+    console.log('Run apiGetSessionOptions')
+    let req = {'type': 'get', 'url': API_URL + '/get-session-options/'}
+    // let req = {'type': 'get', 'url': API_URL + '/get-session-options/', 'header': { headers: { Authorization: `Bearer: ${jwt}` } }}
+    return handleResponse(req)
 }
 
 
-export async function postRecordDecision(decision) {
-    console.log('post Record Decision')
-    return await axios.post(API_URL + '/record-decision/', decision)
+export function apiPostStartNewSession(form) {
+    console.log('Run apiPostStartNewSession')
+    let req = {'type': 'post', 'url': API_URL + '/start-new-session/', 'args': form}
+    return handleResponse(req)
 }
 
 
-export async function getSessionsResults(sessionId) {
-    console.log('Run getSessionsResults')
-    return await axios.get(API_URL + `/get-sessions-results/${sessionId}/`)
+export function apiGetIterationChart(sessionId, iterationNum) {
+    console.log('Run apiGetIterationChart')
+    let req = {'type': 'get', 'url': API_URL + `/get-chart/${sessionId}/${iterationNum}/`}
+    return handleResponse(req)
 }
 
 
-export async function getScoreboard(userId) {
-    console.log('Run getScoreboard')
-    return await axios.get(API_URL + `/get-scoreboard/${userId}/`)
+export function apiPostRecordDecision(decision) {
+    console.log('apiPostRecordDecision')
+    let req = {'type': 'post', 'url': API_URL + '/record-decision/', 'args': decision}
+    return handleResponse(req)
+}
+
+
+export function apiGetSessionsResults(sessionId) {
+    console.log('Run apiGetSessionsResults')
+    let req = {'type': 'get', 'url': API_URL + `/get-sessions-results/${sessionId}/`}
+    return handleResponse(req)
+}
+
+
+export function apiGetScoreboard(userId) {
+    console.log('Run apiGetScoreboard')
+    let req = {'type': 'get', 'url': API_URL + `/get-scoreboard/${userId}/`}
+    return handleResponse(req)
 }

@@ -3,9 +3,11 @@ import app.config as cfg
 import app.service as srv
 from app.models import User, Decision, Session, Iteration
 
-from flask import Blueprint, request
+from flask import Blueprint, jsonify, request, abort
 from flask.wrappers import Response
-import json
+import jwt
+from datetime import datetime, timedelta
+from functools import wraps
 
 
 # Set up api prefix
@@ -16,6 +18,44 @@ srv.print_log(f'Flask has been started')
 session_options = cfg.collect_session_options()
 
 
+def auth_required(f):
+    @wraps(f)
+    def _verify(*args, **kwargs):
+        """Verify authorization token in request header"""
+        auth_headers = request.headers.get('Authorization', '').split()
+
+        invalid_msg = 'Invalid session error. Registeration/authentication required'
+        expired_msg = 'Expired session error. Reauthentication required.'
+        runtime_msg = 'Runtime error during API request processing'
+        
+        # Check if header looks like header with auth info
+        assert len(auth_headers) == 2, invalid_msg
+
+        # Validate JWT from header is valid and not expired
+        try:
+            token = auth_headers[1]
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms="HS256")
+            current_user = User.get_user_by_email(email=data['sub'])
+            assert current_user, f'User {data["sub"]} not found'
+            return f(*args, **kwargs)
+        except jwt.ExpiredSignatureError:
+            srv.print_log(expired_msg)
+            return jsonify(expired_msg), 500
+        except (jwt.InvalidTokenError, AssertionError) as e:
+            srv.print_log(invalid_msg)
+            return jsonify(invalid_msg), 500
+        except (Exception) as e:
+            srv.print_log(runtime_msg)
+            return jsonify(runtime_msg), 500
+
+    return _verify
+
+
+@api.errorhandler(500)
+def internal_server_error(e):
+    return jsonify(e.name + ' (' + str(e.code) + '): ' + e.original_exception.args[0]), 500
+
+
 @api.route('/create-user/', methods=['POST'])
 def sign_up() -> Response:
     """Get registration form and create user's record in db for it"""
@@ -23,8 +63,13 @@ def sign_up() -> Response:
     current_user = User()
     current_user.new(creds=request.json)
     srv.print_log(f'User {current_user} has been created')
-    resp = {'id': current_user.UserId, 'email': current_user.UserEmail}
-    return json.dumps(resp)
+    token = jwt.encode({
+        'sub': current_user.UserEmail,
+        'iat': datetime.utcnow(),
+        'exp': datetime.utcnow() + timedelta(minutes=60)},
+        app.config['SECRET_KEY'])
+    resp = {'id': current_user.UserId, 'email': current_user.UserEmail, 'token': token}
+    return jsonify(resp), 200
 
 
 @api.route('/check-email/', methods=['GET', 'POST'])
@@ -32,7 +77,7 @@ def check_email() -> Response:
     """Check if email is free"""
     assert request.json, 'Error: Wrong POST request has been received'
     email_is_free = User.check_is_email_free(request.json['email'])
-    return json.dumps(email_is_free)
+    return jsonify(email_is_free), 200
 
 
 @api.route('/login/', methods=['POST'])
@@ -41,33 +86,42 @@ def sign_in() -> Response:
     assert request.json, 'Error: Wrong POST request has been received'
     current_user = User.get_user_by_email(request.json['email'])
     is_password_correct = current_user.check_password(request.json['password'])
+    
     if current_user and is_password_correct:
-        resp = {'id': current_user.UserId, 'email': current_user.UserEmail}
+        token = jwt.encode({
+            'sub': current_user.UserEmail,
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(minutes=60)},
+            app.config['SECRET_KEY'])
+        resp = {'id': current_user.UserId, 'email': current_user.UserEmail, 'token': token}
         srv.print_log(f'User {current_user} has been authentificated')
     else:
         resp = False
-        srv.print_log(f'Authentication faild for email {request.json["email"]}')
-    return json.dumps(resp)
+        srv.print_log(f'Authentication failed for email {request.json["email"]}')
+    return jsonify(resp), 200
 
 
 @api.route('/get-session-options/', methods=['GET'])
+@auth_required
 def get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
     srv.print_log(f'List of session options has been generated')
-    return json.dumps(session_options, ensure_ascii=False)
+    return jsonify(session_options), 200
 
 
 @api.route('/start-new-session/', methods=['POST'])
+@auth_required
 def start_new_session() -> Response:
     """Start training session: Get json-object, create SQL record and download quotes data"""
     assert request.json, 'Error: Wrong POST request has been received'
     current_session = Session()
     current_session.new(mode='custom', options=request.json)
     srv.print_log(f'{current_session} has been started')
-    return json.dumps(current_session.SessionId)
+    return jsonify(current_session.SessionId), 200
 
 
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
+@auth_required
 def get_chart(session_id: int, iteration_num: int) -> Response:
     """Send json with chart data to frontend"""
     # Load session from db
@@ -86,20 +140,22 @@ def get_chart(session_id: int, iteration_num: int) -> Response:
     chart = loaded_iteration.prepare_chart_plotly()
 
     srv.print_log(f'New chart for {loaded_iteration} has been drawed')
-    return json.dumps(chart, ensure_ascii=False)
+    return jsonify(chart), 200
 
 
 @api.route('/record-decision/', methods=['POST'])
+@auth_required
 def record_decision() -> Response:
     """Save user's decision in db and score results for it"""
     assert request.json, 'Error: Wrong POST request has been received'
     new_decision = Decision()
     new_decision.new(props=request.json)
     srv.print_log(f'New decision {new_decision} has been recorded with result {round(new_decision.ResultFinal * 100, 2)}%')
-    return json.dumps(new_decision.ResultFinal)
+    return jsonify(new_decision.ResultFinal), 200
 
 
 @api.route('/get-sessions-results/<int:session_id>/', methods=['GET'])
+@auth_required
 def get_sessions_results(session_id: int) -> Response:
     """When session is finished collect it's summary in one object and send it back to frontend"""
     # Load session from db
@@ -107,13 +163,13 @@ def get_sessions_results(session_id: int) -> Response:
     current_session = current_session.get_from_db(session_id)
     # Get session's summary
     current_session_summary = current_session.calc_sessions_summary()
-    current_session_result = round(current_session_summary['totalResult'] * 100, 2)
-    srv.print_log(f'Session {current_session} has been finished with result {current_session_result}%')
-    return json.dumps(current_session_summary, ensure_ascii=False)
+    srv.print_log(f'{current_session} has been finished with result {current_session_summary["totalResult"]}%')
+    return jsonify(current_session_summary), 200
 
 
 @api.route('/get-scoreboard/<int:user_id>/', methods=['GET'])
+@auth_required
 def get_scoreboard(user_id: int) -> Response:
     """Show global scoreboard and current user's results"""
     srv.print_log(f'Generated scoreboard for user #{user_id}')
-    return json.dumps(True, ensure_ascii=False)
+    return jsonify(True), 200
