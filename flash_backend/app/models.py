@@ -33,6 +33,7 @@ class User(UserMixin, db.Model):
     UserPassword = db.Column(db.String(128))
 
     sessions = db.relationship('Session', backref='User', lazy='dynamic', passive_deletes=True)
+    sessions = db.relationship('Authentication', backref='User', lazy='dynamic', passive_deletes=True)
 
     def __repr__(self) -> str:
         """Return the user email"""
@@ -74,6 +75,34 @@ class User(UserMixin, db.Model):
             return True
 
 
+class Authentication(db.Model):
+    __tablename__ = 'Authentication'
+
+    AuthId = db.Column(db.Integer, primary_key=True, index=True)
+    UserId = db.Column(db.Integer, db.ForeignKey('User.UserId', ondelete='CASCADE'), index=True)
+    AuthDatetime = db.Column(db.DateTime, default=datetime.utcnow)
+    IpAddress = db.Column(db.String)
+    UserAgent = db.Column(db.String)
+    StatusCode = db.Column(db.String)
+
+    def __repr__(self):
+        """Return description"""
+        return f'<Authentication {self.AuthId} for {self.UserId} at {self.AuthDatetime}>'
+
+    def __init__(self, user, details):
+        """Create new record in db with authentication details"""
+        
+        self.UserId = user.UserId
+        self.IpAddress = details['ip_address']
+        self.UserAgent = details['user_agent']
+
+        assert details['status_code'] in ['200', '201', '401', '500'], 'Wrong status code'
+        self.StatusCode = details['status_code']
+        
+        # Write record to db
+        write_object_to_db(self)
+
+
 class Session(db.Model):
     __tablename__ = 'Session'
 
@@ -98,7 +127,7 @@ class Session(db.Model):
     decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
     
     def __repr__(self):
-        """Return the session id"""
+        """Return object description"""
         return f'<Session {self.SessionId}>'
 
     def new(self, mode: str, options: dict) -> None:
@@ -322,6 +351,7 @@ class Iteration(db.Model):
     decisions = db.relationship('Decision', backref='Iteration', lazy='dynamic', passive_deletes=True)
 
     def __repr__(self):
+        """Return object description"""
         return f'<Iteration {self.IterationNum} of the session {self.SessionId}>'
 
     def new(self, session: Session, iteration_num: int, df_quotes: DataFrame) -> None:
@@ -478,6 +508,7 @@ class Decision(db.Model):
     ResultFinal = db.Column(db.Float)
 
     def __repr__(self):
+        """Return object description"""
         return f'<Decision {self.DecisionId} during session {self.SessionId}>'
 
     def new(self, props: dict) -> None:

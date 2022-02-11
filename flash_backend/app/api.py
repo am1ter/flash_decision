@@ -1,9 +1,9 @@
 from app import app
 import app.config as cfg
 import app.service as srv
-from app.models import User, Decision, Session, Iteration
+from app.models import Authentication, User, Decision, Session, Iteration
 
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request
 from flask.wrappers import Response
 import jwt
 from datetime import datetime, timedelta
@@ -63,12 +63,20 @@ def sign_up() -> Response:
     current_user = User()
     current_user.new(creds=request.json)
     srv.print_log(f'User {current_user} has been created')
+
+    # Create JSON Web Token and prepare export to frontend
     token = jwt.encode({
         'sub': current_user.UserEmail,
         'iat': datetime.utcnow(),
         'exp': datetime.utcnow() + timedelta(minutes=60)},
         app.config['SECRET_KEY'])
     resp = {'id': current_user.UserId, 'email': current_user.UserEmail, 'token': token}
+
+    # Record authentication in db
+    status_code = '201'
+    details = {'ip_address': request.remote_addr, 'user_agent': request.user_agent.string, 'status_code': status_code}
+    Authentication(user=current_user, details=details)
+
     return jsonify(resp), 200
 
 
@@ -86,18 +94,26 @@ def sign_in() -> Response:
     assert request.json, 'Error: Wrong POST request has been received'
     current_user = User.get_user_by_email(request.json['email'])
     is_password_correct = current_user.check_password(request.json['password'])
-    
-    if current_user and is_password_correct:
+
+    # Create JSON Web Token and prepare export to frontend
+    if is_password_correct:
         token = jwt.encode({
             'sub': current_user.UserEmail,
             'iat': datetime.utcnow(),
             'exp': datetime.utcnow() + timedelta(minutes=60)},
             app.config['SECRET_KEY'])
         resp = {'id': current_user.UserId, 'email': current_user.UserEmail, 'token': token}
+        status_code = '200'
         srv.print_log(f'User {current_user} has been authentificated')
     else:
         resp = False
+        status_code = '401'
         srv.print_log(f'Authentication failed for email {request.json["email"]}')
+
+    # Record authentication in db
+    details = {'ip_address': request.remote_addr, 'user_agent': request.user_agent.string, 'status_code': status_code}
+    Authentication(user=current_user, details=details)
+
     return jsonify(resp), 200
 
 
