@@ -74,51 +74,56 @@
             return {
                 isLoaded: true,
                 formErrors: [],
+                registrationForm: {},
                 emailIsFree: true
                 }
         },
         computed: {
-            ...mapState(['user', 'registrationForm', 'apiErrors'])
+            ...mapState(['user', 'apiErrors'])
         },
         methods: {
             ...mapMutations(['setUser']),
             async checkForm(e) {
-            // Get data from inputs and send it via API
-            
-            // Clean list of validation errors
-            this.formErrors = []
+                // Get data from inputs and send it via API
+                e.preventDefault()
 
-            // Check if email is free
-            this.emailIsFree = await apiGetCheckEmailIsFree(this.$children[0].localValue)
+                // Check if email is free
+                this.emailIsFree = await apiGetCheckEmailIsFree(this.$children[0].localValue)
 
-            // Get values from form and validate them
-            for (let i = 0; i <= 2; i++) {
-                // Check email (contains @), name (length) and password (length)
-                let input_id = this.$children[i].id
-                let input_value = this.$children[i].localValue
-               
-                if ((input_id == "input-email" & input_value.indexOf('@') > -1 & input_value.indexOf('.') > -1 & this.emailIsFree) ||
-                    (input_id == "input-name" & input_value.length >= 2) ||
-                    (input_id == "input-password" & input_value.length >= 6)) {
+                // Clean list of validation errors
+                this.formErrors = []
+                this.registrationForm = {}
+
+                // Get values from form and validate them
+                for (let i = 0; i <= 2; i++) {
+                    // Check email (contains @), name (length) and password (length)
+                    let input_id = this.$children[i].id
+                    let input_value = this.$children[i].localValue
+
+                    if (input_id == "input-email" && input_value.indexOf('@') > -1 && input_value.indexOf('.') > -1 && this.emailIsFree) {
                         this.registrationForm[input_id.replace('input-', '')] = input_value
-                } else {
-                    this.formErrors.push(input_id)
+                    } else if (input_id == "input-name" && input_value.length >= 2) {
+                        this.registrationForm[input_id.replace('input-', '')] = input_value
+                    } else if (input_id == "input-password" && input_value.length >= 6) {
+                        this.registrationForm[input_id.replace('input-', '')] = input_value
+                    } else {
+                        this.formErrors.push(input_id)
+                    }
                 }
-            }
 
-            // Send POST request and save response to vuex state
-            // If validation has failed (formErrors.length > 0) than decline form submit (preventDefault)
-            // If validation has passed send POST request, check the response and go to the next page
-            if (this.formErrors.length == 0) {
+                // If form validation has failed then stop
+                if (this.formErrors.length > 0) {
+                    return false 
+                }
+
+                // If validation has passed send POST request, save response to vuex state and go to the next page
                 let user = await apiPostCreateUser(this.registrationForm)
                 if (user) {
                     this.$store.commit('setUser', user)
                 }
+
                 // Go to the main page
                 this.$router.push('/session/')
-            } else {
-                e.preventDefault()
-            }
             },
             checkClassIsInputInvalid(element) {
                 // Change class of dropdown if validation has failed

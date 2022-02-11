@@ -44,7 +44,7 @@
                 }
         },
         computed: {
-            ...mapState(['user', 'registrationForm', 'apiErrors'])
+            ...mapState(['user', 'apiErrors'])
         },
         methods: {
             ...mapMutations(['setUser']),
