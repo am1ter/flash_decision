@@ -2,7 +2,6 @@ import store from '../store'
 import axios from 'axios'
 
 
-
 // In some cases it is neccessary to change AJAX API requests port to 80 or 443 manually.
 // For example, if you use nginx reverse proxy with subdomains with custom '/location' routing.
 // In a such case change the option 'FORCE_AJAX_API_DEF_PORT' in docker-compose .env file to '1'
@@ -11,7 +10,7 @@ let FORCE_AJAX_API_DEF_PORT
 let PORT_BACKEND
 
 // Read docker enviroment variables
-if ("process.env.VUE_APP_FORCE_AJAX_API_DEF_PORT" in window) {
+if (process.env.VUE_APP_FORCE_AJAX_API_DEF_PORT) {
     FORCE_AJAX_API_DEF_PORT = process.env.VUE_APP_FORCE_AJAX_API_DEF_PORT
 } else {
     FORCE_AJAX_API_DEF_PORT = 0
@@ -24,7 +23,7 @@ if ("process.env.VUE_APP_PORT_BACKEND" in window) {
 }
 
 // Override API PORT to 443 (https) or 80 (http) if there is a following option in docker-compose .env file
-if (FORCE_AJAX_API_DEF_PORT == 1) {
+if (FORCE_AJAX_API_DEF_PORT == '1') {
     if (window.location.protocol == 'https:') {
         PORT_BACKEND = 443
     } else {
