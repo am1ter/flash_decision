@@ -1,4 +1,5 @@
 import store from '../store'
+import cookie from '../main'
 import axios from 'axios'
 
 
@@ -41,9 +42,9 @@ async function handleResponse(req) {
         // Make api request and get response
         let response
         if (req['type'] == 'get') {
-            response = await axios.get(req['url'], { headers: { Authorization: `Bearer: ${store.state.user.token}` } })
+            response = await axios.get(req['url'], { headers: { Authorization: `Bearer: ${cookie.get('user_token')}` } })
         } else if (req['type'] == 'post') {
-            response = await axios.post(req['url'], req['args'], { headers: { Authorization: `Bearer: ${store.state.user.token}` } })
+            response = await axios.post(req['url'], req['args'], { headers: { Authorization: `Bearer: ${cookie.get('user_token')}` } })
         }
         // Check if response is not empty
         if (response) {
@@ -53,6 +54,13 @@ async function handleResponse(req) {
             return false
         }
     } catch(err) {
+        // Clean cookies for auth info if have got '401 Unauthorized' response
+        if (err.response.status == 401) {
+            console.log(err.response.status)
+            cookie.delete('user_id')
+            cookie.delete('user_email')
+            cookie.delete('user_token')
+        }
         store.commit('newApiError', err.response.data)
     }
 }

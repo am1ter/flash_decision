@@ -1,8 +1,5 @@
 <template>
     <section id='page'>
-        <div id='errors' v-if="apiErrors.length > 0">
-            <p>{{apiErrors[0]}}</p>
-        </div>
         <div v-if="apiErrors.length == 0 & isLoaded" class="col-12">
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>

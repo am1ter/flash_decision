@@ -1,9 +1,5 @@
 <template>
     <section id='page'>
-        <!-- Show error if there is any errors -->
-        <div id='errors' v-if="apiErrors.length > 0">
-            <p>{{apiErrors[0]}}</p>
-        </div>
         <!-- Get session option via API, wait for user input and then submit it back to API -->
         <form v-if="apiErrors == 0 & isLoaded" @submit.prevent="checkForm" autocomplete="off">
             <b-container class="g-0" fluid>

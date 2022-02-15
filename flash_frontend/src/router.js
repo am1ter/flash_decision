@@ -29,6 +29,7 @@ const routes = [
         name: 'Session page',
         component: App.components.page_Session,
         beforeEnter(to, from, next) {
+            store.commit('setUserFromCookie')
             if (store.getters.isAuth) { next() } else { next('/sign-in') }
         },
         meta: {
@@ -41,6 +42,7 @@ const routes = [
         name: 'Decision’s page',
         component: App.components.page_Decision,
         beforeEnter(to, from, next) {
+            store.commit('setUserFromCookie')
             if (store.getters.isAuth) { next() } else { next('/sign-in') }
         },
         meta: {
@@ -53,6 +55,7 @@ const routes = [
         name: 'Session’s results page',
         component: App.components.page_Results,
         beforeEnter(to, from, next) {
+            store.commit('setUserFromCookie')
             if (store.getters.isAuth) { next() } else { next('/sign-in') }
         },
         meta: {
@@ -65,6 +68,7 @@ const routes = [
         name: 'Scoreboard page',
         component: App.components.page_Scoreboard,
         beforeEnter(to, from, next) {
+            store.commit('setUserFromCookie')
             if (store.getters.isAuth) { next() } else { next('/sign-in') }
         },
         meta: {

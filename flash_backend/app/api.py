@@ -40,10 +40,10 @@ def auth_required(f):
             return f(*args, **kwargs)
         except jwt.ExpiredSignatureError:
             srv.print_log(expired_msg)
-            return jsonify(expired_msg), 500
+            return jsonify(expired_msg), 401
         except (jwt.InvalidTokenError, AssertionError) as e:
             srv.print_log(invalid_msg)
-            return jsonify(invalid_msg), 500
+            return jsonify(invalid_msg), 401
         except (Exception) as e:
             srv.print_log(runtime_msg)
             return jsonify(runtime_msg), 500

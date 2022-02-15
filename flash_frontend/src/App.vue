@@ -5,6 +5,12 @@
             <Background/>
         </div>
 
+        <!-- Show error if there is any errors -->
+        <div id='errors' v-if="apiErrors.length > 0">
+            <div>{{apiErrors[0]}}</div>
+            <b-button class="mt-3 gradient" v-on:click="reloadPage()">Refresh page</b-button>
+        </div>
+
         <div id='header'>
             <Header/>
         </div>
@@ -65,7 +71,13 @@
             page_Scoreboard
         },
         computed: {
-            ...mapState(['sessions', 'isAuth'])
+            ...mapState(['sessions', 'isAuth', 'apiErrors'])
+        },
+        methods: {
+            reloadPage() {
+                // Reload page on click
+                this.$router.go()
+            }
         }
     }
 
@@ -145,9 +157,11 @@
         font-size: 24px;
         font-weight: 700;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         background-color: rgba(255,255,255,0.7);
+        z-index: 1;
     }
 
     .disabled {

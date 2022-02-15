@@ -1,8 +1,5 @@
 <template>
     <section id='page'>
-        <div id='errors' v-if="apiErrors.length > 0">
-            <p>{{apiErrors[0]}}</p>
-        </div>
         <form v-if="apiErrors.length == 0 & isLoaded" @submit.prevent="checkForm" autocomplete="off">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
@@ -82,7 +79,7 @@
             ...mapState(['user', 'apiErrors'])
         },
         methods: {
-            ...mapMutations(['setUser']),
+            ...mapMutations(['setUserFromApi']),
             async checkForm(e) {
                 // Get data from inputs and send it via API
                 e.preventDefault()
@@ -119,7 +116,7 @@
                 // If validation has passed send POST request, save response to vuex state and go to the next page
                 let user = await apiPostCreateUser(this.registrationForm)
                 if (user) {
-                    this.$store.commit('setUser', user)
+                    this.$store.commit('setUserFromApi', user)
                 }
 
                 // Go to the main page

@@ -43,8 +43,12 @@
             },
             checkIsSessionBlank() {
                 // Apply class 'disabled' if session hasn't started yet
-                let ses_started = !('options' in this.currentSession)
-                return ses_started
+                if (this.isAuth) {
+                    let ses_started = !('options' in this.currentSession)
+                    return ses_started
+                } else {
+                    return false
+                }
             },
             sessionsResultsLink() {
                 // Used for return to the session's results page

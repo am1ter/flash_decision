@@ -47,7 +47,7 @@
             ...mapState(['user', 'apiErrors'])
         },
         methods: {
-            ...mapMutations(['setUser']),
+            ...mapMutations(['setUserFromApi']),
             goToSignUp() {
                 // Go to the sign up page
                 this.$router.push('/sign-up/')
@@ -56,7 +56,7 @@
                 let creds = {'email': 'demo@alekseisemenov.ru', 'password': 'demo'}
                 let user = await apiPostLogin(creds)
                 if (user) {
-                    this.$store.commit('setUser', user)
+                    this.$store.commit('setUserFromApi', user)
                     // Go to the main page
                     this.$router.push('/session/')
                 } else {
@@ -77,7 +77,7 @@
                 // Check form via api (authenticated or not)
                 let user = await apiPostLogin(form)
                 if (user) {
-                    this.$store.commit('setUser', user)
+                    this.$store.commit('setUserFromApi', user)
                     // Go to the main page
                     this.$router.push('/session/')
                 } else {
