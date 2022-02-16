@@ -8,6 +8,13 @@ const APP_TITLE = 'Flash decision: '
 
 const routes = [
     {
+        path: '/',
+        beforeEnter (to, from, next) {
+            store.commit('setUserFromCookie')
+            if (store.getters.isAuth) { next('/session') } else { next('/sign-in') }
+          }
+    },
+    {
         path: '/sign-up',
         name: 'Signup page',
         component: App.components.page_Signup,
