@@ -4,6 +4,7 @@ import VueRouter from "vue-router";
 import App from './App.vue';
 
 Vue.use(VueRouter);
+const APP_TITLE = 'Flash decision: '
 
 const routes = [
     {
@@ -13,6 +14,10 @@ const routes = [
         meta: {
             title: 'Create account',
             instruction: 'Please enter your credentials and submit registration form'
+        },
+        beforeEnter(to, from, next) {
+            document.title = APP_TITLE + to.meta.title
+            next()
         }
     },
     {
@@ -20,60 +25,68 @@ const routes = [
         name: 'Login page',
         component: App.components.page_Login,
         meta: {
-            title: 'Login page',
+            title: 'Sign in',
             instruction: 'Please login to start your training session'
+        },
+        beforeEnter(to, from, next) {
+            document.title = APP_TITLE + to.meta.title
+            next()
         }
     },
     {
         path: '/session',
         name: 'Session page',
         component: App.components.page_Session,
+        meta: {
+            title: 'Start new training session',
+            instruction: 'Set parameters of the session and press Start'
+        },
         beforeEnter(to, from, next) {
+            document.title = APP_TITLE + to.meta.title
             store.commit('setUserFromCookie')
             if (store.getters.isAuth) { next() } else { next('/sign-in') }
-        },
-        meta: {
-            title: 'Training session parameters',
-            instruction: 'Set parameters of the session and press Start'
         }
     },
     {
         path: '/decision/:session_id/:iteration_num',
         name: 'Decision’s page',
         component: App.components.page_Decision,
+        meta: {
+            title: 'Make your decisions',
+            instruction: 'We will close your position in 15 bars. Choose wisely!'
+        },
         beforeEnter(to, from, next) {
+            document.title = APP_TITLE + to.meta.title
             store.commit('setUserFromCookie')
             if (store.getters.isAuth) { next() } else { next('/sign-in') }
-        },
-        meta: {
-            title: 'Make your decision',
-            instruction: 'We will close your position in 15 bars. Choose wisely!'
         }
     },
     {
         path: '/sessions-results/:session_id',
         name: 'Session’s results page',
         component: App.components.page_Results,
+        meta: {
+            title: 'Session’s summary',
+            instruction: 'Explore your results'
+        },
         beforeEnter(to, from, next) {
+            document.title = APP_TITLE + to.meta.title
             store.commit('setUserFromCookie')
             if (store.getters.isAuth) { next() } else { next('/sign-in') }
-        },
-        meta: {
-            title: 'Explore your results',
-            instruction: 'Session’s summary'
         }
     },
     {
         path: '/scoreboard/:user_id',
         name: 'Scoreboard page',
         component: App.components.page_Scoreboard,
-        beforeEnter(to, from, next) {
-            store.commit('setUserFromCookie')
-            if (store.getters.isAuth) { next() } else { next('/sign-in') }
-        },
         meta: {
             title: 'Scoreboard',
             instruction: 'Analyze your progress'
+        },
+        beforeEnter(to, from, next) {
+            document.title = APP_TITLE + to.meta.title
+            store.commit('setUserFromCookie')
+            if (store.getters.isAuth) { next() } else { next('/sign-in') }
         }
     }
 ];
