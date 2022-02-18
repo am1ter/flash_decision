@@ -36,3 +36,7 @@ workspace.code-workspace
 /flash_frontend/*.sln
 /flash_frontend/*.sw?
 .gitignore
+
+# Tests
+/tests/__pycache__
+/tests/.pytest_cache

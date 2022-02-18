@@ -143,7 +143,7 @@
                 </b-row>
             </b-container>
             <!-- Start button -->
-            <b-button type="submit" class="col-12 mt-3 gradient rounded-1">Start</b-button>
+            <b-button id="button-start" type="submit" class="col-12 mt-3 gradient rounded-1">Start</b-button>
         </form>
     </section>
 </template>

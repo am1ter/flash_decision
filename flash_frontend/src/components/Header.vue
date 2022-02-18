@@ -7,7 +7,7 @@
             </div>
         </div>
         <div v-if='isAuth == true' id='header_right'>
-            <a class='header_button' v-on:click="logout()">
+            <a id='button-logout' class='header_button' v-on:click="logout()">
                 <img class='icon_margin_right' src='../assets/icons/i_header_logout.svg'/>
                 <p class='header_text'>logout</p>
             </a>
