@@ -92,7 +92,7 @@ class Authentication(db.Model):
     def __init__(self, user, details):
         """Create new record in db with authentication details"""
         
-        self.UserId = user.UserId
+        self.UserId = user.UserId if user else None
         self.IpAddress = details['ip_address']
         self.UserAgent = details['user_agent']
 

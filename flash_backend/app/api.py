@@ -93,7 +93,12 @@ def sign_in() -> Response:
     """Get filled login form and run authentication procedure"""
     assert request.json, 'Error: Wrong POST request has been received'
     current_user = User.get_user_by_email(request.json['email'])
-    is_password_correct = current_user.check_password(request.json['password'])
+
+    # Check if user exists and password is correct
+    if current_user:
+        is_password_correct = current_user.check_password(request.json['password'])
+    else:
+        is_password_correct = False
 
     # Create JSON Web Token and prepare export to frontend
     if is_password_correct:
@@ -111,8 +116,9 @@ def sign_in() -> Response:
         srv.print_log(f'Authentication failed for email {request.json["email"]}')
 
     # Record authentication in db
+    auth_user = current_user if resp else None
     details = {'ip_address': request.remote_addr, 'user_agent': request.user_agent.string, 'status_code': status_code}
-    Authentication(user=current_user, details=details)
+    Authentication(user=auth_user, details=details)
 
     return jsonify(resp), 200
 

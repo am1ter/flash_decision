@@ -1,8 +1,5 @@
 <template>
     <section id='page'>
-        <div id='errors' v-if="apiErrors.length > 0">
-            <p>{{apiErrors[0]}}</p>
-        </div>
         <div v-if="apiErrors.length == 0 & isLoaded" @submit.prevent="checkForm">
             <form>
                 <b-container class="g-0" fluid>
@@ -23,9 +20,9 @@
                         </b-col>
                     </b-row>
                 </b-container>
-                <b-button type="submit" class="col-12 mt-3 gradient">Sign in</b-button>
-                <b-button v-on:click="goToSignUp()" variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
-                <b-button v-on:click="useDemoAccount()" variant="outline-secondary" class="col-12">Sign in with demo account</b-button>
+                <b-button id="button-signin" type="submit" class="col-12 mt-3 gradient">Sign in</b-button>
+                <b-button id="button-signup" v-on:click="goToSignUp()" variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
+                <b-button id="button-signin-demo" v-on:click="useDemoAccount()" variant="outline-secondary" class="col-12">Sign in with demo account</b-button>
             </form>
         </div>
     </section>
