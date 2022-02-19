@@ -17,9 +17,9 @@
             </b-alert>
             <Plotly :data="iterationChart.data" :layout="layout" :display-mode-bar="false"></Plotly>
             <b-button-group class="ps-4 pe-4 w-100">
-                <b-button id="button_sell" v-on:click="saveDecision($event)" class="rounded-1" variant="danger">Sell ᐁ</b-button>
-                <b-button id="button_skip" v-on:click="saveDecision($event)" class="ms-1 rounded-1">Skip ᐅ</b-button>
-                <b-button id="button_buy" v-on:click="saveDecision($event)" class="ms-1 rounded-1" variant="success">Buy ᐃ</b-button>
+                <b-button id="button-sell" v-on:click="saveDecision($event)" class="rounded-1" variant="danger">Sell ᐁ</b-button>
+                <b-button id="button-skip" v-on:click="saveDecision($event)" class="ms-1 rounded-1">Skip ᐅ</b-button>
+                <b-button id="button-buy" v-on:click="saveDecision($event)" class="ms-1 rounded-1" variant="success">Buy ᐃ</b-button>
             </b-button-group>
         </div>
     </section>
@@ -116,9 +116,9 @@
                     action = 'Skip'
                 } else if (event.target.id) {
                     action = 
-                        (event.target.id == 'button_sell') ? 'Sell' :
-                        (event.target.id == 'button_skip') ? 'Skip' :
-                        (event.target.id == 'button_buy') ? 'Buy' : null;
+                        (event.target.id == 'button-sell') ? 'Sell' :
+                        (event.target.id == 'button-skip') ? 'Skip' :
+                        (event.target.id == 'button-buy') ? 'Buy' : null;
                 } else if (event.key) {
                     action = 
                         (event.key == 'ArrowDown') ? 'Sell' :

@@ -8,6 +8,7 @@ from flask.wrappers import Response
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
+from finam import FinamParsingError
 
 
 # Set up api prefix
@@ -24,8 +25,9 @@ def auth_required(f):
         """Verify authorization token in request header"""
         auth_headers = request.headers.get('Authorization', '').split()
 
-        invalid_msg = 'Invalid session error. Registeration/authentication required'
+        invalid_msg = 'Invalid session error. Registeration/authentication required.'
         expired_msg = 'Expired session error. Reauthentication required.'
+        finam_error_msg = 'Error during downloading quotes for selected security. Plase try again later.'
         runtime_msg = 'Runtime error during API request processing'
         
         # Check if header looks like header with auth info
@@ -44,6 +46,9 @@ def auth_required(f):
         except (jwt.InvalidTokenError, AssertionError) as e:
             srv.print_log(invalid_msg)
             return jsonify(invalid_msg), 401
+        except (FinamParsingError):
+            srv.print_log(finam_error_msg)
+            return jsonify(finam_error_msg), 500
         except (Exception) as e:
             srv.print_log(runtime_msg)
             return jsonify(runtime_msg), 500
