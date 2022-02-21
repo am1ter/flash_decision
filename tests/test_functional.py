@@ -5,9 +5,39 @@ import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+import requests as r
 
 
-class TestCommon(unittest.TestCase):
+class TestBackend(unittest.TestCase):
+    """Smoke API tests"""
+    def _get_api_url(self):
+        """Get app url"""
+        if os.environ.get('FLASH_URL'):
+            url = os.environ.get('FLASH_URL')
+        else:
+            url = "http://localhost:8001"
+        return url
+
+    def test_is_api_up(self):
+        """Test: Backend API is up"""
+        url = self._get_api_url() + '/api/check-backend'
+        try:
+            r.get(url)
+        except r.exceptions.ConnectionError as e:
+            self.fail('No response from API: ' + str(e))
+
+    def test_is_db_up(self):
+        """Test: Backend API is up"""
+        url = self._get_api_url() + '/api/check-db'
+        try:
+            resp = r.get(url)
+            if resp.status_code != 200:
+                return self.fail(resp.text)
+        except r.exceptions.ConnectionError as e:
+            self.fail('No response from API: ' + str(e))
+
+
+class TestFrontend(unittest.TestCase):
     """Complex test (standart pattern)"""
 
     def _go_to_page(self, page):
@@ -29,8 +59,8 @@ class TestCommon(unittest.TestCase):
         self.driver = webdriver.Chrome(service=chromeService, options=options)
         self._go_to_page('/')
 
-    def test_load_frontend(self):
-        """Test: main page loaded correctly"""
+    def test_is_frontend_up(self):
+        """Test: Main page loaded correctly"""
         page_start = pages.PageLogin(self.driver)
         assert page_start.is_page_loaded(), "Frontend loading has been failed"
 

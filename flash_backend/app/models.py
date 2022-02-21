@@ -567,6 +567,6 @@ def create_def_user() -> None:
     """Create default user during first run of the script"""
     if User.get_user_by_email('demo@alekseisemenov.ru') is None:
         def_user = User()
-        creds = {'name': 'demo', 'email': 'demo@alekseisemenov.ru', 'password': 'demo'}
+        creds = {'email': cfg.DEMO_EMAIL, 'name': cfg.DEMO_NAME, 'password': cfg.DEMO_PASSWORD}
         def_user.new(creds=creds)
         service.print_log('Default user "admin@localhost" has been created')

@@ -58,7 +58,21 @@ def auth_required(f):
 
 @api.errorhandler(500)
 def internal_server_error(e):
+    """Configure Flask error handler for current Blueprint"""
     return jsonify(e.name + ' (' + str(e.code) + '): ' + e.original_exception.args[0]), 500
+
+
+@api.route('/check-backend/', methods=['GET'])
+def check_backend() -> Response:
+    """Check if backend is up"""
+    return jsonify(True), 200
+
+
+@api.route('/check-db/', methods=['GET'])
+def check_db() -> Response:
+    """Check if backend is up"""
+    User.get_user_by_email(cfg.DEMO_EMAIL)
+    return jsonify(True), 200
 
 
 @api.route('/create-user/', methods=['POST'])

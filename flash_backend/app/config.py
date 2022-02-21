@@ -17,6 +17,12 @@ class FlaskConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
+# Application's demo user
+DEMO_EMAIL = 'demo@alekseisemenov.ru'
+DEMO_NAME = 'demo'
+DEMO_PASSWORD = 'demo'
+
+
 # System parameters
 PLATFORM = platform
 

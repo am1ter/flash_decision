@@ -11,7 +11,7 @@ class PageBase:
     def __init__(self, driver):
         self.title = ''
         self.driver = driver
-        self.wait = WebDriverWait(driver, 5)
+        self.wait = WebDriverWait(driver, 10)
         check_page_loaded = self.is_page_loaded()
         assert check_page_loaded == True, f'Error during {self} loading: {check_page_loaded}'
 
