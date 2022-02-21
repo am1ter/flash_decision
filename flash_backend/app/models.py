@@ -14,11 +14,25 @@ import json
 from plotly.utils import PlotlyJSONEncoder
 from plotly import graph_objs
 from statistics import median
+from functools import wraps
 
 from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
 
 from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "UserId" instead "id"
+
+
+# Decorators
+# ==================
+
+def catch_db_exception(f):
+    @wraps(f)
+    def _catch_exception(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except SQLAlchemyError as e:
+            raise SQLAlchemyError('Error: No connection to DB')
+    return _catch_exception
 
 
 # DB related classes
@@ -47,10 +61,12 @@ class User(UserMixin, db.Model):
         # Write to db
         write_object_to_db(self)
 
+    @catch_db_exception
     def get_user_by_id(id: int) -> BaseQuery:
         """Return object by id"""
         return User.query.get(int(id))
 
+    @catch_db_exception
     def get_user_by_email(email: str) -> BaseQuery:
         """Return object by email"""
         return User.query.filter(User.UserEmail == email).first()
@@ -294,12 +310,10 @@ class Session(db.Model):
         else:
             raise FileNotFoundError('No information about id and ticker of the current session')
 
+    @catch_db_exception
     def get_from_db(self, session_id: int) -> db.Model:
         """Get session's options from DB and fill with them the object"""
-        try:
-            return Session.query.get(int(session_id))
-        except:
-            raise SQLAlchemyError('Error: No connection to DB')
+        return Session.query.get(int(session_id))
 
     def calc_sessions_summary(self) -> float:
         """Collect all session attributes in one object"""
@@ -417,6 +431,7 @@ class Iteration(db.Model):
             days_before = 31 * 3
         return self.FixingBarDatetime - timedelta(days=days_before)
 
+    @catch_db_exception
     def get_from_db(self, session_id: int, iteration_num: int) -> db.Model:
         """Get iterations's options from DB and fill with them the object"""
         return Iteration.query.filter(Iteration.SessionId == session_id, Iteration.IterationNum == iteration_num).first()
@@ -535,6 +550,9 @@ class Decision(db.Model):
         # Write data to db
         write_object_to_db(self)
 
+
+# General functions
+# ==================
 
 def write_object_to_db(object):
     """Default way to write SQLAlchemy object to DB"""

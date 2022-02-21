@@ -29,18 +29,17 @@ class TestCommon(unittest.TestCase):
         self.driver = webdriver.Chrome(service=chromeService, options=options)
         self._go_to_page('/')
 
-    def test_load_start(self):
+    def test_load_frontend(self):
         """Test: main page loaded correctly"""
         page_start = pages.PageLogin(self.driver)
-        assert page_start.is_page_loaded(), "Page loaded incorrectly"
-        assert page_start.is_title_matches(), "Webpage title doesn't match"
+        assert page_start.is_page_loaded(), "Frontend loading has been failed"
 
     def test_login_via_form_correct(self):
         """Test: try to login with correct credentials"""
         page_login = pages.PageLogin(self.driver)
         page_login.login_via_form(email='demo@alekseisemenov.ru', password='demo')
         page_session = pages.PageSession(self.driver)
-        assert page_session.is_title_matches(), "Login failed: Session page hasn't been loaded"
+        assert page_session.is_page_loaded(), "Login failed: Session page hasn't been loaded"
 
     def test_login_via_form_incorrect(self):
         """Test: try to login with incorrect credentials"""
@@ -53,7 +52,6 @@ class TestCommon(unittest.TestCase):
         page_login = pages.PageLogin(self.driver)
         page_login.login_via_demo_button()
         page_session = pages.PageSession(self.driver)
-        assert page_session.is_title_matches(), "Login failed: Session page hasn't been loaded"
 
     def test_logout(self):
         """Test: try to login with demo button"""
@@ -61,7 +59,6 @@ class TestCommon(unittest.TestCase):
         page_session = pages.PageSession(self.driver)
         page_session.logout()
         page_login = pages.PageLogin(self.driver)
-        assert page_login.is_title_matches(), "Logout failed: Login page hasn't been loaded"
 
     def test_custom_session(self):
         """Test: start new session"""
@@ -72,7 +69,6 @@ class TestCommon(unittest.TestCase):
         page_session.start_custom_session()
         # On page Decision
         page_decision = pages.PageDecision(self.driver)
-        assert page_decision.is_title_matches(), "Session hasn't started - Decision page hasn't been loaded"
         page_decision.action_sell()
         page_decision.action_skip()
         page_decision.action_buy()
@@ -80,11 +76,9 @@ class TestCommon(unittest.TestCase):
         page_decision.action_buy()
         # On page Results
         page_results = pages.PageResults(self.driver)
-        assert page_results.is_title_matches(), "Session hasn't finished - Results page hasn't been loaded"
         page_results.go_to_scoreboard()
         # On page Scoreboard page
         page_scoreboard = pages.PageScoreboard(self.driver)
-        assert page_scoreboard.is_title_matches(), "Scoreboard page hasn't been loaded"
 
     def tearDown(self):
         self.driver.close()

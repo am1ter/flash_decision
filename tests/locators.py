@@ -1,6 +1,12 @@
 from selenium.webdriver.common.by import By
 
 
+class LocatorsPageBase(object):
+    """Locators for all pages"""
+    div_errors = (By.ID, 'errors')
+    div_footer = (By.ID, 'credits')
+
+
 class LocatorsPageLogin(object):
     """Locators for page_Login"""
     input_email = (By.ID, 'input-email')
