@@ -12,15 +12,20 @@ class TestBackend(unittest.TestCase):
     """Smoke API tests"""
     def _get_api_url(self):
         """Get app url"""
-        if os.environ.get('FLASH_URL'):
-            url = os.environ.get('FLASH_URL')
+        if os.environ.get('URL_BACKEND'):
+            url = os.environ.get('URL_BACKEND')
         else:
             url = "http://localhost:8001"
+        print('========================================')
+        print('========================================')
+        print(url)
+        print('========================================')
+        print('========================================')
         return url
 
     def test_is_api_up(self):
         """Test: Backend API is up"""
-        url = self._get_api_url() + '/api/check-backend'
+        url = self._get_api_url() + '/check-backend'
         try:
             r.get(url)
         except r.exceptions.ConnectionError as e:
@@ -28,9 +33,10 @@ class TestBackend(unittest.TestCase):
 
     def test_is_db_up(self):
         """Test: Backend API is up"""
-        url = self._get_api_url() + '/api/check-db'
+        url = self._get_api_url() + '/check-db'
         try:
             resp = r.get(url)
+            print(resp)
             if resp.status_code != 200:
                 return self.fail(resp.text)
         except r.exceptions.ConnectionError as e:
@@ -41,26 +47,30 @@ class TestFrontend(unittest.TestCase):
     """Complex test (standart pattern)"""
 
     def _go_to_page(self, page):
-        if os.environ.get('FLASH_URL'):
-            url = os.environ.get('FLASH_URL') + page
+        if os.environ.get('URL_FRONTEND'):
+            url = os.environ.get('URL_FRONTEND') + page
         else:
             url = "http://localhost:8000" + page
         self.driver.get(url)
 
     def setUp(self):
         """Setup chrome driver with webdriver service"""
+        print('setUp')
         chromeService = Service(ChromeDriverManager().install())
         options = webdriver.ChromeOptions()
-        options.headless = False
+        options.headless = True
         options.add_argument("--window-size=1920,1080")
-        options.add_argument("--start-maximized")
+        # options.add_argument("--start-maximized")
         options.add_argument('--disable-translate')
         options.add_argument('--lang=en-US')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--headless')
         self.driver = webdriver.Chrome(service=chromeService, options=options)
         self._go_to_page('/')
 
     def test_is_frontend_up(self):
         """Test: Main page loaded correctly"""
+        print('test_is_frontend_up')
         page_start = pages.PageLogin(self.driver)
         assert page_start.is_page_loaded(), "Frontend loading has been failed"
 

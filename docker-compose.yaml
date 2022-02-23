@@ -24,12 +24,14 @@ services:
     build: flash_backend/
     container_name: flash_backend
     restart: "no"
+    depends_on:
+      - flash_db
     ports:
       - ${PORT_BACKEND}:8001
     environment:
       - TZ=Europe/Moscow
       - DATABASE_URL=flash_db
-      - DATABASE_PORT=5432
+      - DATABASE_PORT=${PORT_DB}
       - DATABASE_USER=postgres
       - DATABASE_PASS=flash!Pass
 
@@ -38,9 +40,25 @@ services:
     build: 
       context: ./flash_frontend/
       args:
-        - PORT_BACKEND=${PORT_BACKEND}
-        - FORCE_AJAX_API_DEF_PORT=${FORCE_AJAX_API_DEF_PORT}
+        - URL_BACKEND=${URL_BACKEND}
     container_name: flash_frontend
     restart: "no"
+    depends_on:
+      - flash_db
+      - flash_backend
     ports:
       - ${PORT_FRONTEND}:8000
+
+  # Run end2end tests
+  flash_tests:
+    build: 
+      context: ./tests/
+      args:
+        - URL_BACKEND=${URL_BACKEND}
+        - URL_FRONTEND=${URL_FRONTEND}
+    container_name: flash_tests
+    restart: "no"
+    depends_on:
+      - flash_db
+      - flash_backend
+      - flash_frontend

@@ -3,6 +3,9 @@ module.exports = {
     parallel: true,
     devServer: {
         disableHostCheck: true,
-        port: 8000
+        host: 'http://0.0.0.0',
+        port: 8000,
+        useLocalIp: true,
+        https: false
     }
 }

@@ -1,10 +1,8 @@
 FROM node:14
 
 # Read environment variables from docker-compose file
-ARG PORT_BACKEND
-ARG FORCE_AJAX_API_DEF_PORT
-ENV VUE_APP_PORT_BACKEND=${PORT_BACKEND}
-ENV VUE_APP_FORCE_AJAX_API_DEF_PORT=${FORCE_AJAX_API_DEF_PORT}
+ARG URL_BACKEND
+ENV VUE_APP_URL_BACKEND=${URL_BACKEND}
 
 # Install simple http server for serving static content
 RUN npm install -g http-server
