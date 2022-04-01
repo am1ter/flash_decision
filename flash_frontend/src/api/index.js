@@ -63,7 +63,6 @@ export function apiPostLogin(form) {
 export function apiGetSessionOptions() {
     console.log('Run apiGetSessionOptions')
     let req = {'type': 'get', 'url': API_URL + '/get-session-options/'}
-    // let req = {'type': 'get', 'url': API_URL + '/get-session-options/', 'header': { headers: { Authorization: `Bearer: ${jwt}` } }}
     return handleResponse(req)
 }
 
@@ -71,6 +70,7 @@ export function apiGetSessionOptions() {
 export function apiPostStartNewSession(form) {
     console.log('Run apiPostStartNewSession')
     let req = {'type': 'post', 'url': API_URL + '/start-new-session/', 'args': form}
+    console.log(req)
     return handleResponse(req)
 }
 

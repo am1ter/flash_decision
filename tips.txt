@@ -5,4 +5,8 @@ sys.path.extend(['C:\\!Coding\\flash_decision\\flash_backend', 'C:/!Coding/flash
 flask db upgrade
 
 # Connect WSL to LAN (run with powershell)
+ip addr show
 netsh interface portproxy add v4tov4 listenport=8000 listenaddress=0.0.0.0 connectport=8000 connectaddress=172.17.221.129
+
+# Remove docker images without names
+docker rmi $(docker images -a | grep "^<none>" | awk '{print $3}')

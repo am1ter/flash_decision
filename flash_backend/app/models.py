@@ -19,7 +19,7 @@ from functools import wraps
 from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
 
-from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "UserId" instead "id"
+# from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "UserId" instead "id"
 
 
 # Decorators
@@ -38,7 +38,7 @@ def catch_db_exception(f):
 # DB related classes
 # ==================
 
-class User(UserMixin, db.Model):
+class User(db.Model):
     __tablename__ = 'User'
 
     UserId = db.Column(db.Integer, primary_key=True, index=True)
@@ -70,6 +70,19 @@ class User(UserMixin, db.Model):
     def get_user_by_email(email: str) -> BaseQuery:
         """Return object by email"""
         return User.query.filter(User.UserEmail == email).first()
+
+    @catch_db_exception
+    def delete_user_by_email(email: str) -> BaseQuery:
+        """Return object by email"""
+        # Get user from db
+        user = User.get_user_by_email(email)
+        if user:
+            # Delete it from db
+            delete_object_from_db(user)
+            return True
+        else:
+            return False
+
 
     def set_email(self, email: str) -> None:
         """Set new email for the user"""
@@ -251,16 +264,24 @@ class Session(db.Model):
         exporter = Exporter()
         security = exporter.lookup(code=self.Ticker, market=eval(self.Market),
                             code_comparator=LookupComparator.EQUALS)
-        assert len(security) == 1, 'Unable to find correct security for this ticker'
+
+        # If there are more than 1 security with the following ticker, use the first one
+        if len(security) == 0:
+            raise RuntimeError('Unable to find correct security for this ticker')
+        elif len(security) >= 1:
+            security = security.iloc[0]
 
         # Download quotes
         try:
-            df_quotes = exporter.download(id_=security.index[0], market=eval(self.Market),
+            df_quotes = exporter.download(id_=security.name, market=eval(self.Market),
                                     start_date=self.FirstBarDatetime, end_date=self.LastFixingBarDatetime,
                                     timeframe=eval(self.Timeframe))
             df_quotes.index = pd.to_datetime(df_quotes['<DATE>'].astype(str) + ' ' + df_quotes['<TIME>'])
         except:
             raise RuntimeError('Unable to download quotes')
+        
+        # Check if downloaded quotes is correct
+        assert len(df_quotes) > 0, 'There are no quotes for this security for the selected period'
 
         # Save full df to file
         if cfg.SAVE_FORMAT == 'csv':
@@ -561,12 +582,29 @@ def write_object_to_db(object):
         db.session.commit()
     except SQLAlchemyError as e:
         raise SQLAlchemyError('Error: DB transaction has failed')
+        
+
+def delete_object_from_db(object):
+    """Default way to write SQLAlchemy object to DB"""
+    try:
+        db.session.delete(object)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        raise SQLAlchemyError('Error: DB transaction has failed')
 
 
-def create_def_user() -> None:
-    """Create default user during first run of the script"""
-    if User.get_user_by_email('demo@alekseisemenov.ru') is None:
-        def_user = User()
-        creds = {'email': cfg.DEMO_EMAIL, 'name': cfg.DEMO_NAME, 'password': cfg.DEMO_PASSWORD}
-        def_user.new(creds=creds)
-        service.print_log('Default user "admin@localhost" has been created')
+def create_system_users() -> None:
+    """Create system users during first run of the script"""
+    # Create demo user
+    if User.get_user_by_email(cfg.USER_DEMO_EMAIL) is None:
+        demo_user = User()
+        creds = {'email': cfg.USER_DEMO_EMAIL, 'name': cfg.USER_DEMO_NAME, 'password': cfg.USER_DEMO_PASSWORD}
+        demo_user.new(creds=creds)
+        service.print_log(f'Demo user "{cfg.USER_DEMO_EMAIL}" has been created')
+        
+    # Create test user
+    if User.get_user_by_email(cfg.USER_TEST_EMAIL) is None:
+        test_user = User()
+        creds = {'email': cfg.USER_TEST_EMAIL, 'name': cfg.USER_TEST_NAME, 'password': cfg.USER_TEST_PASSWORD}
+        test_user.new(creds=creds)
+        service.print_log(f'Demo user "{cfg.USER_TEST_EMAIL}" has been created')

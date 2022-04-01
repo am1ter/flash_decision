@@ -25,5 +25,4 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run app
-# CMD ["python"]
 CMD ["python", "test_e2e.py"]

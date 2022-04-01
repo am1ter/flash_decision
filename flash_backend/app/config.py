@@ -17,10 +17,13 @@ class FlaskConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
-# Application's demo user
-DEMO_EMAIL = 'demo@alekseisemenov.ru'
-DEMO_NAME = 'demo'
-DEMO_PASSWORD = 'demo'
+# Application's system users
+USER_DEMO_EMAIL = 'demo@alekseisemenov.ru'
+USER_DEMO_NAME = 'demo'
+USER_DEMO_PASSWORD = 'demo'
+USER_TEST_EMAIL = 'test@alekseisemenov.ru'
+USER_TEST_NAME = 'test'
+USER_TEST_PASSWORD = 'uc8a&Q!W'
 
 
 # System parameters

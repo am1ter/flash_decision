@@ -62,9 +62,42 @@ class PageLogin(PageBase):
         """Send email and password with html form"""
         self.button_signin_demo.click()
 
+    def go_to_signup(self):
+        """Send email and password with html form"""
+        self.button_signup.click()
+
     def has_text_incorrect_creds(self):
         """Check if there is an alert on the page"""
         return 'Incorrect email or password' in self.driver.page_source
+
+
+class PageSignup(PageBase):
+    """Signup page"""
+
+    def __repr__(self):
+        """Return formated object name"""
+        return f'<Page Signup>'
+
+    def __init__(self, driver):
+        """Page setup"""
+        PageBase.__init__(self, driver=driver)
+        self.title = 'Create account'
+        self.input_email = ElementInput(page=self, locator=loc.LocatorsPageSignup.input_email)
+        self.input_name = ElementInput(page=self, locator=loc.LocatorsPageSignup.input_name)
+        self.input_password = ElementInput(page=self, locator=loc.LocatorsPageSignup.input_password)
+        self.button_signup = ElementButton(page=self, locator=loc.LocatorsPageSignup.button_signup)
+        self.button_go_back = ElementButton(page=self, locator=loc.LocatorsPageSignup.button_go_back)
+
+    def go_back(self):
+        """Click on the back button"""
+        self.button_go_back.click()
+
+    def sign_up(self, email, name, password):
+        """Click on the back button"""
+        self.input_email.val = email
+        self.input_name.val = name
+        self.input_password.val = password
+        self.button_signup.click()
 
 
 class PageSession(PageBase):
@@ -96,7 +129,7 @@ class PageSession(PageBase):
 
     def start_custom_session(self):
         self.input_market.val = 'SHARES'
-        self.input_ticker.val = 'AFLT'
+        self.input_ticker.val = 'SBER'
         self.input_timeframe.val = '15'
         self.input_barsnumber.val = '50'
         self.input_timelimit.val = '120'

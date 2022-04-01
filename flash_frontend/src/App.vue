@@ -71,11 +71,12 @@
             page_Scoreboard
         },
         computed: {
-            ...mapState(['sessions', 'isAuth', 'apiErrors'])
+            ...mapState(['apiErrors'])
         },
         methods: {
             reloadPage() {
                 // Reload page on click
+                this.$router.push('/session/')
                 this.$router.go()
             }
         }

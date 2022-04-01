@@ -23,4 +23,4 @@ RUN npm run build
 EXPOSE 8000
 
 # Run app
-CMD ["http-server", "dist" , "-p 8000"]
+CMD ["http-server", "dist", "--cors" , "-p 8000"]

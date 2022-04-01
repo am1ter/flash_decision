@@ -8,14 +8,24 @@ from flask.wrappers import Response
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
+import socket
 from finam import FinamParsingError
 
 
 # Set up api prefix
 api = Blueprint('api', __name__)
 
-# Run during application initialization
-srv.print_log(f'Flask has been started')
+
+# Display Flask initialization output
+local_ip = socket.gethostbyname(socket.gethostname())
+network_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+network_socket.connect(("8.8.8.8", 80))
+network_ip = network_socket.getsockname()[0]
+srv.print_log(f'Flask has been running at:')
+srv.print_log(f'- Local: {local_ip}')
+srv.print_log(f'- Network: {network_ip}')
+
+# Get initial app settings
 session_options = cfg.collect_session_options()
 
 
@@ -25,8 +35,8 @@ def auth_required(f):
         """Verify authorization token in request header"""
         auth_headers = request.headers.get('Authorization', '').split()
 
-        invalid_msg = 'Invalid session error. Registeration/authentication required.'
-        expired_msg = 'Expired session error. Reauthentication required.'
+        invalid_msg = 'Invalid session. Registeration/authentication required.'
+        expired_msg = 'Expired session. Reauthentication required.'
         finam_error_msg = 'Error during downloading quotes for selected security. Plase try again later.'
         runtime_msg = 'Runtime error during API request processing'
         
@@ -43,14 +53,18 @@ def auth_required(f):
         except jwt.ExpiredSignatureError:
             srv.print_log(expired_msg)
             return jsonify(expired_msg), 401
-        except (jwt.InvalidTokenError, AssertionError) as e:
+        except (jwt.InvalidTokenError) as e:
             srv.print_log(invalid_msg)
             return jsonify(invalid_msg), 401
+        except (AssertionError) as e:
+            assertion_msg = 'Error: ' + e.args[0]
+            srv.print_log(assertion_msg)
+            return jsonify(assertion_msg), 500
         except (FinamParsingError):
             srv.print_log(finam_error_msg)
             return jsonify(finam_error_msg), 500
         except (Exception) as e:
-            srv.print_log(runtime_msg)
+            srv.print_log(e)
             return jsonify(runtime_msg), 500
 
     return _verify
@@ -71,7 +85,7 @@ def check_backend() -> Response:
 @api.route('/check-db/', methods=['GET'])
 def check_db() -> Response:
     """Check if backend is up"""
-    User.get_user_by_email(cfg.DEMO_EMAIL)
+    User.get_user_by_email(cfg.USER_DEMO_EMAIL)
     return jsonify(True), 200
 
 
@@ -214,3 +228,12 @@ def get_scoreboard(user_id: int) -> Response:
     """Show global scoreboard and current user's results"""
     srv.print_log(f'Generated scoreboard for user #{user_id}')
     return jsonify(True), 200
+
+
+@api.route(f'/cleanup-tests-results/', methods=['POST'])
+def cleanup_tests_results() -> Response:
+    """Clean data generated during end2end tests"""
+    # Delete test user
+    result = User.delete_user_by_email(cfg.USER_TEST_EMAIL)
+    srv.print_log(f'Tests data clean up has finished. DB records has been deleted: {result}')
+    return jsonify(result), 200

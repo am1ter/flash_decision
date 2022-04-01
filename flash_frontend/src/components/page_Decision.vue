@@ -37,7 +37,6 @@
         },
         data() {
             return {
-                temp: 15000,
                 iterationChart: {},
                 // Chart layout properties
                 layout: {

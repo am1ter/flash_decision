@@ -5,4 +5,3 @@ if __name__ == '__main__':
 
     # Run backend server using waitress lib
     serve(app, host='0.0.0.0', port=8001)
-    # app.run(debug=True, port=8001)

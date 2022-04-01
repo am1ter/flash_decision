@@ -16,27 +16,23 @@ class TestBackend(unittest.TestCase):
             url = os.environ.get('URL_BACKEND')
         else:
             url = "http://localhost:8001"
-        print('========================================')
-        print('========================================')
-        print(url)
-        print('========================================')
-        print('========================================')
         return url
 
     def test_is_api_up(self):
         """Test: Backend API is up"""
         url = self._get_api_url() + '/check-backend'
         try:
-            r.get(url)
+            resp = r.get(url)
+            if resp.status_code != 200:
+                return self.fail(resp.text)
         except r.exceptions.ConnectionError as e:
             self.fail('No response from API: ' + str(e))
 
     def test_is_db_up(self):
-        """Test: Backend API is up"""
+        """Test: Connection between backend and db is up"""
         url = self._get_api_url() + '/check-db'
         try:
             resp = r.get(url)
-            print(resp)
             if resp.status_code != 200:
                 return self.fail(resp.text)
         except r.exceptions.ConnectionError as e:
@@ -53,6 +49,17 @@ class TestFrontend(unittest.TestCase):
             url = "http://localhost:8000" + page
         self.driver.get(url)
 
+    def _cleanup_test_results(self):
+        """Clean results of previous tests from db"""
+        url = TestBackend._get_api_url(None) + '/cleanup-tests-results'
+        print(f'Results cleaned up: ' + url)
+        try:
+            resp = r.post(url)
+            if resp.status_code != 200:
+                return self.fail(resp.text)
+        except r.exceptions.ConnectionError as e:
+            self.fail('No response from API: ' + str(e))
+
     def setUp(self):
         """Setup chrome driver with webdriver service"""
         print('setUp')
@@ -64,7 +71,6 @@ class TestFrontend(unittest.TestCase):
         options.add_argument('--disable-translate')
         options.add_argument('--lang=en-US')
         options.add_argument('--no-sandbox')
-        options.add_argument('--headless')
         self.driver = webdriver.Chrome(service=chromeService, options=options)
         self._go_to_page('/')
 
@@ -95,15 +101,37 @@ class TestFrontend(unittest.TestCase):
 
     def test_logout(self):
         """Test: try to login with demo button"""
-        self.test_login_via_demo_button()
+        self.test_login_via_form_correct()
         page_session = pages.PageSession(self.driver)
         page_session.logout()
         page_login = pages.PageLogin(self.driver)
 
+    def test_signup_correct(self):
+        """Test: try to create new user (delete it when test passed)"""
+        # Delete previous created test user
+        self._cleanup_test_results()
+        # Go to login page
+        page_login = pages.PageLogin(self.driver)
+        # Test: go back button
+        page_login.go_to_signup()
+        page_signup = pages.PageSignup(self.driver)
+        page_signup.go_back()
+        page_login = pages.PageLogin(self.driver)
+        # Test sign up
+        page_login.go_to_signup()
+        page_signup = pages.PageSignup(self.driver)
+        page_signup.sign_up(email='test@alekseisemenov.ru', name='test', password='uc8a&Q!W')
+        page_session = pages.PageSession(self.driver)
+        # Logout
+        page_session.logout()
+        # Login with new user credentials
+        page_login = pages.PageLogin(self.driver)
+        page_login.login_via_form(email='test@alekseisemenov.ru', password='uc8a&Q!W')
+
     def test_custom_session(self):
         """Test: start new session"""
         # On page Login
-        self.test_login_via_demo_button()
+        self.test_login_via_form_correct()
         # On page Session
         page_session = pages.PageSession(self.driver)
         page_session.start_custom_session()

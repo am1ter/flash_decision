@@ -55,8 +55,8 @@
                     </b-col>
                 </b-row>
             </b-container>
-            <b-button type="submit" class="col-12 mt-3 gradient">Sign up</b-button>
-            <b-button v-on:click="goToSignIn()" variant="outline-secondary" class="col-12 my-2">Back</b-button>
+            <b-button id="button-signup" type="submit" class="col-12 mt-3 gradient">Sign up</b-button>
+            <b-button id="button-go-back" v-on:click="goToSignIn()" variant="outline-secondary" class="col-12 my-2">Back</b-button>
         </form>
     </section>
 </template>

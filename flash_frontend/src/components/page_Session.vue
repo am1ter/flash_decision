@@ -168,7 +168,7 @@
                 }
         },
         computed: {
-            ...mapState(['isAuth', 'user', 'currentSession', 'apiErrors'])
+            ...mapState(['user', 'currentSession', 'apiErrors'])
         },
         methods: {
             async loadPage() {
