@@ -2,6 +2,7 @@
 /.vscode/
 /.idea/
 workspace.code-workspace
+flash_backend.log
 
 # Backend: Main
 /flash_backend/.idea

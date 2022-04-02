@@ -1,52 +1,47 @@
 from app.config import FlaskConfig
 
-from flask import Flask, jsonify
+from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_login import LoginManager
-
 import logging
-import traceback
+import logging.config
+import yaml
+from pathlib import Path
 
 
-# Create Flask application and configure it
+# Create logger
+path_logs_local = Path.cwd() / 'flash_backend' / 'settings_logs.yaml'
+path_logs_docker = Path.cwd() / 'settings_logs.yaml'
+path_logs_settings = path_logs_local if path_logs_local.exists() else path_logs_docker
+with open(str(path_logs_settings), 'r') as f:
+    settings_logs = yaml.safe_load(f.read())
+    logging.config.dictConfig(settings_logs)
+
+logger = logging.getLogger('App')
+logger.info('Logger started successfully')
+
+
+# Create Flask application and load it's config
 app = Flask(__name__, static_url_path='')
 app.config.from_object(FlaskConfig)
 cors = CORS(app, resources={r'/api/*': {'origins': '*'}})
-
-login = LoginManager(app)
-login.login_view = 'login'
+logger.info('Flask initialized')
 
 
 # Create database and migrations
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+logger.info('Connection to db established')
 
 
-# Debug: Create logger
-logger = logging.getLogger()
-
-
-# Debug: Create exception route
-@app.errorhandler(code_or_exception=500)
-def handle_http_exception(error):
-    error_dict = {
-        'code': error.code,
-        'description': error.description,
-        'stack_trace': traceback.format_exc()
-    }
-    log_msg = f"HTTPException {error_dict['code']}, Description: {error_dict['description']}, Stack trace: {error_dict['stack_trace']}"
-    logger.log(msg=log_msg, level=40)
-    if error.code == 500:
-        response = jsonify(error.name + '. ' + str(error.original_exception))
-    else:
-        response = jsonify(error_dict)
-    return response
+# Check if system users are exist, create them if not
+from app.models import create_system_users
+create_system_users()
+logger.info('System users verified')
 
 
 # Load scripts to run flask app
-# from app import routes # TODO: Delete before release
-from app.models import User, Session, Iteration
 from app.api import api
 app.register_blueprint(api, url_prefix='/api')
+logger.info('API started successfully')

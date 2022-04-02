@@ -1,6 +1,5 @@
-from app import db, login
+from app import db
 import app.config as cfg
-import app.service as service
 
 from flask_sqlalchemy import BaseQuery
 from sqlalchemy.exc import SQLAlchemyError 
@@ -15,11 +14,15 @@ from plotly.utils import PlotlyJSONEncoder
 from plotly import graph_objs
 from statistics import median
 from functools import wraps
+import logging
 
 from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
 
-# from app.libs.mixins import UserMixin   # Module duplicated and modified because of usage "UserId" instead "id"
+
+# Set up logger
+# ==================
+logger = logging.getLogger('Models')
 
 
 # Decorators
@@ -600,11 +603,11 @@ def create_system_users() -> None:
         demo_user = User()
         creds = {'email': cfg.USER_DEMO_EMAIL, 'name': cfg.USER_DEMO_NAME, 'password': cfg.USER_DEMO_PASSWORD}
         demo_user.new(creds=creds)
-        service.print_log(f'Demo user "{cfg.USER_DEMO_EMAIL}" has been created')
+        logger.info(f'Demo user "{cfg.USER_DEMO_EMAIL}" has been created')
         
     # Create test user
     if User.get_user_by_email(cfg.USER_TEST_EMAIL) is None:
         test_user = User()
         creds = {'email': cfg.USER_TEST_EMAIL, 'name': cfg.USER_TEST_NAME, 'password': cfg.USER_TEST_PASSWORD}
         test_user.new(creds=creds)
-        service.print_log(f'Demo user "{cfg.USER_TEST_EMAIL}" has been created')
+        logger.info(f'Test user "{cfg.USER_TEST_EMAIL}" has been created')

@@ -1,6 +1,5 @@
 from app import app
 import app.config as cfg
-import app.service as srv
 from app.models import Authentication, User, Decision, Session, Iteration
 
 from flask import Blueprint, jsonify, request
@@ -10,23 +9,43 @@ from datetime import datetime, timedelta
 from functools import wraps
 import socket
 from finam import FinamParsingError
+import logging
+import traceback
 
+
+# Set up logger
+logger = logging.getLogger('API')
 
 # Set up api prefix
 api = Blueprint('api', __name__)
-
 
 # Display Flask initialization output
 local_ip = socket.gethostbyname(socket.gethostname())
 network_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 network_socket.connect(("8.8.8.8", 80))
 network_ip = network_socket.getsockname()[0]
-srv.print_log(f'Flask has been running at:')
-srv.print_log(f'- Local: {local_ip}')
-srv.print_log(f'- Network: {network_ip}')
+logger.info(f'Flask started successfully')
+logger.info(f'Flask`s local ip: {local_ip}, Flask`s network ip: {network_ip}')
 
 # Get initial app settings
 session_options = cfg.collect_session_options()
+logger.info('List of session`s options loaded')
+
+
+def log_request(f):
+    @wraps(f)
+    def _log(*args, **kwargs):
+        """Log on debug level api requests"""
+        # Check if request contains data with password. If yes delete from log
+        if request.json:
+            params = {k:request.json[k] for k in request.json if k != 'password'}
+            params_str = ' with parameters: ' + str(params)
+        else:
+            params_str = ''
+
+        logger.debug(f'{request.method} request to {request.path} from ip {request.remote_addr}{params_str}')
+        return f(*args, **kwargs)
+    return _log
 
 
 def auth_required(f):
@@ -51,20 +70,20 @@ def auth_required(f):
             assert current_user, f'User {data["sub"]} not found'
             return f(*args, **kwargs)
         except jwt.ExpiredSignatureError:
-            srv.print_log(expired_msg)
+            logger.warning(expired_msg)
             return jsonify(expired_msg), 401
         except (jwt.InvalidTokenError) as e:
-            srv.print_log(invalid_msg)
+            logger.warning(invalid_msg)
             return jsonify(invalid_msg), 401
         except (AssertionError) as e:
             assertion_msg = 'Error: ' + e.args[0]
-            srv.print_log(assertion_msg)
+            logger.error(assertion_msg)
             return jsonify(assertion_msg), 500
         except (FinamParsingError):
-            srv.print_log(finam_error_msg)
+            logger.error(finam_error_msg)
             return jsonify(finam_error_msg), 500
         except (Exception) as e:
-            srv.print_log(e)
+            logger.error(e)
             return jsonify(runtime_msg), 500
 
     return _verify
@@ -73,16 +92,29 @@ def auth_required(f):
 @api.errorhandler(500)
 def internal_server_error(e):
     """Configure Flask error handler for current Blueprint"""
-    return jsonify(e.name + ' (' + str(e.code) + '): ' + e.original_exception.args[0]), 500
+    error_dict = {
+        'code': e.code,
+        'description': e.description,
+        'stack_trace': traceback.format_exc()
+    }
+    log_msg = f"HTTPException {error_dict['code']}, Description: {error_dict['description']}, Stack trace: {error_dict['stack_trace']}"
+    logger.error(log_msg)
+    if e.code == 500:
+        response = jsonify(e.name + ' (' + str(e.code) + '): ' + e.original_exception.args[0]), 500
+    else:
+        response = jsonify(error_dict)
+    return response
 
 
 @api.route('/check-backend/', methods=['GET'])
+@log_request
 def check_backend() -> Response:
     """Check if backend is up"""
     return jsonify(True), 200
 
 
 @api.route('/check-db/', methods=['GET'])
+@log_request
 def check_db() -> Response:
     """Check if backend is up"""
     User.get_user_by_email(cfg.USER_DEMO_EMAIL)
@@ -90,12 +122,13 @@ def check_db() -> Response:
 
 
 @api.route('/create-user/', methods=['POST'])
+@log_request
 def sign_up() -> Response:
     """Get registration form and create user's record in db for it"""
     assert request.json, 'Error: Wrong POST request has been received'
     current_user = User()
     current_user.new(creds=request.json)
-    srv.print_log(f'User {current_user} has been created')
+    logger.info(f'User {current_user} created')
 
     # Create JSON Web Token and prepare export to frontend
     token = jwt.encode({
@@ -114,6 +147,7 @@ def sign_up() -> Response:
 
 
 @api.route('/check-email/', methods=['GET', 'POST'])
+@log_request
 def check_email() -> Response:
     """Check if email is free"""
     assert request.json, 'Error: Wrong POST request has been received'
@@ -122,6 +156,7 @@ def check_email() -> Response:
 
 
 @api.route('/login/', methods=['POST'])
+@log_request
 def sign_in() -> Response:
     """Get filled login form and run authentication procedure"""
     assert request.json, 'Error: Wrong POST request has been received'
@@ -142,11 +177,11 @@ def sign_in() -> Response:
             app.config['SECRET_KEY'])
         resp = {'id': current_user.UserId, 'email': current_user.UserEmail, 'token': token}
         status_code = '200'
-        srv.print_log(f'User {current_user} has been authentificated')
+        logger.info(f'User {current_user} authentificated')
     else:
         resp = False
         status_code = '401'
-        srv.print_log(f'Authentication failed for email {request.json["email"]}')
+        logger.info(f'Authentication failed for email {request.json["email"]}')
 
     # Record authentication in db
     auth_user = current_user if resp else None
@@ -157,26 +192,29 @@ def sign_in() -> Response:
 
 
 @api.route('/get-session-options/', methods=['GET'])
+@log_request
 @auth_required
 def get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
-    srv.print_log(f'List of session options has been generated')
+    logger.info(f'List of session options sent to frontend')
     return jsonify(session_options), 200
 
 
 @api.route('/start-new-session/', methods=['POST'])
 @auth_required
+@log_request
 def start_new_session() -> Response:
     """Start training session: Get json-object, create SQL record and download quotes data"""
     assert request.json, 'Error: Wrong POST request has been received'
     current_session = Session()
     current_session.new(mode='custom', options=request.json)
-    srv.print_log(f'{current_session} has been started')
+    logger.info(f'{current_session} started')
     return jsonify(current_session.SessionId), 200
 
 
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
 @auth_required
+@log_request
 def get_chart(session_id: int, iteration_num: int) -> Response:
     """Send json with chart data to frontend"""
     # Load session from db
@@ -194,23 +232,25 @@ def get_chart(session_id: int, iteration_num: int) -> Response:
     # Format data to draw it with plotly
     chart = loaded_iteration.prepare_chart_plotly()
 
-    srv.print_log(f'New chart for {loaded_iteration} has been drawed')
+    logger.info(f'New chart for {loaded_iteration} generated')
     return jsonify(chart), 200
 
 
 @api.route('/record-decision/', methods=['POST'])
 @auth_required
+@log_request
 def record_decision() -> Response:
     """Save user's decision in db and score results for it"""
     assert request.json, 'Error: Wrong POST request has been received'
     new_decision = Decision()
     new_decision.new(props=request.json)
-    srv.print_log(f'New decision {new_decision} has been recorded with result {round(new_decision.ResultFinal * 100, 2)}%')
+    logger.info(f'New decision {new_decision} recorded with result {round(new_decision.ResultFinal * 100, 2)}%')
     return jsonify(new_decision.ResultFinal), 200
 
 
 @api.route('/get-sessions-results/<int:session_id>/', methods=['GET'])
 @auth_required
+@log_request
 def get_sessions_results(session_id: int) -> Response:
     """When session is finished collect it's summary in one object and send it back to frontend"""
     # Load session from db
@@ -218,22 +258,24 @@ def get_sessions_results(session_id: int) -> Response:
     current_session = current_session.get_from_db(session_id)
     # Get session's summary
     current_session_summary = current_session.calc_sessions_summary()
-    srv.print_log(f'{current_session} has been finished with result {current_session_summary["totalResult"]}%')
+    logger.info(f'{current_session} finished with result {current_session_summary["totalResult"]}%')
     return jsonify(current_session_summary), 200
 
 
 @api.route('/get-scoreboard/<int:user_id>/', methods=['GET'])
 @auth_required
+@log_request
 def get_scoreboard(user_id: int) -> Response:
     """Show global scoreboard and current user's results"""
-    srv.print_log(f'Generated scoreboard for user #{user_id}')
+    logger.info(f'Generated scoreboard for user #{user_id}')
     return jsonify(True), 200
 
 
 @api.route(f'/cleanup-tests-results/', methods=['POST'])
+@log_request
 def cleanup_tests_results() -> Response:
     """Clean data generated during end2end tests"""
     # Delete test user
     result = User.delete_user_by_email(cfg.USER_TEST_EMAIL)
-    srv.print_log(f'Tests data clean up has finished. DB records has been deleted: {result}')
+    logger.info(f'Tests data clean up finished. DB records deleted: {result}')
     return jsonify(result), 200
