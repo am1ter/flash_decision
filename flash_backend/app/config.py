@@ -1,5 +1,6 @@
 import os
 from sys import platform
+import time
 
 from finam.export import Exporter           # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe   # https://github.com/ffeast/finam-export

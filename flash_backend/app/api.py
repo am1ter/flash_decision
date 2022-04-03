@@ -11,6 +11,7 @@ import socket
 from finam import FinamParsingError
 import logging
 import traceback
+import re
 
 
 # Set up logger
@@ -37,12 +38,11 @@ def log_request(f):
     def _log(*args, **kwargs):
         """Log on debug level api requests"""
         # Check if request contains data with password. If yes delete from log
-        if request.json:
-            params = {k:request.json[k] for k in request.json if k != 'password'}
-            params_str = ' with parameters: ' + str(params)
+        if request.data:
+            params_byte = str(request.data)[2:-1]
+            params_str = ' with parameters: ' + re.sub(',"password":.*"', '', params_byte)
         else:
             params_str = ''
-
         logger.debug(f'{request.method} request to {request.path} from ip {request.remote_addr}{params_str}')
         return f(*args, **kwargs)
     return _log
@@ -83,7 +83,12 @@ def auth_required(f):
             logger.error(finam_error_msg)
             return jsonify(finam_error_msg), 500
         except (Exception) as e:
-            logger.error(e)
+            error_dict = {
+                'description': e.description,
+                'stack_trace': traceback.format_exc()
+            }
+            log_msg = f"HTTPException: Description: {error_dict['description']}, Stack trace: {error_dict['stack_trace']}"
+            logger.error(log_msg)
             return jsonify(runtime_msg), 500
 
     return _verify

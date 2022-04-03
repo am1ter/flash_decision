@@ -415,8 +415,8 @@ class Iteration(db.Model):
         
         # Fill other required bars numbers
         self.FinalBarNum = self.FixingBarNum - session.Fixingbar
-        self.StartBarNum = self.FinalBarNum - session.Barsnumber
-    
+        self.StartBarNum = self.FinalBarNum - session.Barsnumber if session.Barsnumber <= self.FinalBarNum else 0
+
         # Write data to db
         write_object_to_db(self)
 
