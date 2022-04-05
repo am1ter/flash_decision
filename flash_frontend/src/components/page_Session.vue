@@ -260,4 +260,8 @@
         display: flex;
         justify-content: center;
     }
+
+    .form-control {
+        font-size: 14px !important;
+    }
 </style>

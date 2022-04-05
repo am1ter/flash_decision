@@ -1,7 +1,9 @@
+from xmlrpc.client import Boolean
 from app import db
 import app.config as cfg
 
 from flask_sqlalchemy import BaseQuery
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError 
 import pandas as pd
 from pandas.core.frame import DataFrame
@@ -15,6 +17,8 @@ from plotly import graph_objs
 from statistics import median
 from functools import wraps
 import logging
+from collections import OrderedDict
+from itertools import islice
 
 from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
@@ -50,7 +54,7 @@ class User(db.Model):
     UserPassword = db.Column(db.String(128))
 
     sessions = db.relationship('Session', backref='User', lazy='dynamic', passive_deletes=True)
-    sessions = db.relationship('Authentication', backref='User', lazy='dynamic', passive_deletes=True)
+    authentications = db.relationship('Authentication', backref='User', lazy='dynamic', passive_deletes=True)
 
     def __repr__(self) -> str:
         """Return the user email"""
@@ -86,7 +90,6 @@ class User(db.Model):
         else:
             return False
 
-
     def set_email(self, email: str) -> None:
         """Set new email for the user"""
         self.UserEmail = email
@@ -99,12 +102,40 @@ class User(db.Model):
         """Check the password against stored hashed password """
         return check_password_hash(self.UserPassword, password)
 
-    def check_is_email_free(email):
+    def check_is_email_free(email: str) -> Boolean:
         """Check if email is free"""
         if User.get_user_by_email(email):
             return False
         else:
             return True
+
+    def calc_user_summary(self, mode: str) -> dict:
+        """Calculate user's summary along his activity"""
+
+        closed_sessions = self.sessions.filter(Session.Status == 'closed', Session.Mode == mode).all()
+        sessions_results = [s.calc_sessions_summary() for s in closed_sessions]
+
+        total_sessions = len(closed_sessions)
+        profitalbe_sessions = len([s['totalResult'] for s in sessions_results if s['totalResult'] > 0])
+        unprofitalbe_sessions = len([s['totalResult'] for s in sessions_results if s['totalResult'] <= 0])
+        total_result = round(sum([s['totalResult'] for s in sessions_results]), 2)
+        median_result = round(median([s['totalResult'] for s in sessions_results]), 2)
+        best_result = round(max([s['totalResult'] for s in sessions_results]), 2)
+        first_session = min([s.CreateDatetime for s in closed_sessions]).strftime("%d.%m.%Y")
+
+        user_summary = {
+            'userId': self.UserId,
+            'userName': self.UserName,
+            'totalSessions': total_sessions,
+            'profitableSessions': profitalbe_sessions,
+            'unprofitableSessions': unprofitalbe_sessions,
+            'totalResult': total_result,
+            'medianResult': median_result,
+            'bestSessionResult': best_result,
+            'firstSession': first_session
+        }
+
+        return user_summary
 
 
 class Authentication(db.Model):
@@ -117,7 +148,7 @@ class Authentication(db.Model):
     UserAgent = db.Column(db.String)
     StatusCode = db.Column(db.String)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return description"""
         return f'<Authentication {self.AuthId} for {self.UserId} at {self.AuthDatetime}>'
 
@@ -154,11 +185,11 @@ class Session(db.Model):
     TradingType = db.Column(db.String)
     FirstBarDatetime = db.Column(db.DateTime)
     TotalSessionBars = db.Column(db.Integer)
-
+    Mode = db.Column(db.String)
     iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', passive_deletes=True)
     decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return object description"""
         return f'<Session {self.SessionId}>'
 
@@ -182,6 +213,7 @@ class Session(db.Model):
             self.Fixingbar = int(options['fixingbar'])
             self.TradingType = self._determine_trading_type()
             self.FirstBarDatetime = self._calc_first_bar_datetime()
+            self.Mode = mode
         else:
             raise RuntimeError('Only custom mode is available')
 
@@ -297,7 +329,7 @@ class Session(db.Model):
         # Return DF to create iterations
         return df_quotes
 
-    def _update_session_with_df_data(self, df_quotes) -> None:
+    def _update_session_with_df_data(self, df_quotes: pd.DataFrame) -> None:
         """Update current session options in the DB"""
         # Write count of bars in the downloaded df
         self.TotalSessionBars = len(df_quotes)
@@ -310,7 +342,7 @@ class Session(db.Model):
         # Write to db
         write_object_to_db(self)
 
-    def _create_iterations(self, df_quotes) -> None:
+    def _create_iterations(self, df_quotes: pd.DataFrame) -> None:
         """Create all iterations for current session (self)"""
         for i in range (1, self.Iterations + 1):
             iteration = Iteration()
@@ -335,11 +367,11 @@ class Session(db.Model):
             raise FileNotFoundError('No information about id and ticker of the current session')
 
     @catch_db_exception
-    def get_from_db(self, session_id: int) -> db.Model:
+    def get_from_db(session_id: int) -> db.Model:
         """Get session's options from DB and fill with them the object"""
         return Session.query.get(int(session_id))
 
-    def calc_sessions_summary(self) -> float:
+    def calc_sessions_summary(self) -> dict:
         """Collect all session attributes in one object"""
         try:
             decisions = self.decisions.all()
@@ -355,6 +387,8 @@ class Session(db.Model):
             total_time_spent = str(timedelta(seconds=total_time_spent))
 
             session_summary = {
+                'userId': self.UserId,
+                'sessionId': self.SessionId,
                 'totalResult': total_result,
                 'totalDecisions': total_decisions,
                 'profitableDecisions': profitable_decisions,
@@ -368,7 +402,12 @@ class Session(db.Model):
 
             return session_summary
         except:
-            raise SQLAlchemyError('Error: No connection to DB')            
+            raise SQLAlchemyError('Error: No connection to DB')
+
+    def set_status(self, status: str) -> None:
+        """Record new session's status in db"""
+        self.Status = status
+        write_object_to_db(self)
 
 
 class Iteration(db.Model):
@@ -388,7 +427,7 @@ class Iteration(db.Model):
 
     decisions = db.relationship('Decision', backref='Iteration', lazy='dynamic', passive_deletes=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return object description"""
         return f'<Iteration {self.IterationNum} of the session {self.SessionId}>'
 
@@ -415,7 +454,10 @@ class Iteration(db.Model):
         
         # Fill other required bars numbers
         self.FinalBarNum = self.FixingBarNum - session.Fixingbar
-        self.StartBarNum = self.FinalBarNum - session.Barsnumber if session.Barsnumber <= self.FinalBarNum else 0
+        if session.Barsnumber <= self.FinalBarNum:
+            self.StartBarNum = self.FinalBarNum - session.Barsnumber
+        else:
+            return
 
         # Write data to db
         write_object_to_db(self)
@@ -456,11 +498,11 @@ class Iteration(db.Model):
         return self.FixingBarDatetime - timedelta(days=days_before)
 
     @catch_db_exception
-    def get_from_db(self, session_id: int, iteration_num: int) -> db.Model:
+    def get_from_db(session_id: int, iteration_num: int) -> db.Model:
         """Get iterations's options from DB and fill with them the object"""
         return Iteration.query.filter(Iteration.SessionId == session_id, Iteration.IterationNum == iteration_num).first()
 
-    def _generate_filename_iteration(self):
+    def _generate_filename_iteration(self) -> str:
         """ Get filename for current iteration """
 
         # Generate dirname
@@ -539,6 +581,7 @@ class Decision(db.Model):
 
     DecisionId = db.Column(db.Integer, primary_key=True, index=True)
     CreateDatetime = db.Column(db.DateTime, default=datetime.utcnow)
+    UserId = db.Column(db.Integer, db.ForeignKey('User.UserId', ondelete='CASCADE'), index=True)
     SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)
     IterationId = db.Column(db.Integer, db.ForeignKey('Iteration.IterationId', ondelete='CASCADE'), index=True)
     Action = db.Column(db.String)
@@ -546,14 +589,16 @@ class Decision(db.Model):
     ResultRaw = db.Column(db.Float)
     ResultFinal = db.Column(db.Float)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return object description"""
         return f'<Decision {self.DecisionId} during session {self.SessionId}>'
 
     def new(self, props: dict) -> None:
         """Create new session and write it to db"""
-        current_iter = Iteration()
-        current_iter = current_iter.get_from_db(session_id=props['sessionId'], iteration_num=props['iterationNum'])
+        current_iter = Iteration.get_from_db(session_id=props['sessionId'], iteration_num=props['iterationNum'])
+        if not current_iter:
+            return
+        self.UserId = current_iter.Session.UserId
         self.SessionId = current_iter.SessionId
         self.IterationId = current_iter.IterationId
         self.Action = props['action']
@@ -573,6 +618,46 @@ class Decision(db.Model):
 
         # Write data to db
         write_object_to_db(self)
+
+
+class Scoreboard:
+    def __repr__(self) -> str:
+        """Return object description"""
+        return f'<Scoreboard>'
+
+    def _get_all_users_results(mode: str) -> dict:
+        """Return list of all users results"""
+        closed_sessions = Session.query.filter(Session.Mode == mode, Session.Status == 'closed').all()
+        sessions_results = [s.calc_sessions_summary() for s in closed_sessions]
+        
+        # Sum results of all sessions for every user
+        users_results = {}
+        for r in sessions_results:
+            if r['userId'] not in users_results:
+                users_results[r['userId']] = r['totalResult'] 
+            else:
+                users_results[r['userId']] += r['totalResult'] 
+        
+        # Order users by result
+        users_results = OrderedDict(sorted(users_results.items(), key=lambda r: r[1], reverse=True))
+        return users_results
+
+    def get_users_top3(mode: str) -> dict:
+        """Return list of top 3 leaders for selected mode"""
+        users_results = Scoreboard._get_all_users_results(mode)
+        
+        # Cut dict to top3, round results and replace ids with names
+        users_results = OrderedDict(islice(users_results.items(), 3))
+        users_results = {User.get_user_by_id(key).UserName: round(val, 2) for (key, val) in users_results.items()}
+
+        return users_results  
+
+    def get_user_rank(user, mode: str) -> int:
+        """Return rank of user in global scoreboard"""
+        users_results = Scoreboard._get_all_users_results(mode)
+        rank = list(users_results).index(user.UserId)
+
+        return rank
 
 
 # General functions
@@ -598,6 +683,13 @@ def delete_object_from_db(object):
 
 def create_system_users() -> None:
     """Create system users during first run of the script"""
+    # Check if there is tables in db
+    meta = db.MetaData(bind=db.engine)
+    meta.reflect()
+    if not meta.tables:
+        logger.warning('DB is empty')
+        return
+
     # Create demo user
     if User.get_user_by_email(cfg.USER_DEMO_EMAIL) is None:
         demo_user = User()

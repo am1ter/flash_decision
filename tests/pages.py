@@ -38,7 +38,7 @@ class PageBase:
 class PageLogin(PageBase):
     """Login page"""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return formated object name"""
         return f'<Page Login>'
 
@@ -74,7 +74,7 @@ class PageLogin(PageBase):
 class PageSignup(PageBase):
     """Signup page"""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return formated object name"""
         return f'<Page Signup>'
 
@@ -103,7 +103,7 @@ class PageSignup(PageBase):
 class PageSession(PageBase):
     """Session page"""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return formated object name"""
         return f'<Page Session>'
 
@@ -143,7 +143,7 @@ class PageSession(PageBase):
 class PageDecision(PageBase):
     """Search results page action methods come here"""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return formated object name"""
         return f'<Page Decision>'
 
@@ -171,7 +171,7 @@ class PageDecision(PageBase):
 class PageResults(PageBase):
     """Search results page action methods come here"""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return formated object name"""
         return f'<Page Results>'
 
@@ -189,7 +189,7 @@ class PageResults(PageBase):
 class PageScoreboard(PageBase):
     """Search results page action methods come here"""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return formated object name"""
         return f'<Page Scoreboard>'
 

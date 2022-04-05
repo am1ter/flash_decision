@@ -30,7 +30,8 @@
         methods: {
             async loadScoreboard() {
                 // Load last session results
-                let response = await apiGetScoreboard(this.user.id)
+                let mode = 'custom'
+                let response = await apiGetScoreboard(mode, this.user.id)
                 console.log(response)
                 this.isLoaded = true
             }

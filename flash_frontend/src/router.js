@@ -83,7 +83,7 @@ const routes = [
         }
     },
     {
-        path: '/scoreboard/:user_id',
+        path: '/scoreboard/:mode/:user_id',
         name: 'Scoreboard page',
         component: App.components.page_Scoreboard,
         meta: {

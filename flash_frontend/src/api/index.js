@@ -70,7 +70,6 @@ export function apiGetSessionOptions() {
 export function apiPostStartNewSession(form) {
     console.log('Run apiPostStartNewSession')
     let req = {'type': 'post', 'url': API_URL + '/start-new-session/', 'args': form}
-    console.log(req)
     return handleResponse(req)
 }
 
@@ -96,8 +95,8 @@ export function apiGetSessionsResults(sessionId) {
 }
 
 
-export function apiGetScoreboard(userId) {
+export function apiGetScoreboard(mode, userId) {
     console.log('Run apiGetScoreboard')
-    let req = {'type': 'get', 'url': API_URL + `/get-scoreboard/${userId}/`}
+    let req = {'type': 'get', 'url': API_URL + `/get-scoreboard/${mode}/${userId}/`}
     return handleResponse(req)
 }

@@ -1,6 +1,6 @@
 from app import app
 import app.config as cfg
-from app.models import Authentication, User, Decision, Session, Iteration
+from app.models import Authentication, User, Decision, Session, Iteration, Scoreboard
 
 from flask import Blueprint, jsonify, request
 from flask.wrappers import Response
@@ -83,11 +83,7 @@ def auth_required(f):
             logger.error(finam_error_msg)
             return jsonify(finam_error_msg), 500
         except (Exception) as e:
-            error_dict = {
-                'description': e.description,
-                'stack_trace': traceback.format_exc()
-            }
-            log_msg = f"HTTPException: Description: {error_dict['description']}, Stack trace: {error_dict['stack_trace']}"
+            log_msg = f"HTTPException: Description: {e.args[0]}, Stack trace: {traceback.format_exc()}"
             logger.error(log_msg)
             return jsonify(runtime_msg), 500
 
@@ -223,22 +219,23 @@ def start_new_session() -> Response:
 def get_chart(session_id: int, iteration_num: int) -> Response:
     """Send json with chart data to frontend"""
     # Load session from db
-    current_session = Session()
-    current_session = current_session.get_from_db(session_id)
+    current_session = Session.get_from_db(session_id)
     # Check if iteration number from API request is correct
     assert 1 <= iteration_num <= current_session.Iterations, 'Error: Wrong iteration number'
     # Check if session is still active
     assert current_session.Status == cfg.SESSION_STATUS_ACTIVE, 'Error: Session is closed'
 
     # Get iteration from db and read data file
-    loaded_iteration = Iteration()
-    loaded_iteration = loaded_iteration.get_from_db(session_id, iteration_num)
+    loaded_iteration = Iteration.get_from_db(session_id, iteration_num)
 
     # Format data to draw it with plotly
-    chart = loaded_iteration.prepare_chart_plotly()
-
-    logger.info(f'New chart for {loaded_iteration} generated')
-    return jsonify(chart), 200
+    if loaded_iteration:
+        chart = loaded_iteration.prepare_chart_plotly()
+        logger.info(f'New chart for {loaded_iteration} generated')
+        return jsonify(chart), 200
+    else:
+        logger.warning(f'Chart generation for {loaded_iteration} failed')
+        return jsonify(False), 200
 
 
 @api.route('/record-decision/', methods=['POST'])
@@ -249,8 +246,13 @@ def record_decision() -> Response:
     assert request.json, 'Error: Wrong POST request has been received'
     new_decision = Decision()
     new_decision.new(props=request.json)
-    logger.info(f'New decision {new_decision} recorded with result {round(new_decision.ResultFinal * 100, 2)}%')
-    return jsonify(new_decision.ResultFinal), 200
+    if new_decision.DecisionId:
+        logger.info(f'New decision {new_decision} recorded with result {round(new_decision.ResultFinal * 100, 2)}%')
+        return jsonify(new_decision.ResultFinal), 200
+    else:
+        session = Session.get_from_db(request.json["sessionId"])
+        logger.warning(f'New decision recording for {session} failed')
+        return jsonify(False), 200
 
 
 @api.route('/get-sessions-results/<int:session_id>/', methods=['GET'])
@@ -259,21 +261,37 @@ def record_decision() -> Response:
 def get_sessions_results(session_id: int) -> Response:
     """When session is finished collect it's summary in one object and send it back to frontend"""
     # Load session from db
-    current_session = Session()
-    current_session = current_session.get_from_db(session_id)
+    current_session = Session.get_from_db(session_id)
     # Get session's summary
     current_session_summary = current_session.calc_sessions_summary()
+    # Write 'Close' status for session in db
+    current_session.set_status('closed')
+
     logger.info(f'{current_session} finished with result {current_session_summary["totalResult"]}%')
     return jsonify(current_session_summary), 200
 
 
-@api.route('/get-scoreboard/<int:user_id>/', methods=['GET'])
+@api.route('/get-scoreboard/<string:mode>/<int:user_id>/', methods=['GET'])
 @auth_required
 @log_request
-def get_scoreboard(user_id: int) -> Response:
+def get_scoreboard(mode: str, user_id: int) -> Response:
     """Show global scoreboard and current user's results"""
-    logger.info(f'Generated scoreboard for user #{user_id}')
-    return jsonify(True), 200
+    # Load user from db
+    user = User.get_user_by_id(user_id)
+
+    # Gather scoreboard data to render
+    user_summary = user.calc_user_summary(mode)
+    user_rank = Scoreboard.get_user_rank(user, mode)
+    top3_users = Scoreboard.get_users_top3(mode)
+
+    response = {
+        'user_summary': user_summary,
+        'user_rank': user_rank,
+        'top3_users': top3_users
+        }
+
+    logger.info(f'Generated scoreboard for {user}')
+    return jsonify(response), 200
 
 
 @api.route(f'/cleanup-tests-results/', methods=['POST'])

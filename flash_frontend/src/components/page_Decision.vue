@@ -90,8 +90,15 @@
                 // Get iteration chart over API
                 let response = await apiGetIterationChart(this.currentSession.options.sessionId, this.currentSession.currentIterationNum)
                 // Chart data to display [0], iteration data to vuex storage [1]
-                this.iterationChart = JSON.parse(response)[0];
-                this.currentSession['iterations'][this.currentSession.currentIterationNum] = JSON.parse(response)[1]
+                if (response) {
+                    this.iterationChart = JSON.parse(response)[0];
+                    this.currentSession['iterations'][this.currentSession.currentIterationNum] = JSON.parse(response)[1]
+                } else {
+                    // If response is `false` then skip decision for such iteration 
+                    this.iterationChart = JSON.parse(false);
+                    this.currentSession['iterations'][this.currentSession.currentIterationNum] = this.currentSession['iterations'][this.currentSession.currentIterationNum - 1]
+                    document.getElementById("button-skip").click(); 
+                }
             },
             async saveDecision(event) {
                 // Decision has been made

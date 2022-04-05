@@ -14,6 +14,7 @@ from pathlib import Path
 path_logs_local = Path.cwd() / 'flash_backend' / 'settings_logs.yaml'
 path_logs_docker = Path.cwd() / 'settings_logs.yaml'
 path_logs_settings = path_logs_local if path_logs_local.exists() else path_logs_docker
+
 with open(str(path_logs_settings), 'r') as f:
     settings_logs = yaml.safe_load(f.read())
     logging.config.dictConfig(settings_logs)

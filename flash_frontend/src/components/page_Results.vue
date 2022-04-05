@@ -61,7 +61,8 @@
                     return 'text-danger'
             },
             scoreboardLink() {
-                return '/#/scoreboard' + '/' + this.user.id
+                let mode = 'custom'
+                return '/#/scoreboard' + '/' + mode + '/' + this.user.id
             }
         }
     }

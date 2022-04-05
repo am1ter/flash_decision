@@ -5,12 +5,12 @@
                 <img v-else src='../assets/icons/i_menu_session_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Session</p>
             </router-link>
-            <router-link :to="{name: 'Session’s results page', params: {'session_id': sessionsResultsLink()}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("decision"), "disabled": checkIsSessionBlank()}'>
+            <router-link :to="{name: 'Session’s results page', params: {'session_id': insUrlParamSessionId()}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("decision"), "disabled": checkIsSessionBlank()}'>
                 <img v-if='checkPageIsActive("decision")' src='../assets/icons/i_menu_decision_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_decision_inactive.svg' alt='Icon'>
                 <p class='menu_text' >Decision</p>
             </router-link>
-            <router-link :to="{name: 'Scoreboard page', params: {'user_id': this.user.id}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("scoreboard") }'>
+            <router-link :to="{name: 'Scoreboard page', params: {'mode': 'custom', 'user_id': insUrlParamUserId()}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("scoreboard") }'>
                 <img v-if='checkPageIsActive("scoreboard")' src='../assets/icons/i_menu_scoreboard_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_scoreboard_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Scoreboard</p>
@@ -50,10 +50,16 @@
                     return false
                 }
             },
-            sessionsResultsLink() {
+            insUrlParamSessionId() {
                 // Used for return to the session's results page
                 // Check if session has been started and there is sessionId
                 let link_postfix = ('options' in this.currentSession) ? this.currentSession.options.sessionId : 0
+                return link_postfix
+            },
+            insUrlParamUserId() {
+                // Used for return to the session's results page
+                // Check if session has been started and there is sessionId
+                let link_postfix = ('id' in this.user) ? this.user.id : 0
                 return link_postfix
             }
         }
