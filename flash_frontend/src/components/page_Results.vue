@@ -19,15 +19,15 @@
                 isLoaded: false,
                 fields: [
                     { key: 'column' },
-                    { key: 'value', tdClass: 'setValueTdClass' }
+                    { key: 'value', tdClass: this.setValueTdClass }
                 ]
             }
         },
         computed: {
             ...mapState(['user', 'currentSession', 'apiErrors'])
         },
-        async mounted() {
-            await this.loadSessionsResults()
+        mounted() {
+            this.loadSessionsResults()
         },
         methods: {
             async loadSessionsResults() {
@@ -37,6 +37,7 @@
                 this.isLoaded = true
             },
             formatFigures(x) {
+                // Improve text display of figures
                 return (x > 0) ? '+' + x + '%': x + '%'
             },
             calcSessionsSummary() {
@@ -50,11 +51,11 @@
                     { column: 'Median decision’s result', value: this.formatFigures(sesRes.medianDecisionsResult)},
                     { column: 'Best decision’s result', value: this.formatFigures(sesRes.bestDecisionsResult)},
                     { column: 'Worst decision’s result', value: this.formatFigures(sesRes.worstDecisionsResult)},
-                    { column: 'Total time spent', value: sesRes.totalTimeSpent},
+                    { column: 'Total time spent', value: sesRes.totalTimeSpent}
                 ]
             },
             setValueTdClass(value) {
-                var firstChar = String(value).charAt(0)
+                let firstChar = String(value).charAt(0)
                 if(firstChar === '+')
                     return 'text-success'
                 else if(firstChar === '-')

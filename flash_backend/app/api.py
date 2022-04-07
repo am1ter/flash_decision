@@ -285,9 +285,9 @@ def get_scoreboard(mode: str, user_id: int) -> Response:
     top3_users = Scoreboard.get_users_top3(mode)
 
     response = {
-        'user_summary': user_summary,
-        'user_rank': user_rank,
-        'top3_users': top3_users
+        'userSummary': user_summary,
+        'userRank': user_rank,
+        'top3Users': top3_users
         }
 
     logger.info(f'Generated scoreboard for {user}')

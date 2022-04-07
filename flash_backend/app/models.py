@@ -648,9 +648,11 @@ class Scoreboard:
         
         # Cut dict to top3, round results and replace ids with names
         users_results = OrderedDict(islice(users_results.items(), 3))
-        users_results = {User.get_user_by_id(key).UserName: round(val, 2) for (key, val) in users_results.items()}
+        users_results_final = {}
+        for idx, user in enumerate(users_results):
+            users_results_final[idx] = {'name': User.get_user_by_id(user).UserName, 'result': round(users_results[user], 2)}
 
-        return users_results  
+        return users_results_final  
 
     def get_user_rank(user, mode: str) -> int:
         """Return rank of user in global scoreboard"""
