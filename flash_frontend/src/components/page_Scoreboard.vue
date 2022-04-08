@@ -1,86 +1,122 @@
 <template>
     <section id='page'>
-        <div id='empty_scoreboard'
-            v-if="apiErrors.length == 0 & isLoaded & Object.keys(top3Users).length == 0" class="text-center shadow col-12 pt-2">
-            <h1>N/A</h1>
-            <p>
-                Nobody has tried this mode yet<br>
-                Will you be the first one?
-            </p>
-        </div>
         <div v-if="isLoaded" id='scoreboard_mode'>
-                <b-tabs pills align="center" active-nav-item-class="text-light">
-                    <b-tab title="Custom" class="mt-3" active>
-                        <!-- Top-3 users-->
-                        <b-container fluid v-for="(user, idx) in top3Users" :key="user.name">
-                            <!-- All users in top-3 except current user -->
-                            <b-row v-if="idx!=userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
-                                <b-col sm="2">
-                                    <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
-                                    <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
-                                </b-col>
-                                <b-col sm="6" class="user_card_col">
-                                    <p class="user_name">{{top3Users[idx]["name"]}} #{{parseInt(idx) + 1}}</p>
-                                    <p class="user_result">Result: <span class="text-success">{{top3Users[idx]["result"]}}%</span></p>
-                                </b-col>
-                                <b-col sm="4">
-                                    <p></p>
-                                </b-col>
-                            </b-row>
-                            <!-- Display current user's summary if current user is in top-3) -->
-                            <b-row v-if="idx==userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
-                                <b-col sm="2">
-                                    <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
-                                    <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
-                                </b-col>
-                                <b-col sm="6" class="user_card_col">
-                                    <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
-                                    <p class="user_result">Result: <span class="text-success">{{userSummary.totalResult}}%</span></p>
-                                </b-col>
-                                <b-col sm="4">
-                                    <p></p>
-                                </b-col>
-                            </b-row>
-                            <b-table  
-                                v-if="idx==userRank"
-                                striped borderless hover thead-class="d-none"
-                                :items="calcUserSummary"
-                                :fields="fields"
-                                class="current_user_summary shadow"
-                                :class="{ current_user_summary_champion: idx==0 }"
-                            />
-                        </b-container>
-                        <!-- Display current user's summary if current user is not in top-3 -->
-                        <b-container fluid v-if="userRank >= 4">
-                            ...
-                            <b-row class="user_card">
-                                <b-col sm="2">
-                                    <img src="../assets/icons/i_ava_default.svg"/>
-                                </b-col>
-                                <b-col sm="6" class="user_card_col">
-                                    <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
-                                    <p class="user_result">Result: <span class="text-success">{{userSummary.totalResult}}%</span></p>
-                                </b-col>
-                                <b-col sm="4">
-                                    <p></p>
-                                </b-col>
-                            </b-row>
-                            <b-table  
-                                v-if="idx==userRank"
-                                striped borderless hover thead-class="d-none"
-                                :items="calcUserSummary"
-                                :fields="fields"
-                                class="current_user_summary shadow"
-                            />
-                        </b-container>
-                    </b-tab>
-                    <b-tab title="Classic" class="mt-3">
-                        <b-card-text>TBD</b-card-text>
-                    </b-tab>
-                    <b-tab title="Blitz" class="mt-3">
-                        <b-card-text>TBD</b-card-text>
-                    </b-tab>
-                </b-tabs>
+            <!-- Navigation bar (modes) -->
+            <ul class="nav justify-content-center">
+                <li class="nav-item">
+                    <a class="nav-link" 
+                    :class="{active: isPageActive('custom')}"
+                    role="button"
+                    v-on:click="$router.push(`/scoreboard/custom/${user.id}`)">Custom</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" 
+                    :class="{active: isPageActive('classic')}" 
+                    role="button" 
+                    v-on:click="$router.push(`/scoreboard/classic/${user.id}`)">Classic</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                    :class="{active: isPageActive('blitz')}"
+                    role="button"
+                    v-on:click="$router.push(`/scoreboard/blitz/${user.id}`)">Blitz</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" 
+                    :class="{active: isPageActive('crypto')}" 
+                    role="button" 
+                    v-on:click="$router.push(`/scoreboard/crypto/${user.id}`)">Crypto</a>
+                </li>
+            </ul>
+            <!-- Empty scoreboard -->
+            <div id='empty_scoreboard'
+                v-if="apiErrors.length == 0 & isLoaded & Object.keys(top3Users).length == 0"
+                class="text-center shadow col-12 mt-3 pt-3 pb-1">
+                <h1>N/A</h1>
+                <p>
+                    Nobody has tried this mode yet<br>
+                    Will you be the first one?
+                </p>
+            </div>
+            <!-- Scoreboard data -->
+            <b-tab title="Custom" class="mt-3" active>
+                <!-- Top-3 users-->
+                <b-container fluid v-for="(user, idx) in top3Users" :key="user.name">
+                    <!-- All users in top-3 except current user -->
+                    <b-row v-if="idx!=userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
+                        <b-col sm="2">
+                            <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
+                            <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
+                        </b-col>
+                        <b-col sm="6" class="user_card_col">
+                            <p class="user_name">{{top3Users[idx]["name"]}} #{{parseInt(idx) + 1}}</p>
+                            <p class="user_result">
+                                Result: <span :class="formatFiguresColor(formatFigures(top3Users[idx]['result']))">{{top3Users[idx]["result"]}}%</span>
+                            </p>
+                        </b-col>
+                        <b-col sm="4">
+                            <p></p>
+                        </b-col>
+                    </b-row>
+                    <!-- Display current user's summary if current user is in top-3) -->
+                    <b-row v-if="idx==userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
+                        <b-col sm="2">
+                            <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
+                            <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
+                        </b-col>
+                        <b-col sm="6" class="user_card_col">
+                            <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
+                            <p class="user_result">
+                                Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
+                            </p>
+                        </b-col>
+                        <b-col sm="4">
+                            <p></p>
+                        </b-col>
+                    </b-row>
+                    <b-table  
+                        v-if="idx==userRank"
+                        striped borderless hover thead-class="d-none"
+                        :items="calcUserSummary"
+                        :fields="fields"
+                        class="current_user_summary shadow"
+                        :class="{ current_user_summary_champion: idx==0 }"
+                    />
+                </b-container>
+                <!-- Display current user's summary if current user is not in top-3 -->
+                <b-container fluid v-if="userRank >= 3">
+                    ...
+                    <b-row class="user_card">
+                        <b-col sm="2">
+                            <img src="../assets/icons/i_ava_default.svg"/>
+                        </b-col>
+                        <b-col sm="6" class="user_card_col">
+                            <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
+                            <p class="user_result">
+                                Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
+                            </p>
+                        </b-col>
+                        <b-col sm="4">
+                            <p></p>
+                        </b-col>
+                    </b-row>
+                    <b-table  
+                        striped borderless hover thead-class="d-none"
+                        :items="calcUserSummary"
+                        :fields="fields"
+                        class="current_user_summary shadow"
+                    />
+                </b-container>
+            </b-tab>
+            <b-tab disabled title="Classic" class="mt-3">
+                <b-card-text>TBD</b-card-text>
+            </b-tab>
+            <b-tab disabled title="Blitz" class="mt-3">
+                <b-card-text>TBD</b-card-text>
+            </b-tab>
+            <b-tab disabled title="Crypto" class="mt-3">
+                <b-card-text>TBD</b-card-text>
+            </b-tab>
         </div>
     </section>
 </template>
@@ -94,12 +130,13 @@
         data() {
             return {
                 isLoaded: false,
+                mode: 'custom',
                 top3Users: {},
-                userRank: {},
+                userRank: -1,
                 userSummary: {},
                 fields: [
                     { key: 'column' },
-                    { key: 'value', tdClass: this.setValueTdClass }
+                    { key: 'value', tdClass: this.formatFiguresColor }
                 ]
             }
         },
@@ -109,15 +146,21 @@
         mounted() {
             this.loadScoreboard()
         },
+        beforeRouteUpdate(to, from, next) {
+            // Send API request when mode nav bar used
+            this.isLoaded = false
+            this.mode = to.params.mode
+            this.loadScoreboard()
+            next()
+        },
         methods: {
             async loadScoreboard() {
                 // Load last session results
-                let mode = 'custom'
-                let response = await apiGetScoreboard(mode, this.user.id)
-                console.log(response)
-                this.top3Users = response.top3Users
-                this.userRank = response.userRank
-                this.userSummary = response.userSummary
+                let response = await apiGetScoreboard(this.mode, this.user.id)
+                // Check if there is data for current user and current mode
+                this.top3Users = (response) ? response.top3Users : false
+                this.userRank = (response) ? response.userRank : -1
+                this.userSummary = (response) ? response.userSummary : {}
                 this.isLoaded = true
             },
             formatFigures(x) {
@@ -125,6 +168,7 @@
                 return (x > 0) ? '+' + x + '%': x + '%'
             },
             calcUserSummary() {
+                // Format api user summary response to put it into bootstrap table
                 let userSum = this.userSummary
                 return [
                     { column: 'Total sessions', value: userSum.totalSessions},
@@ -136,13 +180,17 @@
                     { column: 'First session', value: userSum.firstSession}
                 ]
             },
-            setValueTdClass(value) {
+            formatFiguresColor(value) {
+                // Change color of figures
                 let firstChar = String(value).charAt(0)
-                console.log(firstChar)
                 if(firstChar === '+')
                     return 'text-success'
                 else if(firstChar === '-')
                     return 'text-danger'
+            },
+            isPageActive(nav_item) {
+                // Check if navbar item is active
+                return this.$route.params.mode == nav_item
             }
         }
     }
@@ -154,8 +202,18 @@
         width: 100%;
     }
 
-    .font_white {
-        color: white;
+    .nav-link {
+        color: #888888 !important;
+        font-weight: 500;
+        font-size: 16px;
+        text-decoration-line: underline !important;
+    }
+
+    .nav-link.active {
+        color: #0B5A73 !important;
+        font-weight: 500;
+        font-size: 16px;
+        text-decoration-line: underline !important;
     }
 
     .user_card {

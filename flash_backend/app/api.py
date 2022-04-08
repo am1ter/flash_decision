@@ -279,12 +279,24 @@ def get_scoreboard(mode: str, user_id: int) -> Response:
     # Load user from db
     user = User.get_user_by_id(user_id)
 
-    # Gather scoreboard data to render
-    user_summary = user.calc_user_summary(mode)
-    user_rank = Scoreboard.get_user_rank(user, mode)
-    top3_users = Scoreboard.get_users_top3(mode)
+    # Check if there is scoreboard for current mode
+    try:
+        top3_users = Scoreboard.get_users_top3(mode)
+    except:
+        logger.debug(f'No scoreboard for mode: {mode}')
+        return jsonify(False), 200
+    
+    # Check if current user has results for current mode
+    try:
+        user_summary = user.calc_user_summary(mode)
+        user_rank = Scoreboard.get_user_rank(user, mode)
+    except (AssertionError, ValueError):
+        user_summary = {}
+        user_rank = -1
+        logger.debug(f'Scoreboard generation failed for {user} with {mode}')
 
     response = {
+        'mode': mode,
         'userSummary': user_summary,
         'userRank': user_rank,
         'top3Users': top3_users

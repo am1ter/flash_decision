@@ -115,6 +115,10 @@ class User(db.Model):
         closed_sessions = self.sessions.filter(Session.Status == 'closed', Session.Mode == mode).all()
         sessions_results = [s.calc_sessions_summary() for s in closed_sessions]
 
+        # Check if there is results for current user
+        if not closed_sessions or not sessions_results:
+            return False
+
         total_sessions = len(closed_sessions)
         profitalbe_sessions = len([s['totalResult'] for s in sessions_results if s['totalResult'] > 0])
         unprofitalbe_sessions = len([s['totalResult'] for s in sessions_results if s['totalResult'] <= 0])
@@ -124,6 +128,7 @@ class User(db.Model):
         first_session = min([s.CreateDatetime for s in closed_sessions]).strftime("%d.%m.%Y")
 
         user_summary = {
+            'mode': mode,
             'userId': self.UserId,
             'userName': self.UserName,
             'totalSessions': total_sessions,

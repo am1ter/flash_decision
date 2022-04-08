@@ -19,7 +19,7 @@
                 isLoaded: false,
                 fields: [
                     { key: 'column' },
-                    { key: 'value', tdClass: this.setValueTdClass }
+                    { key: 'value', tdClass: this.formatFiguresColor }
                 ]
             }
         },
@@ -54,7 +54,7 @@
                     { column: 'Total time spent', value: sesRes.totalTimeSpent}
                 ]
             },
-            setValueTdClass(value) {
+            formatFiguresColor(value) {
                 let firstChar = String(value).charAt(0)
                 if(firstChar === '+')
                     return 'text-success'
