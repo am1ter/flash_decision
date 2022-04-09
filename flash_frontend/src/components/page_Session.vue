@@ -2,13 +2,13 @@
     <section id='page'>
         <!-- Get session option via API, wait for user input and then submit it back to API -->
         <form v-if="apiErrors == 0 & isLoaded" @submit.prevent="checkForm" autocomplete="off">
-            <b-container class="g-0" fluid>
-                <b-row cols="2">
+            <b-container class="g-0">
+                <b-row cols="2" class="gx-0">
                     <!-- Parameters -->
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Market</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown 
                             name="market"
                             :class="checkClassIsInputInvalid('market')"
@@ -21,10 +21,10 @@
 
                     <div class="w-100 my-1"></div>
 
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Ticker</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown 
                             name="ticker"
                             :class="checkClassIsInputInvalid('ticker')"
@@ -36,10 +36,10 @@
                     
                     <div class="w-100 my-1"></div>
                     
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Timeframe</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown
                             name="timeframe"
                             :class="checkClassIsInputInvalid('timeframe')"
@@ -50,10 +50,10 @@
                     
                     <div class="w-100 my-1"></div>
                     
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Bars number</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown 
                             name="barsnumber"
                             :class="checkClassIsInputInvalid('barsnumber')"
@@ -64,10 +64,10 @@
                     
                     <div class="w-100 my-1"></div>
                     
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Time limit</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown 
                             name="timelimit"
                             :class="checkClassIsInputInvalid('timelimit')"
@@ -78,10 +78,10 @@
                     
                     <div class="w-100 my-1"></div>
                     
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Date</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <b-form-datepicker 
                             id="date" 
                             size="sm"
@@ -101,10 +101,10 @@
                     
                     <div class="w-100 my-1"></div>
                     
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Iterations</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown 
                             name="iterations"
                             :class="checkClassIsInputInvalid('iterations')"
@@ -115,10 +115,10 @@
                     
                     <div class="w-100 my-1"></div>
                     
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Slippage</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown 
                             name="slippage"
                             :class="checkClassIsInputInvalid('slippage')"
@@ -129,10 +129,10 @@
                     
                     <div class="w-100 my-1"></div>
                     
-                    <b-col class="my-auto" sm="4">
+                    <b-col class="my-auto col-4">
                         <label>Fixing bar</label>
                     </b-col>
-                    <b-col class="my-auto" sm="8">
+                    <b-col class="my-auto col-8">
                         <Dropdown 
                             name="fixingbar"
                             :class="checkClassIsInputInvalid('fixingbar')"
@@ -143,7 +143,7 @@
                 </b-row>
             </b-container>
             <!-- Start button -->
-            <b-button id="button-start" type="submit" class="col-12 mt-3 gradient rounded-1">Start</b-button>
+            <b-button id="button-start" type="submit" squared class="col-12 mt-3 gradient">Start</b-button>
         </form>
     </section>
 </template>

@@ -8,7 +8,7 @@
         <!-- Show error if there is any errors -->
         <div id='errors' v-if="apiErrors.length > 0">
             <div>{{apiErrors[0]}}</div>
-            <b-button class="mt-3 gradient" v-on:click="reloadPage()">Refresh page</b-button>
+            <b-button squared class="mt-3 gradient" v-on:click="reloadPage()">Refresh page</b-button>
         </div>
 
         <div id='header'>
@@ -16,7 +16,7 @@
         </div>
 
         <div id='content' class="shadow">
-            <Menu class="shadow-sm"/>
+            <Menu />
             <Title/>
             <router-view>
                 <page_Login/>
@@ -93,7 +93,6 @@
         font-size: 16px;
         color: #333333;
         background-color: #ffffff;
-        overflow: hidden;
         height: 100%;
         width: 100%;
         margin: 0; 
@@ -113,14 +112,14 @@
     }
 
     #header {
-        width: 453px;
+        max-width: 453px;
         height: 100%;
-        margin: 15px auto 10px auto;
+        margin: auto;
     }
 
     #content {
-        min-height: 85vh;
-        width: 453px;
+        min-height: calc(100vh - 34px - 10px - 34px);
+        max-width: 453px;
         margin: 0px auto;
         padding-bottom: 15px;
         background-color: #ffffff;
@@ -128,23 +127,28 @@
     }
 
     #content_border_bottom {
-        height: 5px;
-        width: 453px;
         background: linear-gradient(to right, #271238, #113763, #0B5A73);
-        margin: 0px auto 10px auto;
+        height: 5px;
+        max-width: 453px;
+        width: 100%;
+        margin: 0px auto;
     }
 
     #credits {
-        height: auto;
-        width: 453px;
-        margin: 0px auto 0px auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 35px;
+        margin: 0px auto;
+        max-width: 453px;
+        width: 100%;
         text-align: center;
     }
 
     #page {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
         margin: 15px 25px;
         width: auto;
@@ -163,6 +167,7 @@
         align-items: center;
         background-color: rgba(255,255,255,0.7);
         z-index: 1;
+        text-align: center;
     }
 
     .disabled {

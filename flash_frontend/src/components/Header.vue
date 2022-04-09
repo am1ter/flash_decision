@@ -1,12 +1,12 @@
 <template>
-    <div id='header_layout'>
+    <div id='header_layout' v-if='isAuth == true'>
         <div id='header_left'>
-            <div v-if='isAuth == true' class='header_button'>
+            <div class='header_button'>
                 <img class='icon_margin_right' src='../assets/icons/i_header_user.svg'/>
                 <p class='header_text'>{{ user.email }}</p>
             </div>
         </div>
-        <div v-if='isAuth == true' id='header_right'>
+        <div id='header_right'>
             <a id='button-logout' class='header_button' v-on:click="logout()">
                 <img class='icon_margin_right' src='../assets/icons/i_header_logout.svg'/>
                 <p class='header_text'>logout</p>
@@ -43,6 +43,8 @@
         display: flex;
         flex-direction: row;
         width: 100%;
+        margin: 0px 0px;
+        height: 35px;
     }
 
     #header_left {

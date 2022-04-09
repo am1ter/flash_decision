@@ -1,7 +1,7 @@
 <template>
     <section id="page" v-cloak @keyup.enter="actionBuy">
         <div id='bars' v-if="apiErrors.length == 0">
-            <b-alert show variant="success" class="ms-4 me-4 mb-0 p-1 text-center">
+            <b-alert show variant="success" class="mb-0 p-1 text-center">
                 <countdown 
                     ref="pageTimer" 
                     :autoStart="false" 
@@ -16,10 +16,10 @@
                 </countdown>
             </b-alert>
             <Plotly :data="iterationChart.data" :layout="layout" :display-mode-bar="false"></Plotly>
-            <b-button-group class="ps-4 pe-4 w-100">
-                <b-button id="button-sell" v-on:click="saveDecision($event)" class="rounded-1" variant="danger">Sell ᐁ</b-button>
-                <b-button id="button-skip" v-on:click="saveDecision($event)" class="ms-1 rounded-1">Skip ᐅ</b-button>
-                <b-button id="button-buy" v-on:click="saveDecision($event)" class="ms-1 rounded-1" variant="success">Buy ᐃ</b-button>
+            <b-button-group class="w-100">
+                <b-button id="button-sell" v-on:click="saveDecision($event)" squared variant="danger">Sell ᐁ</b-button>
+                <b-button id="button-skip" v-on:click="saveDecision($event)" squared class="ms-1">Skip ᐅ</b-button>
+                <b-button id="button-buy" v-on:click="saveDecision($event)" squared variant="success" class="ms-1">Buy ᐃ</b-button>
             </b-button-group>
         </div>
     </section>
@@ -45,10 +45,10 @@
                     showlegend: false,
                     height: 350,
                     margin: {
-                        r: 25,
+                        r: 0,
                         t: 25,
                         b: 25,
-                        l: 60
+                        l: 0
                     },
                     xaxis: {
                         autorange: true,
@@ -171,7 +171,8 @@
 <style scoped>
 
 #bars {
-        width: 453px;
+        max-width: 453px;
+        width: 100%;
         padding-bottom: 15px;
     }
 

@@ -76,7 +76,7 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        border-bottom: 1px solid #0B5A73;
+        box-shadow: 0px 1px 0px #0B5A73;
     }
 
     .menu_button {
@@ -92,7 +92,7 @@
     }
 
     .menu_button:hover {
-        box-shadow: 0px -1px 0px #271238 inset;
+        box-shadow: 0px 1px 0px #271238;
     }
 
     .menu_button.router-link-active:hover {
@@ -112,13 +112,13 @@
     .router-link-active {
         background-color: #0B5A73;
         color: #ffffff;
-        box-shadow: 0px -1px 0px #333333 inset;
+        box-shadow: 0px 1px 0px #333333;
     }
     
     .menu-active {
         background-color: #0B5A73;
         color: #ffffff;
-        box-shadow: 0px -1px 0px #333333 inset;
+        box-shadow: 0px 1px 0px #333333;
     }   
 
     .menu-active:hover {

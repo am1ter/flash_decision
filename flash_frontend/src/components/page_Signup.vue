@@ -3,17 +3,17 @@
         <form v-if="apiErrors.length == 0 & isLoaded" @submit.prevent="checkForm" autocomplete="off">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
-                    <b-col class="my-auto text-center" sm="3">
+                    <b-col class="my-auto text-center col-3">
                         <label>Email*</label>
                     </b-col>
-                    <b-col class="my-auto" sm="9">
+                    <b-col class="my-auto col-9">
                         <b-form-input id="input-email" :class="checkClassIsInputInvalid('input-email')"  placeholder="Enter your email"/>
                     </b-col>
                     <!-- Place for error messages (hidden if no errors) -->
-                    <b-col class="my-auto" sm="3" v-if="formErrors.indexOf('input-email') > -1">
+                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-email') > -1">
                         <!-- Empty cell -->
                     </b-col>                    
-                    <b-col class="my-auto" sm="9" v-if="formErrors.indexOf('input-email') > -1">
+                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-email') > -1">
                         <p class="text-danger text-left mb-0" v-if="emailIsFree == true">
                             <small>Please enter a valid email</small>
                         </p>
@@ -22,41 +22,41 @@
                         </p>
                     </b-col>
                     <div class="w-100 my-1"></div>
-                    <b-col class="my-auto text-center" sm="3">
+                    <b-col class="my-auto text-center col-3">
                         <label>Name*</label>
                     </b-col>
-                    <b-col class="my-auto" sm="9">
+                    <b-col class="my-auto col-9">
                         <b-form-input id="input-name" :class="checkClassIsInputInvalid('input-name')" placeholder="Enter your name"/>
                     </b-col>
                     <!-- Place for error messages (hidden if no errors) -->
-                    <b-col class="my-auto" sm="3" v-if="formErrors.indexOf('input-name') > -1">
+                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-name') > -1">
                         <!-- Empty cell -->
                     </b-col>                    
-                    <b-col class="my-auto" sm="9" v-if="formErrors.indexOf('input-name') > -1">
+                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-name') > -1">
                         <p class="text-danger text-left mb-0">
                             <small>Please enter your name</small>
                         </p>
                     </b-col>
                     <div class="w-100 my-1"></div>
-                    <b-col class="my-auto text-center" sm="3">
+                    <b-col class="my-auto text-center col-3">
                         <label>Password*</label>
                     </b-col>
-                    <b-col class="my-auto" sm="9">
+                    <b-col class="my-auto col-9">
                         <b-form-input type='password' id="input-password" :class="checkClassIsInputInvalid('input-password')" placeholder="Enter your password"/>
                     </b-col>
                     <!-- Place for error messages (hidden if no errors) -->
-                    <b-col class="my-auto" sm="3" v-if="formErrors.indexOf('input-password') > -1">
+                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-password') > -1">
                         <!-- Empty cell -->
                     </b-col>                    
-                    <b-col class="my-auto" sm="9" v-if="formErrors.indexOf('input-password') > -1">
+                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-password') > -1">
                         <p class="text-danger text-left mb-0">
                             <small>Password must contain at least 6 symbols</small>
                         </p>
                     </b-col>
                 </b-row>
             </b-container>
-            <b-button id="button-signup" type="submit" class="col-12 mt-3 gradient">Sign up</b-button>
-            <b-button id="button-go-back" v-on:click="goToSignIn()" variant="outline-secondary" class="col-12 my-2">Back</b-button>
+            <b-button id="button-signup" type="submit" squared class="col-12 mt-3 gradient">Sign up</b-button>
+            <b-button id="button-go-back" v-on:click="goToSignIn()" squared variant="outline-secondary" class="col-12 my-2">Back</b-button>
         </form>
     </section>
 </template>
@@ -139,12 +139,9 @@
 </script>
 
 <style scoped>
+
     #page {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin: 15px 25px;
-        width: auto;
+        height: calc(100vh - 54px - 113px - 34px - 104px);
     }
+
 </style>

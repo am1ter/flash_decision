@@ -4,25 +4,25 @@
             <form>
                 <b-container class="g-0" fluid>
                     <b-row cols="2">
-                        <b-col class="my-auto text-center" sm="3"><label>Email</label></b-col>
-                        <b-col class="my-auto" sm="9"><b-form-input id="input-email" placeholder="Enter your email"/></b-col>
+                        <b-col class="my-auto text-center col-3"><label>Email</label></b-col>
+                        <b-col class="my-auto col-9"><b-form-input id="input-email" placeholder="Enter your email"/></b-col>
                         <div class="w-100 my-1"></div>
-                        <b-col class="my-auto text-center" sm="3"><label>Password</label></b-col>
-                        <b-col class="my-auto" sm="9"><b-form-input type='password' id="input-password" placeholder="Enter your password"/></b-col>
+                        <b-col class="my-auto text-center col-3"><label>Password</label></b-col>
+                        <b-col class="my-auto col-9"><b-form-input type='password' id="input-password" placeholder="Enter your password"/></b-col>
                         <div class="w-100 my-1"></div>
-                        <b-col class="my-auto" sm="3" v-if="formErrors.indexOf('input-password') > -1">
+                        <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-password') > -1">
                             <!-- Empty cell -->
                         </b-col>
-                        <b-col class="my-auto" sm="9" v-if="formErrors.indexOf('input-password') > -1">
+                        <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-password') > -1">
                             <p class="text-danger text-left mb-0">
                                 <small>Incorrect email or password</small>
                             </p>
                         </b-col>
                     </b-row>
                 </b-container>
-                <b-button id="button-signin" type="submit" class="col-12 mt-3 gradient">Sign in</b-button>
-                <b-button id="button-signup" v-on:click="goToSignUp()" variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
-                <b-button id="button-signin-demo" v-on:click="useDemoAccount()" variant="outline-secondary" class="col-12">Sign in with demo account</b-button>
+                <b-button id="button-signin" type="submit" squared class="col-12 mt-3 gradient">Sign in</b-button>
+                <b-button id="button-signup" v-on:click="goToSignUp()" squared variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
+                <b-button id="button-signin-demo" v-on:click="useDemoAccount()" squared variant="outline-secondary" class="col-12">Sign in with demo account</b-button>
             </form>
         </div>
     </section>
@@ -86,12 +86,9 @@
 </script>
 
 <style scoped>
+
     #page {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin: 15px 25px;
-        width: auto;
+        height: calc(100vh - 54px - 113px - 34px - 80px);
     }
+
 </style>

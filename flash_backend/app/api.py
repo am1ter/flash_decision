@@ -8,7 +8,7 @@ import jwt
 from datetime import datetime, timedelta
 from functools import wraps
 import socket
-from finam import FinamParsingError
+from finam import FinamParsingError, FinamDownloadError
 import logging
 import traceback
 import re
@@ -79,7 +79,7 @@ def auth_required(f):
             assertion_msg = 'Error: ' + e.args[0]
             logger.error(assertion_msg)
             return jsonify(assertion_msg), 500
-        except (FinamParsingError):
+        except (FinamParsingError, FinamDownloadError):
             logger.error(finam_error_msg)
             return jsonify(finam_error_msg), 500
         except (Exception) as e:

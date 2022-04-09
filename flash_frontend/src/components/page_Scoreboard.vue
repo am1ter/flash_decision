@@ -39,84 +39,73 @@
                 </p>
             </div>
             <!-- Scoreboard data -->
-            <b-tab title="Custom" class="mt-3" active>
-                <!-- Top-3 users-->
-                <b-container fluid v-for="(user, idx) in top3Users" :key="user.name">
-                    <!-- All users in top-3 except current user -->
-                    <b-row v-if="idx!=userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
-                        <b-col sm="2">
-                            <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
-                            <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
-                        </b-col>
-                        <b-col sm="6" class="user_card_col">
-                            <p class="user_name">{{top3Users[idx]["name"]}} #{{parseInt(idx) + 1}}</p>
-                            <p class="user_result">
-                                Result: <span :class="formatFiguresColor(formatFigures(top3Users[idx]['result']))">{{top3Users[idx]["result"]}}%</span>
-                            </p>
-                        </b-col>
-                        <b-col sm="4">
-                            <p></p>
-                        </b-col>
-                    </b-row>
-                    <!-- Display current user's summary if current user is in top-3) -->
-                    <b-row v-if="idx==userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
-                        <b-col sm="2">
-                            <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
-                            <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
-                        </b-col>
-                        <b-col sm="6" class="user_card_col">
-                            <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
-                            <p class="user_result">
-                                Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
-                            </p>
-                        </b-col>
-                        <b-col sm="4">
-                            <p></p>
-                        </b-col>
-                    </b-row>
-                    <b-table  
-                        v-if="idx==userRank"
-                        striped borderless hover thead-class="d-none"
-                        :items="calcUserSummary"
-                        :fields="fields"
-                        class="current_user_summary shadow"
-                        :class="{ current_user_summary_champion: idx==0 }"
-                    />
-                </b-container>
-                <!-- Display current user's summary if current user is not in top-3 -->
-                <b-container fluid v-if="userRank >= 3">
-                    ...
-                    <b-row class="user_card">
-                        <b-col sm="2">
-                            <img src="../assets/icons/i_ava_default.svg"/>
-                        </b-col>
-                        <b-col sm="6" class="user_card_col">
-                            <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
-                            <p class="user_result">
-                                Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
-                            </p>
-                        </b-col>
-                        <b-col sm="4">
-                            <p></p>
-                        </b-col>
-                    </b-row>
-                    <b-table  
-                        striped borderless hover thead-class="d-none"
-                        :items="calcUserSummary"
-                        :fields="fields"
-                        class="current_user_summary shadow"
-                    />
-                </b-container>
-            </b-tab>
-            <b-tab disabled title="Classic" class="mt-3">
-                <b-card-text>TBD</b-card-text>
-            </b-tab>
-            <b-tab disabled title="Blitz" class="mt-3">
-                <b-card-text>TBD</b-card-text>
-            </b-tab>
-            <b-tab disabled title="Crypto" class="mt-3">
-                <b-card-text>TBD</b-card-text>
-            </b-tab>
+            <!-- Top-3 users-->
+            <b-container fluid v-for="(user, idx) in top3Users" :key="user.name">
+                <!-- All users in top-3 except current user -->
+                <b-row v-if="idx!=userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
+                    <b-col cols="2">
+                        <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
+                        <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
+                    </b-col>
+                    <b-col cols="6" class="user_card_col">
+                        <p class="user_name">{{top3Users[idx]["name"]}} #{{parseInt(idx) + 1}}</p>
+                        <p class="user_result">
+                            Result: <span :class="formatFiguresColor(formatFigures(top3Users[idx]['result']))">{{top3Users[idx]["result"]}}%</span>
+                        </p>
+                    </b-col>
+                    <b-col cols="4">
+                        <p></p>
+                    </b-col>
+                </b-row>
+                <!-- Display current user's summary if current user is in top-3) -->
+                <b-row v-if="idx==userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
+                    <b-col cols="2">
+                        <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
+                        <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
+                    </b-col>
+                    <b-col cols="6" class="user_card_col">
+                        <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
+                        <p class="user_result">
+                            Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
+                        </p>
+                    </b-col>
+                    <b-col cols="4">
+                        <p></p>
+                    </b-col>
+                </b-row>
+                <b-table  
+                    v-if="idx==userRank"
+                    striped borderless hover thead-class="d-none"
+                    :items="calcUserSummary"
+                    :fields="fields"
+                    class="current_user_summary shadow"
+                    :class="{ current_user_summary_champion: idx==0 }"
+                />
+            </b-container>
+            <!-- Display current user's summary if current user is not in top-3 -->
+            <b-container fluid v-if="userRank >= 3">
+                ...
+                <b-row class="user_card">
+                    <b-col sm="2">
+                        <img src="../assets/icons/i_ava_default.svg"/>
+                    </b-col>
+                    <b-col sm="6" class="user_card_col">
+                        <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
+                        <p class="user_result">
+                            Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
+                        </p>
+                    </b-col>
+                    <b-col sm="4">
+                        <p></p>
+                    </b-col>
+                </b-row>
+                <b-table  
+                    striped borderless hover thead-class="d-none"
+                    :items="calcUserSummary"
+                    :fields="fields"
+                    class="current_user_summary shadow"
+                />
+            </b-container>
         </div>
     </section>
 </template>
@@ -198,6 +187,7 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
     #scoreboard_mode {
         width: 100%;
     }
@@ -206,18 +196,22 @@
         color: #888888 !important;
         font-weight: 500;
         font-size: 16px;
-        text-decoration-line: underline !important;
+        margin: 0px 10px;
+        padding: 0px 5px !important;
+        border-bottom: 1px solid #888888;
     }
 
     .nav-link.active {
         color: #0B5A73 !important;
         font-weight: 500;
         font-size: 16px;
-        text-decoration-line: underline !important;
+        margin: 0px 10px;
+        padding: 0px 5px !important;
+        border-bottom: 1px solid #0B5A73;
     }
 
     .user_card {
-        border: 2px solid #888888;
+        border: 1px solid #888888;
         box-sizing: border-box;
         margin-top: 15px;
         padding: 10px 0px;
@@ -247,18 +241,18 @@
     }
 
     .current_user_summary {
-        border-left: 2px solid #888888;
-        border-right: 2px solid #888888;
-        border-bottom: 2px solid #888888;
+        border-left: 1px solid #888888;
+        border-right: 1px solid #888888;
+        border-bottom: 1px solid #888888;
         box-sizing: border-box;
         box-shadow: 0px 4px 6px -4px rgba(24, 39, 75, 0.12), 0px 8px 8px -4px rgba(24, 39, 75, 0.08);
         font-size: 14px;
     }
     
     .current_user_summary_champion {
-        border-left: 2px solid #FFC107;
-        border-right: 2px solid #FFC107;
-        border-bottom: 2px solid #FFC107;
+        border-left: 1px solid #FFC107;
+        border-right: 1px solid #FFC107;
+        border-bottom: 1px solid #FFC107;
     }
 
     .container-fluid {

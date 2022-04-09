@@ -56,7 +56,8 @@
 
     #layout_subtitle {
         position: relative;
-        width: 100%;
+        max-width: 100%;
+        margin: 0px 25px;
     }
 
     #title {
