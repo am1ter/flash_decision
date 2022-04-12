@@ -1,6 +1,6 @@
 <template>
-    <section id='page'>
-        <div v-if="isLoaded" id='scoreboard_mode'>
+    <section id='page' v-if="apiErrors.length == 0 & isLoaded">
+        <div id='scoreboard_mode'>
             <!-- Navigation bar (modes) -->
             <ul class="nav justify-content-center">
                 <li class="nav-item">
@@ -30,7 +30,7 @@
             </ul>
             <!-- Empty scoreboard -->
             <div id='empty_scoreboard'
-                v-if="apiErrors.length == 0 & isLoaded & Object.keys(top3Users).length == 0"
+                v-if="Object.keys(top3Users).length == 0"
                 class="text-center shadow col-12 mt-3 pt-3 pb-1">
                 <h1>N/A</h1>
                 <p>
@@ -86,16 +86,16 @@
             <b-container fluid v-if="userRank >= 3">
                 ...
                 <b-row class="user_card">
-                    <b-col sm="2">
+                    <b-col cols="2">
                         <img src="../assets/icons/i_ava_default.svg"/>
                     </b-col>
-                    <b-col sm="6" class="user_card_col">
+                    <b-col cols="6" class="user_card_col">
                         <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
                         <p class="user_result">
                             Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
                         </p>
                     </b-col>
-                    <b-col sm="4">
+                    <b-col cols="4">
                         <p></p>
                     </b-col>
                 </b-row>
@@ -105,6 +105,20 @@
                     :fields="fields"
                     class="current_user_summary shadow"
                 />
+            </b-container>
+            <b-container fluid v-if="userRank == -1">
+                ...
+                <b-row class="user_card">
+                    <b-col cols="2">
+                        <img src="../assets/icons/i_ava_default.svg"/>
+                    </b-col>
+                    <b-col cols="10" class="user_card_col">
+                        <p class="user_name">{{user.email}}</p>
+                        <p class="user_result">
+                            <a href="#" v-on:click="$router.push('/session/')">No results yes. Would you like to start start your first session?</a>
+                        </p>
+                    </b-col>
+                </b-row>
             </b-container>
         </div>
     </section>

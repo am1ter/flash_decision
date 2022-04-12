@@ -20,5 +20,4 @@ EXPOSE 8001
 
 # Use db migrations and create default user
 RUN chmod 777 ./entrypoint.sh
-ENTRYPOINT ["tail", "-f", "/dev/null"]
-# ENTRYPOINT ./entrypoint.sh
+ENTRYPOINT ./entrypoint.sh

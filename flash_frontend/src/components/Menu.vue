@@ -105,7 +105,7 @@
 
 
     .menu_text {
-        margin: 15px 5px;
+        margin: 15px 0px 15px 5px;
         font-weight: 500;
     }
 
