@@ -106,7 +106,7 @@
                     class="current_user_summary shadow"
                 />
             </b-container>
-            <b-container fluid v-if="userRank == -1">
+            <b-container fluid v-if="userRank == -1 & Object.keys(top3Users).length != 0">
                 ...
                 <b-row class="user_card">
                     <b-col cols="2">
