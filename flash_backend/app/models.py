@@ -112,7 +112,7 @@ class User(db.Model):
     def calc_user_summary(self, mode: str) -> dict:
         """Calculate user's summary along his activity"""
 
-        closed_sessions = self.sessions.filter(Session.Status == 'closed', Session.Mode == mode).all()
+        closed_sessions = self.sessions.filter(Session.Status == cfg.SESSION_STATUS_CLOSED, Session.Mode == mode).all()
         sessions_results = [s.calc_sessions_summary() for s in closed_sessions]
 
         # Check if there is results for current user
@@ -352,6 +352,11 @@ class Session(db.Model):
         for i in range (1, self.Iterations + 1):
             iteration = Iteration()
             iteration.new(session=self, iteration_num=i, df_quotes=df_quotes)
+
+    def convert_to_dict(self) -> dict:
+        """Convet SQLAlchemy object to dict"""
+        as_dict = {i.name: str(getattr(self, i.name)) for i in self.__table__.columns}
+        return as_dict
 
     def load_csv(self) -> DataFrame:
         """Get dataframe by reading data from hdd file"""
@@ -632,7 +637,7 @@ class Scoreboard:
 
     def _get_all_users_results(mode: str) -> dict:
         """Return list of all users results"""
-        closed_sessions = Session.query.filter(Session.Mode == mode, Session.Status == 'closed').all()
+        closed_sessions = Session.query.filter(Session.Mode == mode, Session.Status == cfg.SESSION_STATUS_CLOSED).all()
         sessions_results = [s.calc_sessions_summary() for s in closed_sessions]
         
         # Sum results of all sessions for every user

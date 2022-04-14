@@ -130,7 +130,7 @@ class PageSession(PageBase):
     def start_custom_session(self):
         self.input_market.val = 'SHARES'
         self.input_ticker.val = 'SBER'
-        self.input_timeframe.val = '15'
+        self.input_timeframe.val = '5'
         self.input_barsnumber.val = '50'
         self.input_timelimit.val = '120'
         self.input_date.last_workday()

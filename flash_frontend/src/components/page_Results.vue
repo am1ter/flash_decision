@@ -3,7 +3,13 @@
         <div v-if="apiErrors.length == 0 & isLoaded" class="col-12">
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
-            <b-button id="button-go-to-scoreboard" type="submit" squared class="col-12 gradient" :href="scoreboardLink()">Go to the scoreboard</b-button>
+            <b-button id="button-go-to-scoreboard" type="submit" squared class="col-12 gradient" :href="scoreboardLink()">
+                Go to the scoreboard
+            </b-button>
+            <b-button id="button-start-new-session" type="submit" squared variant="outline-secondary" class="col-12 mt-2" 
+                href="#" v-on:click="$router.push('/session/')">
+                Start new session
+            </b-button>
         </div>
     </section>
 </template>
@@ -32,6 +38,12 @@
         methods: {
             async loadSessionsResults() {
                 // Load last session results
+
+                // Check if no info for current session found. Page reloaded? Parse url and make api request
+                if (Object.keys(this.currentSession).length == 0) {
+                    this.currentSession['options'] = {}
+                    this.currentSession['options']['sessionId'] = parseInt(this.$route.params.session_id)
+                }
                 let response = await apiGetSessionsResults(this.currentSession.options.sessionId)
                 this.currentSession['sessionsResults'] = response
                 this.isLoaded = true

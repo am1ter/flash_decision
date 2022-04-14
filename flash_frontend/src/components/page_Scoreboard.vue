@@ -147,6 +147,7 @@
             ...mapState(['user', 'currentSession', 'apiErrors'])
         },
         mounted() {
+            this.mode = this.$route.params.mode
             this.loadScoreboard()
         },
         beforeRouteUpdate(to, from, next) {

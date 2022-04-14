@@ -238,6 +238,47 @@ def get_chart(session_id: int, iteration_num: int) -> Response:
         return jsonify(False), 200
 
 
+@api.route('/get-iteration-info/<int:session_id>/<int:iteration_num>/', methods=['GET'])
+@auth_required
+@log_request
+def get_iteration_info(session_id: int, iteration_num: int) -> Response:
+    """Get info about iteration for current session and send it back to frontend"""
+    # Load session from db
+    current_session = Session.get_from_db(session_id)
+    # Check if current user is related to the current session
+    auth_headers = request.headers.get('Authorization', '').split()
+    token = auth_headers[1]
+    user_data = jwt.decode(token, app.config['SECRET_KEY'], algorithms="HS256")
+    current_user = User.get_user_by_email(user_data['sub'])
+    if current_session.UserId != current_user.UserId:
+        logger.warning(f'No access to {current_session} from {current_user}')
+        return jsonify('You do not have no access to this session'), 401
+    # Check if session is already closed
+    if current_session.Status == cfg.SESSION_STATUS_CLOSED:
+        logger.warning(f'Request for reload closed {current_session}')
+        return jsonify('Session is already closed'), 500
+    # Check if requested decision number is correct for current session
+    all_decisions = current_session.decisions.all()
+    if len(all_decisions) != iteration_num - 1:
+        logger.warning(f'Wrong number of decisions in db ({iteration_num}) for {current_session}')
+        return jsonify('Wrong iteration number. Please start new session'), 500
+    # Send response to frontend
+    current_session_options = current_session.convert_to_dict()
+    response = {
+        'sessionId': current_session_options['SessionId'],
+        'iterations': current_session_options['Iterations'],
+        'barsNumber': current_session_options['Barsnumber'],
+        'fixingBar': current_session_options['Fixingbar'],
+        'market': current_session_options['Market'],
+        'mode': current_session_options['Mode'],
+        'ticker': current_session_options['Ticker'],
+        'timelimit': current_session_options['Timelimit'],
+        'timeframe': current_session_options['Timeframe']
+    }
+    logger.info(f'Info about iteration #{iteration_num} during {current_session} sent to frontend')
+    return jsonify(response), 200
+
+
 @api.route('/record-decision/', methods=['POST'])
 @auth_required
 @log_request
@@ -265,7 +306,7 @@ def get_sessions_results(session_id: int) -> Response:
     # Get session's summary
     current_session_summary = current_session.calc_sessions_summary()
     # Write 'Close' status for session in db
-    current_session.set_status('closed')
+    current_session.set_status(cfg.SESSION_STATUS_CLOSED)
 
     logger.info(f'{current_session} finished with result {current_session_summary["totalResult"]}%')
     return jsonify(current_session_summary), 200

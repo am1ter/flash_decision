@@ -81,6 +81,13 @@ export function apiGetIterationChart(sessionId, iterationNum) {
 }
 
 
+export function apiGetIterationInfo(sessionId, iterationNum) {
+    console.log('Run apiGetIterationChart')
+    let req = {'type': 'get', 'url': API_URL + `/get-iteration-info/${sessionId}/${iterationNum}/`}
+    return handleResponse(req)
+}
+
+
 export function apiPostRecordDecision(decision) {
     console.log('apiPostRecordDecision')
     let req = {'type': 'post', 'url': API_URL + '/record-decision/', 'args': decision}

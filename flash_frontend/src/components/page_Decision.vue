@@ -1,10 +1,10 @@
 <template>
-    <section id="page" v-cloak @keyup.enter="actionBuy">
-        <div id='bars' v-if="apiErrors.length == 0">
+    <section id="page" v-if="apiErrors.length == 0 & isLoaded" v-cloak @keyup.enter="actionBuy">
+        <div id='bars'>
             <b-alert show variant="success" class="mb-0 p-1 text-center">
                 <countdown 
                     ref="pageTimer" 
-                    :autoStart="false" 
+                    :autoStart="true" 
                     :left-time="Number(currentSession.options.timelimit) * 1000"
                     @finish="(vac) => saveDecision(vac)">
                     <template v-slot:process="pageTimer">
@@ -28,7 +28,7 @@
 <script>
     import { mapState } from 'vuex'
     import { Plotly } from 'vue-plotly'
-    import { apiGetIterationChart, apiPostRecordDecision } from '@/api'
+    import { apiGetIterationChart, apiGetIterationInfo, apiPostRecordDecision } from '@/api'
 
     export default {
         name: 'page_Decision',
@@ -37,6 +37,7 @@
         },
         data() {
             return {
+                isLoaded: false,
                 iterationChart: {},
                 // Chart layout properties
                 layout: {
@@ -64,29 +65,40 @@
         },
         mounted() {
             // Declare hotkeys (listen to keyboard input)
-            window.addEventListener('keyup', event => {
-                    if (event.key == 'ArrowDown' || event.key == 'ArrowRight' || event.key == 'ArrowUp' ) {
-                        this.saveDecision(event)
-                    } 
-                }
-            ),
+            this.enableHotkeys()
             // Create blank decision when page has been mounted
             this.createBlankDecision()
             // Load first chart
             this.updateChart()
-            // Start countdown
-            this.$refs.pageTimer.startCountdown()
         },
         methods: {
-            createBlankDecision() {
+            enableHotkeys() {
+                window.addEventListener('keyup', event => {
+                if (event.key == 'ArrowDown' || event.key == 'ArrowRight' || event.key == 'ArrowUp' ) {
+                    this.saveDecision(event)}
+                }
+                )
+            },
+            async createBlankDecision() {
                 // Create blank decision
                 if (this.currentSession.currentIterationNum == 1) {
+                    // First iteration
                     this.currentSession['decisions'] = {1: {'action': null, 'timeSpent': null}}}
-                else {
+                else if (this.currentSession.currentIterationNum > 1) {
+                    // Following iterations
                     this.currentSession['decisions'][this.currentSession.currentIterationNum] = {'action': null, 'timeSpent': null}
                 }
             },
             async updateChart() {
+                // Check if no info for current session found. Page reloaded? Parse url and make api request
+                if (Object.keys(this.currentSession).length == 0) {
+                    this.currentSession['currentIterationNum'] = parseInt(this.$route.params.iteration_num)
+                    this.currentSession['options'] = {}
+                    this.currentSession['iterations'] = {}
+                    this.currentSession['decisions'] = {}
+                    this.currentSession['decisions'][this.currentSession.currentIterationNum] = {'action': null, 'timeSpent': null}
+                    this.currentSession['options'] = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession.currentIterationNum)
+                }
                 // Get iteration chart over API
                 let response = await apiGetIterationChart(this.currentSession.options.sessionId, this.currentSession.currentIterationNum)
                 // Chart data to display [0], iteration data to vuex storage [1]
@@ -99,6 +111,8 @@
                     this.currentSession['iterations'][this.currentSession.currentIterationNum] = this.currentSession['iterations'][this.currentSession.currentIterationNum - 1]
                     document.getElementById("button-skip").click(); 
                 }
+                // Show elements
+                this.isLoaded = true
             },
             async saveDecision(event) {
                 // Decision has been made
