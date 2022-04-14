@@ -55,7 +55,7 @@
                 if (user) {
                     this.$store.commit('setUserFromApi', user)
                     // Go to the main page
-                    this.$router.push('/session/')
+                    this.$router.push('/session/custom/')
                 } else {
                     this.formErrors.push('input-password')
                 }
@@ -76,7 +76,7 @@
                 if (user) {
                     this.$store.commit('setUserFromApi', user)
                     // Go to the main page
-                    this.$router.push('/session/')
+                    this.$router.push('/session/custom/')
                 } else {
                     this.formErrors.push('input-password')
                 }

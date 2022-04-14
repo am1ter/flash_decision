@@ -41,7 +41,7 @@ const routes = [
         }
     },
     {
-        path: '/session',
+        path: '/session/:mode',
         name: 'Session page',
         component: App.components.page_Session,
         meta: {

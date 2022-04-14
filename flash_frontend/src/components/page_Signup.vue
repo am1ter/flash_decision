@@ -120,7 +120,7 @@
                 }
 
                 // Go to the main page
-                this.$router.push('/session/')
+                this.$router.push('/session/custom/')
             },
             checkClassIsInputInvalid(element) {
                 // Change class of dropdown if validation has failed

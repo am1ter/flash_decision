@@ -7,7 +7,7 @@
                 Go to the scoreboard
             </b-button>
             <b-button id="button-start-new-session" type="submit" squared variant="outline-secondary" class="col-12 mt-2" 
-                href="#" v-on:click="$router.push('/session/')">
+                href="#" v-on:click="$router.push('/session/custom/')">
                 Start new session
             </b-button>
         </div>

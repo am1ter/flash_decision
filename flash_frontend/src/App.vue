@@ -76,7 +76,7 @@
         methods: {
             reloadPage() {
                 // Reload page on click
-                this.$router.push('/session/')
+                this.$router.push('/session/custom/')
                 this.$router.go()
             }
         }
@@ -233,6 +233,24 @@
         background-position: right calc(.375em + .1875rem) center;
         background-repeat: no-repeat;
         background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+    }
+
+    .nav-link {
+        color: #888888 !important;
+        font-weight: 500;
+        font-size: 16px;
+        margin: 0px 10px;
+        padding: 0px 5px !important;
+        border-bottom: 1px solid #888888;
+    }
+
+    .nav-link.active {
+        color: #0B5A73 !important;
+        font-weight: 500;
+        font-size: 16px;
+        margin: 0px 10px;
+        padding: 0px 5px !important;
+        border-bottom: 1px solid #0B5A73;
     }
 
 </style>

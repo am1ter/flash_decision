@@ -1,6 +1,6 @@
 <template>
     <section id='menu' :class='{ disabled: !isAuth }'>
-            <router-link to='/session' tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("session") }'>
+            <router-link :to="{name: 'Session page', params: {'mode': 'custom'}}" tag="div" class='menu_button' :class='{ "menu-active": checkPageIsActive("session") }'>
                 <img v-if='checkPageIsActive("session")' src='../assets/icons/i_menu_session_active.svg' alt='Icon'>
                 <img v-else src='../assets/icons/i_menu_session_inactive.svg' alt='Icon'>
                 <p class='menu_text'>Session</p>

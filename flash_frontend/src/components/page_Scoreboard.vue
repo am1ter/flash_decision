@@ -2,7 +2,7 @@
     <section id='page' v-if="apiErrors.length == 0 & isLoaded">
         <div id='scoreboard_mode'>
             <!-- Navigation bar (modes) -->
-            <ul class="nav justify-content-center">
+            <ul class="nav justify-content-center pb-1">
                 <li class="nav-item">
                     <a class="nav-link" 
                     :class="{active: isPageActive('custom')}"
@@ -34,7 +34,7 @@
                 class="text-center shadow col-12 mt-3 pt-3 pb-1">
                 <h1>N/A</h1>
                 <p>
-                    Nobody has tried this mode yet<br>
+                    Nobody has tried this mode yet.<br>
                     Will you be the first one?
                 </p>
             </div>
@@ -115,7 +115,7 @@
                     <b-col cols="10" class="user_card_col">
                         <p class="user_name">{{user.email}}</p>
                         <p class="user_result">
-                            <a href="#" v-on:click="$router.push('/session/')">No results yes. Would you like to start start your first session?</a>
+                            <a href="#" v-on:click="$router.push('/session/custom/')">No results yes. Would you like to start start your first session?</a>
                         </p>
                     </b-col>
                 </b-row>
@@ -205,24 +205,6 @@
 
     #scoreboard_mode {
         width: 100%;
-    }
-
-    .nav-link {
-        color: #888888 !important;
-        font-weight: 500;
-        font-size: 16px;
-        margin: 0px 10px;
-        padding: 0px 5px !important;
-        border-bottom: 1px solid #888888;
-    }
-
-    .nav-link.active {
-        color: #0B5A73 !important;
-        font-weight: 500;
-        font-size: 16px;
-        margin: 0px 10px;
-        padding: 0px 5px !important;
-        border-bottom: 1px solid #0B5A73;
     }
 
     .user_card {

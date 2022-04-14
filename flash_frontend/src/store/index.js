@@ -7,7 +7,7 @@ Vue.use(Vuex)
 
 const state = {
     // single source of data
-    version: '0.7.04',
+    version: '0.7.05',
     user: {},
     apiErrors: [],
     currentSession: {},

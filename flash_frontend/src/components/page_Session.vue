@@ -1,8 +1,37 @@
 <template>
-    <section id='page'>
+    <section id='page' v-if="apiErrors == 0 & isLoaded">
         <!-- Get session option via API, wait for user input and then submit it back to API -->
-        <form v-if="apiErrors == 0 & isLoaded" @submit.prevent="checkForm" autocomplete="off">
-            <b-container class="g-0">
+        <!-- Navigation bar (modes) -->
+        <div id="session_mode">
+            <ul class="nav justify-content-center mb-4">
+                <li class="nav-item">
+                    <a class="nav-link" 
+                    :class="{active: isPageActive('custom')}"
+                    role="button"
+                    v-on:click="$router.push(`/session/custom/`)">Custom</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" 
+                    :class="{active: isPageActive('classic')}" 
+                    role="button" 
+                    v-on:click="$router.push(`/session/classic/`)">Classic</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                    :class="{active: isPageActive('blitz')}"
+                    role="button"
+                    v-on:click="$router.push(`/session/blitz/`)">Blitz</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" 
+                    :class="{active: isPageActive('crypto')}" 
+                    role="button" 
+                    v-on:click="$router.push(`/session/crypto/`)">Crypto</a>
+                </li>
+            </ul>
+        </div>
+        <form @submit.prevent="checkForm" autocomplete="off">
+            <b-container class="g-0" v-if="$route.params.mode == 'custom'">
                 <b-row cols="2" class="gx-0">
                     <!-- Parameters -->
                     <b-col class="my-auto col-4">
@@ -141,10 +170,20 @@
                         </Dropdown>
                     </b-col>
                 </b-row>
+                <!-- Start button -->
+                <b-button id="button-start" type="submit" squared class="col-12 mt-3 gradient">Start</b-button>
             </b-container>
-            <!-- Start button -->
-            <b-button id="button-start" type="submit" squared class="col-12 mt-3 gradient">Start</b-button>
         </form>
+        <!-- Other mode properties -->
+        <div id='mode_tbd'
+            v-if="$route.params.mode != 'custom'"
+            class="text-center shadow col-12 pt-3 pb-1">
+            <h1>TBD</h1>
+            <p>
+                Current mode is unavailable now.<br>
+                Please come back later.
+            </p>
+        </div>
     </section>
 </template>
 
@@ -169,6 +208,9 @@
         },
         computed: {
             ...mapState(['user', 'currentSession', 'apiErrors'])
+        },
+        beforeMount() {
+            this.loadPage()
         },
         methods: {
             async loadPage() {
@@ -247,10 +289,11 @@
                     hasError = this.formErrors.indexOf(element) >= 0 ? true : false
                 }
                 return {isInputInvalid: hasError}
+            },
+            isPageActive(nav_item) {
+                // Check if navbar item is active
+                return this.$route.params.mode == nav_item
             }
-        },
-        beforeMount() {
-            this.loadPage()
         }
     }
 </script>
@@ -264,4 +307,9 @@
     .form-control {
         font-size: 14px !important;
     }
+
+    #session_mode {
+        width: 100%;
+    }
+
 </style>
