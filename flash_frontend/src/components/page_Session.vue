@@ -73,6 +73,7 @@
                             name="timeframe"
                             :class="checkClassIsInputInvalid('timeframe')"
                             :options="sessionOptionsAll.timeframes"
+                            :maxItem="7"
                             placeholder="Select a timeframe">
                         </Dropdown>
                     </b-col>

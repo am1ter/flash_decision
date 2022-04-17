@@ -50,8 +50,9 @@ COLUMN_RESULT = '<CLOSE>'
 # Session options
 # ===============
 
-DOWNLOAD_SAFETY_FACTOR = 2                  # Enlarge time period for quotes downloading
 TRADINGDAY_DURATION_MINS = (9*60) - 15 - 5   # Standart trading day duration in minutes
+MARKETS_EXCLUDE_LIST = ['FUTURES_ARCHIVE', 'FUTURES_USA', 'CURRENCIES', 'SPB']
+TIMEFRAME_EXCLUDE_LIST = ['TICKS', 'WEEKLY', 'MONTHLY']
 
 
 def convert_timeframe_to_mintues(tf: str) -> int:
@@ -72,15 +73,34 @@ def convert_timeframe_to_mintues(tf: str) -> int:
 
 
 def read_session_options_markets() -> list:
-    """Read all markets from finam module (hardcoded in external lib)"""
+    """Read all markets from finam module (hardcoded enum in external lib)"""
 
     options_markets = []
+    name_mapping = {
+        'BONDS': 'Bonds',
+        'COMMODITIES': 'Commodities',
+        'CURRENCIES_WORLD': 'Currencies',
+        'ETF': 'International ETFs',
+        'ETF_MOEX': 'Russian ETFs',
+        'FUTURES': 'Futures',
+        'INDEXES': 'Indexes',
+        'SHARES': 'Russian shares',
+        'USA': 'International shares',
+        'CRYPTO_CURRENCIES': 'Cryptocurrencies',
+    }
+
     for idx, market in enumerate(Market):
-        market = str(market)
-        # Convert list of strings to list of objects (+1 for idx because of vue-simple-search-dropdown)   
-        options = {'id': idx+1, 'name': market.replace('Market.', ''), 'code': market}
+        # Prepare export: convert enum to list of objects (+1 for idx because of vue-simple-search-dropdown)   
+        # Skip excluded markets
+        if market.name in MARKETS_EXCLUDE_LIST:
+            continue
+        # Format object before export
+        options = {'id': idx+1, 'name': name_mapping[market.name], 'code': str(market)}
         options_markets.append(options)
-    
+
+    # Sort markets by name
+    options_markets.sort(key=lambda x: x['name'])
+
     return options_markets
 
 
@@ -92,20 +112,27 @@ def collect_session_options_securities() -> dict:
 
     # Read tickers for every market and convert it to dict
     for market in Market:
+        # Skip excluded markets
+        if market.name in MARKETS_EXCLUDE_LIST:
+            continue
         # Find tickers by market name
         tickers = exporter.lookup(market=[market])
-        # Use market name instead of market object
-        market_name = str(market)
+        # Drop duplicated codes
+        tickers = tickers.drop_duplicates()
+        # Drop removed tickers
+        tickers = tickers[tickers['code'].str.match('.*-RM')==False]
         # Copy df to avoid chained assignation below
         tickers = tickers.copy(deep=True)
         # Copy index to column
         tickers.reset_index(inplace=True)
         # Replace special symbols in ticker's names
-        tickers['name'] = tickers.loc[:, 'name'].apply(lambda str: str.replace('(', ' - ').replace(')', ''))
+        tickers['name'] = tickers.loc[:, 'name'].apply(lambda str: str.replace('(', ' - ').replace(')', '').replace('\\', ''))
         # Add ticker's code to displayed name
         tickers['name'] = tickers['name'] + ' - ' + tickers['code']
         # Create dict filled dict of dicts instead of pandas df
-        options_securities[market_name] = tickers.to_dict(orient='records')
+        options_securities[str(market)] = tickers.to_dict(orient='records')
+        # Sort markets by name
+        options_securities[str(market)].sort(key=lambda x: x['name'])
 
     return options_securities
 
@@ -114,15 +141,23 @@ def read_session_options_timeframes() -> list:
     """Read timeframes from finam module (hardcoded in external lib)"""
 
     options_timeframes = []
+    name_mapping = {
+        'MINUTES1': '1 min.',
+        'MINUTES5': '5 min.',
+        'MINUTES10': '10 min.',
+        'MINUTES15': '15 min.',
+        'MINUTES30': '30 min.',
+        'HOURLY': '1 hour',
+        'DAILY': '1 day',
+    }
 
     for idx, tf in enumerate(Timeframe):
-        tf = str(tf)
-
-        # Drop some timeframes from the session's options list
-        if tf not in ['Timeframe.TICKS', 'Timeframe.WEEKLY', 'Timeframe.MONTHLY'] :
-            # Convert list of strings to list of dicts (+1 for idx because of vue-simple-search-dropdown)
-            option = {'id': idx+1, 'name': tf.replace('Timeframe.', ''), 'code': tf}
-            options_timeframes.append(option)
+        # Skip some timeframes from the session's options list
+        if tf.name in TIMEFRAME_EXCLUDE_LIST:
+            continue
+        # Convert enum to list of objects (+1 for idx because of vue-simple-search-dropdown)
+        option = {'id': idx+1, 'name': name_mapping[tf.name], 'code': str(tf)}
+        options_timeframes.append(option)
 
     return options_timeframes
 
@@ -141,8 +176,8 @@ def collect_session_options() -> dict:
 
     # Option: Bars number
     barsnumber = [
-        {'id': 1, 'name': '10 bars', 'code': '10'},
-        {'id': 2, 'name': '15 bars', 'code': '15'},
+        {'id': 1, 'name': '15 bars', 'code': '15'},
+        {'id': 2, 'name': '30 bars', 'code': '30'},
         {'id': 3, 'name': '50 bars', 'code': '50'},
         {'id': 4, 'name': '100 bars', 'code': '100'}
     ]

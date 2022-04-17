@@ -128,7 +128,7 @@ class PageSession(PageBase):
         self.button_logout.click()
 
     def start_custom_session(self):
-        self.input_market.val = 'SHARES'
+        self.input_market.val = 'Russian shares'
         self.input_ticker.val = 'SBER'
         self.input_timeframe.val = '5'
         self.input_barsnumber.val = '50'
