@@ -29,7 +29,7 @@ logger.info(f'Flask started successfully')
 logger.info(f'Flask`s local ip: {local_ip}, Flask`s network ip: {network_ip}')
 
 # Get initial app settings
-session_options = cfg.collect_session_options()
+session_options = cfg.SessionOptions()
 logger.info('List of session`s options loaded')
 
 
@@ -198,7 +198,7 @@ def sign_in() -> Response:
 def get_session_options() -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
     logger.info(f'List of session options sent to frontend')
-    return jsonify(session_options), 200
+    return jsonify(session_options.export()), 200
 
 
 @api.route('/start-new-session/', methods=['POST'])

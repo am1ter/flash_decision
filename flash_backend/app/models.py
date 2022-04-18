@@ -237,7 +237,7 @@ class Session(db.Model):
 
     def _determine_trading_type(self) -> str:
         """Determine how long trader will keep the security: <day, <week or >week"""
-        tf_in_mins = cfg.convert_timeframe_to_mintues(self.Timeframe)
+        tf_in_mins = cfg.SessionOptions.convert_tf_to_min(self.Timeframe)
         iteration_period_bars = self.Barsnumber + self.Fixingbar
         iteration_period_mins = iteration_period_bars * tf_in_mins
 
