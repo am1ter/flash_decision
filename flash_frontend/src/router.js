@@ -11,7 +11,7 @@ const routes = [
         path: "/",
         beforeEnter (to, from, next) {
             store.commit("setUserFromCookie")
-            if (store.getters.isAuth) { next("/session") } else { next("/sign-in") }
+            if (store.getters.isAuth) { next("/session") } else { next("/login") }
           }
     },
     {
@@ -28,11 +28,11 @@ const routes = [
         }
     },
     {
-        path: "/sign-in",
+        path: "/login",
         name: "Login page",
         component: App.components.PageLogin,
         meta: {
-            title: "Sign in",
+            title: "Login",
             instruction: "Please login to start your training session"
         },
         beforeEnter(to, from, next) {
@@ -51,7 +51,7 @@ const routes = [
         beforeEnter(to, from, next) {
             document.title = APP_TITLE + to.meta.title
             store.commit("setUserFromCookie")
-            if (store.getters.isAuth) { next() } else { next("/sign-in") }
+            if (store.getters.isAuth) { next() } else { next("/login") }
         }
     },
     {
@@ -65,7 +65,7 @@ const routes = [
         beforeEnter(to, from, next) {
             document.title = APP_TITLE + to.meta.title
             store.commit("setUserFromCookie")
-            if (store.getters.isAuth) { next() } else { next("/sign-in") }
+            if (store.getters.isAuth) { next() } else { next("/login") }
         }
     },
     {
@@ -79,7 +79,7 @@ const routes = [
         beforeEnter(to, from, next) {
             document.title = APP_TITLE + to.meta.title
             store.commit("setUserFromCookie")
-            if (store.getters.isAuth) { next() } else { next("/sign-in") }
+            if (store.getters.isAuth) { next() } else { next("/login") }
         }
     },
     {
@@ -93,7 +93,7 @@ const routes = [
         beforeEnter(to, from, next) {
             document.title = APP_TITLE + to.meta.title
             store.commit("setUserFromCookie")
-            if (store.getters.isAuth) { next() } else { next("/sign-in") }
+            if (store.getters.isAuth) { next() } else { next("/login") }
         }
     },
     {
@@ -107,7 +107,7 @@ const routes = [
         beforeEnter(to, from, next) {
             document.title = APP_TITLE + to.meta.title
             store.commit("setUserFromCookie")
-            if (store.getters.isAuth) { next() } else { next("/sign-in") }
+            if (store.getters.isAuth) { next() } else { next("/login") }
         }
     }
 ];

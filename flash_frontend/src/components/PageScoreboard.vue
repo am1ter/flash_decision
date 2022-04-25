@@ -37,7 +37,7 @@
                 </b-row>
 
                 <!-- Display current user`s summary if current user is in top-3 -->
-                <b-row v-if="idx==userRank" class="usercard usercard-current-user" :class="{ 'usercard-champion': idx==0 }">
+                <b-row v-if="idx==userRank" class="usercard" :class="{ 'usercard-champion': idx==0, 'usercard-current-user': userRank > 0 }">
                     <b-col cols="2">
                         <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
                         <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
@@ -195,7 +195,7 @@
     }
 
     .usercard {
-        border: 1px solid #888888;
+        border: 0.5px solid #888888;
         box-sizing: border-box;
         margin-top: 15px;
         padding: 10px 0px;
@@ -229,18 +229,17 @@
     }
 
     .current-user-summary {
-        border-left: 1px solid #076583;
-        border-right: 1px solid #076583;
-        border-bottom: 1px solid #076583;
-        box-sizing: border-box;
+        border-left: 0.5px solid #076583;
+        border-right: 0.5px solid #076583;
+        border-bottom: 0.5px solid #076583;
         box-shadow: 0px 4px 6px -4px rgba(24, 39, 75, 0.12), 0px 8px 8px -4px rgba(24, 39, 75, 0.08);
         font-size: 14px;
     }
     
     .current-user-summary-champion {
-        border-left: 1px solid #FFC107;
-        border-right: 1px solid #FFC107;
-        border-bottom: 1px solid #FFC107;
+        border-left: 1.5px solid #FFC107;
+        border-right: 1.5px solid #FFC107;
+        border-bottom: 2px solid #FFC107;
     }
 
     .container-fluid {

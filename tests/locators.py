@@ -11,9 +11,9 @@ class LocatorsPageLogin(object):
     """Locators for Login page"""
     input_email = (By.ID, 'input-email')
     input_password = (By.ID, 'input-password')
-    button_signin = (By.ID, 'button-signin')
+    button_signin = (By.ID, 'button-login')
     button_signup = (By.ID, 'button-signup')
-    button_signin_demo = (By.ID, 'button-signin-demo')
+    button_signin_demo = (By.ID, 'button-login-demo')
 
 
 class LocatorsPageSignup(object):

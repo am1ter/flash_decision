@@ -32,7 +32,7 @@
             logout() {
                 this.$store.commit("setNoUser")
                 // Go to the login page
-                this.$router.push("/sign-in/")
+                this.$router.push("/login/")
             }
         }
 }

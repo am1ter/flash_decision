@@ -19,9 +19,9 @@
                     </b-col>
                 </b-row>
             </b-container>
-            <b-button id="button-signin" type="submit" squared class="col-12 mt-3 gradient">Sign in</b-button>
+            <b-button id="button-login" type="submit" squared class="col-12 mt-3 gradient">Login</b-button>
             <b-button id="button-signup" v-on:click="goToSignUp()" squared variant="outline-secondary" class="col-12 my-2">Sign up</b-button>
-            <b-button id="button-signin-demo" v-on:click="useDemoAccount()" squared variant="outline-secondary" class="col-12">Sign in with demo account</b-button>
+            <b-button id="button-login-demo" v-on:click="useDemoAccount()" squared variant="outline-secondary" class="col-12">Login with demo account</b-button>
         </form>
     </section>
 </template>
@@ -86,7 +86,7 @@
 <style scoped>
 
     #page {
-        height: calc(100vh - 54px - 113px - 34px - 80px);
+        height: calc(100vh - 54px - 105px - 34px - 80px);
     }
 
 </style>

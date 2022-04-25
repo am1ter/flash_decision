@@ -52,7 +52,7 @@ class PageBase:
 class PageLogin(PageBase):
     """Login page"""
 
-    title = 'Sign in'
+    title = 'Login'
 
     def __repr__(self) -> str:
         """Return formated object name"""

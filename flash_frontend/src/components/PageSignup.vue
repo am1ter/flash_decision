@@ -54,6 +54,9 @@
                         </p>
                     </b-col>
                 </b-row>
+                <p id="usage-terms" class="text-center mx-1">
+                    By signing up, you agree with Terms of Services and Privacy Policy
+                </p>
             </b-container>
             <b-button id="button-signup" type="submit" squared class="col-12 mt-3 gradient">Sign up</b-button>
             <b-button id="button-go-back" v-on:click="goToSignIn()" squared variant="outline-secondary" class="col-12 my-2">Back</b-button>
@@ -132,7 +135,7 @@
             },
             goToSignIn() {
                 // Go to the login page
-                this.$router.push("/sign-in/")
+                this.$router.push("/login/")
             }
         }
     }
@@ -141,7 +144,14 @@
 <style scoped>
 
     #page {
-        height: calc(100vh - 54px - 113px - 34px - 104px);
+        height: calc(100vh - 54px - 105px - 34px - 80px);
+    }
+
+    #usage-terms {
+        font-size: 0.80em;
+        font-weight: 400;
+        color: #6c757d;
+        margin: 15px 5px 0px 5px;
     }
 
 </style>

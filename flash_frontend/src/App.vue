@@ -121,7 +121,7 @@
     }
 
     #content {
-        min-height: calc(100vh - 34px + 6px - 34px);
+        min-height: calc(100vh - 34px - 10px - 34px);
         max-width: 453px;
         margin: 0px auto;
         padding-bottom: 5px;
