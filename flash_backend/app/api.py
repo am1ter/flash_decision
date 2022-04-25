@@ -284,8 +284,8 @@ def get_iteration_info(session_id: int, iteration_num: int) -> Response:
     response = {
         'sessionId': current_session_options['SessionId'],
         'iterations': current_session_options['Iterations'],
-        'barsNumber': current_session_options['Barsnumber'],
-        'fixingBar': current_session_options['Fixingbar'],
+        'barsnumber': current_session_options['Barsnumber'],
+        'fixingbar': current_session_options['Fixingbar'],
         'market': current_session_options['Market'],
         'mode': current_session_options['Mode'],
         'ticker': current_session_options['Ticker'],

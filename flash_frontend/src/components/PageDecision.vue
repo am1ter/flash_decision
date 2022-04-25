@@ -56,7 +56,65 @@
                         rangeslider: {visible: false},
                         title: {visible: false},
                         showticklabels: false
+                        },
+                    annotations: [
+                        {
+                        x: 0,
+                        y: 0.5,
+                        xref: 'x',
+                        yref: 'paper',
+                        text: 'Your<br>decision?',
+                        font: {color: 'black'},
+                        showarrow: true,
+                        xanchor: 'right',
+                        ax: 0,
+                        ay: 0
                         }
+                    ],
+                    shapes: [
+                        {
+                        type: 'rect',
+                        xref: 'x',
+                        yref: 'paper',
+                        x0: 0,
+                        y0: 0,
+                        x1: 0,
+                        y1: 1,
+                        fillcolor: '#d3d3d3',
+                        opacity: 0.2,
+                        line: {
+                            width: 0
+                        }
+                        },
+                        {
+                        type: 'rect',
+                        xref: 'x',
+                        yref: 'paper',
+                        x0: 0,
+                        y0: 0,
+                        x1: 0,
+                        y1: 1,
+                        fillcolor: '#d3d3d3',
+                        opacity: 0.5,
+                        line: {
+                            width: 0
+                        }
+                        },
+                        {
+                        type: 'rect',
+                        xref: 'x',
+                        yref: 'paper',
+                        x0: 0,
+                        y0: 0,
+                        x1: 0,
+                        y1: 1,
+                        fillcolor: '#d3d3d3',
+                        opacity: 0.5,
+                        line: {
+                            width: 0
+                        }
+                        }
+                        ]
                 }
             }
         },
@@ -110,6 +168,17 @@
                     this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = this.currentSession["iterations"][this.currentSession["currentIterationNum"] - 1]
                     document.getElementById("button-skip").click(); 
                 }
+                // Format chart - add extra space to the graph
+                let finalbar = parseInt(this.currentSession["options"]["values"]["barsnumber"])
+                let fixingbar = parseInt(this.currentSession["options"]["values"]["fixingbar"])
+                this.layout.annotations[0].ax = fixingbar * -1
+                this.layout.annotations[0].x = finalbar + fixingbar
+                this.layout.shapes[0].x0 = finalbar
+                this.layout.shapes[0].x1 = finalbar + fixingbar
+                this.layout.shapes[1].x0 = finalbar
+                this.layout.shapes[1].x1 = finalbar + 1
+                this.layout.shapes[2].x0 = finalbar + fixingbar - 1
+                this.layout.shapes[2].x1 = finalbar + fixingbar
                 // Show elements
                 this.isLoaded = true
             },

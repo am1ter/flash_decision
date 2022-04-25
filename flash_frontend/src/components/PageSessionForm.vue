@@ -333,6 +333,8 @@
                 this.currentSession["options"]["values"]["sessionId"] = response.vals["SessionId"]
                 this.currentSession["options"]["values"]["timelimit"] = response.vals["Timelimit"]
                 this.currentSession["options"]["values"]["iterations"] = response.vals["Iterations"]
+                this.currentSession["options"]["values"]["barsnumber"] = response.vals["Barsnumber"]
+                this.currentSession["options"]["values"]["fixingbar"] = response.vals["Fixingbar"]
 
                 this.currentSession["options"]["aliases"] = {
                     "market": response.aliases["Market"],
