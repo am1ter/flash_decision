@@ -1,6 +1,6 @@
 <template>
-    <section id='page'>
-        <form v-if="apiErrors.length == 0 & isLoaded" @submit.prevent="checkForm" autocomplete="off">
+    <section id="page" v-if="apiErrors.length == 0 & isLoaded" >
+        <form @submit.prevent="checkForm">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
                     <b-col class="my-auto text-center col-3">
@@ -42,7 +42,7 @@
                         <label>Password*</label>
                     </b-col>
                     <b-col class="my-auto col-9">
-                        <b-form-input type='password' id="input-password" :class="checkClassIsInputInvalid('input-password')" placeholder="Enter your password"/>
+                        <b-form-input type="password" id="input-password" :class="checkClassIsInputInvalid('input-password')" placeholder="Enter your password"/>
                     </b-col>
                     <!-- Place for error messages (hidden if no errors) -->
                     <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-password') > -1">
@@ -62,11 +62,11 @@
 </template>
 
 <script>
-    import { mapState, mapMutations } from 'vuex'
-    import { apiPostCreateUser, apiGetCheckEmailIsFree } from '@/api'
+    import { mapState, mapMutations } from "vuex"
+    import { apiPostCreateUser, apiGetCheckEmailIsFree } from "@/api"
 
     export default {
-        name: 'page_Signup',
+        name: "PageSignup",
         data() {
             return {
                 isLoaded: true,
@@ -76,10 +76,10 @@
                 }
         },
         computed: {
-            ...mapState(['user', 'apiErrors'])
+            ...mapState(["user", "apiErrors"])
         },
         methods: {
-            ...mapMutations(['setUserFromApi']),
+            ...mapMutations(["setUserFromApi"]),
             async checkForm(e) {
                 // Get data from inputs and send it via API
                 e.preventDefault()
@@ -97,12 +97,12 @@
                     let input_id = this.$children[i].id
                     let input_value = this.$children[i].localValue
 
-                    if (input_id == "input-email" && input_value.indexOf('@') > -1 && input_value.indexOf('.') > -1 && this.emailIsFree) {
-                        this.registrationForm[input_id.replace('input-', '')] = input_value
+                    if (input_id == "input-email" && input_value.indexOf("@") > -1 && input_value.indexOf(".") > -1 && this.emailIsFree) {
+                        this.registrationForm[input_id.replace("input-", "")] = input_value
                     } else if (input_id == "input-name" && input_value.length >= 2) {
-                        this.registrationForm[input_id.replace('input-', '')] = input_value
+                        this.registrationForm[input_id.replace("input-", "")] = input_value
                     } else if (input_id == "input-password" && input_value.length >= 6) {
-                        this.registrationForm[input_id.replace('input-', '')] = input_value
+                        this.registrationForm[input_id.replace("input-", "")] = input_value
                     } else {
                         this.formErrors.push(input_id)
                     }
@@ -116,11 +116,11 @@
                 // If validation has passed send POST request, save response to vuex state and go to the next page
                 let user = await apiPostCreateUser(this.registrationForm)
                 if (user) {
-                    this.$store.commit('setUserFromApi', user)
+                    this.$store.commit("setUserFromApi", user)
                 }
 
                 // Go to the main page
-                this.$router.push('/session/custom/')
+                this.$router.push("/session/custom/")
             },
             checkClassIsInputInvalid(element) {
                 // Change class of dropdown if validation has failed
@@ -128,11 +128,11 @@
                 if (this.formErrors.length > 0) {
                     hasError = this.formErrors.indexOf(element) >= 0 ? true : false
                 }
-                return {isInputInvalid: hasError}
+                return {"is-input-invalid": hasError}
             },
             goToSignIn() {
                 // Go to the login page
-                this.$router.push('/sign-in/')
+                this.$router.push("/sign-in/")
             }
         }
     }

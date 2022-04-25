@@ -7,6 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError 
 import pandas as pd
 from pandas.core.frame import DataFrame
+from pandas.tseries.offsets import BDay
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
@@ -19,6 +20,7 @@ from functools import wraps
 import logging
 from collections import OrderedDict
 from itertools import islice
+import random
 
 from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
@@ -155,7 +157,7 @@ class Authentication(db.Model):
 
     def __repr__(self) -> str:
         """Return description"""
-        return f'<Authentication {self.AuthId} for {self.UserId} at {self.AuthDatetime}>'
+        return f'<Authentication #{self.AuthId} for {self.UserId} at {self.AuthDatetime}>'
 
     def __init__(self, user, details):
         """Create new record in db with authentication details"""
@@ -191,36 +193,41 @@ class Session(db.Model):
     FirstBarDatetime = db.Column(db.DateTime)
     TotalSessionBars = db.Column(db.Integer)
     Mode = db.Column(db.String)
+
     iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', passive_deletes=True)
     decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
     
+    # Random security generation attributes
+    _random_security = {
+        'Market.USA': ('AMZN', 'NVDA', 'FB', 'MSFT', 'AAPL', 'DIS', 'XOM'),
+        'Market.SHARES': ('SBER', 'AFLT', 'GAZP', 'ROSN', 'YNDX'),
+        'Market.CRYPTO_CURRENCIES': ('ETHUSD', 'BTCUSD', 'LTCUSD')
+        }
+
     def __repr__(self) -> str:
         """Return object description"""
-        return f'<Session {self.SessionId}>'
+        return f'<Session #{self.SessionId} ({self.Mode})>'
 
-    def new(self, mode: str, options: dict) -> None:
+    def __init__(self, options: dict) -> None:
         """Create new session and write it to db"""
 
-        # Custom session with manual specific options
-        if mode == 'custom':
-            # Set session's status to active
-            self.Status = cfg.SESSION_STATUS_ACTIVE
-            # Get options data from webpage
-            self.UserId = int(options['userId'])
-            self.Market = options['market']
-            self.Ticker = options['ticker']
-            self.Timeframe = options['timeframe']
-            self.Barsnumber = int(options['barsnumber'])
-            self.Timelimit = int(options['timelimit'])
-            self.LastFixingBarDatetime = datetime.strptime(options['date'], '%Y-%m-%d')
-            self.Iterations = int(options['iterations'])
-            self.Slippage = float(options['slippage'])
-            self.Fixingbar = int(options['fixingbar'])
-            self.TradingType = self._determine_trading_type()
-            self.FirstBarDatetime = self._calc_first_bar_datetime()
-            self.Mode = mode
-        else:
-            raise RuntimeError('Only custom mode is available')
+        # Set session's status to active
+        self.Status = cfg.SESSION_STATUS_CREATED
+        # Get options data from webpage
+        self.UserId = int(options['userId'])
+        self.Market = options['market']
+        self.Ticker = options['ticker']
+        self.Timeframe = options['timeframe']
+        self.Barsnumber = int(options['barsnumber'])
+        self.Timelimit = int(options['timelimit'])
+        self.LastFixingBarDatetime = datetime.strptime(options['date'], '%Y-%m-%d')
+        self.Iterations = int(options['iterations'])
+        self.Slippage = float(options['slippage'])
+        self.Fixingbar = int(options['fixingbar'])
+        self.TradingType = self._determine_trading_type()
+        self.FirstBarDatetime = self._calc_first_bar_datetime()
+        # Set session's mode
+        self.Mode = options['mode']
 
         # Write form data to db
         write_object_to_db(self)
@@ -233,7 +240,6 @@ class Session(db.Model):
 
         # Create all iterations
         self._create_iterations(df_quotes)
-
 
     def _determine_trading_type(self) -> str:
         """Determine how long trader will keep the security: <day, <week or >week"""
@@ -353,9 +359,35 @@ class Session(db.Model):
             iteration = Iteration()
             iteration.new(session=self, iteration_num=i, df_quotes=df_quotes)
 
+    @staticmethod
+    def _get_last_workday():
+        """Get last workday before today for preset sessions"""
+        return (datetime.today() - BDay(1)).strftime('%Y-%m-%d')
+
+    def _select_random_security(self, market):
+        """Select random security from short list for current mode"""
+        return random.choice(self._random_security[market])
+
     def convert_to_dict(self) -> dict:
         """Convet SQLAlchemy object to dict"""
         as_dict = {i.name: str(getattr(self, i.name)) for i in self.__table__.columns}
+        return as_dict
+
+    def convert_to_dict_format(self) -> dict:
+        """Convet SQLAlchemy object to dict with beautiful strings as values"""
+        as_dict = {
+            'UserId': self.UserId,
+            'Market': cfg.SessionOptions.aliases_markets[self.Market.replace('Market.', '')],
+            'Ticker': cfg.SessionOptions.find_alias_ticker(self.Market, self.Ticker),
+            'Timeframe': cfg.SessionOptions.aliases_timeframes[self.Timeframe.replace('Timeframe.', '')],
+            'Barsnumber': str(self.Barsnumber) + ' bars',
+            'Timelimit': str(self.Timelimit) + ' sec',
+            'Date': self.LastFixingBarDatetime.strftime('%Y-%m-%d'),
+            'Iterations': str(self.Iterations),
+            'Slippage': str(float(self.Slippage) * 100) + '%',
+            'Fixingbar': str(self.Fixingbar),
+            'Mode': self.Mode
+        }
         return as_dict
 
     def load_csv(self) -> DataFrame:
@@ -420,6 +452,80 @@ class Session(db.Model):
         write_object_to_db(self)
 
 
+class SessionCustom(Session):
+    """Class for session with manually selected options (custom)"""
+
+    def __init__(self, form: dict) -> None:
+        """Call super method with mode == custom"""
+        super().__init__(options=form)
+
+
+class SessionClassic(Session):
+    """Class for classic session"""
+
+    def __init__(self, form: dict) -> None:
+        """Setup attributes for classic session"""
+        # Collect all options for new session generation
+        options = {
+            'userId': form['userId'],
+            'mode': form['mode'],
+            'market': 'Market.USA',
+            'ticker': self._select_random_security('Market.USA'),
+            'timeframe': 'Timeframe.HOURLY',
+            'barsnumber': '50',
+            'timelimit': '60',
+            'date': self._get_last_workday(),
+            'iterations': '5',
+            'slippage': '0.001',
+            'fixingbar': '20'
+            }
+        super().__init__(options=options)
+
+
+class SessionBlitz(Session):
+    """Class for blitz session"""
+
+    def __init__(self, form: dict) -> None:
+        """Setup attributes for blitz session"""
+        # Collect all options for new session generation
+        options = {
+            'userId': form['userId'],
+            'mode': form['mode'],
+            'market': 'Market.SHARES',
+            'ticker': self._select_random_security('Market.SHARES'),
+            'timeframe': 'Timeframe.MINUTES5',
+            'barsnumber': '30',
+            'timelimit': '5',
+            'date': self._get_last_workday(),
+            'iterations': '10',
+            'slippage': '0.001',
+            'fixingbar': '15'
+            }
+        super().__init__(options=options)
+
+
+class SessionCrypto(Session):
+    """Class for crypto session"""
+
+    def __init__(self, form: dict) -> None:
+        """Setup attributes for crypto session"""
+        # Collect all options for new session generation
+        options = {
+            'userId': form['userId'],
+            'mode': form['mode'],
+            'market': 'Market.CRYPTO_CURRENCIES',
+            'ticker': self._select_random_security('Market.CRYPTO_CURRENCIES'),
+            'timeframe': 'Timeframe.MINUTES5',
+            'barsnumber': '50',
+            'timelimit': '60',
+            'date': self._get_last_workday(),
+            'iterations': '10',
+            'slippage': '0.001',
+            'fixingbar': '20'
+            }
+        super().__init__(options=options)
+
+
 class Iteration(db.Model):
     __tablename__ = 'Iteration'
 
@@ -439,7 +545,7 @@ class Iteration(db.Model):
 
     def __repr__(self) -> str:
         """Return object description"""
-        return f'<Iteration {self.IterationNum} of the session {self.SessionId}>'
+        return f'<Iteration #{self.IterationNum} of the Session #{self.SessionId}>'
 
     def new(self, session: Session, iteration_num: int, df_quotes: DataFrame) -> None:
         """Create new iteration"""
@@ -601,7 +707,7 @@ class Decision(db.Model):
 
     def __repr__(self) -> str:
         """Return object description"""
-        return f'<Decision {self.DecisionId} during session {self.SessionId}>'
+        return f'<Decision #{self.DecisionId} during session #{self.SessionId}>'
 
     def new(self, props: dict) -> None:
         """Create new session and write it to db"""

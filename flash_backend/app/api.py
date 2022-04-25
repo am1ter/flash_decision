@@ -1,6 +1,7 @@
 from app import app
 import app.config as cfg
-from app.models import Authentication, User, Decision, Session, Iteration, Scoreboard
+from app.models import Authentication, SessionBlitz, SessionCrypto, User, Decision, Session, Iteration, Scoreboard
+from app.models import SessionCustom, SessionClassic
 
 from flask import Blueprint, jsonify, request
 from flask.wrappers import Response
@@ -28,8 +29,8 @@ network_ip = network_socket.getsockname()[0]
 logger.info(f'Flask started successfully')
 logger.info(f'Flask`s local ip: {local_ip}, Flask`s network ip: {network_ip}')
 
-# Get initial app settings
-session_options = cfg.SessionOptions()
+# Parse finam for options for custom sessions during APP initialization
+cfg.SessionOptions.update()
 logger.info('List of session`s options loaded')
 
 
@@ -192,13 +193,14 @@ def sign_in() -> Response:
     return jsonify(resp), 200
 
 
-@api.route('/get-session-options/', methods=['GET'])
+@api.route('/get-session-options/<string:mode>/', methods=['GET'])
 @log_request
 @auth_required
-def get_session_options() -> Response:
+def get_session_options(mode: str) -> Response:
     """Get lists of all available parameters of the training set to show them on the page"""
-    logger.info(f'List of session options sent to frontend')
-    return jsonify(session_options.export()), 200
+    session_options = cfg.SessionOptions()
+    logger.info(f'List of session options for mode {mode} sent to frontend')
+    return jsonify(session_options), 200
 
 
 @api.route('/start-new-session/', methods=['POST'])
@@ -207,10 +209,21 @@ def get_session_options() -> Response:
 def start_new_session() -> Response:
     """Start training session: Get json-object, create SQL record and download quotes data"""
     assert request.json, 'Error: Wrong POST request has been received'
-    current_session = Session()
-    current_session.new(mode='custom', options=request.json)
-    logger.info(f'{current_session} started')
-    return jsonify(current_session.SessionId), 200
+    # Create Session instance by mode from request
+    session_creator = {
+        'custom': SessionCustom,
+        'classic': SessionClassic,
+        'blitz': SessionBlitz,
+        'crypto': SessionCrypto
+    }
+    current_session_func = session_creator[request.json['mode']]
+    current_session_obj = current_session_func(form=request.json)
+    response = {
+        'vals': current_session_obj.convert_to_dict(),
+        'aliases': current_session_obj.convert_to_dict_format()
+    }
+    logger.info(f'{current_session_obj} started')
+    return jsonify(response), 200
 
 
 @api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
@@ -222,8 +235,12 @@ def get_chart(session_id: int, iteration_num: int) -> Response:
     current_session = Session.get_from_db(session_id)
     # Check if iteration number from API request is correct
     assert 1 <= iteration_num <= current_session.Iterations, 'Error: Wrong iteration number'
-    # Check if session is still active
-    assert current_session.Status == cfg.SESSION_STATUS_ACTIVE, 'Error: Session is closed'
+    # Check if session is not closed
+    if current_session.Status == cfg.SESSION_STATUS_CLOSED:
+        raise RuntimeError('Error: Session is closed')    
+    # Write 'Active' status for new session in db
+    if current_session.Status == cfg.SESSION_STATUS_CREATED:
+        current_session.set_status(cfg.SESSION_STATUS_ACTIVE)
 
     # Get iteration from db and read data file
     loaded_iteration = Iteration.get_from_db(session_id, iteration_num)
@@ -305,7 +322,7 @@ def get_sessions_results(session_id: int) -> Response:
     current_session = Session.get_from_db(session_id)
     # Get session's summary
     current_session_summary = current_session.calc_sessions_summary()
-    # Write 'Close' status for session in db
+    # Write 'Closed' status for session in db
     current_session.set_status(cfg.SESSION_STATUS_CLOSED)
 
     logger.info(f'{current_session} finished with result {current_session_summary["totalResult"]}%')

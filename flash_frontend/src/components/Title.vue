@@ -1,19 +1,23 @@
 <template>
-    <section id='title'>
-        <div id="layout_title" class="shadow">
-            <div id="layout_title_left"><h1 id="title_letter">{{ title.charAt(0).toUpperCase() }}</h1></div>
-            <div id="layout_title_right"><h1 id="title">{{ title }}</h1></div>
+    <section id="title">
+        <div id="layout-title" class="shadow">
+            <div id="layout-title-left">
+                <h1 id="title-letter">{{ title.charAt(0).toUpperCase() }}</h1>
+            </div>
+            <div id="layout-title-right">
+                <h1 id="title">{{ title }}</h1>
+            </div>
         </div>
 
-        <div id="layout_subtitle">
-            <p class="subtitle">{{ instruction }}</p>
+        <div id="layout-subtitle">
+            <h2 class="subtitle">{{ instruction }}</h2>
         </div>
     </section>
 </template>
 
 <script>
     export default {
-        name: 'Title',
+        name: "Title",
         props: {},
         computed: {
             title() {
@@ -29,7 +33,7 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-    #layout_title {
+    #layout-title {
         height: 64px;
         margin: 25px;
         display: flex;
@@ -40,7 +44,7 @@
         border-bottom: 0.5px solid #0B5A73;
     }
 
-    #layout_title_left {
+    #layout-title-left {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -50,11 +54,11 @@
         color: #ffffff;
     }
 
-    #layout_title_right {
+    #layout-title-right {
         width: 339px;
     }
 
-    #layout_subtitle {
+    #layout-subtitle {
         position: relative;
         max-width: 100%;
         margin: 0px 25px;
@@ -64,9 +68,16 @@
         text-align: center;
         font-size: 24px;
         font-weight: 700;
+        margin: 0px;
+    }
+    
+    @media (max-width: 700px) {
+        #title {
+            font-size: 20px;
+        }
     }
 
-    #title_letter {
+    #title-letter {
         font-size: 48px;
         font-weight: 900;
     }

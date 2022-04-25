@@ -129,12 +129,87 @@ class TestFrontend(unittest.TestCase):
         page_login.login_via_form(email='test@alekseisemenov.ru', password='uc8a&Q!W')
 
     def test_custom_session(self):
-        """Test: start new session"""
+        """Test: start new custom session, make decisions, look at results, go to scoreboard"""
         # On page Login
         self.test_login_via_form_correct()
-        # On page Session
+        # Select mode on the Session page
         page_session = pages.PageSession(self.driver)
-        page_session.start_custom_session()
+        page_session.select_mode(mode='custom')
+        # On page Session Custom
+        page_session_custom = pages.PageSessionCustom(self.driver)
+        page_session_custom.start()
+        # On page Decision
+        page_decision = pages.PageDecision(self.driver)
+        page_decision.action_buy()
+        page_decision.action_sell()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        # On page Results
+        page_results = pages.PageResults(self.driver)
+        page_results.go_to_scoreboard()
+        # On page Scoreboard page
+        page_scoreboard = pages.PageScoreboard(self.driver)
+
+    def test_classic_session(self):
+        """Test: start new classic session, make decisions, refresh page, look at results, start new session, go back to results"""
+        # On page Login
+        self.test_login_via_form_correct()
+        # Select mode on the Session page
+        page_session = pages.PageSession(self.driver)
+        page_session.select_mode(mode='classic')
+        # On page Session Classic
+        page_session_classic = pages.PageSessionPreset(self.driver)
+        # On page Decision
+        page_decision = pages.PageDecision(self.driver)
+        page_decision.action_buy()
+        page_decision.action_sell()
+        page_decision.refresh_page()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        # On page Results
+        page_results = pages.PageResults(self.driver)
+        page_results.start_new_session()
+        # On the Session page
+        page_session = pages.PageSession(self.driver)
+        page_session.go_to_page('decision')
+        # On page Results
+        page_results = pages.PageResults(self.driver)
+
+    def test_blitz_session(self):
+        """Test: start new blitz session, make decisions, skip one decision by waiting, look at results"""
+        # On page Login
+        self.test_login_via_form_correct()
+        # Select mode on the Session page
+        page_session = pages.PageSession(self.driver)
+        page_session.select_mode(mode='blitz')
+        # On page Session Classic
+        page_session_classic = pages.PageSessionPreset(self.driver)
+        # On page Decision
+        page_decision = pages.PageDecision(self.driver)
+        page_decision.action_buy()
+        page_decision.action_sell()
+        page_decision.no_action()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        # On page Results
+        page_results = pages.PageResults(self.driver)
+
+    def test_crypto_session(self):
+        """Test: start new blitz session, make decision, look at results"""
+        # On page Login
+        self.test_login_via_form_correct()
+        # Select mode on the Session page
+        page_session = pages.PageSession(self.driver)
+        page_session.select_mode(mode='crypto')
+        # On page Session Classic
+        page_session_classic = pages.PageSessionPreset(self.driver)
         # On page Decision
         page_decision = pages.PageDecision(self.driver)
         page_decision.action_sell()
@@ -142,11 +217,27 @@ class TestFrontend(unittest.TestCase):
         page_decision.action_buy()
         page_decision.action_sell()
         page_decision.action_buy()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
+        page_decision.action_skip()
         # On page Results
         page_results = pages.PageResults(self.driver)
-        page_results.go_to_scoreboard()
+
+    def test_scoreboard(self):
+        """Test: go to scoreboard, switch between modes"""
+        # On page Login
+        self.test_login_via_form_correct()
+        # Select mode on the Session page
+        page_session = pages.PageSession(self.driver)
+        page_session.go_to_page(page='scoreboard')
         # On page Scoreboard page
         page_scoreboard = pages.PageScoreboard(self.driver)
+        page_scoreboard.select_mode(mode='classic')
+        page_scoreboard.select_mode(mode='blitz')
+        page_scoreboard.select_mode(mode='crypto')
+        page_scoreboard.select_mode(mode='custom')
 
     def tearDown(self):
         self.driver.close()

@@ -1,35 +1,12 @@
 <template>
-    <section id='page' v-if="apiErrors.length == 0 & isLoaded">
-        <div id='scoreboard_mode'>
+    <section id="page" v-if="apiErrors.length == 0 & isLoaded">
+        <div id="scoreboard-mode">
+
             <!-- Navigation bar (modes) -->
-            <ul class="nav justify-content-center pb-1">
-                <li class="nav-item">
-                    <a class="nav-link" 
-                    :class="{active: isPageActive('custom')}"
-                    role="button"
-                    v-on:click="$router.push(`/scoreboard/custom/${user.id}`)">Custom</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" 
-                    :class="{active: isPageActive('classic')}" 
-                    role="button" 
-                    v-on:click="$router.push(`/scoreboard/classic/${user.id}`)">Classic</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                    :class="{active: isPageActive('blitz')}"
-                    role="button"
-                    v-on:click="$router.push(`/scoreboard/blitz/${user.id}`)">Blitz</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" 
-                    :class="{active: isPageActive('crypto')}" 
-                    role="button" 
-                    v-on:click="$router.push(`/scoreboard/crypto/${user.id}`)">Crypto</a>
-                </li>
-            </ul>
+            <ModeSelector :page="'scoreboard'" :userId="user.id"/>
+
             <!-- Empty scoreboard -->
-            <div id='empty_scoreboard'
+            <div id="scoreboard-empty"
                 v-if="Object.keys(top3Users).length == 0"
                 class="text-center shadow col-12 mt-3 pt-3 pb-1">
                 <h1>N/A</h1>
@@ -38,18 +15,19 @@
                     Will you be the first one?
                 </p>
             </div>
+
             <!-- Scoreboard data -->
             <!-- Top-3 users-->
             <b-container fluid v-for="(user, idx) in top3Users" :key="user.name">
                 <!-- All users in top-3 except current user -->
-                <b-row v-if="idx!=userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
+                <b-row v-if="idx!=userRank" class="usercard" :class="{ 'usercard-champion': idx==0 }">
                     <b-col cols="2">
                         <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
                         <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
                     </b-col>
-                    <b-col cols="6" class="user_card_col">
+                    <b-col cols="6" class="usercard-col">
                         <p class="user_name">{{top3Users[idx]["name"]}} #{{parseInt(idx) + 1}}</p>
-                        <p class="user_result">
+                        <p class="user-result">
                             Result: <span :class="formatFiguresColor(formatFigures(top3Users[idx]['result']))">{{top3Users[idx]["result"]}}%</span>
                         </p>
                     </b-col>
@@ -57,15 +35,16 @@
                         <p></p>
                     </b-col>
                 </b-row>
-                <!-- Display current user's summary if current user is in top-3) -->
-                <b-row v-if="idx==userRank" class="user_card" :class="{ user_card_champion: idx==0 }">
+
+                <!-- Display current user`s summary if current user is in top-3 -->
+                <b-row v-if="idx==userRank" class="usercard usercard-current-user" :class="{ 'usercard-champion': idx==0 }">
                     <b-col cols="2">
                         <img v-if="idx==0" src="../assets/icons/i_ava_champion.svg"/>
                         <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
                     </b-col>
-                    <b-col cols="6" class="user_card_col">
+                    <b-col cols="6" class="usercard-col">
                         <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
-                        <p class="user_result">
+                        <p class="user-result">
                             Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
                         </p>
                     </b-col>
@@ -78,20 +57,21 @@
                     striped borderless hover thead-class="d-none"
                     :items="calcUserSummary"
                     :fields="fields"
-                    class="current_user_summary shadow"
-                    :class="{ current_user_summary_champion: idx==0 }"
+                    class="current-user-summary shadow"
+                    :class="{ 'current-user-summary-champion': idx==0 }"
                 />
             </b-container>
-            <!-- Display current user's summary if current user is not in top-3 -->
+
+            <!-- Display current user`s summary if current user is not in top-3 -->
             <b-container fluid v-if="userRank >= 3">
                 ...
-                <b-row class="user_card">
+                <b-row class="usercard usercard-current-user">
                     <b-col cols="2">
                         <img src="../assets/icons/i_ava_default.svg"/>
                     </b-col>
-                    <b-col cols="6" class="user_card_col">
+                    <b-col cols="6" class="usercard-col">
                         <p class="user_name">{{userSummary.userName}} #{{userRank + 1}}</p>
-                        <p class="user_result">
+                        <p class="user-result">
                             Result: <span :class="formatFiguresColor(formatFigures(userSummary.totalResult))">{{userSummary.totalResult}}%</span>
                         </p>
                     </b-col>
@@ -103,19 +83,20 @@
                     striped borderless hover thead-class="d-none"
                     :items="calcUserSummary"
                     :fields="fields"
-                    class="current_user_summary shadow"
+                    class="current-user-summary shadow"
                 />
             </b-container>
+            <!-- Display card for case when user has no results for specified mode -->
             <b-container fluid v-if="userRank == -1 & Object.keys(top3Users).length != 0">
                 ...
-                <b-row class="user_card">
+                <b-row class="usercard">
                     <b-col cols="2">
                         <img src="../assets/icons/i_ava_default.svg"/>
                     </b-col>
-                    <b-col cols="10" class="user_card_col">
+                    <b-col cols="10" class="usercard-col">
                         <p class="user_name">{{user.email}}</p>
-                        <p class="user_result">
-                            <a href="#" v-on:click="$router.push('/session/custom/')">No results yes. Would you like to start start your first session?</a>
+                        <p class="user-result">
+                            <a href="#" v-on:click="$router.push('/session/')">No results yes. Would you like to start start your first session?</a>
                         </p>
                     </b-col>
                 </b-row>
@@ -125,26 +106,32 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import { apiGetScoreboard } from '@/api'
+    import { mapState } from "vuex"
+    import { apiGetScoreboard } from "@/api"
+
+    // Pages subcomponents
+    import ModeSelector from "./subcomponents/ModeSelector.vue"
 
     export default {
-        name: 'page_Scoreboard',
+        name: "PageScoreboard",
+        components: {
+            ModeSelector
+        },
         data() {
             return {
                 isLoaded: false,
-                mode: 'custom',
+                mode: this.$route.params.mode,
                 top3Users: {},
                 userRank: -1,
                 userSummary: {},
                 fields: [
-                    { key: 'column' },
-                    { key: 'value', tdClass: this.formatFiguresColor }
+                    { key: "column" },
+                    { key: "value", tdClass: this.formatFiguresColor }
                 ]
             }
         },
         computed: {
-            ...mapState(['user', 'currentSession', 'apiErrors'])
+            ...mapState(["user", "currentSession", "apiErrors"])
         },
         mounted() {
             this.mode = this.$route.params.mode
@@ -169,28 +156,28 @@
             },
             formatFigures(x) {
                 // Improve text display of figures
-                return (x > 0) ? '+' + x + '%': x + '%'
+                return (x > 0) ? "+" + x + "%": x + "%"
             },
             calcUserSummary() {
                 // Format api user summary response to put it into bootstrap table
                 let userSum = this.userSummary
                 return [
-                    { column: 'Total sessions', value: userSum.totalSessions},
-                    { column: 'Profitable sessions', value: userSum.profitableSessions},
-                    { column: 'Unprofitable sessions', value: userSum.unprofitableSessions},
-                    { column: 'Total result', value: this.formatFigures(userSum.totalResult)},
-                    { column: 'Median result', value: this.formatFigures(userSum.medianResult)},
-                    { column: 'Best session result', value: this.formatFigures(userSum.bestSessionResult)},
-                    { column: 'First session', value: userSum.firstSession}
+                    { column: "Total sessions", value: userSum.totalSessions},
+                    { column: "Profitable sessions", value: userSum.profitableSessions},
+                    { column: "Unprofitable sessions", value: userSum.unprofitableSessions},
+                    { column: "Total result", value: this.formatFigures(userSum.totalResult)},
+                    { column: "Median result", value: this.formatFigures(userSum.medianResult)},
+                    { column: "Best session result", value: this.formatFigures(userSum.bestSessionResult)},
+                    { column: "First session", value: userSum.firstSession}
                 ]
             },
             formatFiguresColor(value) {
                 // Change color of figures
                 let firstChar = String(value).charAt(0)
-                if(firstChar === '+')
-                    return 'text-success'
-                else if(firstChar === '-')
-                    return 'text-danger'
+                if(firstChar === "+")
+                    return "text-success"
+                else if(firstChar === "-")
+                    return "text-danger"
             },
             isPageActive(nav_item) {
                 // Check if navbar item is active
@@ -203,11 +190,11 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-    #scoreboard_mode {
+    #scoreboard-mode {
         width: 100%;
     }
 
-    .user_card {
+    .usercard {
         border: 1px solid #888888;
         box-sizing: border-box;
         margin-top: 15px;
@@ -215,11 +202,15 @@
         box-shadow: 0px 4px 6px -4px rgba(24, 39, 75, 0.12), 0px 8px 8px -4px rgba(24, 39, 75, 0.08);
     }
 
-    .user_card_champion {
+    .usercard-champion {
         border: 2px solid #FFC107;
     }
 
-    .user_card_col {
+    .usercard-current-user {
+        border: 1px solid #076583 !important;
+    }
+
+    .usercard-col {
         display: flex;
         justify-content: center;
         flex-direction: column;
@@ -231,22 +222,22 @@
         margin-bottom: 0px;
     }
 
-    .user_result {
+    .user-result {
         font-weight: 500;
         font-size: 12px;
         margin-bottom: 0px;
     }
 
-    .current_user_summary {
-        border-left: 1px solid #888888;
-        border-right: 1px solid #888888;
-        border-bottom: 1px solid #888888;
+    .current-user-summary {
+        border-left: 1px solid #076583;
+        border-right: 1px solid #076583;
+        border-bottom: 1px solid #076583;
         box-sizing: border-box;
         box-shadow: 0px 4px 6px -4px rgba(24, 39, 75, 0.12), 0px 8px 8px -4px rgba(24, 39, 75, 0.08);
         font-size: 14px;
     }
     
-    .current_user_summary_champion {
+    .current-user-summary-champion {
         border-left: 1px solid #FFC107;
         border-right: 1px solid #FFC107;
         border-bottom: 1px solid #FFC107;

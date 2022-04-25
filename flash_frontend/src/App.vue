@@ -1,36 +1,37 @@
 <template>
-    <div id='app'>
+    <div id="app">
 
-        <div id='pagebackgroundtext'>
+        <div id="background-text">
             <Background/>
         </div>
 
         <!-- Show error if there is any errors -->
-        <div id='errors' v-if="apiErrors.length > 0">
+        <div id="errors" v-if="apiErrors.length > 0">
             <div>{{apiErrors[0]}}</div>
             <b-button squared class="mt-3 gradient" v-on:click="reloadPage()">Refresh page</b-button>
         </div>
 
-        <div id='header'>
+        <div id="header">
             <Header/>
         </div>
 
-        <div id='content' class="shadow">
+        <div id="content" class="shadow">
             <Menu />
             <Title/>
             <router-view>
-                <page_Login/>
-                <page_Signup/>
-                <page_Session/>
-                <page_Decision/>
-                <page_Results/>
-                <page_Scoreboard/>
+                <PageLogin/>
+                <PageSignup/>
+                <PageSession/>
+                <PageSessionForm/>
+                <PageDecision/>
+                <PageResults/>
+                <PageScoreboard/>
             </router-view>
         </div>
 
-        <div id='content_border_bottom'/>
+        <div id="content-border-bottom"/>
 
-        <div id='credits'>
+        <div id="credits">
             <Credits/>
         </div>
 
@@ -38,45 +39,47 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapState } from "vuex"
 
     // Service components
-    import Background from './components/Background.vue'
-    import Header from './components/Header.vue'
-    import Menu from './components/Menu.vue'
-    import Title from './components/Title.vue'
-    import Credits from './components/Credits.vue'
+    import Background from "./components/Background.vue"
+    import Header from "./components/Header.vue"
+    import Menu from "./components/Menu.vue"
+    import Title from "./components/Title.vue"
+    import Credits from "./components/Credits.vue"
     
     // Pages components
-    import page_Login from './components/page_Login.vue'
-    import page_Signup from './components/page_Signup.vue'
-    import page_Session from './components/page_Session.vue'
-    import page_Decision from './components/page_Decision.vue'
-    import page_Results from './components/page_Results.vue'
-    import page_Scoreboard from './components/page_Scoreboard.vue'
+    import PageLogin from "./components/PageLogin.vue"
+    import PageSignup from "./components/PageSignup.vue"
+    import PageSession from "./components/PageSession.vue"
+    import PageSessionForm from "./components/PageSessionForm.vue"
+    import PageDecision from "./components/PageDecision.vue"
+    import PageResults from "./components/PageResults.vue"
+    import PageScoreboard from "./components/PageScoreboard.vue"
 
     export default {
-        name: 'App',
+        name: "App",
         components: {
             Background,
             Header,
             Menu,
             Title,
             Credits,
-            page_Login,
-            page_Signup,
-            page_Session,
-            page_Decision,
-            page_Results,
-            page_Scoreboard
+            PageLogin,
+            PageSignup,
+            PageSession,
+            PageSessionForm,
+            PageDecision,
+            PageResults,
+            PageScoreboard
         },
         computed: {
-            ...mapState(['apiErrors'])
+            ...mapState(["apiErrors"])
         },
         methods: {
             reloadPage() {
                 // Reload page on click
-                this.$router.push('/session/custom/')
+                this.$router.push("/session/")
                 this.$router.go()
             }
         }
@@ -85,10 +88,10 @@
 </script>
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+    @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap");
 
     body {
-        font-family: 'Roboto', sans-serif;
+        font-family: "Roboto", sans-serif;
         font-weight: 400;
         font-size: 16px;
         color: #333333;
@@ -118,15 +121,15 @@
     }
 
     #content {
-        min-height: calc(100vh - 34px - 10px - 34px);
+        min-height: calc(100vh - 34px + 6px - 34px);
         max-width: 453px;
         margin: 0px auto;
-        padding-bottom: 15px;
+        padding-bottom: 5px;
         background-color: #ffffff;
         opacity: 0.85;
     }
 
-    #content_border_bottom {
+    #content-border-bottom {
         background: linear-gradient(to right, #271238, #113763, #0B5A73);
         height: 5px;
         max-width: 453px;
@@ -150,7 +153,7 @@
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        margin: 15px 25px;
+        margin: 15px 25px 5px 25px;
         width: auto;
     }
 
@@ -224,12 +227,12 @@
         font-size: 14px !important;
     }
 
-    .isInputInvalid {
-        border: 1px solid #dc3545;
+    .is-input-invalid {
+        border: 1px solid #dc3545 !important;
         border-radius: 3px;
         font-size: 14px;
         padding-right: calc(1.5em + .75rem)!important;
-        background-image: url('./assets/icons/i_formvalidation_error.svg') !important;
+        background-image: url("./assets/icons/i_formvalidation_error.svg") !important;
         background-position: right calc(.375em + .1875rem) center;
         background-repeat: no-repeat;
         background-size: calc(.75em + .375rem) calc(.75em + .375rem);

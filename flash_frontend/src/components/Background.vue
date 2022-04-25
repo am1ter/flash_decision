@@ -1,5 +1,5 @@
 <template>
-        <div id='background'>
+        <div id="background">
             <marquee-text :duration="60">
                 <p># flash_decision</p>
             </marquee-text>
@@ -8,7 +8,10 @@
 
 
 <script>
-
+    export default {
+        name: "Backgroud",
+        props: {}
+    }
 </script>
 
 
