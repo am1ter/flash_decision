@@ -557,22 +557,31 @@ class Iteration(db.Model):
         self.SessionId = session.SessionId
         self.IterationNum = iteration_num
 
-        # Start generation iterations from the end of df
+        # Start iterations generation from the end of df
         if iteration_num == 1:
             # For first iteration use session options
             self.FixingBarDatetime = session.LastFixingBarDatetime
             self.FixingBarNum = session.TotalSessionBars - 1   # first bar num = 0
         else:
-            # For other iteration find last created iteration and use it to calc new vals
-            last_iteration = session.iterations.all()[-1:][0]
-            self.FixingBarDatetime = last_iteration._calc_new_iteration_fixbardatetime()
+            # For other iterations find last created iteration for current session and use it to calc new vals
+            last_iteration = session.iterations.filter(Iteration.Session == session).order_by(Iteration.IterationId).all()[-1:][0]
+            # Calc new iteration fixing date and bar number considering if there is a skipped iterations 
+            iterations_distance = self.IterationNum - last_iteration.IterationNum
+            self.FixingBarDatetime = last_iteration._calc_new_iteration_fixbardatetime(iterations_distance)
             self.FixingBarNum = df_quotes.index.get_loc(str(self.FixingBarDatetime), method='nearest')
         
+            # Skip dates with no data for chart
+            if self.FixingBarNum - last_iteration.FixingBarNum > session.Fixingbar * -1:
+                logger.warning(f'Skip iteration generation for {self} because of no data for {self.FixingBarDatetime}')
+                return
+
         # Fill other required bars numbers
         self.FinalBarNum = self.FixingBarNum - session.Fixingbar
         if session.Barsnumber <= self.FinalBarNum:
             self.StartBarNum = self.FinalBarNum - session.Barsnumber
         else:
+            # Stop iteration generation if not enough data in df
+            logger.warning(f'Skip iteration generation for {self}. Not enough data in dataframe')
             return
 
         # Write data to db
@@ -596,7 +605,7 @@ class Iteration(db.Model):
         # Update db object
         write_object_to_db(self)
 
-    def _calc_new_iteration_fixbardatetime(self) -> datetime:
+    def _calc_new_iteration_fixbardatetime(self, distance: int) -> datetime:
         """Calculate datetime of the previous bar in downloaded quotes dataset"""
         trading_type = self.Session.TradingType
         if trading_type == 'daytrading':
@@ -611,7 +620,16 @@ class Iteration(db.Model):
         else:
             # One iteration per 3 months
             days_before = 31 * 3
-        return self.FixingBarDatetime - timedelta(days=days_before)
+        
+        # Multiply days number by amount of skipped iterations (distance between iterations) 
+        days_before = days_before * distance 
+
+        # Skip weekends
+        bar_date = self.FixingBarDatetime + timedelta(days=-days_before)
+        if bar_date.weekday() >= 5:
+            bar_date = bar_date + timedelta(days=6-bar_date.weekday()-2)
+
+        return bar_date
 
     @catch_db_exception
     def get_from_db(session_id: int, iteration_num: int) -> db.Model:
@@ -724,13 +742,15 @@ class Decision(db.Model):
         price_change = round((current_iter.FixingBarPrice - current_iter.FinalBarPrice) / current_iter.StartBarPrice, 6)
         if self.Action == 'Buy':
             self.ResultRaw = price_change * 1
+            self.ResultFinal = round(self.ResultRaw - current_iter.Session.Slippage, 6)
         elif self.Action == 'Skip':
-            self.ResultRaw = price_change * 0
+            self.ResultRaw = 0
+            self.ResultFinal = 0
         elif self.Action == 'Sell':
             self.ResultRaw = price_change * -1
+            self.ResultFinal = round(self.ResultRaw - current_iter.Session.Slippage, 6)
         else:
             raise RuntimeError('Unsupported action')
-        self.ResultFinal = round(self.ResultRaw - current_iter.Session.Slippage, 6)
 
         # Write data to db
         write_object_to_db(self)

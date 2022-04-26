@@ -24,8 +24,8 @@ async function handleResponse(req) {
             return false
         }
     } catch(err) {
-
         // Clean cookies for auth info if have got "401 Unauthorized" response
+        console.log(err.toJSON)
         if (err.toJSON().message == 'Network Error') {
             store.commit("newApiError", err)
         } else {
