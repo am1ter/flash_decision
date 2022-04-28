@@ -1,24 +1,12 @@
 import os
 from sys import platform
-import random
-from datetime import datetime
-from pandas.tseries.offsets import BDay
 
 from finam.export import Exporter           # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe   # https://github.com/ffeast/finam-export
 
 
-# Flask configuration
-class FlaskConfig(object):
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'flashDecisionSecretKey'
-    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ.get('DATABASE_USER') + ":" \
-                              + os.environ.get('DATABASE_PASS') + "@" \
-                              + os.environ.get('DATABASE_URL') + ":" \
-                              + os.environ.get('DATABASE_PORT') \
-                              if os.environ.get('DATABASE_URL') \
-                              else "postgresql://postgres:flash!Pass@localhost:5432"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
+# General app settings
+# ====================
 
 # Application's system users
 USER_DEMO_EMAIL = 'demo@alekseisemenov.ru'
@@ -28,13 +16,11 @@ USER_TEST_EMAIL = 'test@alekseisemenov.ru'
 USER_TEST_NAME = 'test'
 USER_TEST_PASSWORD = 'uc8a&Q!W'
 
-
 # Files
 PLATFORM = platform
 SAVE_FORMAT = 'json' # Options: 'json' or 'csv'
 PATH_APP = os.path.dirname(os.path.abspath(__file__))
 PATH_DOWNLOADS = os.path.join(os.path.dirname(PATH_APP), 'downloads')
-
 
 # Session parameters
 SESSION_STATUS_CREATED = 'created'
@@ -43,9 +29,21 @@ SESSION_STATUS_CLOSED = 'closed'
 TRADINGDAY_DURATION_MINS = (9*60) - 15 - 5  # Standart trading day duration in minutes
 
 
-# Chart parameters
-DF_DAYS_BEFORE = 90
-COLUMN_RESULT = '<CLOSE>'
+# Flask configuration
+# ===================
+
+class FlaskConfig(object):
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'flashDecisionSecretKey'
+    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ.get('DATABASE_USER') + ":" \
+                              + os.environ.get('DATABASE_PASS') + "@" \
+                              + os.environ.get('DATABASE_URL') + ":" \
+                              + os.environ.get('DATABASE_PORT') \
+                              if os.environ.get('DATABASE_URL') \
+                              else "postgresql://postgres:flash!Pass@localhost:5432"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    API_PREFIX = '/api'
+    HOST = '0.0.0.0'
+    PORT = 8001
 
 
 # Session options
@@ -58,12 +56,12 @@ class SessionOptions:
     _MARKETS_EXCLUDE_LIST = ('FUTURES_ARCHIVE', 'FUTURES_USA', 'CURRENCIES', 'SPB')
     _TIMEFRAME_EXCLUDE_LIST = ('TICKS', 'WEEKLY', 'MONTHLY')
 
-    # Attributes for storing parsed data
-    markets = ()
-    tickers = ()
-    timeframes = ()
+    # Attributes for storing parsed finam data (options)
+    markets = []
+    tickers = {}
+    timeframes = []
 
-    
+    # Mapping tables (Raw name -> Beautiful name alias)
     aliases_markets = {
             'BONDS': 'Bonds',
             'COMMODITIES': 'Commodities',
@@ -132,10 +130,10 @@ class SessionOptions:
         """Return the user email"""
         return f'<Session options>'
     
-    def __new__(self) -> None:
+    def __new__(self) -> dict:
         """Collect all session options in a single object before exporting to frontend"""
 
-        # Check if class has parsed info
+        # Check if parsed options is not saved in class attributes yet
         if not all((self.markets, self.tickers, self.timeframes)):
             self.update()
 
@@ -153,99 +151,87 @@ class SessionOptions:
 
         return session_options
 
-    def _get_markets(self) -> list:
+    @classmethod
+    def _parse_markets(cls) -> None:
         """Read all markets from finam module (hardcoded enum in external lib)"""
 
-        options_markets = []
-
+        # Prepare export: convert enum to list of formatted objects
         for idx, market in enumerate(Market):
-            # Prepare export: convert enum to list of objects (+1 for idx because of vue-simple-search-dropdown)   
             # Skip excluded markets
-            if market.name in self._MARKETS_EXCLUDE_LIST:
+            if market.name in cls._MARKETS_EXCLUDE_LIST:
                 continue
-            # Format object before export
-            options = {'id': idx+1, 'name': self.aliases_markets[market.name], 'code': str(market)}
-            options_markets.append(options)
+            # Format object before export (+1 for idx because of vue-simple-search-dropdown)
+            options = {'id': idx+1, 'name': cls.aliases_markets[market.name], 'code': market.name}
+            cls.markets.append(options)
 
         # Sort markets by name
-        options_markets.sort(key=lambda x: x['name'])
+        cls.markets.sort(key=lambda x: x['name'])
 
-        return options_markets
-
-    def _get_tickers(self) -> dict:
+    @classmethod
+    def _parse_tickers(cls) -> None:
         """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
 
-        exporter = Exporter()
-        options_securities = {}
-
         # Read tickers for every market and convert it to dict
+        exporter = Exporter()
         for market in Market:
             # Skip excluded markets
-            if market.name in self._MARKETS_EXCLUDE_LIST:
+            if market.name in cls._MARKETS_EXCLUDE_LIST:
                 continue
             # Find tickers by market name
-            tickers = exporter.lookup(market=[market])
+            tickers = exporter.lookup(market=market)
             # Drop duplicated codes
             tickers = tickers.drop_duplicates()
             # Drop removed tickers
             tickers = tickers[tickers['code'].str.match('.*-RM')==False]
-            # Copy df to avoid chained assignation below
-            tickers = tickers.copy(deep=True)
             # Copy index to column
             tickers.reset_index(inplace=True)
             # Replace special symbols in ticker's names
             tickers['name'] = tickers.loc[:, 'name'].apply(lambda str: str.replace('(', ' - ').replace(')', '').replace('\\', ''))
             # Add ticker's code to displayed name
             tickers['name'] = tickers['name'] + ' - ' + tickers['code']
-            # Create dict filled dict of dicts instead of pandas df
-            options_securities[str(market)] = tickers.to_dict(orient='records')
-            # Sort markets by name
-            options_securities[str(market)].sort(key=lambda x: x['name'])
-        
-        return options_securities
-
-    def _get_timeframes(self) -> list:
+            # Create filled dict of dicts instead of pandas df
+            cls.tickers[market.name] = tickers.to_dict(orient='records')
+            # Order tickers for every market by name
+            cls.tickers[market.name].sort(key=lambda x: x['name'])
+            
+    @classmethod
+    def _parse_timeframes(cls) -> None:
         """Read timeframes from finam module (hardcoded in external lib)"""
 
-        options_timeframes = []
-
+        # Prepare export: convert enum to list of formatted objects 
         for idx, tf in enumerate(Timeframe):
             # Skip some timeframes from the session's options list
-            if tf.name in self._TIMEFRAME_EXCLUDE_LIST:
+            if tf.name in cls._TIMEFRAME_EXCLUDE_LIST:
                 continue
-            # Convert enum to list of objects (+1 for idx because of vue-simple-search-dropdown)
-            option = {'id': idx+1, 'name': self.aliases_timeframes[tf.name], 'code': str(tf)}
-            options_timeframes.append(option)
-
-        return options_timeframes
-
-    def _get_random_security(self, market):
-        return random.choice(self._random_security[market])
+            # Format object before export (+1 for idx because of vue-simple-search-dropdown)
+            option = {'id': idx+1, 'name': cls.aliases_timeframes[tf.name], 'code': tf.name}
+            cls.timeframes.append(option)
 
     @classmethod
     def update(cls) -> None:
-        """Parse finam data and save results in class"""
+        """Parse finam data and save results in class attributes"""
         if not all((cls.markets, cls.tickers, cls.timeframes)):
-            cls.markets = cls._get_markets(cls)
-            cls.tickers = cls._get_tickers(cls)
-            cls.timeframes = cls._get_timeframes(cls)
-        pass
+            cls._parse_markets()
+            cls._parse_tickers()
+            cls._parse_timeframes()
 
     @classmethod
     def find_alias_ticker(cls, market, ticker) -> str:
         """Find in class ticker for specified market and return full name of it"""
-        return [t['name'] for t in cls.tickers[market] if t['code'] == ticker][0]
+        market_tickers = cls.tickers[market]
+        ticker_alias = [t['name'] for t in market_tickers if t['code'] == ticker][0]
+        return ticker_alias
 
     @staticmethod
     def convert_tf_to_min(tf: str) -> int:
         """Map timeframe names with their duration in minutes"""
         minutes_in_timeframe = {
-            'Timeframe.MINUTES1': 1,
-            'Timeframe.MINUTES5': 5,
-            'Timeframe.MINUTES10': 10,
-            'Timeframe.MINUTES15': 15,
-            'Timeframe.MINUTES30': 30,
-            'Timeframe.HOURLY': 60,
-            'Timeframe.DAILY': 24*60
+            'MINUTES1': 1,
+            'MINUTES5': 5,
+            'MINUTES10': 10,
+            'MINUTES15': 15,
+            'MINUTES30': 30,
+            'HOURLY': 60,
+            'DAILY': 24*60
         }
         return minutes_in_timeframe[tf]

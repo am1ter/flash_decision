@@ -54,7 +54,7 @@ class TestFrontend(unittest.TestCase):
         url = TestBackend._get_api_url(None) + '/cleanup-tests-results'
         print(f'Results cleaned up: ' + url)
         try:
-            resp = r.post(url)
+            resp = r.get(url)
             if resp.status_code != 200:
                 return self.fail(resp.text)
         except r.exceptions.ConnectionError as e:

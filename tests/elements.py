@@ -65,7 +65,7 @@ class ElementDatePicker(ElementBase):
         actions.pause(1/8)
 
         # Select last workday - send additional ARROW_LEFT keys depending on weekday
-        if weekday in [2, 3, 4, 5, 6]:
+        if weekday in (2, 3, 4, 5, 6):
             actions.send_keys(Keys.ARROW_LEFT)
         elif weekday == 7:
             actions.send_keys(Keys.ARROW_LEFT)

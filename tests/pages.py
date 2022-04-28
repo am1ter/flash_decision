@@ -198,7 +198,7 @@ class PageSessionCustom(PageBase):
 
 
 class PageSessionPreset(PageBase):
-    """Page for waiting before preseted session"""
+    """Page for waiting before preset session"""
 
     title = 'Start new training session'
 

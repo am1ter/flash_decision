@@ -1,5 +1,3 @@
-from app.config import FlaskConfig
-
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -23,26 +21,28 @@ logger = logging.getLogger('App')
 logger.info('Logger started successfully')
 
 
-# Create Flask application and load it's config
-app = Flask(__name__, static_url_path='')
-app.config.from_object(FlaskConfig)
-cors = CORS(app, resources={r'/api/*': {'origins': '*'}})
+# Create Flask application and load it`s config
+from app.config import FlaskConfig
+flask_app = Flask(__name__, static_url_path='')
+flask_app.config.from_object(FlaskConfig)
+cors = CORS(flask_app, resources={flask_app.config['API_PREFIX'] + '/*': {'origins': '*'}})
 logger.info('Flask initialized')
 
 
 # Create database and migrations
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+db = SQLAlchemy(flask_app)
+migrate = Migrate(flask_app, db)
+
+
+# Check if db connection is up and system users are exist (create them if not)
+from app.models import check_db_connection, create_system_users
+check_db_connection()
 logger.info('Connection to db established')
-
-
-# Check if system users are exist, create them if not
-from app.models import create_system_users
 create_system_users()
 logger.info('System users verified')
 
 
-# Load scripts to run flask app
+# Load scripts to run flask app, set up api prefix
 from app.api import api
-app.register_blueprint(api, url_prefix='/api')
+flask_app.register_blueprint(api, url_prefix=flask_app.config['API_PREFIX'])
 logger.info('API started successfully')

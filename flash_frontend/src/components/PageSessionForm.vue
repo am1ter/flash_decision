@@ -214,7 +214,7 @@
                 inputMarketsLen: 10,
                 sessionOptionsTickers: [],
                 inputTickersLen: 10,
-                selectedMarket: "Market.SHARES",
+                selectedMarket: "SHARES",
                 dateMax: new Date(),
                 dateMin: new Date(2019, 0, 1),
                 formErrors: [],
