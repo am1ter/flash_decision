@@ -591,7 +591,7 @@ class Iteration(db.Model):
             iter.FixingBarDatetime = session.LastFixingBarDatetime
             iter.FixingBarNum = session.TotalSessionBars - 1   # first bar num = 0
         else:
-            # For other iterations find last created iteration for current session and use it to calc new vals
+            # For other iterations find last created iteration for current session and use it to calc new values
             last_iteration = session.iterations.filter(cls.Session == session).order_by(cls.IterationId).all()[-1:][0]
             # Calc new iteration fixing date and bar number considering if there is a skipped iterations 
             iterations_distance = iter.IterationNum - last_iteration.IterationNum

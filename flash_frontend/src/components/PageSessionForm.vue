@@ -198,7 +198,7 @@
     import { mapState } from "vuex"
     import { apiGetSessionOptions, apiPostStartNewSession } from "@/api"
 
-    // Pages subcomponents
+    // Page subcomponents
     import ModeSelector from "./subcomponents/ModeSelector.vue"
 
     export default {
@@ -330,11 +330,11 @@
                 
                 let response = await apiPostStartNewSession(this.currentSession["options"]["values"])
                 // Add attributes from response to the object
-                this.currentSession["options"]["values"]["sessionId"] = response.vals["SessionId"]
-                this.currentSession["options"]["values"]["timelimit"] = response.vals["Timelimit"]
-                this.currentSession["options"]["values"]["iterations"] = response.vals["Iterations"]
-                this.currentSession["options"]["values"]["barsnumber"] = response.vals["Barsnumber"]
-                this.currentSession["options"]["values"]["fixingbar"] = response.vals["Fixingbar"]
+                this.currentSession["options"]["values"]["sessionId"] = response.values["SessionId"]
+                this.currentSession["options"]["values"]["timelimit"] = response.values["Timelimit"]
+                this.currentSession["options"]["values"]["iterations"] = response.values["Iterations"]
+                this.currentSession["options"]["values"]["barsnumber"] = response.values["Barsnumber"]
+                this.currentSession["options"]["values"]["fixingbar"] = response.values["Fixingbar"]
 
                 this.currentSession["options"]["aliases"] = {
                     "market": response.aliases["Market"],

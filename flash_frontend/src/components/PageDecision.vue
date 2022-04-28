@@ -15,7 +15,7 @@
                     </template>
                 </countdown>
             </b-alert>
-            <Plotly :data="iterationChart.data" :layout="layout" :display-mode-bar="false"></Plotly>
+            <ChartCandles :eventBus="eventBus"/>
             <b-button-group class="w-100">
                 <b-button id="button-sell" v-on:click="saveDecision($event)" squared variant="danger">Sell ᐁ</b-button>
                 <b-button id="button-skip" v-on:click="saveDecision($event)" squared class="ms-1">Skip ᐅ</b-button>
@@ -26,108 +26,36 @@
 </template>
 
 <script>
+    import Vue from "vue"
     import { mapState } from "vuex"
-    import { Plotly } from "vue-plotly"
-    import { apiGetIterationChart, apiGetIterationInfo, apiPostRecordDecision } from "@/api"
+    import { apiPostRecordDecision, apiGetIterationInfo } from "@/api"
+
+    // Page subcomponents
+    import ChartCandles from "./subcomponents/ChartCandles.vue"
 
     export default {
         name: "PageDecision",
         components: {
-            Plotly
+            ChartCandles
         },
         data() {
             return {
                 isLoaded: false,
-                iterationChart: {},
-                // Chart layout properties
-                layout: {
-                    title: {visible: false},
-                    dragmode: "zoom",
-                    showlegend: false,
-                    height: 350,
-                    margin: {
-                        r: 0,
-                        t: 25,
-                        b: 25,
-                        l: 0
-                    },
-                    xaxis: {
-                        autorange: true,
-                        rangeslider: {visible: false},
-                        title: {visible: false},
-                        showticklabels: false
-                        },
-                    annotations: [
-                        {
-                        x: 0,
-                        y: 0.5,
-                        xref: 'x',
-                        yref: 'paper',
-                        text: 'Your<br>decision?',
-                        font: {color: 'black'},
-                        showarrow: true,
-                        xanchor: 'right',
-                        ax: 0,
-                        ay: 0
-                        }
-                    ],
-                    shapes: [
-                        {
-                        type: 'rect',
-                        xref: 'x',
-                        yref: 'paper',
-                        x0: 0,
-                        y0: 0,
-                        x1: 0,
-                        y1: 1,
-                        fillcolor: '#d3d3d3',
-                        opacity: 0.2,
-                        line: {
-                            width: 0
-                        }
-                        },
-                        {
-                        type: 'rect',
-                        xref: 'x',
-                        yref: 'paper',
-                        x0: 0,
-                        y0: 0,
-                        x1: 0,
-                        y1: 1,
-                        fillcolor: '#d3d3d3',
-                        opacity: 0.5,
-                        line: {
-                            width: 0
-                        }
-                        },
-                        {
-                        type: 'rect',
-                        xref: 'x',
-                        yref: 'paper',
-                        x0: 0,
-                        y0: 0,
-                        x1: 0,
-                        y1: 1,
-                        fillcolor: '#d3d3d3',
-                        opacity: 0.5,
-                        line: {
-                            width: 0
-                        }
-                        }
-                        ]
-                }
+                eventBus: new Vue()
             }
         },
         computed: {
             ...mapState(["user", "currentSession", "apiErrors"])
         },
-        mounted() {
+        async mounted() {
             // Declare hotkeys (listen to keyboard input)
             this.enableHotkeys()
+            // If page is reloaded - update vuex objects
+            await this.updateObject()
             // Create blank decision when page has been mounted
-            this.createBlankDecision()
-            // Load first chart
-            this.updateChart()
+            await this.createBlankDecision()
+            // Show elements
+            this.isLoaded = true
         },
         methods: {
             enableHotkeys() {
@@ -146,41 +74,6 @@
                     // Following iterations
                     this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
                 }
-            },
-            async updateChart() {
-                // Check if no info for current session found. Page reloaded? Parse url and make api request
-                if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
-                    this.currentSession["currentIterationNum"] = parseInt(this.$route.params.iteration_num)
-                    this.currentSession["iterations"] = {}
-                    this.currentSession["decisions"] = {}
-                    this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
-                    this.currentSession["options"]["values"] = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession["currentIterationNum"])
-                }
-                // Get iteration chart over API
-                let response = await apiGetIterationChart(this.currentSession["options"]["values"]["sessionId"], this.currentSession["currentIterationNum"])
-                // Chart data to display [0], iteration data to vuex storage [1]
-                if (response) {
-                    this.iterationChart = JSON.parse(response)[0];
-                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = JSON.parse(response)[1]
-                } else {
-                    // If response is `false` then skip decision for such iteration 
-                    this.iterationChart = JSON.parse(false);
-                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = this.currentSession["iterations"][this.currentSession["currentIterationNum"] - 1]
-                    document.getElementById("button-skip").click(); 
-                }
-                // Format chart - add extra space to the graph
-                let finalbar = parseInt(this.currentSession["options"]["values"]["barsnumber"])
-                let fixingbar = parseInt(this.currentSession["options"]["values"]["fixingbar"])
-                this.layout.annotations[0].ax = fixingbar * -1
-                this.layout.annotations[0].x = finalbar + fixingbar
-                this.layout.shapes[0].x0 = finalbar
-                this.layout.shapes[0].x1 = finalbar + fixingbar
-                this.layout.shapes[1].x0 = finalbar
-                this.layout.shapes[1].x1 = finalbar + 1
-                this.layout.shapes[2].x0 = finalbar + fixingbar - 1
-                this.layout.shapes[2].x1 = finalbar + fixingbar
-                // Show elements
-                this.isLoaded = true
             },
             async saveDecision(event) {
                 // Decision has been made
@@ -232,6 +125,17 @@
                     this.$router.push(`/sessions-results/${this.currentSession["options"]["values"]["sessionId"]}`)
                 }
             },
+            async updateObject() {
+                // Check if no info for current session found. Page reloaded? Parse url and make api request
+                if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
+                    this.currentSession["currentIterationNum"] = parseInt(this.$route.params.iteration_num)
+                    this.currentSession["iterations"] = {}
+                    this.currentSession["decisions"] = {}
+                    this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
+                    this.currentSession["options"]["values"] = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession["currentIterationNum"])
+                }
+            }
+            ,
             goNextIteration() {
                 // New iteration processing
                 // Update vars
@@ -241,7 +145,7 @@
                 // Create blank decision
                 this.createBlankDecision()
                 // Load new chart
-                this.updateChart()
+                this.eventBus.$emit('goNextIteration')
                 // Restart countdown
                 this.$refs.pageTimer.startCountdown(true)
             }
@@ -252,10 +156,10 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-#bars {
-        max-width: 453px;
-        width: 100%;
-        padding-bottom: 15px;
-    }
+    #bars {
+            max-width: 453px;
+            width: 100%;
+            padding-bottom: 5px;
+        }
 
 </style>

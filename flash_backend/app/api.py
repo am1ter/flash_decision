@@ -214,7 +214,7 @@ def api_start_new_session() -> Response:
 
     # Prepare response to frontend
     response = {
-        'vals': current_session.convert_to_dict(),
+        'values': current_session.convert_to_dict(),
         'aliases': current_session.convert_to_dict_format()
     }
     
@@ -289,14 +289,15 @@ def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
     current_session_options = current_session.convert_to_dict()
     response = {
         'sessionId': current_session_options['SessionId'],
-        'iterations': current_session_options['Iterations'],
-        'barsnumber': current_session_options['Barsnumber'],
-        'fixingbar': current_session_options['Fixingbar'],
-        'market': current_session_options['Market'],
         'mode': current_session_options['Mode'],
+        'market': current_session_options['Market'],
         'ticker': current_session_options['Ticker'],
+        'timeframe': current_session_options['Timeframe'],
+        'barsnumber': current_session_options['Barsnumber'],
         'timelimit': current_session_options['Timelimit'],
-        'timeframe': current_session_options['Timeframe']
+        'iterations': current_session_options['Iterations'],
+        'slippage': current_session_options['Slippage'],
+        'fixingbar': current_session_options['Fixingbar']
     }
     
     logger.info(f'Info about {current_iteration} sent to frontend')
