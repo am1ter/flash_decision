@@ -109,6 +109,10 @@ const routes = [
             store.commit("setUserFromCookie")
             if (store.getters.isAuth) { next() } else { next("/login") }
         }
+    },
+    {
+        path: "*",
+        redirect: '/'
     }
 ];
 
