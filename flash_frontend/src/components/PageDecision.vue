@@ -145,7 +145,7 @@
                 // Create blank decision
                 this.createBlankDecision()
                 // Load new chart
-                this.eventBus.$emit('goNextIteration')
+                this.eventBus.$emit("goNextIteration")
                 // Restart countdown
                 this.$refs.pageTimer.startCountdown(true)
             }

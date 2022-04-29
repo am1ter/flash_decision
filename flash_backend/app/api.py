@@ -282,7 +282,7 @@ def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
     # Check if all decisions before requested iteration were already made (manual skips is forbidden)
     total_decisions = len(current_session.decisions.all())
     if total_decisions != iteration_num - 1:
-        logger.warning(f'Requested iteration info for {current_session}, but not all decisions for it exist in db')
+        logger.warning(f'Requested unexpected iteration info for {current_session}')
         return jsonify('Something went wrong. Please start new session.'), 500
 
     # Send response to frontend

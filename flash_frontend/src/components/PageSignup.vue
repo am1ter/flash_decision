@@ -144,7 +144,7 @@
 <style scoped>
 
     #page {
-        height: calc(100vh - 54px - 105px - 34px - 80px);
+        height: calc(100vh - 54px - 105px - 34px - 50px);
     }
 
     #usage-terms {

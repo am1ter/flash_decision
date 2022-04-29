@@ -195,7 +195,7 @@
     }
 
     .usercard {
-        border: 0.5px solid #888888;
+        border: 1px solid #888888;
         box-sizing: border-box;
         margin-top: 15px;
         padding: 10px 0px;
@@ -229,9 +229,9 @@
     }
 
     .current-user-summary {
-        border-left: 0.5px solid #076583;
-        border-right: 0.5px solid #076583;
-        border-bottom: 0.5px solid #076583;
+        border-left: 1px solid #076583;
+        border-right: 1px solid #076583;
+        border-bottom: 1px solid #076583;
         box-shadow: 0px 4px 6px -4px rgba(24, 39, 75, 0.12), 0px 8px 8px -4px rgba(24, 39, 75, 0.08);
         font-size: 14px;
     }
@@ -239,7 +239,7 @@
     .current-user-summary-champion {
         border-left: 1.5px solid #FFC107;
         border-right: 1.5px solid #FFC107;
-        border-bottom: 2px solid #FFC107;
+        border-bottom: 1.5px solid #FFC107;
     }
 
     .container-fluid {

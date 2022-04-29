@@ -240,6 +240,7 @@
         methods: {
             async prepareSession() {
                 // Call functions to prepare page with session settings
+                this.cleanResults()
                 if (this.mode == "custom") {
                     await this.prepareSessionCustom()
                     this.isLoaded = true
@@ -335,6 +336,7 @@
                 this.currentSession["options"]["values"]["iterations"] = response.values["Iterations"]
                 this.currentSession["options"]["values"]["barsnumber"] = response.values["Barsnumber"]
                 this.currentSession["options"]["values"]["fixingbar"] = response.values["Fixingbar"]
+                this.currentSession["options"]["values"]["slippage"] = response.values["Slippage"]
 
                 this.currentSession["options"]["aliases"] = {
                     "market": response.aliases["Market"],
@@ -351,6 +353,10 @@
                 this.currentSession["currentIterationNum"] = 1
                 this.currentSession["iterations"] = {1: {}}
                 this.isLoaded = true
+            },
+            cleanResults() {
+                // Clean results of previeous sessions
+                this.currentSession["sessionsResults"] = {}
             },
             goToDecisions() {
                 // Go to the decision making page

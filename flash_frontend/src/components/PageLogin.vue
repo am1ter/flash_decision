@@ -66,6 +66,7 @@
 
                 // Stop if blank login or password
                 if (!input_login || !input_password) {
+                    this.formErrors.push("input-password")
                     return false
                 }
 
@@ -86,7 +87,7 @@
 <style scoped>
 
     #page {
-        height: calc(100vh - 54px - 105px - 34px - 80px);
+        height: calc(100vh - 54px - 105px - 34px - 50px);
     }
 
 </style>

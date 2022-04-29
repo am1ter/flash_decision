@@ -11,13 +11,8 @@
             <b-button squared class="mt-3 gradient" v-on:click="reloadPage()">Refresh page</b-button>
         </div>
 
-        <div id="header">
-            <Header/>
-        </div>
-
         <div id="content" class="shadow">
-            <Menu />
-            <Title/>
+             <Header/>
             <router-view>
                 <PageLogin/>
                 <PageSignup/>
@@ -44,8 +39,6 @@
     // Service components
     import Background from "./components/Background.vue"
     import Header from "./components/Header.vue"
-    import Menu from "./components/Menu.vue"
-    import Title from "./components/Title.vue"
     import Credits from "./components/Credits.vue"
     
     // Pages components
@@ -62,8 +55,6 @@
         components: {
             Background,
             Header,
-            Menu,
-            Title,
             Credits,
             PageLogin,
             PageSignup,
@@ -114,14 +105,8 @@
         font-size: 16px;
     }
 
-    #header {
-        max-width: 453px;
-        height: 100%;
-        margin: auto;
-    }
-
     #content {
-        min-height: calc(100vh - 34px - 10px - 34px);
+        min-height: calc(100vh - 89px - 25px - 20px);
         max-width: 453px;
         margin: 0px auto;
         padding-bottom: 5px;

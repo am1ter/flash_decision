@@ -1,18 +1,27 @@
 <template>
     <section id="menu" :class="{ disabled: !isAuth }">
-            <router-link id="button-menu-session" :to="{name: 'Session Mode Selector'}" tag="div" class="menu-button" :class="{ 'menu-active': checkPageIsActive('session') }">
-                <img v-if="checkPageIsActive('session')" src="../assets/icons/i_menu_session_active.svg" alt="Icon">
-                <img v-else src="../assets/icons/i_menu_session_inactive.svg" alt="Icon">
+            <router-link
+            id="button-menu-session" tag="div" class="menu-button" 
+            :to="`/session/`"
+            :class="{ 'menu-active': checkPageIsActive('session') }">
+                <img v-if="checkPageIsActive('session')" src="@/assets/icons/i_menu_session_active.svg" alt="Icon">
+                <img v-else src="@/assets/icons/i_menu_session_inactive.svg" alt="Icon">
                 <p class="menu-text">Session</p>
             </router-link>
-            <router-link id="button-menu-decision" :to="{name: 'Session’s results page', params: {'session_id': insUrlParamSessionId()}}" tag="div" class="menu-button" :class="{ 'menu-active': checkPageIsActive('decision'), 'disabled': checkIsSessionBlank()}">
-                <img v-if="checkPageIsActive('decision')" src="../assets/icons/i_menu_decision_active.svg" alt="Icon">
-                <img v-else src="../assets/icons/i_menu_decision_inactive.svg" alt="Icon">
+            <router-link 
+            id="button-menu-decision" tag="div" class="menu-button"
+            :to="makeUrlForDecisionButton()"
+            :class="{ 'menu-active': checkPageIsActive('decision'), 'disabled': checkNoSession()}">
+                <img v-if="checkPageIsActive('decision')" src="@/assets/icons/i_menu_decision_active.svg" alt="Icon">
+                <img v-else src="@/assets/icons/i_menu_decision_inactive.svg" alt="Icon">
                 <p class="menu-text" >Decision</p>
             </router-link>
-            <router-link id="button-menu-scoreboard" :to="{name: 'Scoreboard page', params: {'mode': 'custom', 'user_id': insUrlParamUserId()}}" tag="div" class="menu-button" :class="{ 'menu-active': checkPageIsActive('scoreboard') }">
-                <img v-if="checkPageIsActive('scoreboard')" src="../assets/icons/i_menu_scoreboard_active.svg" alt="Icon">
-                <img v-else src="../assets/icons/i_menu_scoreboard_inactive.svg" alt="Icon">
+            <router-link
+            id="button-menu-scoreboard" tag="div" class="menu-button"
+            :to="`/scoreboard/custom/${insUrlParamUserId()}/`"
+            :class="{ 'menu-active': checkPageIsActive('scoreboard') }">
+                <img v-if="checkPageIsActive('scoreboard')" src="@/assets/icons/i_menu_scoreboard_active.svg" alt="Icon">
+                <img v-else src="@/assets/icons/i_menu_scoreboard_inactive.svg" alt="Icon">
                 <p class="menu-text">Scoreboard</p>
             </router-link>
     </section>
@@ -41,26 +50,36 @@
                 let current_page = this.$route.path.split("/")[1]
                 return menu_paths[menu_element].indexOf(current_page) >= 0
             },
-            checkIsSessionBlank() {
+            checkNoSession() {
                 // Apply class 'disabled' if session hasn't started yet
-                if (this.isAuth) {
-                    let ses_not_started = (Object.keys(this.currentSession["options"]["values"]).length == 0)
-                    return ses_not_started
-                } else {
-                    return false
-                }
+                let noSession = this.currentSession["options"]["values"]["sessionId"] == undefined
+                return noSession
             },
             insUrlParamSessionId() {
                 // Used for return to the session's results page
                 // Check if session has been started and there is sessionId
-                let link_postfix = (Object.keys(this.currentSession["options"]["values"]).length != 0) ? this.currentSession["options"]["values"]["sessionId"] : 0
-                return link_postfix
+                let sessionId = (Object.keys(this.currentSession["options"]["values"]).length != 0) ? this.currentSession["options"]["values"]["sessionId"] : 0
+                return sessionId
             },
             insUrlParamUserId() {
                 // Used for return to the session's results page
                 // Check if session has been started and there is sessionId
                 let link_postfix = ("id" in this.user) ? this.user.id : 0
                 return link_postfix
+            },
+            makeUrlForDecisionButton() {
+                // Make url for decision button: go to decisions or go to session results
+                let url = ''
+                let isSessionStarted = this.currentSession["currentIterationNum"] != undefined
+                let isSessionFinished = Object.keys(this.currentSession["sessionsResults"]).length > 0
+
+                if (isSessionFinished) {
+                    url = `/sessions-results/${this.insUrlParamSessionId()}/`
+                } else if (isSessionStarted) {
+                    url = `/decision/${this.insUrlParamSessionId()}/${this.currentSession["currentIterationNum"]}`
+                }
+
+                return url
             }
         }
     }
@@ -103,18 +122,11 @@
         background-color: #ffffff;
     }
 
-
     .menu-text {
         margin: 15px 0px 15px 5px;
         font-weight: 500;
     }
 
-    /* .router-link-active {
-        background-color: #0B5A73;
-        color: #ffffff;
-        box-shadow: 0px 1px 0px #333333;
-    } */
-    
     .menu-active {
         background-color: #0B5A73;
         color: #ffffff;

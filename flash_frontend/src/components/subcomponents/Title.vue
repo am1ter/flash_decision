@@ -1,5 +1,5 @@
 <template>
-    <section id="title">
+    <section id="title" :class="{shift_header: !isAuth}">
         <div id="layout-title" class="shadow">
             <div id="layout-title-left">
                 <h1 id="title-letter">{{ title.charAt(0).toUpperCase() }}</h1>
@@ -16,15 +16,21 @@
 </template>
 
 <script>
+    import { mapState } from "vuex"
+
     export default {
         name: "Title",
         props: {},
         computed: {
+            ...mapState(["user"]),
             title() {
                 return this.$route.meta.title
             },
             instruction() {
                 return this.$route.meta.instruction
+            },
+            isAuth() {
+                return this.$store.getters.isAuth
             }
         }
     }
@@ -33,9 +39,34 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
+    .shift_header {
+        margin: 55px auto 0px auto !important;
+    }
+
+    #title {
+        margin-top: 89px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+        z-index: 1;
+        padding-top: 5px;
+    }
+
+    #title h1 {
+        margin-top: 0px;
+        margin-bottom: 0px;
+        padding-top: 0px;
+    }
+    
+    @media (max-width: 700px) {
+        #title {
+            font-size: 20px;
+        }
+    }
+
     #layout-title {
         height: 64px;
-        margin: 25px;
+        margin: 15px 25px;
         display: flex;
         flex-direction: row;
         justify-content: center;
@@ -62,19 +93,6 @@
         position: relative;
         max-width: 100%;
         margin: 0px 25px;
-    }
-
-    #title {
-        text-align: center;
-        font-size: 24px;
-        font-weight: 700;
-        margin: 0px;
-    }
-    
-    @media (max-width: 700px) {
-        #title {
-            font-size: 20px;
-        }
     }
 
     #title-letter {

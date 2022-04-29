@@ -31,7 +31,7 @@
                 layout: {
                     title: {visible: false},
                     showlegend: false,
-                    dragmode: "lasso",
+                    dragmode: false,
                     height: (window.innerHeight > 700) ? window.innerHeight * 0.54 : window.innerHeight * 0.48,
                     autosize: true,
                     margin: {
@@ -51,17 +51,17 @@
                         {
                         x: 0, // Will be set during formating
                         y: 0, // Will be set during formating
-                        xref: 'x',
-                        yref: 'y',
-                        ayref: 'y',
-                        text: 'Your<br>decision?',
-                        font: {color: '#333333', size: 10},
+                        xref: "x",
+                        yref: "y",
+                        ayref: "y",
+                        text: "Your<br>decision?",
+                        font: {color: "#333333", size: 10},
                         showarrow: true,
                         arrowhead: 0,
                         arrowsize: 1,
                         arrowwidth: 1.25,
-                        arrowcolor: '#888888',
-                        xanchor: 'left',
+                        arrowcolor: "#888888",
+                        xanchor: "left",
                         ax: 0, // Will be set during formating
                         ay: 0 // Will be set during formating
                         },
@@ -69,16 +69,16 @@
                         {
                         x: 0, // Will be set during formating
                         y: 0.05,
-                        xref: 'x',
-                        yref: 'paper',
-                        text: 'Position<br>autoclosing',
-                        font: {color: '#333333', size: 10},
+                        xref: "x",
+                        yref: "paper",
+                        text: "Position<br>autoclosing",
+                        font: {color: "#333333", size: 10},
                         showarrow: true,
                         arrowhead: 0,
                         arrowsize: 1,
                         arrowwidth: 1.25,
-                        arrowcolor: '#888888',
-                        xanchor: 'right',
+                        arrowcolor: "#888888",
+                        xanchor: "right",
                         ax: 0, // Will be set during formating
                         ay: 0
                         }
@@ -86,70 +86,70 @@
                     shapes: [
                         // Background
                         {
-                        type: 'rect',
-                        xref: 'x',
-                        yref: 'paper',
+                        type: "rect",
+                        xref: "x",
+                        yref: "paper",
                         x0: 0, // Will be set during formating
                         y0: 0,
                         x1: 0, // Will be set during formating
                         y1: 1,
-                        fillcolor: '#d3d3d3',
+                        fillcolor: "#d3d3d3",
                         opacity: 0.2,
                         line: {width: 0},
                         layer: "below"
                         },
                         // Border left
                         {
-                        type: 'line',
-                        xref: 'x',
-                        yref: 'paper',
+                        type: "line",
+                        xref: "x",
+                        yref: "paper",
                         x0: 0, // Will be set during formating
                         y0: 0,
                         x1: 0, // Will be set during formating
                         y1: 1,
-                        fillcolor: '#d3d3d3',
+                        fillcolor: "#d3d3d3",
                         opacity: 0.25,
                         line: {width: 1},
-                        layer: "below"
+                        layer: "above"
                         },
                         // Border right
                         {
-                        type: 'line',
-                        xref: 'x',
-                        yref: 'paper',
+                        type: "line",
+                        xref: "x",
+                        yref: "paper",
                         x0: 0, // Will be set during formating
                         y0: 0,
                         x1: 0, // Will be set during formating
                         y1: 1,
-                        fillcolor: '#d3d3d3',
+                        fillcolor: "#d3d3d3",
                         opacity: 0.25,
                         line: {width: 1},
-                        layer: "below"
+                        layer: "above"
                         },
                         // Last price line
                         {
-                        type: 'line',
-                        xref: 'x',
-                        yref: 'y',
+                        type: "line",
+                        xref: "x",
+                        yref: "y",
                         x0: 0, // Will be set during formating
                         y0: 0, // Will be set during formating
                         x1: 0, // Will be set during formating
                         y1: 0, // Will be set during formating
-                        fillcolor: '#d3d3d3',
+                        fillcolor: "#d3d3d3",
                         opacity: 0.25,
                         line: {width: 1},
-                        layer: "below"
+                        layer: "above"
                         },
                         // Slippage zone
                         {
-                        type: 'rect',
-                        xref: 'x',
-                        yref: 'y',
+                        type: "rect",
+                        xref: "x",
+                        yref: "y",
                         x0: 0, // Will be set during formating
                         y0: 0, // Will be set during formating
                         x1: 0, // Will be set during formating
                         y1: 0, // Will be set during formating
-                        fillcolor: 'red',
+                        fillcolor: "red",
                         opacity: 0.05,
                         line: {width: 0}
                         }
@@ -162,7 +162,7 @@
         },
         beforeMount() {
             // Start listen for pressing action buttons on Decision page 
-            this.eventBus.$on('goNextIteration', this.createChart)
+            this.eventBus.$on("goNextIteration", this.createChart)
             // Download and format chart
             this.createChart()
             // Display component

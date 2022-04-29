@@ -10,7 +10,7 @@ const state = {
     version: "0.7.09",
     user: {},
     apiErrors: [],
-    currentSession: {"options": {"values": {}, "aliases": ""}},
+    currentSession: {"options": {"values": {}, "aliases": ""}, 'sessionsResults': {}},
     copyright_year: new Date().getFullYear()
 }
 

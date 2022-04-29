@@ -1,6 +1,6 @@
 <template>
-    <section id="page">
-        <div v-if="apiErrors.length == 0 & isLoaded" class="col-12">
+    <section id="page" v-if="apiErrors.length == 0 & isLoaded">
+        <div class="col-12">
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
             <b-button id="button-go-to-scoreboard" type="submit" squared class="col-12 gradient"
