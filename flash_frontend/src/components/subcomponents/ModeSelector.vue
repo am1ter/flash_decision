@@ -1,6 +1,6 @@
 <template>
     <!-- Navigation bar (modes) -->
-    <div id="session-mode" v-if="apiErrors == 0 & isLoaded">
+    <div id="session-mode" v-if="apiErrors == 0 & !isLoading">
         <ul class="nav justify-content-center mb-4">
             <li id="button-mode-custom" class="nav-item">
                 <a class="nav-link" 
@@ -31,26 +31,21 @@
 </template>
 
 <script>
-
     import { mapState } from "vuex"
 
     export default {
         name: "ModeSelector",
         data() {
-            return {
-                isLoaded: false,
-                }
+            return {}
         },
         props: {
             page: String,
             userId: String
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors"])
+            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
         },
-        beforeMount() {
-            this.isLoaded = true
-        },
+        beforeMount() {},
         methods: {
             isPageActive(nav_item) {
                 // Check if navbar item is active

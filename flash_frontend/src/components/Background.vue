@@ -1,8 +1,8 @@
 <template>
         <div id="background">
-            <marquee-text :duration="60">
+            <Marquee-text :duration="60">
                 <p># flash_decision</p>
-            </marquee-text>
+            </Marquee-text>
         </div>
 </template>
 

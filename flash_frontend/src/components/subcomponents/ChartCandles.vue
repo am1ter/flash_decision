@@ -1,6 +1,6 @@
 <template>
     <!-- Chart Candels -->
-    <div id="chart-candels" v-if="apiErrors == 0 & isLoaded">
+    <div id="chart-candels" v-if="apiErrors == 0 & !isLoading">
         <Plotly 
         :data="iterationChart['data']" 
         :layout="layout" 
@@ -13,7 +13,6 @@
 <script>
     import { mapState } from "vuex"
     import { Plotly } from "vue-plotly"
-    import { apiGetIterationChart } from "@/api"
 
     export default {
         name: "ChartCandels",
@@ -21,12 +20,10 @@
             Plotly
         },
         props: {
-            eventBus: Object
+            iterationChart: Object
         },
         data() {
             return {
-                isLoaded: false,
-                iterationChart: {},
                 // Chart layout properties
                 layout: {
                     title: {visible: false},
@@ -158,32 +155,13 @@
                 }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors"])
+            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
         },
         beforeMount() {
-            // Start listen for pressing action buttons on Decision page 
-            this.eventBus.$on("goNextIteration", this.createChart)
-            // Download and format chart
-            this.createChart()
-            // Display component
-            this.isLoaded = true
+            // Change chart layout
+            this.formatChart()
         },
         methods: {
-            async createChart() {
-                // Get iteration chart over API
-                let response = await apiGetIterationChart(this.currentSession["options"]["values"]["sessionId"], this.currentSession["currentIterationNum"])
-                // Chart data to display [0], iteration data to vuex storage [1]
-                if (response) {
-                    this.iterationChart = JSON.parse(response)[0];
-                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = JSON.parse(response)[1]
-                } else {
-                    // If response is `false` then skip decision for such iteration 
-                    this.iterationChart = JSON.parse(false);
-                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = this.currentSession["iterations"][this.currentSession["currentIterationNum"] - 1]
-                    document.getElementById("button-skip").click(); 
-                }
-                this.formatChart()
-            },
             formatChart() {
                 // Format chart - add extra space to the graph
                 let finalbar = parseInt(this.currentSession["options"]["values"]["barsnumber"])

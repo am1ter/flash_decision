@@ -11,7 +11,8 @@ const state = {
     user: {},
     apiErrors: [],
     currentSession: {"options": {"values": {}, "aliases": ""}, 'sessionsResults': {}},
-    copyright_year: new Date().getFullYear()
+    copyright_year: new Date().getFullYear(),
+    isLoading: false
 }
 
 const actions = {
@@ -40,6 +41,12 @@ const mutations = {
     },
     newApiError (state, error) {
         state.apiErrors.push(error)
+    },
+    startLoading () {
+        state.isLoading = true
+    },
+    stopLoading () {
+        state.isLoading = false
     }
 }
 

@@ -1,6 +1,8 @@
 <template>
     <div id="app">
 
+        <Loading :active.sync="isLoading" :canCancel=false :loader="'dots'" :color="'#076583'"/>
+
         <div id="background-text">
             <Background/>
         </div>
@@ -65,7 +67,7 @@
             PageScoreboard
         },
         computed: {
-            ...mapState(["apiErrors"])
+            ...mapState(["apiErrors", "isLoading"])
         },
         methods: {
             reloadPage() {

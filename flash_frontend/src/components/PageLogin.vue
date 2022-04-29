@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0 & isLoaded">
+    <section id="page" v-if="apiErrors.length == 0">
         <form @submit.prevent="checkForm">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
@@ -34,7 +34,6 @@
         name: "PageLogin",
         data() {
             return {
-                isLoaded: true,
                 formErrors: []
                 }
         },

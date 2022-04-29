@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors == 0 & isLoaded">
+    <section id="page" v-if="apiErrors == 0">
         <!-- Get session option via API, wait for user input and then submit it back to API -->
 
         <!-- Mode selection menu -->
@@ -48,17 +48,19 @@
         components: {
         },
         data() {
-            return {
-                isLoaded: false,
-                }
+            return {}
         },
         computed: {
             ...mapState(["user", "currentSession", "apiErrors"])
         },
         beforeMount() {
-            this.isLoaded = true
+            this.cleanSessionInfo()
         },
         methods: {
+            cleanSessionInfo() {
+                // Clean results of previeous sessions
+                this.currentSession["options"]["aliases"] = {}
+            }
         }
     }
 </script>

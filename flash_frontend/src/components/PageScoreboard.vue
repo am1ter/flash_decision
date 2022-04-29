@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0 & isLoaded">
+    <section id="page" v-if="apiErrors.length == 0 & !isLoading">
         <div id="scoreboard-mode">
 
             <!-- Navigation bar (modes) -->
@@ -106,7 +106,7 @@
 </template>
 
 <script>
-    import { mapState } from "vuex"
+    import { mapState, mapMutations } from "vuex"
     import { apiGetScoreboard } from "@/api"
 
     // Pages subcomponents
@@ -119,7 +119,6 @@
         },
         data() {
             return {
-                isLoaded: false,
                 mode: this.$route.params.mode,
                 top3Users: {},
                 userRank: -1,
@@ -131,20 +130,30 @@
             }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors"])
+            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
         },
-        mounted() {
+        async beforeMount() {
+            // Start page loading
+            this.startLoading()
+            // Load scoreboard for current mode
             this.mode = this.$route.params.mode
-            this.loadScoreboard()
+            await this.loadScoreboard()
+            // Display page
+            this.stopLoading()
         },
-        beforeRouteUpdate(to, from, next) {
-            // Send API request when mode nav bar used
-            this.isLoaded = false
+        // Send API request when mode nav bar used
+        async beforeRouteUpdate(to, from, next) {
+            // Start page loading after route updating
+            this.startLoading()
+            // Load scoreboard for current mode
             this.mode = to.params.mode
-            this.loadScoreboard()
-            next()
+            await this.loadScoreboard()
+            await next()
+            // Display page
+            this.stopLoading()
         },
         methods: {
+            ...mapMutations(["startLoading", "stopLoading"]),
             async loadScoreboard() {
                 // Load last session results
                 let response = await apiGetScoreboard(this.mode, this.user.id)
@@ -152,7 +161,6 @@
                 this.top3Users = (response) ? response.top3Users : false
                 this.userRank = (response) ? response.userRank : -1
                 this.userSummary = (response) ? response.userSummary : {}
-                this.isLoaded = true
             },
             formatFigures(x) {
                 // Improve text display of figures

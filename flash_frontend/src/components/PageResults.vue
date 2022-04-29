@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0 & isLoaded">
+    <section id="page" v-if="apiErrors.length == 0 & !isLoading">
         <div class="col-12">
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
@@ -16,14 +16,13 @@
 </template>
 
 <script>
-    import { mapState } from "vuex"
+    import { mapState, mapMutations } from "vuex"
     import { apiGetSessionsResults } from "@/api"
 
     export default {
         name: "PageResults",
         data() {
             return {
-                isLoaded: false,
                 fields: [
                     { key: "column" },
                     { key: "value", tdClass: this.formatFiguresColor }
@@ -31,22 +30,26 @@
             }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors"])
+            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
         },
-        mounted() {
-            this.loadSessionsResults()
+        async beforeMount() {
+            // Start page loading
+            this.startLoading()
+            // Load last session results
+            await this.loadSessionsResults()
+            // Display page
+            this.stopLoading()
         },
         methods: {
+            ...mapMutations(["startLoading", "stopLoading"]),
             async loadSessionsResults() {
                 // Load last session results
-
                 // Check if no info for current session found. Page reloaded? Parse url and make api request
                 if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
                     this.currentSession["options"]["values"]["sessionId"] = parseInt(this.$route.params.session_id)
                 }
                 let response = await apiGetSessionsResults(this.currentSession["options"]["values"]["sessionId"])
                 this.currentSession["sessionsResults"] = response
-                this.isLoaded = true
             },
             formatFigures(x) {
                 // Improve text display of figures

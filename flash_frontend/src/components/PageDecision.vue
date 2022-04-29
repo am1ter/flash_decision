@@ -1,10 +1,10 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0 & isLoaded" v-cloak @keyup.enter="actionBuy">
+    <section id="page" v-if="apiErrors.length == 0 & !isLoading" v-cloak @keyup.enter="actionBuy">
         <div id="bars">
             <b-alert show variant="success" class="mb-0 p-1 text-center">
                 <countdown 
                     ref="pageTimer" 
-                    :autoStart="true" 
+                    :autoStart="false" 
                     :left-time="Number(currentSession['options']['values']['timelimit']) * 1000"
                     @finish="(vac) => saveDecision(vac)">
                     <template v-slot:process="pageTimer">
@@ -15,7 +15,7 @@
                     </template>
                 </countdown>
             </b-alert>
-            <ChartCandles :eventBus="eventBus"/>
+            <ChartCandles :iterationChart="iterationChart"/>
             <b-button-group class="w-100">
                 <b-button id="button-sell" v-on:click="saveDecision($event)" squared variant="danger">Sell ᐁ</b-button>
                 <b-button id="button-skip" v-on:click="saveDecision($event)" squared class="ms-1">Skip ᐅ</b-button>
@@ -26,9 +26,8 @@
 </template>
 
 <script>
-    import Vue from "vue"
-    import { mapState } from "vuex"
-    import { apiPostRecordDecision, apiGetIterationInfo } from "@/api"
+    import { mapState, mapMutations } from "vuex"
+    import { apiPostRecordDecision, apiGetIterationInfo, apiGetIterationChart } from "@/api"
 
     // Page subcomponents
     import ChartCandles from "./subcomponents/ChartCandles.vue"
@@ -40,29 +39,48 @@
         },
         data() {
             return {
-                isLoaded: false,
-                eventBus: new Vue()
+                iterationChart: {}
             }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors"])
+            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
         },
-        async mounted() {
+        async beforeMount() {
+            // Start page loading
+            this.startLoading()
             // Declare hotkeys (listen to keyboard input)
             this.enableHotkeys()
-            // If page is reloaded - update vuex objects
-            await this.updateObject()
             // Create blank decision when page has been mounted
-            await this.createBlankDecision()
-            // Show elements
-            this.isLoaded = true
+            this.createBlankDecision()
+            // If page is reloaded - update vuex objects
+            await this.updateIfPageRefresh()
+            // Load new chart
+            await this.createChart()
+            // Display page
+            await this.stopLoading()
+            // Start countdown
+            this.$refs.pageTimer.startCountdown(true)
+        },
+        async beforeRouteUpdate(to, from, next) {
+            // Start page loading after route updating
+            this.startLoading()
+            // Create blank decision
+            this.createBlankDecision()
+            // Load new chart
+            await this.createChart()
+            // Display page
+            await this.stopLoading()
+            // Restart countdown
+            this.$refs.pageTimer.startCountdown(true)
+            next()
         },
         methods: {
+            ...mapMutations(["startLoading", "stopLoading"]),
             enableHotkeys() {
                 window.addEventListener("keyup", event => {
-                if (event.key == "ArrowDown" || event.key == "ArrowRight" || event.key == "ArrowUp" ) {
-                    this.saveDecision(event)}
-                }
+                    if (event.key == "ArrowDown" || event.key == "ArrowRight" || event.key == "ArrowUp" ) {
+                        this.saveDecision(event)}
+                    }
                 )
             },
             async createBlankDecision() {
@@ -73,6 +91,31 @@
                 else if (this.currentSession["currentIterationNum"] > 1) {
                     // Following iterations
                     this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
+                }
+            },
+            async updateIfPageRefresh() {
+                // Check if no info for current session found. Page reloaded? Parse url and make api request
+                if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
+                    this.currentSession["currentIterationNum"] = parseInt(this.$route.params.iteration_num)
+                    this.currentSession["iterations"] = {}
+                    this.currentSession["decisions"] = {}
+                    this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
+                    this.currentSession["options"]["values"] = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession["currentIterationNum"])
+                }
+            },
+            async createChart() {
+                // Run async request - пet iteration chart over API
+                let response = await apiGetIterationChart(this.currentSession["options"]["values"]["sessionId"], this.currentSession["currentIterationNum"])
+
+                // Chart data to display [0], iteration data to vuex storage [1]
+                if (response) {
+                    this.iterationChart = JSON.parse(response)[0];
+                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = JSON.parse(response)[1]
+                } else {
+                    // If response is `false` then skip decision for such iteration 
+                    this.iterationChart = JSON.parse(false);
+                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = this.currentSession["iterations"][this.currentSession["currentIterationNum"] - 1]
+                    document.getElementById("button-skip").click(); 
                 }
             },
             async saveDecision(event) {
@@ -118,6 +161,7 @@
 
                 // Send post request
                 await apiPostRecordDecision(this.currentSession["decisions"][this.currentSession["currentIterationNum"]])
+
                 // When post request has been processed go to the next iteration or to the results page
                 if (this.currentSession["currentIterationNum"] < Number(this.currentSession["options"]["values"]["iterations"])) {
                     this.goNextIteration()
@@ -125,29 +169,12 @@
                     this.$router.push(`/sessions-results/${this.currentSession["options"]["values"]["sessionId"]}`)
                 }
             },
-            async updateObject() {
-                // Check if no info for current session found. Page reloaded? Parse url and make api request
-                if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
-                    this.currentSession["currentIterationNum"] = parseInt(this.$route.params.iteration_num)
-                    this.currentSession["iterations"] = {}
-                    this.currentSession["decisions"] = {}
-                    this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
-                    this.currentSession["options"]["values"] = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession["currentIterationNum"])
-                }
-            }
-            ,
             goNextIteration() {
                 // New iteration processing
                 // Update vars
                 this.currentSession["currentIterationNum"] += 1
                 // Change route url
                 this.$router.push(`/decision/${this.currentSession["options"]["values"]["sessionId"]}/${this.currentSession["currentIterationNum"]}`)
-                // Create blank decision
-                this.createBlankDecision()
-                // Load new chart
-                this.eventBus.$emit("goNextIteration")
-                // Restart countdown
-                this.$refs.pageTimer.startCountdown(true)
             }
         }
     }

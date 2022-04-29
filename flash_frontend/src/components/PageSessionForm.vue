@@ -1,23 +1,26 @@
 <template>
-    <section id="page" v-if="apiErrors == 0 & isLoaded">
-        <ModeSelector  :page="'session'"/>
+    <section id="page">
+        <ModeSelector :page="'session'"/>
+
+        <!-- Countdown for presets starts before form loading -->
         <countdown v-if="mode != 'custom'" 
             ref="pageTimer" 
             id="page-timer"
             :autoStart="true" 
-            :left-time="6000"
+            :left-time="5000"
             @finish="goToDecisions()">
             <template v-slot:process="pageTimer">
-                <span v-if="pageTimer.timeObj.ceil.s > 4">Ready</span>
-                <span v-if="pageTimer.timeObj.ceil.s > 2 && pageTimer.timeObj.ceil.s <= 4">Set</span>
-                <span v-if="pageTimer.timeObj.ceil.s <= 2">Go!</span>
+                <span v-if="pageTimer.timeObj.ceil.s > 3">Ready</span>
+                <span v-if="pageTimer.timeObj.ceil.s > 1 && pageTimer.timeObj.ceil.s <= 3">Set</span>
+                <span v-if="pageTimer.timeObj.ceil.s <= 1">Go!</span>
                 <span id="page-timer-countdown">{{ `Session will start in ${pageTimer.timeObj.ceil.s}` }} sec.</span>
             </template>
             <template v-slot:finish>
                 <span>Please wait. Session is starting</span>
             </template>
         </countdown>
-        <form @submit.prevent="checkForm" autocomplete="off">
+
+        <form @submit.prevent="checkForm" autocomplete="off" v-if="apiErrors == 0 & !isLoading">
             <b-container class="g-0">
                 <b-row cols="2" class="gx-0">
                     <!-- Parameters: b-col #1 - label, b-col #2 - custom mode, b-col #3 - all other modes -->
@@ -195,7 +198,7 @@
 
 <script>
 
-    import { mapState } from "vuex"
+    import { mapState, mapMutations } from "vuex"
     import { apiGetSessionOptions, apiPostStartNewSession } from "@/api"
 
     // Page subcomponents
@@ -209,7 +212,6 @@
         },
         data() {
             return {
-                isLoaded: false,
                 sessionOptionsAll: [],
                 inputMarketsLen: 10,
                 sessionOptionsTickers: [],
@@ -222,28 +224,35 @@
                 }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors"])
+            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
         },
         beforeRouteUpdate(to, from, next) {
-            // Send API request when mode nav bar used
+            // Ask for confirm before mode changing
             let answer = window.confirm("Do you really want to switch to another mode?")
             if (answer) {
-                this.isLoaded = false
                 this.mode = to.params.mode
                 this.prepareSession()         
                 next()
             }
         },
-        beforeMount() {
-            this.prepareSession() 
+        async beforeMount() {
+            // Start page loading
+            this.startLoading()
+            // Create new session
+            await this.prepareSession() 
+            // Display page
+            this.stopLoading()
         },
         methods: {
+            ...mapMutations(["startLoading", "stopLoading"]),
+            cleanResults() {
+                // Clean results of previeous sessions
+                this.currentSession["sessionsResults"] = {}
+            },
             async prepareSession() {
                 // Call functions to prepare page with session settings
-                this.cleanResults()
                 if (this.mode == "custom") {
                     await this.prepareSessionCustom()
-                    this.isLoaded = true
                 } else {
                     await this.prepareSessionPreset()
                 }
@@ -329,6 +338,7 @@
                 // Send POST request and save response to vuex state
                 // If form validation has passed send POST request, check the response and go to the Decision page
                 
+                // Wait for async methods
                 let response = await apiPostStartNewSession(this.currentSession["options"]["values"])
                 // Add attributes from response to the object
                 this.currentSession["options"]["values"]["sessionId"] = response.values["SessionId"]
@@ -352,11 +362,6 @@
                 // Create first iteration in the current session (counter and storage)
                 this.currentSession["currentIterationNum"] = 1
                 this.currentSession["iterations"] = {1: {}}
-                this.isLoaded = true
-            },
-            cleanResults() {
-                // Clean results of previeous sessions
-                this.currentSession["sessionsResults"] = {}
             },
             goToDecisions() {
                 // Go to the decision making page
