@@ -1,6 +1,6 @@
 <template>
     <!-- Chart Candels -->
-    <div id="chart-candels" v-if="apiErrors == 0 & !isLoading">
+    <div id="chart-candels" v-if="!isLoading">
         <Plotly 
         :data="iterationChart['data']" 
         :layout="layout" 
@@ -155,7 +155,7 @@
                 }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"])
         },
         beforeMount() {
             // Change chart layout

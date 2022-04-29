@@ -2,18 +2,13 @@
     <div id="app">
 
         <Loading :active.sync="isLoading" :canCancel=false :loader="'dots'" :color="'#076583'"/>
+        <Error/>
 
         <div id="background-text">
             <Background/>
         </div>
 
-        <!-- Show error if there is any errors -->
-        <div id="errors" v-if="apiErrors.length > 0">
-            <div>{{apiErrors[0]}}</div>
-            <b-button squared class="mt-3 gradient" v-on:click="reloadPage()">Refresh page</b-button>
-        </div>
-
-        <div id="content" class="shadow">
+        <div id="content" class="shadow" :class="{disabled: apiErrors.length > 0}">
              <Header/>
             <router-view>
                 <PageLogin/>
@@ -42,6 +37,7 @@
     import Background from "./components/Background.vue"
     import Header from "./components/Header.vue"
     import Credits from "./components/Credits.vue"
+    import Error from "./components/Error.vue"
     
     // Pages components
     import PageLogin from "./components/PageLogin.vue"
@@ -55,6 +51,7 @@
     export default {
         name: "App",
         components: {
+            Error,
             Background,
             Header,
             Credits,
@@ -68,13 +65,6 @@
         },
         computed: {
             ...mapState(["apiErrors", "isLoading"])
-        },
-        methods: {
-            reloadPage() {
-                // Reload page on click
-                this.$router.push("/session/")
-                this.$router.go()
-            }
         }
     }
 
@@ -142,22 +132,6 @@
         align-items: center;
         margin: 15px 25px 5px 25px;
         width: auto;
-    }
-
-    #errors {
-        position: absolute;
-        width: 100vw;
-        height: 100vh;
-        top: 0px;
-        font-size: 24px;
-        font-weight: 700;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background-color: rgba(255,255,255,0.7);
-        z-index: 1;
-        text-align: center;
     }
 
     .disabled {

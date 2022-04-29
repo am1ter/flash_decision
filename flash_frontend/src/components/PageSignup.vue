@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0" >
+    <section id="page">
         <form @submit.prevent="checkForm">
             <b-container class="g-0" fluid>
                 <b-row cols="2">
@@ -78,7 +78,7 @@
                 }
         },
         computed: {
-            ...mapState(["user", "apiErrors"])
+            ...mapState(["user"])
         },
         methods: {
             ...mapMutations(["setUserFromApi"]),

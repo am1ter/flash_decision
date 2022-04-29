@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors == 0">
+    <section id="page">
         <!-- Get session option via API, wait for user input and then submit it back to API -->
 
         <!-- Mode selection menu -->
@@ -51,7 +51,7 @@
             return {}
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors"])
+            ...mapState(["user", "currentSession"])
         },
         beforeMount() {
             this.cleanSessionInfo()

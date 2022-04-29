@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0 & !isLoading" v-cloak @keyup.enter="actionBuy">
+    <section id="page" v-if="!isLoading" v-cloak @keyup.enter="actionBuy">
         <div id="bars">
             <b-alert show variant="success" class="mb-0 p-1 text-center">
                 <countdown 
@@ -43,7 +43,7 @@
             }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"])
         },
         async beforeMount() {
             // Start page loading

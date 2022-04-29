@@ -17,7 +17,6 @@ import logging
 from collections import OrderedDict
 from itertools import islice
 import random
-from types import FunctionType
 import jwt
 
 from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
@@ -27,19 +26,6 @@ from finam.const import Market, Timeframe               # https://github.com/ffe
 # Set up logger
 # =============
 logger = logging.getLogger('Models')
-
-
-# Decorators
-# ==========
-
-def catch_db_exception(f: FunctionType) -> FunctionType:
-    @wraps(f)
-    def _catch_exception(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except SQLAlchemyError as e:
-            raise SQLAlchemyError('Error: Database request failed')
-    return _catch_exception
 
 
 # Database related classes (ORM)
@@ -76,13 +62,11 @@ class User(db.Model):
         return user
 
     @classmethod
-    @catch_db_exception
     def get_user_by_id(cls, id: int) -> db.Model:
         """Return object by id"""
         return cls.query.get(int(id))
 
     @classmethod
-    @catch_db_exception
     def get_user_by_email(cls, email: str) -> db.Model:
         """Return object by email"""
         return cls.query.filter(User.UserEmail == email).first()
@@ -147,7 +131,7 @@ class User(db.Model):
         auth_headers = request.headers.get('Authorization', '').split()
 
         # Check if header looks like correct header with auth info
-        assert len(auth_headers) == 2, 'Error: Wrong request header'
+        assert len(auth_headers) == 2, 'Wrong request header'
 
         # Try to decode jwt token and verify user information
         token = auth_headers[1]
@@ -442,7 +426,6 @@ class Session(db.Model):
             raise FileNotFoundError('No information about id and ticker of the current session')
 
     @classmethod
-    @catch_db_exception
     def get_from_db(cls, session_id: int) -> db.Model:
         """Get session's options from db and fill with them the object"""
         return cls.query.get(int(session_id))
@@ -661,7 +644,6 @@ class Iteration(db.Model):
 
         return bar_date
 
-    @catch_db_exception
     def get_from_db(session_id: int, iteration_num: int) -> db.Model:
         """Get iterations's options from db and fill with them the object"""
         return Iteration.query.filter(Iteration.SessionId == session_id, Iteration.IterationNum == iteration_num).first()
@@ -861,7 +843,6 @@ class Scoreboard:
         self.mode = mode
         self.user = user
 
-    @catch_db_exception
     def _get_all_users_results(self) -> dict:
         """Return list of all users results"""
 
@@ -901,7 +882,6 @@ class Scoreboard:
 
         return rank
 
-    @catch_db_exception
     def calc_user_summary(self) -> dict:
         """Calculate user`s activity summary"""
 
@@ -943,25 +923,26 @@ class Scoreboard:
 
 def check_db_connection() -> None:
     """Check if connection to db can be established"""
-    conn = db.engine.connect()
-    conn.close()
+    try:
+        conn = db.engine.connect()
+        conn.close()
+        return True
+    except SQLAlchemyError:
+        return False
 
 
-@catch_db_exception
 def write_object_to_db(object: db.Model) -> None:
     """Default way to write SQLAlchemy object to db"""
     db.session.add(object)
     db.session.commit()
         
 
-@catch_db_exception
 def delete_object_from_db(object: db.Model) -> None:
     """Default way to write SQLAlchemy object to db"""
     db.session.delete(object)
     db.session.commit()
 
 
-@catch_db_exception
 def create_system_users() -> None:
     """Create system users during first run of the script"""
     

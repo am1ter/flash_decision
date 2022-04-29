@@ -12,6 +12,7 @@ import socket
 import logging
 import traceback
 import re
+from types import FunctionType
 
 from finam import FinamParsingError, FinamDownloadError
 
@@ -41,7 +42,7 @@ logger.info('List of session`s options loaded')
 # Decorators
 # ==========
 
-def log_request(f):
+def log_request(f: FunctionType) -> FunctionType:
     @wraps(f)
     def _log(*args, **kwargs):
         """Log on debug level api requests"""
@@ -56,7 +57,7 @@ def log_request(f):
     return _log
 
 
-def auth_required(f):
+def auth_required(f: FunctionType) -> FunctionType:
     @wraps(f)
     def _verify(*args, **kwargs):
         """Verify authorization token in request header"""
@@ -64,7 +65,6 @@ def auth_required(f):
         invalid_msg = 'Invalid session. Registeration/authentication required.'
         expired_msg = 'Expired session. Reauthentication required.'
         finam_error_msg = 'Error during downloading quotes for selected security. Plase try again later.'
-        runtime_msg = 'Runtime error during API request processing'
         
         # Validate JSON Web Token (jwt) from header (is valid and not expired)
         try:
@@ -83,10 +83,6 @@ def auth_required(f):
         except (FinamParsingError, FinamDownloadError):
             logger.error(finam_error_msg)
             return jsonify(finam_error_msg), 500
-        except (Exception) as e:
-            log_msg = f"HTTPException: Description: {e.args[0]}, Stack trace: {traceback.format_exc()}"
-            logger.error(log_msg)
-            return jsonify(runtime_msg), 500
 
     return _verify
 
@@ -95,20 +91,11 @@ def auth_required(f):
 def internal_server_error(e):
     """Configure Flask internal error handler for current Blueprint"""
 
-    error_dict = {
-        'code': e.code,
-        'description': e.description,
-        'stack_trace': traceback.format_exc()
-    }
-    log_msg = f"HTTPException {error_dict['code']}, Description: {error_dict['description']}, Stack trace: {error_dict['stack_trace']}"
+    log_msg = f"HTTPException {e.code}, Description: {e.description}, Stack trace: {traceback.format_exc()}"
     logger.error(log_msg)
 
-    if e.code == 500:
-        response = jsonify(e.name + ' (' + str(e.code) + '): ' + e.original_exception.args[0]), 500
-    else:
-        response = jsonify(error_dict)
-
-    return response
+    runtime_msg = f'{e.name}. Something go wrong'
+    return jsonify(runtime_msg), 500
 
 
 # API requests for authentication

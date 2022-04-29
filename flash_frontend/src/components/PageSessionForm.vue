@@ -20,7 +20,7 @@
             </template>
         </countdown>
 
-        <form @submit.prevent="checkForm" autocomplete="off" v-if="apiErrors == 0 & !isLoading">
+        <form @submit.prevent="checkForm" autocomplete="off" v-if="!isLoading">
             <b-container class="g-0">
                 <b-row cols="2" class="gx-0">
                     <!-- Parameters: b-col #1 - label, b-col #2 - custom mode, b-col #3 - all other modes -->
@@ -224,7 +224,7 @@
                 }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"])
         },
         beforeRouteUpdate(to, from, next) {
             // Ask for confirm before mode changing

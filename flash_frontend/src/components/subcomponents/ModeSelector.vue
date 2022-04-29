@@ -1,6 +1,6 @@
 <template>
     <!-- Navigation bar (modes) -->
-    <div id="session-mode" v-if="apiErrors == 0 & !isLoading">
+    <div id="session-mode" v-if="!isLoading">
         <ul class="nav justify-content-center mb-4">
             <li id="button-mode-custom" class="nav-item">
                 <a class="nav-link" 
@@ -43,7 +43,7 @@
             userId: String
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"])
         },
         beforeMount() {},
         methods: {

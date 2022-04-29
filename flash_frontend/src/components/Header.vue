@@ -15,7 +15,7 @@
                     </a>
                 </div>
             </div>
-            <Menu />
+            <Menu/>
         </div>
         <Title id="title"/>
     </section>

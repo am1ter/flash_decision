@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0 & !isLoading">
+    <section id="page" v-if="!isLoading">
         <div id="scoreboard-mode">
 
             <!-- Navigation bar (modes) -->
@@ -130,7 +130,7 @@
             }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"])
         },
         async beforeMount() {
             // Start page loading

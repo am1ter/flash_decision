@@ -36,7 +36,9 @@ migrate = Migrate(flask_app, db)
 
 # Check if db connection is up and system users are exist (create them if not)
 from app.models import check_db_connection, create_system_users
-check_db_connection()
+if not check_db_connection():
+    logger.critical('Database connection error: Application closed.')
+    exit(1)
 logger.info('Connection to db established')
 create_system_users()
 logger.info('System users verified')

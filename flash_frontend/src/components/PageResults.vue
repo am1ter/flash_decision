@@ -1,5 +1,5 @@
 <template>
-    <section id="page" v-if="apiErrors.length == 0 & !isLoading">
+    <section id="page" v-if="!isLoading">
         <div class="col-12">
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
@@ -30,7 +30,7 @@
             }
         },
         computed: {
-            ...mapState(["user", "currentSession", "apiErrors", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"])
         },
         async beforeMount() {
             // Start page loading
