@@ -53,15 +53,8 @@
         computed: {
             ...mapState(["user", "currentSession"])
         },
-        beforeMount() {
-            this.cleanSessionInfo()
-        },
-        methods: {
-            cleanSessionInfo() {
-                // Clean results of previeous sessions
-                this.currentSession["options"]["aliases"] = {}
-            }
-        }
+        beforeMount() {},
+        methods: {}
     }
 </script>
 
@@ -69,6 +62,12 @@
 
     p {
         font-size: 14px;
+    }
+
+    @media (max-width: 380px) {
+        p {
+            font-size: 13px;
+        }
     }
 
     #session_mode {

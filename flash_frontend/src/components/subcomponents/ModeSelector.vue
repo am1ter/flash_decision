@@ -1,7 +1,7 @@
 <template>
     <!-- Navigation bar (modes) -->
     <div id="session-mode" v-if="!isLoading">
-        <ul class="nav justify-content-center mb-4">
+        <ul class="nav justify-content-center mb-3">
             <li id="button-mode-custom" class="nav-item">
                 <a class="nav-link" 
                 :class="{active: isPageActive('custom')}"

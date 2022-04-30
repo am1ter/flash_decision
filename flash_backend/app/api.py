@@ -272,19 +272,10 @@ def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
         logger.warning(f'Requested unexpected iteration info for {current_session}')
         return jsonify('Something went wrong. Please start new session.'), 500
 
-    # Send response to frontend
-    current_session_options = current_session.convert_to_dict()
+    # Prepare response to frontend
     response = {
-        'sessionId': current_session_options['SessionId'],
-        'mode': current_session_options['Mode'],
-        'market': current_session_options['Market'],
-        'ticker': current_session_options['Ticker'],
-        'timeframe': current_session_options['Timeframe'],
-        'barsnumber': current_session_options['Barsnumber'],
-        'timelimit': current_session_options['Timelimit'],
-        'iterations': current_session_options['Iterations'],
-        'slippage': current_session_options['Slippage'],
-        'fixingbar': current_session_options['Fixingbar']
+        'values': current_session.convert_to_dict(),
+        'aliases': current_session.convert_to_dict_format()
     }
     
     logger.info(f'Info about {current_iteration} sent to frontend')

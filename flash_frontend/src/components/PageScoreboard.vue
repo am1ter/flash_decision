@@ -1,6 +1,6 @@
 <template>
     <section id="page" v-if="!isLoading">
-        <div id="scoreboard-mode">
+        <div id="scoreboard">
 
             <!-- Navigation bar (modes) -->
             <ModeSelector :page="'scoreboard'" :userId="user.id"/>
@@ -198,7 +198,7 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
-    #scoreboard-mode {
+    #scoreboard {
         width: 100%;
     }
 

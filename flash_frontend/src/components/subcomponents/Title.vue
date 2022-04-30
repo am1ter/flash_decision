@@ -10,7 +10,7 @@
         </div>
 
         <div id="layout-subtitle">
-            <h2 class="subtitle">{{ instruction }}</h2>
+            <h2 class="subtitle">{{ this.instruction() }}</h2>
         </div>
     </section>
 </template>
@@ -22,15 +22,27 @@
         name: "Title",
         props: {},
         computed: {
-            ...mapState(["user"]),
+            ...mapState(["user", "currentSession", "isLoading"]),
             title() {
                 return this.$route.meta.title
             },
-            instruction() {
-                return this.$route.meta.instruction
-            },
             isAuth() {
                 return this.$store.getters.isAuth
+            }
+        },
+        methods: {
+            instruction() {
+                let title = this.$route.meta.instruction
+                // Return default titles for all routes except Decision`s page
+                if (this.$route.name != "Decision’s page") {
+                    return title
+                }
+
+                // Custom route for Decision`s page
+                if (!this.isLoading) {
+                    title = `${this.currentSession["options"]["aliases"]["ticker"]} (timeframe: ${this.currentSession["options"]["aliases"]["timeframe"]})`
+                }
+                return title
             }
         }
     }
@@ -44,7 +56,7 @@
     }
 
     #title {
-        margin-top: 89px;
+        margin-top: 92px;
         text-align: center;
         font-size: 24px;
         font-weight: 700;
@@ -102,8 +114,14 @@
 
     .subtitle {
         text-align: center;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 500;
+    }
+
+    @media (max-width: 380px) {
+        .subtitle {
+            font-size: 13px;
+        }
     }
 
 </style>

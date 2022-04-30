@@ -74,7 +74,7 @@ const routes = [
         component: App.components.PageDecision,
         meta: {
             title: "Make your decisions",
-            instruction: "We will close your position in 15 bars. Choose wisely!"
+            instruction: "Analyze the chart and decide to buy or to sell"
         },
         beforeEnter(to, from, next) {
             document.title = APP_TITLE + to.meta.title

@@ -2,7 +2,7 @@
     <div id="app">
 
         <Loading :active.sync="isLoading" :canCancel=false :loader="'dots'" :color="'#076583'"/>
-        <Error/>
+        <Error v-if="apiErrors.length > 0"/>
 
         <div id="background-text">
             <Background/>
@@ -98,10 +98,10 @@
     }
 
     #content {
-        min-height: calc(100vh - 89px - 25px - 20px);
+        min-height: calc(100vh - 92px - 25px - 20px);
         max-width: 453px;
         margin: 0px auto;
-        padding-bottom: 5px;
+        padding-bottom: 10px;
         background-color: #ffffff;
         opacity: 0.85;
     }
@@ -130,7 +130,7 @@
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        margin: 15px 25px 5px 25px;
+        margin: 10px 25px 5px 25px;
         width: auto;
     }
 

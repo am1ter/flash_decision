@@ -226,18 +226,22 @@
         computed: {
             ...mapState(["user", "currentSession", "isLoading"])
         },
-        beforeRouteUpdate(to, from, next) {
+        async beforeRouteUpdate(to, from, next) {
             // Ask for confirm before mode changing
             let answer = window.confirm("Do you really want to switch to another mode?")
             if (answer) {
                 this.mode = to.params.mode
-                this.prepareSession()         
+                // Clean results of previeous sessions
+                await this.cleanSessionInfo()
+                await this.prepareSession()         
                 next()
             }
         },
         async beforeMount() {
             // Start page loading
             this.startLoading()
+            // Clean results of previeous sessions
+            await this.cleanSessionInfo()
             // Create new session
             await this.prepareSession() 
             // Display page
@@ -374,6 +378,10 @@
                     hasError = this.formErrors.indexOf(element) >= 0 ? true : false
                 }
                 return {"is-input-invalid": hasError}
+            },
+            cleanSessionInfo() {
+                // Clean results of previeous sessions
+                this.currentSession["options"]["aliases"] = {}
             }
         }
     }
@@ -395,10 +403,10 @@
     }
 
     #page-timer {
-        position: absolute;
+        position: fixed;
         width: 100%;
-        height: calc(100% - 89px - 5px - 40px);
-        top: 89px;
+        height: 100%;
+        top: 0px;
         font-size: 24px;
         font-weight: 700;
         display: flex;
@@ -406,7 +414,7 @@
         justify-content: center;
         align-items: center;
         background-color: rgba(255,255,255,0.7);
-        z-index: 1;
+        z-index: 3;
         text-align: center;
     }
 

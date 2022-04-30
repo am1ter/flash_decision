@@ -1,21 +1,28 @@
 <template>
     <section id="page" v-if="!isLoading" v-cloak @keyup.enter="actionBuy">
         <div id="bars">
-            <b-alert show variant="success" class="mb-0 p-1 text-center">
-                <countdown 
-                    ref="pageTimer" 
-                    :autoStart="false" 
-                    :left-time="Number(currentSession['options']['values']['timelimit']) * 1000"
-                    @finish="(vac) => saveDecision(vac)">
-                    <template v-slot:process="pageTimer">
-                        <span>{{ `Time left: ${pageTimer.timeObj.ceil.s}` }} sec. </span>
-                    </template>
-                    <template v-slot:finish>
-                        <span>The time has ended!</span>
-                    </template>
-                </countdown>
-            </b-alert>
+            <countdown 
+                ref="pageTimer" 
+                :autoStart="false" 
+                :left-time="Number(currentSession['options']['values']['timelimit']) * 1000"
+                @finish="(vac) => saveDecision(vac)">
+                <template v-slot:process="pageTimer">
+                    <b-progress class="squared" height="12px" :max="pageTimer.leftTime / 1000">
+                        <b-progress-bar :value="(pageTimer.leftTime - pageTimer.remainingTime) / 1000" variant="success" striped :animated="true"/>
+                        <b-progress-bar id= "bar-time-left" :value="pageTimer.remainingTime / 1000" variant="secondary" :class="{'bg-danger': pageTimer.timeObj.ceil.s <= 3}" >
+                            {{pageTimer.timeObj.ceil.s + ' s.'}}
+                        </b-progress-bar>
+                    </b-progress>
+                </template>
+                <template v-slot:finish>
+                    <b-progress class="squared" height="12px" :value="100" :max="100" variant="success"/>
+                </template>
+            </countdown>
             <ChartCandles :iterationChart="iterationChart"/>
+            <b-progress class="squared mb-2" height="7px" :max="currentSession['options']['values']['iterations']">
+                <b-progress-bar :value="currentSession['currentIterationNum']" variant="dark"/>
+                <b-progress-bar :value="currentSession['options']['values']['iterations'] - currentSession['currentIterationNum']" variant="secondary"/>
+            </b-progress>
             <b-button-group class="w-100">
                 <b-button id="button-sell" v-on:click="saveDecision($event)" squared variant="danger">Sell ᐁ</b-button>
                 <b-button id="button-skip" v-on:click="saveDecision($event)" squared class="ms-1">Skip ᐅ</b-button>
@@ -100,7 +107,29 @@
                     this.currentSession["iterations"] = {}
                     this.currentSession["decisions"] = {}
                     this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
-                    this.currentSession["options"]["values"] = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession["currentIterationNum"])
+
+                    // Wait for async methods
+                    let response = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession["currentIterationNum"])
+                    // Add attributes from response to the object
+                    this.currentSession["options"]["values"]["sessionId"] = response.values["SessionId"]
+                    this.currentSession["options"]["values"]["timelimit"] = response.values["Timelimit"]
+                    this.currentSession["options"]["values"]["iterations"] = response.values["Iterations"]
+                    this.currentSession["options"]["values"]["barsnumber"] = response.values["Barsnumber"]
+                    this.currentSession["options"]["values"]["fixingbar"] = response.values["Fixingbar"]
+                    this.currentSession["options"]["values"]["slippage"] = response.values["Slippage"]
+
+                    this.currentSession["options"]["aliases"] = {
+                        "market": response.aliases["Market"],
+                        "ticker": response.aliases["Ticker"],
+                        "timeframe": response.aliases["Timeframe"],
+                        "barsnumber": response.aliases["Barsnumber"],
+                        "timelimit": response.aliases["Timelimit"],
+                        "date": response.aliases["Date"],
+                        "iterations": response.aliases["Iterations"],
+                        "slippage": response.aliases["Slippage"],
+                        "fixingbar": response.aliases["Fixingbar"]
+                    }
+
                 }
             },
             async createChart() {
@@ -197,5 +226,15 @@
             width: 100%;
             padding-bottom: 5px;
         }
+
+    .squared {
+        border-radius: 0px;
+        font-size: 0.55rem;
+    }
+
+    #bar-time-left {
+        padding-left: 3px;
+        text-align: left;
+    }
 
 </style>

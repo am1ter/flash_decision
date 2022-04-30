@@ -1,12 +1,12 @@
 <template>
     <!-- Chart Candels -->
-    <div id="chart-candels" v-if="!isLoading">
-        <Plotly 
+    <div id="chart-candles" v-if="!isLoading">
+        <Plotly style="height: 100%"
         :data="iterationChart['data']" 
         :layout="layout" 
+        :responsive="true"
         :displayModeBar="false"
         :displaylogo="false"/>
-        <!-- :responsive="true" -->
     </div>
 </template>
 
@@ -29,12 +29,11 @@
                     title: {visible: false},
                     showlegend: false,
                     dragmode: false,
-                    height: (window.innerHeight > 700) ? window.innerHeight * 0.54 : window.innerHeight * 0.48,
                     autosize: true,
                     margin: {
                         r: 0,
-                        t: 10,
-                        b: 10,
+                        t: 0,
+                        b: 0,
                         l: 0
                     },
                     xaxis: {
@@ -64,10 +63,11 @@
                         },
                         // Text right
                         {
-                        x: 0, // Will be set during formating
+                        x: 1,
                         y: 0.05,
-                        xref: "x",
+                        xref: "paper",
                         yref: "paper",
+                        axref: "paper",
                         text: "Position<br>autoclosing",
                         font: {color: "#333333", size: 10},
                         showarrow: true,
@@ -76,26 +76,38 @@
                         arrowwidth: 1.25,
                         arrowcolor: "#888888",
                         xanchor: "right",
-                        ax: 0, // Will be set during formating
+                        ax: -20,
                         ay: 0
+                        },
+                        // Slippage zone hint
+                        {
+                        x: 0.15,
+                        y: 0, // Will be set during formating
+                        xref: "paper",
+                        yref: "y",
+                        text: "Slippage<br>zone",
+                        font: {color: "#333333", size: 10},
+                        showarrow: false,
+                        xanchor: "right",
+                        opacity: 0.5
                         }
                     ],
                     shapes: [
                         // Background
                         {
                         type: "rect",
-                        xref: "x",
+                        xref: "paper",
                         yref: "paper",
                         x0: 0, // Will be set during formating
                         y0: 0,
-                        x1: 0, // Will be set during formating
+                        x1: 1,
                         y1: 1,
                         fillcolor: "#d3d3d3",
-                        opacity: 0.2,
+                        opacity: 0.25,
                         line: {width: 0},
                         layer: "below"
                         },
-                        // Border left
+                        // Last price line vertical
                         {
                         type: "line",
                         xref: "x",
@@ -106,24 +118,10 @@
                         y1: 1,
                         fillcolor: "#d3d3d3",
                         opacity: 0.25,
-                        line: {width: 1},
+                        line: {width: 2},
                         layer: "above"
                         },
-                        // Border right
-                        {
-                        type: "line",
-                        xref: "x",
-                        yref: "paper",
-                        x0: 0, // Will be set during formating
-                        y0: 0,
-                        x1: 0, // Will be set during formating
-                        y1: 1,
-                        fillcolor: "#d3d3d3",
-                        opacity: 0.25,
-                        line: {width: 1},
-                        layer: "above"
-                        },
-                        // Last price line
+                        // Last price line horizontal
                         {
                         type: "line",
                         xref: "x",
@@ -132,7 +130,7 @@
                         y0: 0, // Will be set during formating
                         x1: 0, // Will be set during formating
                         y1: 0, // Will be set during formating
-                        fillcolor: "#d3d3d3",
+                        fillcolor: "#000000",
                         opacity: 0.25,
                         line: {width: 1},
                         layer: "above"
@@ -140,11 +138,11 @@
                         // Slippage zone
                         {
                         type: "rect",
-                        xref: "x",
+                        xref: "paper",
                         yref: "y",
-                        x0: 0, // Will be set during formating
+                        x0: 0,
                         y0: 0, // Will be set during formating
-                        x1: 0, // Will be set during formating
+                        x1: 1,
                         y1: 0, // Will be set during formating
                         fillcolor: "red",
                         opacity: 0.05,
@@ -166,6 +164,7 @@
                 // Format chart - add extra space to the graph
                 let finalbar = parseInt(this.currentSession["options"]["values"]["barsnumber"])
                 let fixingbar = parseInt(this.currentSession["options"]["values"]["fixingbar"])
+                let totalbars = finalbar + fixingbar
                 let priceLast = this.iterationChart["data"][0]["close"].at(-1)
                 let priceMax = Math.max(...this.iterationChart["data"][0]["close"])
                 let priceMin = Math.min(...this.iterationChart["data"][0]["close"])
@@ -176,28 +175,21 @@
                 this.layout.annotations[0].y = priceLast
                 this.layout.annotations[0].ax = fixingbar
                 this.layout.annotations[0].ay = priceLast + ((priceMax - priceMin) / 10) * 1.5
-                // Update coordinates for text right
-                this.layout.annotations[1].x = finalbar + fixingbar
-                this.layout.annotations[1].ax = fixingbar * -1
-                // Update coordinates for background
-                this.layout.shapes[0].x0 = finalbar
-                this.layout.shapes[0].x1 = finalbar + fixingbar
+                // Update coordinates for slippage zone hint
+                this.layout.annotations[2].y = priceLast
+                // Update coordinates for background (shift for 0.5bar back to the middle of the candle)
+                this.layout.shapes[0].x0 = parseFloat((finalbar / totalbars - (0.5 / totalbars)).toFixed(2))
                 // Update coordinates for border left
                 this.layout.shapes[1].x0 = finalbar
                 this.layout.shapes[1].x1 = finalbar
-                // Update coordinates for border right
-                this.layout.shapes[2].x0 = finalbar + fixingbar
-                this.layout.shapes[2].x1 = finalbar + fixingbar
                 // Update coordinates for price line
-                this.layout.shapes[3].x0 = 0.5
-                this.layout.shapes[3].x1 = finalbar + fixingbar
-                this.layout.shapes[3].y0 = priceLast
-                this.layout.shapes[3].y1 = priceLast
-                // Update coordinates for background
-                this.layout.shapes[4].x0 = 0.5
-                this.layout.shapes[4].x1 = finalbar + fixingbar
-                this.layout.shapes[4].y0 = priceLast * (1 + slippage)
-                this.layout.shapes[4].y1 = priceLast * (1 - slippage)
+                this.layout.shapes[2].x0 = 0.5
+                this.layout.shapes[2].x1 = totalbars
+                this.layout.shapes[2].y0 = priceLast
+                this.layout.shapes[2].y1 = priceLast
+                // Update coordinates for slippage zone
+                this.layout.shapes[3].y0 = priceLast * (1 + slippage)
+                this.layout.shapes[3].y1 = priceLast * (1 - slippage)
             }
         }
     }
@@ -205,5 +197,12 @@
 </script>
 
 <style scoped>
+
+    #chart-candles {
+        border: 1px;
+        border-color: #d3d3d3;
+        border-style: solid;
+        height: calc(100vh - 230px - 38px - 15px - 25px - 5px - 35px);
+    }
 
 </style>

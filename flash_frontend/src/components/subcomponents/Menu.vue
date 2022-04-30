@@ -52,7 +52,7 @@
             },
             checkNoSession() {
                 // Apply class 'disabled' if session hasn't started yet
-                let noSession = this.currentSession["options"]["values"]["sessionId"] == undefined
+                let noSession = (this.currentSession["currentIterationNum"] == undefined) && (isNaN(parseInt(this.$route.params.iteration_num)))
                 return noSession
             },
             insUrlParamSessionId() {

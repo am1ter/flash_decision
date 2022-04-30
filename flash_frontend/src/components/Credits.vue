@@ -16,5 +16,13 @@
 </script>
 
 <style scoped>
+    a {
+        font-size: 16px;
+    }
 
+    @media (max-width: 380px) {
+        a {
+            font-size: 14px;
+        }
+    }
 </style>

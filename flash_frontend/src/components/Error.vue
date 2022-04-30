@@ -1,5 +1,5 @@
 <template>
-    <div id="errors" v-if="apiErrors.length > 0">
+    <div id="errors">
         <div>{{apiErrors[0]}}</div>
         <b-button squared class="mt-3 gradient" v-on:click="reloadPage()">Refresh page</b-button>
     </div>

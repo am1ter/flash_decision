@@ -28,6 +28,7 @@ async function handleResponse(req) {
         console.log(err.toJSON())
         if (err.toJSON().message == 'Network Error') {
             store.commit("newApiError", err)
+            store.commit("stopLoading")
         } else {
             if (err.response.status == 401) {
                 cookie.delete("user_id")
@@ -35,6 +36,7 @@ async function handleResponse(req) {
                 cookie.delete("user_token")
             }
             store.commit("newApiError", err.response.data)
+            store.commit("stopLoading")
         }
     }
 }
