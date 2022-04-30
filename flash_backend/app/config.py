@@ -26,7 +26,11 @@ PATH_DOWNLOADS = os.path.join(os.path.dirname(PATH_APP), 'downloads')
 SESSION_STATUS_CREATED = 'created'
 SESSION_STATUS_ACTIVE = 'active'
 SESSION_STATUS_CLOSED = 'closed'
+DAYS_IN_WEEK = 5
+DAYS_IN_MONTH = 21
 TRADINGDAY_DURATION_MINS = (9*60) - 15 - 5  # Standart trading day duration in minutes
+DOWNLOAD_SAFETY_FACTOR = 1.1    # Multiply on this value to ensure downloading df with enough data
+RANDOM_WORKDAY_LIMIT = 500  # How many business days in the past use to get random business day
 
 
 # Flask configuration

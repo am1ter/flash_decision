@@ -207,13 +207,13 @@ class Session(db.Model):
     TotalSessionBars = db.Column(db.Integer)
     Mode = db.Column(db.String)
 
-    iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', passive_deletes=True)
+    iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', order_by='Iteration.IterationId', passive_deletes=True)
     decisions = db.relationship('Decision', backref='Session', lazy='selectin', passive_deletes=True)
     
     # Random security generation attributes
     _random_security = {
-        'USA': ('AMZN', 'NVDA', 'FB', 'MSFT', 'AAPL', 'DIS', 'XOM'),
-        'SHARES': ('SBER', 'AFLT', 'GAZP', 'ROSN', 'YNDX'),
+        'USA': ('AMZN', 'NVDA', 'FB', 'MSFT', 'AAPL', 'DIS', 'XOM', 'GS', 'BA', 'NKE'),
+        'SHARES': ('SBER', 'AFLT', 'GAZP', 'ROSN', 'YNDX', 'MOEX', 'MGNT', 'GMKN'),
         'CRYPTO_CURRENCIES': ('ETHUSD', 'BTCUSD', 'LTCUSD')
         }
 
@@ -225,8 +225,8 @@ class Session(db.Model):
         """Determine how long trader will keep the security: <day, <week or >week"""
 
         tf_in_mins = cfg.SessionOptions.convert_tf_to_min(self.Timeframe)
-        days_in_week = 5
-        days_in_month = 20
+        days_in_week = cfg.DAYS_IN_WEEK
+        days_in_month = cfg.DAYS_IN_MONTH
         iteration_period_bars = self.Barsnumber + self.Fixingbar
         iteration_period_mins = iteration_period_bars * tf_in_mins
 
@@ -251,7 +251,9 @@ class Session(db.Model):
             'longinvesting': self.Iterations * 31 * 3 # One iteration per 3 months
         }
     
-        return self.LastFixingBarDatetime - timedelta(days=days_before[self.TradingType])
+        safety_factor = cfg.DOWNLOAD_SAFETY_FACTOR
+
+        return self.LastFixingBarDatetime - timedelta(days=days_before[self.TradingType] * safety_factor)
 
     def _generate_filename_session(self) -> str:
         """ Get filename for current session """
@@ -339,6 +341,12 @@ class Session(db.Model):
     def _get_last_workday():
         """Get last workday before today for preset sessions"""
         return (datetime.today() - BDay(1)).strftime('%Y-%m-%d')
+
+    @staticmethod
+    def _get_random_workday():
+        """Get one of the random business days from the last 500 business days"""
+        random_bday = random.randint(0, cfg.RANDOM_WORKDAY_LIMIT)
+        return (datetime.today() - BDay(random_bday)).strftime('%Y-%m-%d')
 
     @classmethod
     def _select_random_security(cls, market: str) -> str:
@@ -465,12 +473,12 @@ class SessionClassic(Session):
             'market': 'USA',
             'ticker': cls._select_random_security('USA'),
             'timeframe': 'HOURLY',
-            'barsnumber': '50',
+            'barsnumber': '100',
             'timelimit': '60',
             'date': cls._get_last_workday(),
             'iterations': '5',
-            'slippage': '0.001',
-            'fixingbar': '20'
+            'slippage': '0.005',
+            'fixingbar': '50'
             }
         session = super().create(options=options)
         return session
@@ -494,7 +502,7 @@ class SessionBlitz(Session):
             'timeframe': 'MINUTES5',
             'barsnumber': '30',
             'timelimit': '5',
-            'date': cls._get_last_workday(),
+            'date': cls._get_random_workday(),
             'iterations': '10',
             'slippage': '0.001',
             'fixingbar': '15'
@@ -518,13 +526,13 @@ class SessionCrypto(Session):
             'mode': request['mode'],
             'market': 'CRYPTO_CURRENCIES',
             'ticker': cls._select_random_security('CRYPTO_CURRENCIES'),
-            'timeframe': 'MINUTES5',
+            'timeframe': 'MINUTES15',
             'barsnumber': '50',
-            'timelimit': '60',
-            'date': cls._get_last_workday(),
+            'timelimit': '30',
+            'date': cls._get_random_workday(),
             'iterations': '10',
             'slippage': '0.001',
-            'fixingbar': '20'
+            'fixingbar': '50'
             }
         session = super().create(options=options)
         return session
@@ -575,7 +583,7 @@ class Iteration(db.Model):
             iter.FixingBarNum = session.TotalSessionBars - 1   # first bar num = 0
         else:
             # For other iterations find last created iteration for current session and use it to calc new values
-            last_iteration = session.iterations.filter(cls.Session == session).order_by(cls.IterationId).all()[-1:][0]
+            last_iteration = session.iterations.filter(cls.Session == session).all()[-1:][0]
             # Calc new iteration fixing date and bar number considering if there is a skipped iterations 
             iterations_distance = iter.IterationNum - last_iteration.IterationNum
             iter.FixingBarDatetime = last_iteration._calc_new_iteration_fixbardatetime(iterations_distance)
@@ -583,6 +591,7 @@ class Iteration(db.Model):
         
             # Skip dates with no data for chart
             if iter.FixingBarNum - last_iteration.FixingBarNum > session.Fixingbar * -1:
+                iter.Session = session
                 logger.warning(f'Skip iteration generation for {iter} because of no data for {iter.FixingBarDatetime}')
                 return None
 
@@ -592,6 +601,7 @@ class Iteration(db.Model):
             iter.StartBarNum = iter.FinalBarNum - session.Barsnumber
         else:
             # Stop iteration generation if not enough data in df
+            iter.Session = session
             logger.warning(f'Skip iteration generation for {iter} because not enough data in dataframe')
             return None
 

@@ -217,12 +217,12 @@ def api_get_chart(session_id: int, iteration_num: int) -> Response:
 
     # Get current iteration and current session from db
     current_iteration = Iteration.get_from_db(session_id, iteration_num)
-    current_session = current_iteration.Session
+    current_session = Session.get_from_db(session_id)
 
-    # Check if iteration number from API request is correct
+    # Check if there is requested iteration, if not - skip it at the frontend
     if not current_iteration:
-        logger.warning(f'Chart generation for {current_iteration} failed (iteration not found)')
-        return jsonify('Something went wrong. Please start new session'), 500
+        logger.warning(f'Chart generation for {current_session} failed (iteration not found)')
+        return jsonify(False), 200
 
     # Check if session is not closed
     if current_session.Status == cfg.SESSION_STATUS_CLOSED:

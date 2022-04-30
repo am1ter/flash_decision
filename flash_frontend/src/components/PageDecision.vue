@@ -59,7 +59,7 @@
             // Display page
             await this.stopLoading()
             // Start countdown
-            this.$refs.pageTimer.startCountdown(true)
+            this.startCountdown()
         },
         async beforeRouteUpdate(to, from, next) {
             // Start page loading after route updating
@@ -71,8 +71,8 @@
             // Display page
             await this.stopLoading()
             // Restart countdown
-            this.$refs.pageTimer.startCountdown(true)
             next()
+            this.startCountdown()
         },
         methods: {
             ...mapMutations(["startLoading", "stopLoading"]),
@@ -115,11 +115,16 @@
                     // If response is `false` then skip decision for such iteration 
                     this.iterationChart = JSON.parse(false);
                     this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = this.currentSession["iterations"][this.currentSession["currentIterationNum"] - 1]
-                    document.getElementById("button-skip").click(); 
+                    // document.getElementById("button-skip").click();
+                    let event = {"target": {"id": "button-skip"}}
+                    await this.saveDecision(event)
                 }
             },
             async saveDecision(event) {
                 // Decision has been made
+
+                let timeSpent = 0
+                let action = null;
 
                 // Check that current iteration is okay
                 if (this.currentSession["decisions"].length < this.currentSession["currentIterationNum"]) {
@@ -130,10 +135,6 @@
                 if (this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["action"] != null) {
                     return false
                 }
-
-                // Get the time spent from the Countdown component
-                let timeSpent = this.$refs.pageTimer.runTimes;
-                let action = null;
 
                 // Get an action type from timer, button or hotkey
                 if (event.timeObj) {
@@ -156,15 +157,17 @@
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["action"] = action
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["timeSpent"] = timeSpent
 
-                // Finish countdown
-                this.$refs.pageTimer.finishCountdown()
+                // Get the time spent from the Countdown component and finish countdown
+                if (!this.isLoading) {
+                    timeSpent = this.$refs.pageTimer.runTimes
+                    this.$refs.pageTimer.finishCountdown()
+                }
 
                 // Send post request
                 await apiPostRecordDecision(this.currentSession["decisions"][this.currentSession["currentIterationNum"]])
-
                 // When post request has been processed go to the next iteration or to the results page
                 if (this.currentSession["currentIterationNum"] < Number(this.currentSession["options"]["values"]["iterations"])) {
-                    this.goNextIteration()
+                    await this.goNextIteration()
                 } else {
                     this.$router.push(`/sessions-results/${this.currentSession["options"]["values"]["sessionId"]}`)
                 }
@@ -175,6 +178,12 @@
                 this.currentSession["currentIterationNum"] += 1
                 // Change route url
                 this.$router.push(`/decision/${this.currentSession["options"]["values"]["sessionId"]}/${this.currentSession["currentIterationNum"]}`)
+            },
+            startCountdown() {
+                // Start or restart countdown
+                if (!this.isLoading) {
+                    this.$refs.pageTimer.startCountdown(true)
+                }
             }
         }
     }
