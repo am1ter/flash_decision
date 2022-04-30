@@ -208,7 +208,7 @@ class Session(db.Model):
     Mode = db.Column(db.String)
 
     iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', passive_deletes=True)
-    decisions = db.relationship('Decision', backref='Session', lazy='dynamic', passive_deletes=True)
+    decisions = db.relationship('Decision', backref='Session', lazy='selectin', passive_deletes=True)
     
     # Random security generation attributes
     _random_security = {
@@ -797,7 +797,7 @@ class SessionResults:
         """Collect all session attributes in one object"""
 
         self.session = session
-        decisions = session.decisions.all()
+        decisions = session.decisions
 
         total_result = round(sum([d.ResultFinal for d in decisions]) * 100, 4)
         total_decisions = len(decisions)
@@ -842,21 +842,25 @@ class Scoreboard:
         """Create new instance"""
         self.mode = mode
         self.user = user
+        self.closed_sessions = []
+        self.sessions_results = []
 
     def _get_all_users_results(self) -> dict:
         """Return list of all users results"""
 
-        closed_sessions = Session.query.filter(Session.Mode == self.mode, Session.Status == cfg.SESSION_STATUS_CLOSED).all()
-        sessions_results = [SessionResults(s) for s in closed_sessions]
+        # Check current Scoreboard instance for cached objects
+        if not any((self.closed_sessions, self.sessions_results)):
+            self.closed_sessions = Session.query.filter(Session.Mode == self.mode, Session.Status == cfg.SESSION_STATUS_CLOSED).all()
+            self.sessions_results = [SessionResults(s) for s in self.closed_sessions]
         
         # Sum results of all sessions for every user
         users_results = {}
-        for r in sessions_results:
+        for r in self.sessions_results:
             if r['userId'] not in users_results:
                 users_results[r['userId']] = r['totalResult'] 
             else:
                 users_results[r['userId']] += r['totalResult'] 
-        
+
         # Order users by result
         users_results = OrderedDict(sorted(users_results.items(), key=lambda r: r[1], reverse=True))
         return users_results
@@ -887,20 +891,22 @@ class Scoreboard:
 
         user = self.user
 
-        closed_sessions = user.sessions.filter(Session.Status == cfg.SESSION_STATUS_CLOSED, Session.Mode == self.mode).all()
-        sessions_results = [SessionResults(s) for s in closed_sessions]
+        # Check current Scoreboard instance for cached objects
+        if not any((self.closed_sessions, self.sessions_results)):
+            self.closed_sessions = user.sessions.filter(Session.Status == cfg.SESSION_STATUS_CLOSED, Session.Mode == self.mode).all()
+            self.sessions_results = [SessionResults(s) for s in self.closed_sessions]
 
         # Check if there is results for current user
-        if not any((closed_sessions, sessions_results)):
+        if not any((self.closed_sessions, self.sessions_results)):
             return False
 
-        total_sessions = len(closed_sessions)
-        profitalbe_sessions = len([s['totalResult'] for s in sessions_results if s['totalResult'] > 0])
-        unprofitalbe_sessions = len([s['totalResult'] for s in sessions_results if s['totalResult'] <= 0])
-        total_result = round(sum([s['totalResult'] for s in sessions_results]), 2)
-        median_result = round(median([s['totalResult'] for s in sessions_results]), 2)
-        best_result = round(max([s['totalResult'] for s in sessions_results]), 2)
-        first_session = min([s.CreateDatetime for s in closed_sessions]).strftime("%d.%m.%Y")
+        total_sessions = len(self.closed_sessions)
+        profitalbe_sessions = len([s['totalResult'] for s in self.sessions_results if s['totalResult'] > 0])
+        unprofitalbe_sessions = len([s['totalResult'] for s in self.sessions_results if s['totalResult'] <= 0])
+        total_result = round(sum([s['totalResult'] for s in self.sessions_results]), 2)
+        median_result = round(median([s['totalResult'] for s in self.sessions_results]), 2)
+        best_result = round(max([s['totalResult'] for s in self.sessions_results]), 2)
+        first_session = min([s.CreateDatetime for s in self.closed_sessions]).strftime("%d.%m.%Y")
 
         user_summary = {
             'mode': self.mode,

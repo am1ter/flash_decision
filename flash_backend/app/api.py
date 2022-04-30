@@ -267,7 +267,7 @@ def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
         return jsonify('Something went wrong. Session is already closed.'), 500
 
     # Check if all decisions before requested iteration were already made (manual skips is forbidden)
-    total_decisions = len(current_session.decisions.all())
+    total_decisions = len(current_session.decisions)
     if total_decisions != iteration_num - 1:
         logger.warning(f'Requested unexpected iteration info for {current_session}')
         return jsonify('Something went wrong. Please start new session.'), 500
