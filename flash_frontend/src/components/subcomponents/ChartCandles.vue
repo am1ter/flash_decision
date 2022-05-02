@@ -161,6 +161,12 @@
         },
         methods: {
             formatChart() {
+
+                // Skip formatting for empty objects
+                if (Object.keys(this.iterationChart).length == 0) {
+                    return
+                }
+
                 // Format chart - add extra space to the graph
                 let finalbar = parseInt(this.currentSession["options"]["values"]["barsnumber"])
                 let fixingbar = parseInt(this.currentSession["options"]["values"]["fixingbar"])

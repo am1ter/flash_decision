@@ -210,6 +210,10 @@ class Session(db.Model):
     iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', order_by='Iteration.IterationId', passive_deletes=True)
     decisions = db.relationship('Decision', backref='Session', lazy='selectin', passive_deletes=True)
     
+    __mapper_args__ = {
+        'polymorphic_on': Mode,
+    }
+
     # Random security generation attributes
     _random_security = {
         'USA': ('AMZN', 'NVDA', 'FB', 'MSFT', 'AAPL', 'DIS', 'XOM', 'GS', 'BA', 'NKE'),
@@ -288,7 +292,7 @@ class Session(db.Model):
         assert not os.path.exists(save_path) or os.stat(save_path).st_size <= 48, 'Error: Quotes already downloaded'   
 
         # Parse quotes with finam.export lib
-        exporter = Exporter()
+        exporter = cfg.SessionOptions.get_exporter()
         security = exporter.lookup(code=self.Ticker, market=Market[self.Market],
                             code_comparator=LookupComparator.EQUALS)
 
@@ -450,6 +454,10 @@ class SessionCustom(Session):
     User is able to set up all session options by himself.
     """
 
+    __mapper_args__ = {
+        'polymorphic_identity':'custom'
+    }
+
     @classmethod
     def create(cls, request: dict) -> db.Model:
         """Call super method with mode == custom"""
@@ -462,6 +470,10 @@ class SessionClassic(Session):
     Subclass for preset session (classic)
     Balanced mode with common USA shares. Used as application default.
     """
+
+    __mapper_args__ = {
+        'polymorphic_identity':'classic'
+    }
 
     @classmethod
     def create(cls, request: dict) -> db.Model:
@@ -490,6 +502,10 @@ class SessionBlitz(Session):
     High speed mode - time for decision making is very limited.
     """
 
+    __mapper_args__ = {
+        'polymorphic_identity':'blitz'
+    }
+
     @classmethod
     def create(cls, request: dict) -> db.Model:
         """Setup attributes for blitz session"""
@@ -516,6 +532,10 @@ class SessionCrypto(Session):
     Subclass for preset session (cryptocurrencies)
     Cryptocurrencies is high volatility securities, so results are less predictable.
     """
+
+    __mapper_args__ = {
+        'polymorphic_identity':'crypto'
+    }
 
     @classmethod
     def create(cls, request: dict) -> db.Model:
@@ -591,8 +611,8 @@ class Iteration(db.Model):
         
             # Skip dates with no data for chart
             if iter.FixingBarNum - last_iteration.FixingBarNum > session.Fixingbar * -1:
-                iter.Session = session
-                logger.warning(f'Skip iteration generation for {iter} because of no data for {iter.FixingBarDatetime}')
+                # iter.Session = session
+                logger.warning(f'Skip iteration generation for <Iteration #{iteration_num} of {session}> because of no data for {iter.FixingBarDatetime}')
                 return None
 
         # Fill other required bars numbers
@@ -601,8 +621,7 @@ class Iteration(db.Model):
             iter.StartBarNum = iter.FinalBarNum - session.Barsnumber
         else:
             # Stop iteration generation if not enough data in df
-            iter.Session = session
-            logger.warning(f'Skip iteration generation for {iter} because not enough data in dataframe')
+            logger.warning(f'Skip iteration generation for <Iteration #{iteration_num} of {session}> because not enough data in dataframe')
             return None
 
         # Write data to db

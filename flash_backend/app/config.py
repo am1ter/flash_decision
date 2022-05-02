@@ -23,6 +23,7 @@ PATH_APP = os.path.dirname(os.path.abspath(__file__))
 PATH_DOWNLOADS = os.path.join(os.path.dirname(PATH_APP), 'downloads')
 
 # Session parameters
+PARSE_OPTIONS_AT_STARTUP = False
 SESSION_STATUS_CREATED = 'created'
 SESSION_STATUS_ACTIVE = 'active'
 SESSION_STATUS_CLOSED = 'closed'
@@ -176,13 +177,12 @@ class SessionOptions:
         """Read all markets from finam module (hardcoded in external lib) and enrich it by downloaded tickers"""
 
         # Read tickers for every market and convert it to dict
-        exporter = Exporter()
         for market in Market:
             # Skip excluded markets
             if market.name in cls._MARKETS_EXCLUDE_LIST:
                 continue
             # Find tickers by market name
-            tickers = exporter.lookup(market=market)
+            tickers = cls.exporter.lookup(market=market)
             # Drop duplicated codes
             tickers = tickers.drop_duplicates()
             # Drop removed tickers
@@ -214,7 +214,8 @@ class SessionOptions:
     @classmethod
     def update(cls) -> None:
         """Parse finam data and save results in class attributes"""
-        if not all((cls.markets, cls.tickers, cls.timeframes)):
+        if not all((cls.exporter, cls.markets, cls.tickers, cls.timeframes)):
+            cls.get_exporter()
             cls._parse_markets()
             cls._parse_tickers()
             cls._parse_timeframes()
@@ -222,8 +223,13 @@ class SessionOptions:
     @classmethod
     def find_alias_ticker(cls, market, ticker) -> str:
         """Find in class ticker for specified market and return full name of it"""
-        market_tickers = cls.tickers[market]
-        ticker_alias = [t['name'] for t in market_tickers if t['code'] == ticker][0]
+        try:
+            market_tickers = cls.tickers[market]
+            ticker_alias = [t['name'] for t in market_tickers if t['code'] == ticker][0]
+        except KeyError:
+            cls.update()
+            market_tickers = cls.tickers[market]
+            ticker_alias = [t['name'] for t in market_tickers if t['code'] == ticker][0]
         return ticker_alias
 
     @staticmethod
@@ -239,3 +245,12 @@ class SessionOptions:
             'DAILY': 24*60
         }
         return minutes_in_timeframe[tf]
+
+    @classmethod
+    def get_exporter(cls) -> Exporter:
+        """Return finam exporter for data parsing"""
+        try:
+            return cls.exporter
+        except AttributeError:
+            cls.exporter = Exporter()
+            return cls.exporter

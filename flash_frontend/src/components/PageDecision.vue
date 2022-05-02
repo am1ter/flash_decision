@@ -73,10 +73,10 @@
             this.startLoading()
             // Create blank decision
             this.createBlankDecision()
-            // Load new chart
-            await this.createChart()
-            // Display page
-            await this.stopLoading()
+            // Load new chart if requested iteration exists
+            if (await this.createChart()) {
+                await this.stopLoading()
+            }
             // Restart countdown
             next()
             this.startCountdown()
@@ -135,19 +135,22 @@
             async createChart() {
                 // Run async request - пet iteration chart over API
                 let response = await apiGetIterationChart(this.currentSession["options"]["values"]["sessionId"], this.currentSession["currentIterationNum"])
+                let status = false
 
                 // Chart data to display [0], iteration data to vuex storage [1]
                 if (response) {
                     this.iterationChart = JSON.parse(response)[0];
                     this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = JSON.parse(response)[1]
+                    status = true
                 } else {
                     // If response is `false` then skip decision for such iteration 
-                    this.iterationChart = JSON.parse(false);
+                    this.iterationChart = {}
                     this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = this.currentSession["iterations"][this.currentSession["currentIterationNum"] - 1]
                     // document.getElementById("button-skip").click();
                     let event = {"target": {"id": "button-skip"}}
                     await this.saveDecision(event)
                 }
+                return status
             },
             async saveDecision(event) {
                 // Decision has been made
