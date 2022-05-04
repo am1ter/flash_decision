@@ -1,6 +1,10 @@
-from elements import ElementInput, ElementButton, ElementDatePicker
-import locators as loc
+import config as cfg
+from tests.frontend_elements import ElementInput, ElementButton, ElementDatePicker
+import tests.frontend_locators as loc
 
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -8,15 +12,18 @@ from selenium.webdriver.support import expected_conditions as EC
 class PageBase:
     """Base class to initialize the base page that will be called from all pages"""
 
-    title = ''
+    def __init__(self) -> None:
+        # Basic setup
+        self._set_wait_timer(cfg.WAIT_TIMEOUT)
+        # Check if page loaded
+        self.is_page_loaded()
+        # Setup buttons
+        self.button_logout = ElementButton(page=self, locator=loc.LocatorsPageBase.button_logout)
+        self.button_menu_session = ElementButton(page=self, locator=loc.LocatorsPageBase.button_menu_session)
+        self.button_menu_decision = ElementButton(page=self, locator=loc.LocatorsPageBase.button_menu_decision)
+        self.button_menu_scoreboard = ElementButton(page=self, locator=loc.LocatorsPageBase.button_menu_scoreboard)
 
-    def __init__(self, driver) -> None:
-        self.driver = driver
-        self.set_wait_timer(10)
-        check_page_loaded = self.is_page_loaded()
-        assert check_page_loaded == True, f'Error during {self} loading: {check_page_loaded}'
-
-    def set_wait_timer(self, timeout: int) -> None:
+    def _set_wait_timer(self, timeout: int) -> None:
         """Reset webdriver wait timer with new timeout (seconds) value"""
         # Delete existed wait timer and replace it with new one
         try:
@@ -25,28 +32,69 @@ class PageBase:
             pass
         self.wait = WebDriverWait(self.driver, timeout)        
 
-    def is_page_loaded(self) -> bool:
+    @classmethod
+    def setup_driver(cls) -> None:
+        """Setup chrome driver with webdriver service"""
+        chromeService = Service(ChromeDriverManager().install())
+        options = webdriver.ChromeOptions()
+        options.headless = cfg.HEADLESS
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument('--disable-translate')
+        options.add_argument('--lang=en-US')
+        options.add_argument('--no-sandbox')
+        if cfg.HEADLESS and cfg.START_MAXIMIZED:
+            options.add_argument("--start-maximized")
+        cls.driver = webdriver.Chrome(service=chromeService, options=options)
+
+    def is_page_loaded(self) -> None:
         """Verifies that the page is loaded"""
+        
         # Wait until page is loaded
-        self.wait.until(EC.title_contains(self.title))
-        self.wait.until(EC.visibility_of_element_located(loc.LocatorsPageBase.div_footer))
+        self.wait.until(method=EC.invisibility_of_element_located(loc.LocatorsPageBase.div_errors), 
+                        message=f'Page is not loaded - there are errors on the page: {self.driver.current_url}')
+        self.wait.until(method=EC.title_contains(self.title), 
+                        message=f'Unexpected page title. No `{self.title}` in `{self.driver.title}`')
+        self.wait.until(method=EC.visibility_of_element_located(loc.LocatorsPageBase.div_footer), 
+                        message=f'No footer found on the page: {self.driver.current_url}')
+        self.wait.until(method=EC.invisibility_of_element_located(loc.LocatorsPageBase.div_loader), 
+                        message=f'Loading did not finish: {self.driver.current_url}')
+        
         # Make checks
+        fails = []
+        no_errors = len(self.driver.find_elements(*loc.LocatorsPageBase.div_errors)) == 0
         is_page_length_enough = len(self.driver.page_source) > 100
-        is_title_matches = self.title in self.driver.title
-        has_errors = self.driver.find_elements(*loc.LocatorsPageBase.div_errors)
-        if is_page_length_enough and is_title_matches and not has_errors:
-            return True
-        elif has_errors:
-            return has_errors[0].text.split('\n')[0]
-        elif is_page_length_enough:
-            return 'Page length <= 100 symbols'
-        elif is_title_matches:
-            return 'Unexpected page title'
+        is_url_correct = 'undefined' not in self.driver.current_url
+        no_undefined = 'undefined' not in self.driver.page_source.lower()
+        
+        if no_errors == False:
+            fails.append('Errors displayed on the page')
+        elif is_page_length_enough == False:
+            fails.append('Page length <= 100 symbols')
+        elif is_url_correct == False:
+            fails.append('URL is incorrect. There is `undefined` in the URL.')
+        elif no_undefined == False:
+            fails.append('There are undefined values on the page')
+
+        assert len(fails) == 0, f'Error during {self} loading: {fails}'
 
     def refresh_page(self) -> None:
         """Press F5 to reload page"""
         self.driver.refresh()
-        assert self.is_page_loaded(), 'Error during page refresh'
+        # Check if page loaded
+        self.is_page_loaded()
+
+    def logout(self) -> None:
+        """Click on the logout button"""
+        self.button_logout.click()
+
+    def go_to_page(self, page: str) -> None:
+        """Click on the logout button"""
+        menu_to_click = {
+            'session': self.button_menu_session,
+            'decision': self.button_menu_decision,
+            'scoreboard': self.button_menu_scoreboard
+        }
+        menu_to_click[page].click()
 
 
 class PageLogin(PageBase):
@@ -58,32 +106,33 @@ class PageLogin(PageBase):
         """Return formated object name"""
         return f'<Page Login>'
 
-    def __init__(self, driver):
+    def __init__(self) -> None:
         """Page setup"""
-        super().__init__(driver)
+        super().__init__()
         self.input_email = ElementInput(page=self, locator=loc.LocatorsPageLogin.input_email)
         self.input_password = ElementInput(page=self, locator=loc.LocatorsPageLogin.input_password)
         self.button_signin = ElementButton(page=self, locator=loc.LocatorsPageLogin.button_signin)
         self.button_signup = ElementButton(page=self, locator=loc.LocatorsPageLogin.button_signup)
         self.button_signin_demo = ElementButton(page=self, locator=loc.LocatorsPageLogin.button_signin_demo)
 
-    def login_via_form(self, email, password):
+    def login_via_form(self, email: str, password: str) -> None:
         """Send email and password with html form"""
         self.input_email.val = email
         self.input_password.val = password
         self.button_signin.click()
 
-    def login_via_demo_button(self):
+    def login_via_demo_button(self) -> None:
         """Send email and password with html form"""
         self.button_signin_demo.click()
 
-    def go_to_signup(self):
+    def go_to_signup(self) -> None:
         """Send email and password with html form"""
         self.button_signup.click()
 
-    def has_text_incorrect_creds(self):
+    def check_error_message(self) -> None:
         """Check if there is an alert on the page"""
-        return 'Incorrect email or password' in self.driver.page_source
+        check_passed = 'incorrect email or password' in self.driver.page_source.lower()
+        assert check_passed, 'Login with incorrect credentials has failed'
 
 
 class PageSignup(PageBase):
@@ -95,25 +144,42 @@ class PageSignup(PageBase):
         """Return formated object name"""
         return f'<Page Signup>'
 
-    def __init__(self, driver):
+    def __init__(self) -> None:
         """Page setup"""
-        super().__init__(driver)
+        super().__init__()
         self.input_email = ElementInput(page=self, locator=loc.LocatorsPageSignup.input_email)
         self.input_name = ElementInput(page=self, locator=loc.LocatorsPageSignup.input_name)
         self.input_password = ElementInput(page=self, locator=loc.LocatorsPageSignup.input_password)
         self.button_signup = ElementButton(page=self, locator=loc.LocatorsPageSignup.button_signup)
         self.button_go_back = ElementButton(page=self, locator=loc.LocatorsPageSignup.button_go_back)
 
-    def go_back(self):
+    def go_back_to_login(self) -> None:
         """Click on the back button"""
         self.button_go_back.click()
 
-    def sign_up(self, email, name, password):
+    def sign_up(self, email: str, name: str, password: str) -> None:
         """Click on the back button"""
         self.input_email.val = email
         self.input_name.val = name
         self.input_password.val = password
         self.button_signup.click()
+
+    def check_error_messages(self, check: str) -> None:
+        """Check if there is an alert on the page"""
+        msg_email_taken = 'Email has already been taken'.lower() 
+        msg_email_invalid = 'Please enter a valid email'.lower()
+        msg_name_invalid = 'Please enter your name'.lower()
+        msg_password_invalid = 'Password must contain at least 6 symbols'.lower()
+        errors = []
+        for msg in (msg_email_invalid, msg_email_taken, msg_name_invalid, msg_password_invalid):
+            if msg in self.driver.page_source.lower():
+                errors.append(msg)
+        if check == 'invalid':
+            invalid_list = [msg_email_invalid, msg_name_invalid, msg_password_invalid]
+            assert invalid_list == errors, 'Check sign up with invalid credentials failed'
+        elif check == 'invalid':
+            taken_list = [msg_email_taken]
+            assert taken_list == errors, 'Check sign up with already taken email failed'
 
 
 class PageSession(PageBase):
@@ -125,32 +191,14 @@ class PageSession(PageBase):
         """Return formated object name"""
         return f'<Page SessionCustom>'
 
-    def __init__(self, driver):
-        super().__init__(driver)
-        self.button_logout = ElementButton(page=self, locator=loc.LocatorsPageSession.button_logout)
-        self.button_menu_session = ElementButton(page=self, locator=loc.LocatorsPageSession.button_menu_session)
-        self.button_menu_decision = ElementButton(page=self, locator=loc.LocatorsPageSession.button_menu_decision)
-        self.button_menu_scoreboard = ElementButton(page=self, locator=loc.LocatorsPageSession.button_menu_scoreboard)
-        self.button_logout = ElementButton(page=self, locator=loc.LocatorsPageSession.button_logout)
+    def __init__(self) -> None:
+        super().__init__()
         self.button_mode_custom = ElementButton(page=self, locator=loc.LocatorsPageSession.button_mode_custom)
         self.button_mode_classic = ElementButton(page=self, locator=loc.LocatorsPageSession.button_mode_classic)
         self.button_mode_blitz = ElementButton(page=self, locator=loc.LocatorsPageSession.button_mode_blitz)
         self.button_mode_crypto = ElementButton(page=self, locator=loc.LocatorsPageSession.button_mode_crypto)
 
-    def logout(self):
-        """Click on the logout button"""
-        self.button_logout.click()
-
-    def go_to_page(self, page):
-        """Click on the logout button"""
-        menu_to_click = {
-            'session': self.button_menu_session,
-            'decision': self.button_menu_decision,
-            'scoreboard': self.button_menu_scoreboard
-        }
-        menu_to_click[page].click()
-
-    def select_mode(self, mode):
+    def select_mode(self, mode: str) -> None:
         """Select mode by clicking mode button"""
         button_to_click = {
             'custom': self.button_mode_custom,
@@ -170,9 +218,9 @@ class PageSessionCustom(PageBase):
         """Return formated object name"""
         return f'<Page SessionCustom>'
 
-    def __init__(self, driver):
+    def __init__(self) -> None:
         """Page setup"""
-        super().__init__(driver)
+        super().__init__()
         self.input_market = ElementInput(page=self, locator=loc.LocatorsPageSessionCustom.input_market)
         self.input_ticker = ElementInput(page=self, locator=loc.LocatorsPageSessionCustom.input_ticker)
         self.input_timeframe = ElementInput(page=self, locator=loc.LocatorsPageSessionCustom.input_timeframe)
@@ -184,7 +232,7 @@ class PageSessionCustom(PageBase):
         self.input_fixingbar = ElementInput(page=self, locator=loc.LocatorsPageSessionCustom.input_fixingbar)
         self.button_start = ElementButton(page=self, locator=loc.LocatorsPageSessionCustom.button_start)
 
-    def start(self):
+    def start(self) -> None:
         self.input_market.val = 'Russian shares'
         self.input_ticker.val = 'SBER'
         self.input_timeframe.val = '5'
@@ -206,13 +254,14 @@ class PageSessionPreset(PageBase):
         """Return formated object name"""
         return f'<Page Session Preseted>'
 
-    def __init__(self, driver):
+    def __init__(self) -> None:
         """Page setup"""
-        super().__init__(driver)
+        super().__init__()
 
-    def wait_for_start(self):
+    def wait_for_start(self) -> None:
         """Wait until session has started"""
-        self.wait.until(EC.title_contains(PageDecision.title))
+        self.wait.until(method=EC.title_contains(PageDecision.title),
+                        message='Page Decision did not load')
 
 
 class PageDecision(PageBase):
@@ -224,30 +273,31 @@ class PageDecision(PageBase):
         """Return formated object name"""
         return f'<Page Decision>'
 
-    def __init__(self, driver):
+    def __init__(self) -> None:
         """Page setup"""
-        super().__init__(driver)
+        super().__init__()
         self.button_sell = ElementButton(page=self, locator=loc.LocatorsPageDecision.button_sell)
         self.button_skip = ElementButton(page=self, locator=loc.LocatorsPageDecision.button_skip)
         self.button_buy = ElementButton(page=self, locator=loc.LocatorsPageDecision.button_buy)
 
-    def action_sell(self):
+    def action_sell(self) -> None:
         """Press action button"""
         self.button_sell.click()
 
-    def action_skip(self):
+    def action_skip(self) -> None:
         """Press action button"""
         self.button_skip.click()
 
-    def action_buy(self):
+    def action_buy(self) -> None:
         """Press action button"""
         self.button_buy.click()
 
-    def no_action(self):
+    def no_action(self) -> None:
         """Decision has not made - Skip"""
         # Wait until url has changed
         url = self.driver.current_url
-        self.wait.until(EC.url_changes(url))
+        self.wait.until(method=EC.url_changes(url),
+                        message='Auto skip failed - new page did not load')
 
 
 class PageResults(PageBase):
@@ -259,17 +309,17 @@ class PageResults(PageBase):
         """Return formated object name"""
         return f'<Page Results>'
 
-    def __init__(self, driver):
+    def __init__(self) -> None:
         """Page setup"""
-        super().__init__(driver)
+        super().__init__()
         self.button_go_to_scoreboard = ElementButton(page=self, locator=loc.LocatorsPageResults.button_go_to_scoreboard)
         self.button_start_new_session = ElementButton(page=self, locator=loc.LocatorsPageResults.button_start_new_session)
 
-    def go_to_scoreboard(self):
+    def go_to_scoreboard(self) -> None:
         """Press button with link to scoreboard"""
         self.button_go_to_scoreboard.click()
 
-    def start_new_session(self):
+    def start_new_session(self) -> None:
         """Press button with link to scoreboard"""
         self.button_start_new_session.click()
 
@@ -283,15 +333,15 @@ class PageScoreboard(PageBase):
         """Return formated object name"""
         return f'<Page Scoreboard>'
 
-    def __init__(self, driver):
+    def __init__(self) -> None:
         """Page setup"""
-        super().__init__(driver)
+        super().__init__()
         self.button_mode_custom = ElementButton(page=self, locator=loc.LocatorsPageScoreboard.button_mode_custom)
         self.button_mode_classic = ElementButton(page=self, locator=loc.LocatorsPageScoreboard.button_mode_classic)
         self.button_mode_blitz = ElementButton(page=self, locator=loc.LocatorsPageScoreboard.button_mode_blitz)
         self.button_mode_crypto = ElementButton(page=self, locator=loc.LocatorsPageScoreboard.button_mode_crypto)
 
-    def select_mode(self, mode):
+    def select_mode(self, mode: str) -> None:
         """Select mode by clicking mode button"""
         button_to_click = {
             'custom': self.button_mode_custom,
@@ -300,5 +350,7 @@ class PageScoreboard(PageBase):
             'crypto': self.button_mode_crypto
         }
         button_to_click[mode].click()
+        
         # Wait until url has changed
-        self.wait.until(EC.url_contains(mode))
+        self.wait.until(method=EC.url_contains(mode),
+                        message='Mode selection failed - new page did not load')

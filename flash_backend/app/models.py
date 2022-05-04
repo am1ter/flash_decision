@@ -71,17 +71,9 @@ class User(db.Model):
         """Return object by email"""
         return cls.query.filter(User.UserEmail == email).first()
 
-    @classmethod
-    def delete_user_by_email(cls, email: str) -> bool:
-        """Return object by email"""
-        # Get user from db
-        user = cls.get_user_by_email(email)
-        if user:
-            # Delete it from db
-            delete_object_from_db(user)
-            return True
-        else:
-            return False
+    def delete_user(self) -> None:
+        """Delete user and all related to it object from db"""
+        delete_object_from_db(self)
 
     def set_email(self, email: str) -> None:
         """Set new email for the user"""

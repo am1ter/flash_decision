@@ -4,8 +4,13 @@ from selenium.webdriver.common.by import By
 class LocatorsPageBase(object):
     """Locators for all pages"""
     div_errors = (By.ID, 'errors')
+    div_loader = (By.ID, 'vld-icon')
     div_footer = (By.ID, 'credits')
 
+    button_logout = (By.ID, 'button-logout')
+    button_menu_session = (By.ID, 'button-menu-session')
+    button_menu_decision = (By.ID, 'button-menu-decision')
+    button_menu_scoreboard = (By.ID, 'button-menu-scoreboard')
 
 class LocatorsPageLogin(object):
     """Locators for Login page"""
@@ -27,10 +32,6 @@ class LocatorsPageSignup(object):
 
 class LocatorsPageSession(object):
     """Locators for main page (Session page)"""
-    button_logout = (By.ID, 'button-logout')
-    button_menu_session = (By.ID, 'button-menu-session')
-    button_menu_decision = (By.ID, 'button-menu-decision')
-    button_menu_scoreboard = (By.ID, 'button-menu-scoreboard')
     button_mode_custom = (By.ID, 'button-custom')
     button_mode_classic = (By.ID, 'button-classic')
     button_mode_blitz = (By.ID, 'button-blitz')

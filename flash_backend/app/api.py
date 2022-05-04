@@ -374,14 +374,23 @@ def api_check_backend() -> Response:
 @api.route('/check-db/', methods=['GET'])
 def api_check_db() -> Response:
     """Check if there is a connection to db"""
-    check_db_connection()
-    return jsonify(True), 200
+    if check_db_connection():
+        logger_general.info(f'Database connection check passed')
+        return jsonify(True), 200
+    else:
+        logger_general.info(f'Database connection check failed')
+        return jsonify(False), 500
 
 
 @api.route('/cleanup-tests-results/', methods=['GET'])
 def api_cleanup_tests_results() -> Response:
     """Clean data generated during end2end tests"""
     # Delete test user
-    result = User.delete_user_by_email(cfg.USER_TEST_EMAIL)
-    logger_general.info(f'Tests data clean up finished. Database records deleted: {result}')
-    return jsonify(result), 200
+    user = User.get_user_by_email(cfg.USER_TEST_SIGNUP_EMAIL)
+    if user:
+        user.delete_user()
+        is_user_deleted = True
+    else:
+        is_user_deleted = False
+    logger_general.info(f'Tests data clean up finished. Database records deleted: {is_user_deleted}')
+    return jsonify(True), 200

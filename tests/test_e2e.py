@@ -1,246 +1,239 @@
-import pages as pages
+import config as cfg
+import backend_functions as backend
+import frontend_pages as frontend
 
 import unittest
-import os
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import requests as r
 
 
 class TestBackend(unittest.TestCase):
     """Smoke API tests"""
-    def _get_api_url(self):
-        """Get app url"""
-        if os.environ.get('URL_BACKEND'):
-            url = os.environ.get('URL_BACKEND')
-        else:
-            url = "http://localhost:8001"
-        return url
 
     def test_is_api_up(self):
         """Test: Backend API is up"""
-        url = self._get_api_url() + '/check-backend'
-        try:
-            resp = r.get(url)
-            if resp.status_code != 200:
-                return self.fail(resp.text)
-        except r.exceptions.ConnectionError as e:
-            self.fail('No response from API: ' + str(e))
+        url = cfg.URL_BACKEND + '/check-backend'
+        resp = backend.send_request(url)
+        assert resp == True, resp
 
     def test_is_db_up(self):
         """Test: Connection between backend and db is up"""
-        url = self._get_api_url() + '/check-db'
-        try:
-            resp = r.get(url)
-            if resp.status_code != 200:
-                return self.fail(resp.text)
-        except r.exceptions.ConnectionError as e:
-            self.fail('No response from API: ' + str(e))
+        url = cfg.URL_BACKEND + '/check-db'
+        resp = backend.send_request(url)
+        assert resp == True, resp
 
 
 class TestFrontend(unittest.TestCase):
     """Complex test (standart pattern)"""
 
     def _go_to_page(self, page):
-        if os.environ.get('URL_FRONTEND'):
-            url = os.environ.get('URL_FRONTEND') + page
-        else:
-            url = "http://localhost:8000" + page
-        self.driver.get(url)
+        """Define URL of the main page"""
+        url = cfg.URL_FRONTEND + page
+        frontend.PageBase.driver.get(url)
 
     def _cleanup_test_results(self):
         """Clean results of previous tests from db"""
-        url = TestBackend._get_api_url(None) + '/cleanup-tests-results'
-        print(f'Results cleaned up: ' + url)
-        try:
-            resp = r.get(url)
-            if resp.status_code != 200:
-                return self.fail(resp.text)
-        except r.exceptions.ConnectionError as e:
-            self.fail('No response from API: ' + str(e))
+        url = cfg.URL_BACKEND + '/cleanup-tests-results'
+        resp = backend.send_request(url)
+        assert resp == True, resp
 
     def setUp(self):
-        """Setup chrome driver with webdriver service"""
-        print('setUp')
-        chromeService = Service(ChromeDriverManager().install())
-        options = webdriver.ChromeOptions()
-        options.headless = True
-        options.add_argument("--window-size=1920,1080")
-        # options.add_argument("--start-maximized")
-        options.add_argument('--disable-translate')
-        options.add_argument('--lang=en-US')
-        options.add_argument('--no-sandbox')
-        self.driver = webdriver.Chrome(service=chromeService, options=options)
+        """Setup chrome driver and go to main page"""
+        frontend.PageBase.setup_driver()
         self._go_to_page('/')
 
     def test_is_frontend_up(self):
         """Test: Main page loaded correctly"""
-        print('test_is_frontend_up')
-        page_start = pages.PageLogin(self.driver)
-        assert page_start.is_page_loaded(), "Frontend loading has been failed"
+        frontend.PageLogin()
 
     def test_login_via_form_correct(self):
         """Test: try to login with correct credentials"""
-        page_login = pages.PageLogin(self.driver)
-        page_login.login_via_form(email='demo@alekseisemenov.ru', password='demo')
-        page_session = pages.PageSession(self.driver)
-        assert page_session.is_page_loaded(), "Login failed: Session page hasn't been loaded"
+        frontend.PageLogin().login_via_form(email='test@alekseisemenov.ru', password='uc8a&Q!W')
+        frontend.PageSession()
 
     def test_login_via_form_incorrect(self):
         """Test: try to login with incorrect credentials"""
-        page_login = pages.PageLogin(self.driver)
-        page_login.login_via_form(email='wrong@alekseisemenov.ru', password='wrong')
-        page_login.has_text_incorrect_creds()
+        frontend.PageLogin().login_via_form(email='wrong@alekseisemenov.ru', password='wrong')
+        frontend.PageLogin().check_error_message()
 
     def test_login_via_demo_button(self):
         """Test: try to login with demo button"""
-        page_login = pages.PageLogin(self.driver)
-        page_login.login_via_demo_button()
-        page_session = pages.PageSession(self.driver)
+        frontend.PageLogin().login_via_demo_button()
+        frontend.PageSession()
 
     def test_logout(self):
         """Test: try to login with demo button"""
         self.test_login_via_form_correct()
-        page_session = pages.PageSession(self.driver)
-        page_session.logout()
-        page_login = pages.PageLogin(self.driver)
+        frontend.PageSession().logout()
+        frontend.PageLogin()
 
     def test_signup_correct(self):
         """Test: try to create new user (delete it when test passed)"""
-        # Delete previous created test user
+        # Delete previous created test user if exists
         self._cleanup_test_results()
-        # Go to login page
-        page_login = pages.PageLogin(self.driver)
-        # Test: go back button
-        page_login.go_to_signup()
-        page_signup = pages.PageSignup(self.driver)
-        page_signup.go_back()
-        page_login = pages.PageLogin(self.driver)
-        # Test sign up
-        page_login.go_to_signup()
-        page_signup = pages.PageSignup(self.driver)
-        page_signup.sign_up(email='test@alekseisemenov.ru', name='test', password='uc8a&Q!W')
-        page_session = pages.PageSession(self.driver)
-        # Logout
-        page_session.logout()
-        # Login with new user credentials
-        page_login = pages.PageLogin(self.driver)
-        page_login.login_via_form(email='test@alekseisemenov.ru', password='uc8a&Q!W')
+        # On page Login
+        frontend.PageLogin().go_to_signup()
+        # On page Signup
+        frontend.PageSignup().go_back_to_login()
+        # On page Login
+        frontend.PageLogin().go_to_signup()
+        # On page Signup - create new user
+        frontend.PageSignup().sign_up(email='test-signup@alekseisemenov.ru', name='test-signup', password='uc8a&Q!W')
+        # On page Session - logout
+        frontend.PageSession().logout()
+        # On page Login - login with new user credentials
+        frontend.PageLogin().login_via_form(email='test-signup@alekseisemenov.ru', password='uc8a&Q!W')
+        # Delete created test user
+        self._cleanup_test_results()
+
+    def test_signup_incorrect(self):
+        """Test: try to create new user (delete it when test passed)"""
+        # On page Login
+        frontend.PageLogin().go_to_signup()
+        # On page Signup - try to create new user with invalid creds
+        frontend.PageSignup().sign_up(email='wrong', name='', password='wrong')
+        frontend.PageSignup().check_error_messages(check='invalid')
+        frontend.PageSignup().go_back_to_login()
+        # On page Login
+        frontend.PageLogin().go_to_signup()
+        # On page Signup - try to create new user with already taken email
+        frontend.PageSignup().sign_up(email='test@alekseisemenov.ru', name='test', password='uc8a&Q!W')
+        frontend.PageSignup().check_error_messages(check='taken')
+
 
     def test_custom_session(self):
         """Test: start new custom session, make decisions, look at results, go to scoreboard"""
         # On page Login
         self.test_login_via_form_correct()
         # Select mode on the Session page
-        page_session = pages.PageSession(self.driver)
-        page_session.select_mode(mode='custom')
+        frontend.PageSession().select_mode(mode='custom')
         # On page Session Custom
-        page_session_custom = pages.PageSessionCustom(self.driver)
-        page_session_custom.start()
+        frontend.PageSessionCustom().start()
         # On page Decision
-        page_decision = pages.PageDecision(self.driver)
-        page_decision.action_buy()
-        page_decision.action_sell()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
+        frontend.PageDecision().action_buy()
+        frontend.PageDecision().action_sell()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
         # On page Results
-        page_results = pages.PageResults(self.driver)
-        page_results.go_to_scoreboard()
+        frontend.PageResults().go_to_scoreboard()
         # On page Scoreboard page
-        page_scoreboard = pages.PageScoreboard(self.driver)
+        frontend.PageScoreboard()
 
     def test_classic_session(self):
-        """Test: start new classic session, make decisions, refresh page, look at results, start new session, go back to results"""
+        """Test: start new classic session, make decisions, look at results, start new session, go back to results"""
         # On page Login
         self.test_login_via_form_correct()
         # Select mode on the Session page
-        page_session = pages.PageSession(self.driver)
-        page_session.select_mode(mode='classic')
+        frontend.PageSession().select_mode(mode='classic')
         # On page Session Classic
-        page_session_classic = pages.PageSessionPreset(self.driver)
+        frontend.PageSessionPreset().wait_for_start()
         # On page Decision
-        page_decision = pages.PageDecision(self.driver)
-        page_decision.action_buy()
-        page_decision.action_sell()
-        page_decision.refresh_page()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
+        frontend.PageDecision().action_buy()
+        frontend.PageDecision().action_sell()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
         # On page Results
-        page_results = pages.PageResults(self.driver)
-        page_results.start_new_session()
+        frontend.PageResults().start_new_session()
         # On the Session page
-        page_session = pages.PageSession(self.driver)
-        page_session.go_to_page('decision')
+        frontend.PageSession().go_to_page('decision')
         # On page Results
-        page_results = pages.PageResults(self.driver)
+        frontend.PageResults()
 
     def test_blitz_session(self):
         """Test: start new blitz session, make decisions, skip one decision by waiting, look at results"""
         # On page Login
         self.test_login_via_form_correct()
         # Select mode on the Session page
-        page_session = pages.PageSession(self.driver)
-        page_session.select_mode(mode='blitz')
+        frontend.PageSession().select_mode(mode='blitz')
         # On page Session Classic
-        page_session_classic = pages.PageSessionPreset(self.driver)
+        frontend.PageSessionPreset().wait_for_start()
         # On page Decision
-        page_decision = pages.PageDecision(self.driver)
-        page_decision.action_buy()
-        page_decision.action_sell()
-        page_decision.no_action()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
+        frontend.PageDecision().action_buy()
+        frontend.PageDecision().action_sell()
+        frontend.PageDecision().no_action()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
         # On page Results
-        page_results = pages.PageResults(self.driver)
+        frontend.PageResults()
 
     def test_crypto_session(self):
         """Test: start new blitz session, make decision, look at results"""
         # On page Login
         self.test_login_via_form_correct()
         # Select mode on the Session page
-        page_session = pages.PageSession(self.driver)
-        page_session.select_mode(mode='crypto')
+        frontend.PageSession().select_mode(mode='crypto')
         # On page Session Classic
-        page_session_classic = pages.PageSessionPreset(self.driver)
+        frontend.PageSessionPreset().wait_for_start()
         # On page Decision
-        page_decision = pages.PageDecision(self.driver)
-        page_decision.action_sell()
-        page_decision.action_skip()
-        page_decision.action_buy()
-        page_decision.action_sell()
-        page_decision.action_buy()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
-        page_decision.action_skip()
+        frontend.PageDecision().action_sell()
+        frontend.PageDecision().action_buy()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
         # On page Results
-        page_results = pages.PageResults(self.driver)
+        frontend.PageResults()
 
     def test_scoreboard(self):
         """Test: go to scoreboard, switch between modes"""
         # On page Login
         self.test_login_via_form_correct()
         # Select mode on the Session page
-        page_session = pages.PageSession(self.driver)
-        page_session.go_to_page(page='scoreboard')
+        frontend.PageSession().go_to_page(page='scoreboard')
         # On page Scoreboard page
-        page_scoreboard = pages.PageScoreboard(self.driver)
-        page_scoreboard.select_mode(mode='classic')
-        page_scoreboard.select_mode(mode='blitz')
-        page_scoreboard.select_mode(mode='crypto')
-        page_scoreboard.select_mode(mode='custom')
+        frontend.PageScoreboard().select_mode(mode='classic')
+        frontend.PageScoreboard().select_mode(mode='blitz')
+        frontend.PageScoreboard().select_mode(mode='crypto')
+        frontend.PageScoreboard().select_mode(mode='custom')
 
+    def test_page_refreshes(self):
+        """Test: try to reload every page"""
+        # On page Login
+        frontend.PageLogin().refresh_page()
+        frontend.PageLogin().go_to_signup()
+        # On page Signup
+        frontend.PageSignup().refresh_page()
+        frontend.PageSignup().go_back_to_login()
+        # On page Login
+        frontend.PageLogin().login_via_form(email='test@alekseisemenov.ru', password='uc8a&Q!W')
+        # On page Session
+        frontend.PageSession().refresh_page()
+        frontend.PageSession().select_mode(mode='custom')
+        # On page Session Custom
+        frontend.PageSessionCustom().refresh_page()
+        frontend.PageSessionCustom().go_to_page('session')
+        frontend.PageSession().select_mode(mode='classic')
+        # On page Session Classic
+        frontend.PageSessionPreset().refresh_page()
+        # On page Decision
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().refresh_page()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().refresh_page()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        frontend.PageDecision().action_skip()
+        # On page Results
+        frontend.PageResults().refresh_page()
+        frontend.PageResults().go_to_scoreboard()
+        # On page Scoreboard page
+        frontend.PageScoreboard().refresh_page()
+        frontend.PageScoreboard().select_mode(mode='blitz')
+        frontend.PageScoreboard().refresh_page()
+        frontend.PageScoreboard().select_mode(mode='custom')
+        
     def tearDown(self):
-        self.driver.close()
+        frontend.PageBase.driver.close()
+
 
 if __name__ == '__main__':
     unittest.main()

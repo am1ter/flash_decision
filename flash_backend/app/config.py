@@ -15,6 +15,7 @@ USER_DEMO_PASSWORD = 'demo'
 USER_TEST_EMAIL = 'test@alekseisemenov.ru'
 USER_TEST_NAME = 'test'
 USER_TEST_PASSWORD = 'uc8a&Q!W'
+USER_TEST_SIGNUP_EMAIL = 'test-signup@alekseisemenov.ru'
 
 # Files
 PLATFORM = platform
@@ -62,6 +63,7 @@ class SessionOptions:
     _TIMEFRAME_EXCLUDE_LIST = ('TICKS', 'WEEKLY', 'MONTHLY')
 
     # Attributes for storing parsed finam data (options)
+    exporter = None
     markets = []
     tickers = {}
     timeframes = []
@@ -182,7 +184,8 @@ class SessionOptions:
             if market.name in cls._MARKETS_EXCLUDE_LIST:
                 continue
             # Find tickers by market name
-            tickers = cls.exporter.lookup(market=market)
+            exporter = cls.get_exporter()
+            tickers = exporter.lookup(market=market)
             # Drop duplicated codes
             tickers = tickers.drop_duplicates()
             # Drop removed tickers
@@ -249,8 +252,8 @@ class SessionOptions:
     @classmethod
     def get_exporter(cls) -> Exporter:
         """Return finam exporter for data parsing"""
-        try:
+        if cls.exporter:
             return cls.exporter
-        except AttributeError:
+        else:
             cls.exporter = Exporter()
             return cls.exporter
