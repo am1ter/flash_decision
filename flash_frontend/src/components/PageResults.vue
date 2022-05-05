@@ -4,7 +4,7 @@
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
             <b-button id="button-go-to-scoreboard" type="submit" squared class="col-12 gradient"
-                href="#" v-on:click="$router.push(`/scoreboard/${currentSession['options']['values']['mode']}/${user.id}/`)">
+                href="#" v-on:click="$router.push(`/scoreboard/${currentSession['sessionsResults']['mode']}/${user.id}/`)">
                 Go to the scoreboard
             </b-button>
             <b-button id="button-start-new-session" type="submit" squared variant="outline-secondary" class="col-12 mt-2" 

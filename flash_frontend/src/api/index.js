@@ -4,9 +4,14 @@ import axios from "axios"
 
 
 // Read docker enviroment variables
+// ================================
+
 let API_URL = (process.env.VUE_APP_URL_BACKEND) ? process.env.VUE_APP_URL_BACKEND : "http://127.0.0.1:8001/api"
 
+
 // API errors handling
+// ===================
+
 async function handleResponse(req) {
     try {
         // Make api request and get response
@@ -23,7 +28,7 @@ async function handleResponse(req) {
             store.commit("newApiError", "Error: Empty API response")
             return false
         }
-    } catch(err) {
+    } catch (err) {
         // Clean cookies for auth info if have got "401 Unauthorized" response
         console.log(err.toJSON())
         if (err.toJSON().message == 'Network Error') {
@@ -42,74 +47,89 @@ async function handleResponse(req) {
 }
 
 
-// API functions
+// API requests for authentication
+// ===============================
 
-export function apiPostCreateUser(form) {
-    console.log("Run apiPostCreateUser")
-    let req = {"type": "post", "url": API_URL + "/create-user/", "args": form}
+export function apiSignUp(form) {
+    console.log("Run apiSignUp")
+    let reqUrl = "/sign-up/"
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
     return handleResponse(req)
 }
 
 
-export function apiGetCheckEmailIsFree(email) {
-    console.log("Run apiGetCheckEmailIsFree")
-    let email_obj = {"email": email}
-    let req = {"type": "post", "url": API_URL + "/check-email/", "args": email_obj}
+export function apiCheckEmailValidity(email) {
+    console.log("Run apiCheckEmailValidity")
+    let reqUrl = "/check-email-validity/"
+    let email_obj = { "email": email }
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": email_obj }
     return handleResponse(req)
 }
 
 
-export function apiPostLogin(form) {
-    console.log("Run apiPostLogin")
-    let req = {"type": "post", "url": API_URL + "/login/", "args": form}
+export function apiLogin(form) {
+    console.log("Run apiLogin")
+    let reqUrl = "/login/"
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
     return handleResponse(req)
 }
 
+
+// API requests for app operations
+// ===============================
 
 export function apiGetSessionOptions(mode) {
     console.log("Run apiGetSessionOptions")
-    let req = {"type": "get", "url": API_URL + `/get-session-options/${mode}/`}
+    let reqUrl = `/get-session-options/${mode}/`
+    console.log(reqUrl)
+    let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
 export function apiPostStartNewSession(form) {
     console.log("Run apiPostStartNewSession")
-    let req = {"type": "post", "url": API_URL + "/start-new-session/", "args": form}
+    let reqUrl = "/start-new-session/"
+    let req = {"type": "post", "url": API_URL + reqUrl, "args": form}
     return handleResponse(req)
 }
 
 
 export function apiGetIterationChart(sessionId, iterationNum) {
     console.log("Run apiGetIterationChart")
-    let req = {"type": "get", "url": API_URL + `/get-chart/${sessionId}/${iterationNum}/`}
+    let reqUrl = `/get-chart/${sessionId}/${iterationNum}/`
+    let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
 export function apiGetIterationInfo(sessionId, iterationNum) {
     console.log("Run apiGetIterationInfo")
-    let req = {"type": "get", "url": API_URL + `/get-iteration-info/${sessionId}/${iterationNum}/`}
+    let reqUrl = `/get-iteration-info/${sessionId}/${iterationNum}/`
+    let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
 export function apiPostRecordDecision(decision) {
     console.log("apiPostRecordDecision")
-    let req = {"type": "post", "url": API_URL + "/record-decision/", "args": decision}
+    let reqUrl = "/record-decision/"
+    let req = {"type": "post", "url": API_URL + reqUrl, "args": decision}
     return handleResponse(req)
 }
 
 
 export function apiGetSessionsResults(sessionId) {
     console.log("Run apiGetSessionsResults")
-    let req = {"type": "get", "url": API_URL + `/get-sessions-results/${sessionId}/`}
+    let reqUrl = `/get-sessions-results/${sessionId}/`
+    let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
 export function apiGetScoreboard(mode, userId) {
     console.log("Run apiGetScoreboard")
-    let req = {"type": "get", "url": API_URL + `/get-scoreboard/${mode}/${userId}/`}
+    let reqUrl = `/get-scoreboard/${mode}/${userId}/`
+    let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }

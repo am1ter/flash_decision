@@ -12,14 +12,13 @@ import json
 from plotly.utils import PlotlyJSONEncoder
 from plotly import graph_objs
 from statistics import median
-from functools import wraps
 import logging
 from collections import OrderedDict
 from itertools import islice
 import random
 import jwt
 
-from finam.export import Exporter, LookupComparator     # https://github.com/ffeast/finam-export
+from finam.export import LookupComparator     # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
 
 
@@ -56,7 +55,7 @@ class User(db.Model):
     def create(cls, creds: dict) -> db.Model:
         """Create new user instance with hashed password and save it to db"""
         user = cls()
-        user.set_email(creds['email'])
+        user.set_email(creds['email'].lower())
         user.set_name(creds['name'])
         user.set_password(creds['password'])
         return user
@@ -69,7 +68,7 @@ class User(db.Model):
     @classmethod
     def get_user_by_email(cls, email: str) -> db.Model:
         """Return object by email"""
-        return cls.query.filter(User.UserEmail == email).first()
+        return cls.query.filter(User.UserEmail == email.lower()).first()
 
     def delete_user(self) -> None:
         """Delete user and all related to it object from db"""
@@ -111,7 +110,7 @@ class User(db.Model):
         token = jwt.encode(
             payload={'sub': self.UserEmail, 
                      'iat': datetime.utcnow(), 
-                     'exp': datetime.utcnow() + timedelta(minutes=60)},
+                     'exp': datetime.utcnow() + timedelta(minutes=cfg.USER_AUTH_TIMEOUT)},
             key=cfg.FlaskConfig.SECRET_KEY)
         
         return token
@@ -603,7 +602,6 @@ class Iteration(db.Model):
         
             # Skip dates with no data for chart
             if iter.FixingBarNum - last_iteration.FixingBarNum > session.Fixingbar * -1:
-                # iter.Session = session
                 logger.warning(f'Skip iteration generation for <Iteration #{iteration_num} of {session}> because of no data for {iter.FixingBarDatetime}')
                 return None
 
@@ -647,21 +645,19 @@ class Iteration(db.Model):
             days_before = 1
         elif trading_type == 'swingtrading':
             # One iteration per week
-            days_before = 7
+            days_before = cfg.DAYS_IN_WEEK
         elif trading_type == 'shortinvesting':
             # One iteration per month
-            days_before = 31
+            days_before = cfg.DAYS_IN_MONTH
         else:
             # One iteration per 3 months
-            days_before = 31 * 3
+            days_before = cfg.DAYS_IN_MONTH * 3
         
-        # Multiply days number by amount of skipped iterations (distance between iterations) 
-        days_before = days_before * distance 
+        # Add to days number amount of skipped iterations (distance between iterations) 
+        days_before = days_before + (distance - 1)
 
         # Skip weekends
-        bar_date = self.FixingBarDatetime + timedelta(days=-days_before)
-        if bar_date.weekday() >= 5:
-            bar_date = bar_date + timedelta(days=6-bar_date.weekday()-2)
+        bar_date = self.FixingBarDatetime - BDay(days_before)
 
         return bar_date
 
@@ -834,6 +830,7 @@ class SessionResults:
         session_summary = {
             'userId': session.UserId,
             'sessionId': session.SessionId,
+            'mode': session.Mode,
             'totalResult': total_result,
             'totalDecisions': total_decisions,
             'profitableDecisions': profitable_decisions,

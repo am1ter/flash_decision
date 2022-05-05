@@ -28,7 +28,7 @@
 
 <script>
     import { mapState, mapMutations } from "vuex"
-    import { apiPostLogin } from "@/api"
+    import { apiLogin } from "@/api"
 
     export default {
         name: "PageLogin",
@@ -48,7 +48,7 @@
             },
             async useDemoAccount() {
                 let creds = {"email": "demo@alekseisemenov.ru", "password": "demo"}
-                let user = await apiPostLogin(creds)
+                let user = await apiLogin(creds)
                 if (user) {
                     this.$store.commit("setUserFromApi", user)
                     // Go to the main page
@@ -70,7 +70,7 @@
                 }
 
                 // Check form via api (authenticated or not)
-                let user = await apiPostLogin(form)
+                let user = await apiLogin(form)
                 if (user) {
                     this.$store.commit("setUserFromApi", user)
                     // Go to the main page

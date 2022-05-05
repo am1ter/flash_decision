@@ -10,10 +10,10 @@
                         <b-form-input id="input-email" :class="checkClassIsInputInvalid('input-email')"  placeholder="Enter your email"/>
                     </b-col>
                     <!-- Place for error messages (hidden if no errors) -->
-                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-email') > -1">
+                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-email') >= 0">
                         <!-- Empty cell -->
                     </b-col>                    
-                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-email') > -1">
+                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-email') >= 0">
                         <p class="text-danger text-left mb-0" v-if="emailIsFree == true">
                             <small>Please enter a valid email</small>
                         </p>
@@ -29,10 +29,10 @@
                         <b-form-input id="input-name" :class="checkClassIsInputInvalid('input-name')" placeholder="Enter your name"/>
                     </b-col>
                     <!-- Place for error messages (hidden if no errors) -->
-                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-name') > -1">
+                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-name') >= 0">
                         <!-- Empty cell -->
                     </b-col>                    
-                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-name') > -1">
+                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-name') >= 0">
                         <p class="text-danger text-left mb-0">
                             <small>Please enter your name</small>
                         </p>
@@ -45,10 +45,10 @@
                         <b-form-input type="password" id="input-password" :class="checkClassIsInputInvalid('input-password')" placeholder="Enter your password"/>
                     </b-col>
                     <!-- Place for error messages (hidden if no errors) -->
-                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-password') > -1">
+                    <b-col class="my-auto col-3" v-if="formErrors.indexOf('input-password') >= 0">
                         <!-- Empty cell -->
                     </b-col>                    
-                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-password') > -1">
+                    <b-col class="my-auto col-9" v-if="formErrors.indexOf('input-password') >= 0">
                         <p class="text-danger text-left mb-0">
                             <small>Password must contain at least 6 symbols</small>
                         </p>
@@ -66,7 +66,7 @@
 
 <script>
     import { mapState, mapMutations } from "vuex"
-    import { apiPostCreateUser, apiGetCheckEmailIsFree } from "@/api"
+    import { apiSignUp, apiCheckEmailValidity } from "@/api"
 
     export default {
         name: "PageSignup",
@@ -86,43 +86,51 @@
                 // Get data from inputs and send it via API
                 e.preventDefault()
 
-                // Check if email is free
-                this.emailIsFree = await apiGetCheckEmailIsFree(this.$children[0].localValue)
-
                 // Clean list of validation errors
                 this.formErrors = []
                 this.registrationForm = {}
 
                 // Get values from form and validate them
-                for (let i = 0; i <= 2; i++) {
-                    // Check email (contains @), name (length) and password (length)
-                    let input_id = this.$children[i].id
-                    let input_value = this.$children[i].localValue
+                this.$children.forEach(function(item) {
+                    // Make checks only for inputs
+                    if (!item.id.includes("input-")) {
+                        return false
+                    }
+                    // Check email (contains @ and dot), name (length) and password (length)
+                    let optionName = item.id
+                    let optionAlias = item.id.replaceAll("input-", "")
+                    let optionValue = item.localValue
 
-                    if (input_id == "input-email" && input_value.indexOf("@") > -1 && input_value.indexOf(".") > -1 && this.emailIsFree) {
-                        this.registrationForm[input_id.replace("input-", "")] = input_value
-                    } else if (input_id == "input-name" && input_value.length >= 2) {
-                        this.registrationForm[input_id.replace("input-", "")] = input_value
-                    } else if (input_id == "input-password" && input_value.length >= 6) {
-                        this.registrationForm[input_id.replace("input-", "")] = input_value
+                    if (optionName == "input-email" && optionValue.indexOf("@") > -1 && optionValue.indexOf(".") > -1) {
+                        this.registrationForm[optionAlias] = optionValue
+                    } else if (optionName == "input-name" && optionValue.length >= 2) {
+                        this.registrationForm[optionAlias] = optionValue
+                    } else if (optionName == "input-password" && optionValue.length >= 6) {
+                        this.registrationForm[optionAlias] = optionValue
                     } else {
-                        this.formErrors.push(input_id)
+                        this.formErrors.push(optionName)
+                    }
+                }, this)
+
+                // Check if email is free
+                if (this.formErrors.indexOf("input-email") < 0) { 
+                    this.emailIsFree = await apiCheckEmailValidity(this.registrationForm["email"])
+                    if (!this.emailIsFree) {
+                        this.formErrors.push("input-email")
                     }
                 }
-
+                
                 // If form validation has failed then stop
                 if (this.formErrors.length > 0) {
                     return false 
                 }
 
                 // If validation has passed send POST request, save response to vuex state and go to the next page
-                let user = await apiPostCreateUser(this.registrationForm)
-                if (user) {
-                    this.$store.commit("setUserFromApi", user)
-                }
+                let user = await apiSignUp(this.registrationForm)
+                this.$store.commit("setUserFromApi", user)
 
                 // Go to the main page
-                this.$router.push("/session/custom/")
+                this.$router.push("/session/")
             },
             checkClassIsInputInvalid(element) {
                 // Change class of dropdown if validation has failed

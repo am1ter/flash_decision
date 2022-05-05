@@ -83,17 +83,19 @@ def auth_required(f: FunctionType) -> FunctionType:
             User.get_user_by_jwt(request)
             return f(*args, **kwargs)
         except jwt.ExpiredSignatureError:
-            logger_general.warning(expired_msg)
+            user_id_alias = 'UserId: ' + str(kwargs['user_id'])
+            logger_general.warning(expired_msg + ' ' + user_id_alias)
             return jsonify(expired_msg), 401
         except (jwt.InvalidTokenError) as e:
-            logger_general.warning(invalid_msg)
+            user_id_alias = 'UserId: ' + str(kwargs['user_id'])
+            logger_general.warning(invalid_msg + ' ' + user_id_alias)
             return jsonify(invalid_msg), 401
         except (AssertionError) as e:
             assertion_msg = 'Error: ' + e.args[0]
-            logger_general.error(assertion_msg)
+            logger_general.error(assertion_msg + ' ' + user_id_alias)
             return jsonify(assertion_msg), 500
         except (FinamParsingError, FinamDownloadError):
-            logger_general.error(finam_error_msg)
+            logger_general.error(finam_error_msg + ' ' + user_id_alias)
             return jsonify(finam_error_msg), 500
 
     return _verify
@@ -113,9 +115,9 @@ def internal_server_error(e):
 # API requests for authentication
 # ===============================
 
-@api.route('/create-user/', methods=['POST'])
+@api.route('/sign-up/', methods=['POST'])
 def api_sign_up() -> Response:
-    """Get sign up form and create user`s record in db"""
+    """Get sign up form and create user record in db"""
 
     assert request.json, 'Error: Wrong POST request received'
     current_user = User.create(creds=request.json)
@@ -132,7 +134,7 @@ def api_sign_up() -> Response:
     return jsonify(resp), 200
 
 
-@api.route('/check-email/', methods=['POST'])
+@api.route('/check-email-validity/', methods=['POST'])
 def api_check_email() -> Response:
     """Check if email is free"""
     assert request.json, 'Error: Wrong POST request received'
@@ -339,7 +341,7 @@ def api_get_scoreboard(mode: str, user_id: int) -> Response:
     try:
         top3_users = sb.get_users_top3()
     except:
-        logger_general.debug(f'No scoreboard for {user} (mode: {mode})')
+        logger_general.info(f'No scoreboard for {user} (mode: {mode})')
         return jsonify(False), 200
     
     # Check if current user has results for current mode
@@ -349,7 +351,7 @@ def api_get_scoreboard(mode: str, user_id: int) -> Response:
     except (AssertionError, ValueError):
         user_summary = {}
         user_rank = -1
-        logger_general.debug(f'Scoreboard generation failed for {user} (mode: {mode})')
+        logger_general.warning(f'Scoreboard generation failed for {user} (mode: {mode})')
 
     response = {
         'mode': mode,

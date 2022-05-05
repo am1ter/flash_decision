@@ -8,7 +8,8 @@ from finam.const import Market, Timeframe   # https://github.com/ffeast/finam-ex
 # General app settings
 # ====================
 
-# Application's system users
+# Application's users parameters
+USER_AUTH_TIMEOUT = 60
 USER_DEMO_EMAIL = 'demo@alekseisemenov.ru'
 USER_DEMO_NAME = 'demo'
 USER_DEMO_PASSWORD = 'demo'
