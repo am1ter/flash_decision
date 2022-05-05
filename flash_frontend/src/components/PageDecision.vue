@@ -34,7 +34,7 @@
 
 <script>
     import { mapState, mapMutations } from "vuex"
-    import { apiPostRecordDecision, apiGetIterationInfo, apiGetIterationChart } from "@/api"
+    import { apiRecordDecision, apiRenderChart } from "@/api"
 
     // Page subcomponents
     import ChartCandles from "./subcomponents/ChartCandles.vue"
@@ -109,14 +109,14 @@
                     this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
 
                     // Wait for async methods
-                    let response = await apiGetIterationInfo(this.$route.params.session_id, this.currentSession["currentIterationNum"])
+                    let response = await apiRenderChart(this.$route.params.session_id, this.currentSession["currentIterationNum"])
                     // Add attributes from response to the object
-                    this.currentSession["options"]["values"]["sessionId"] = response.values["SessionId"]
-                    this.currentSession["options"]["values"]["timelimit"] = response.values["Timelimit"]
-                    this.currentSession["options"]["values"]["iterations"] = response.values["Iterations"]
-                    this.currentSession["options"]["values"]["barsnumber"] = response.values["Barsnumber"]
-                    this.currentSession["options"]["values"]["fixingbar"] = response.values["Fixingbar"]
-                    this.currentSession["options"]["values"]["slippage"] = response.values["Slippage"]
+                    this.currentSession["options"]["values"]["sessionId"] = response["values"]["SessionId"]
+                    this.currentSession["options"]["values"]["timelimit"] = response["values"]["Timelimit"]
+                    this.currentSession["options"]["values"]["iterations"] = response["values"]["Iterations"]
+                    this.currentSession["options"]["values"]["barsnumber"] = response["values"]["Barsnumber"]
+                    this.currentSession["options"]["values"]["fixingbar"] = response["values"]["Fixingbar"]
+                    this.currentSession["options"]["values"]["slippage"] = response["values"]["Slippage"]
 
                     this.currentSession["options"]["aliases"] = {
                         "market": response.aliases["Market"],
@@ -134,19 +134,18 @@
             },
             async createChart() {
                 // Run async request - пet iteration chart over API
-                let response = await apiGetIterationChart(this.currentSession["options"]["values"]["sessionId"], this.currentSession["currentIterationNum"])
+                let response = await apiRenderChart(this.currentSession["options"]["values"]["sessionId"], this.currentSession["currentIterationNum"])
                 let status = false
 
-                // Chart data to display [0], iteration data to vuex storage [1]
+                // Use response to draw chart and save values to vuex object
                 if (response) {
-                    this.iterationChart = JSON.parse(response)[0];
-                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = JSON.parse(response)[1]
+                    this.iterationChart = JSON.parse(response["chart"]);
+                    this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = response["values"]
                     status = true
                 } else {
                     // If response is `false` then skip decision for such iteration 
                     this.iterationChart = {}
                     this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = this.currentSession["iterations"][this.currentSession["currentIterationNum"] - 1]
-                    // document.getElementById("button-skip").click();
                     let event = {"target": {"id": "button-skip"}}
                     await this.saveDecision(event)
                 }
@@ -196,7 +195,7 @@
                 }
 
                 // Send post request
-                await apiPostRecordDecision(this.currentSession["decisions"][this.currentSession["currentIterationNum"]])
+                await apiRecordDecision(this.currentSession["decisions"][this.currentSession["currentIterationNum"]])
                 // When post request has been processed go to the next iteration or to the results page
                 if (this.currentSession["currentIterationNum"] < Number(this.currentSession["options"]["values"]["iterations"])) {
                     await this.goNextIteration()

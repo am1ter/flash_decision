@@ -11,13 +11,13 @@ class TestBackend(unittest.TestCase):
     def test_is_api_up(self):
         """Test: Backend API is up"""
         url = cfg.URL_BACKEND + '/check-backend'
-        resp = backend.send_request(url)
+        resp = backend.send_request('get', url)
         assert resp == True, resp
 
     def test_is_db_up(self):
         """Test: Connection between backend and db is up"""
         url = cfg.URL_BACKEND + '/check-db'
-        resp = backend.send_request(url)
+        resp = backend.send_request('get', url)
         assert resp == True, resp
 
 
@@ -31,8 +31,8 @@ class TestFrontend(unittest.TestCase):
 
     def _cleanup_test_results(self):
         """Clean results of previous tests from db"""
-        url = cfg.URL_BACKEND + '/cleanup-tests-results'
-        resp = backend.send_request(url)
+        url = cfg.URL_BACKEND + '/tests-cleanup'
+        resp = backend.send_request('delete', url)
         assert resp == True, resp
 
     def setUp(self):

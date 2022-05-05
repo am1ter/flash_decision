@@ -199,7 +199,7 @@
 <script>
 
     import { mapState, mapMutations } from "vuex"
-    import { apiGetSessionOptions, apiPostStartNewSession } from "@/api"
+    import { apiFetchSessionOptions, apiStartNewSession } from "@/api"
 
     // Page subcomponents
     import ModeSelector from "./subcomponents/ModeSelector.vue"
@@ -263,7 +263,7 @@
             },
             async prepareSessionCustom() {
                 // Custom session preparation
-                let response = await apiGetSessionOptions(this.mode)
+                let response = await apiFetchSessionOptions(this.mode)
                 this.sessionOptionsAll = response
                 this.inputMarketsLen = this.sessionOptionsAll.markets.length
             },
@@ -343,7 +343,7 @@
                 // If form validation has passed send POST request, check the response and go to the Decision page
                 
                 // Wait for async methods
-                let response = await apiPostStartNewSession(this.currentSession["options"]["values"])
+                let response = await apiStartNewSession(this.currentSession["options"]["values"])
                 // Add attributes from response to the object
                 this.currentSession["options"]["values"]["sessionId"] = response.values["SessionId"]
                 this.currentSession["options"]["values"]["timelimit"] = response.values["Timelimit"]

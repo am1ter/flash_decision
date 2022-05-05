@@ -17,7 +17,7 @@
 
 <script>
     import { mapState, mapMutations } from "vuex"
-    import { apiGetSessionsResults } from "@/api"
+    import { apiRenderSessionsResults } from "@/api"
 
     export default {
         name: "PageResults",
@@ -48,7 +48,7 @@
                 if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
                     this.currentSession["options"]["values"]["sessionId"] = parseInt(this.$route.params.session_id)
                 }
-                let response = await apiGetSessionsResults(this.currentSession["options"]["values"]["sessionId"])
+                let response = await apiRenderSessionsResults(this.currentSession["options"]["values"]["sessionId"])
                 this.currentSession["sessionsResults"] = response
             },
             formatFigures(x) {

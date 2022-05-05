@@ -65,7 +65,7 @@ def log_responses(resp):
         return resp
     # Check if request contains data with password. If yes delete from log
     ip = request.headers.getlist("X-Forwarded-For")[0] if request.headers.getlist("X-Forwarded-For") else request.remote_addr
-    logger_responses.debug(f'Send response for request {request.path} to ip {ip} with params: {str(resp.json)[:500]}')
+    logger_responses.debug(f'Send response for request {request.path} to ip {ip} with params: {str(resp.json)[:cfg.LOG_STRING_MAX_LENGTH]}')
     return resp
 
 
@@ -127,11 +127,11 @@ def api_sign_up() -> Response:
     resp = {'id': current_user.UserId, 'email': current_user.UserEmail, 'token': current_user.encode_jwt_token()}
 
     # Record authentication in db
-    status_code = '201'
+    status_code = 201
     details = {'ip_address': request.remote_addr, 'user_agent': request.user_agent.string, 'status_code': status_code}
     Authentication.create(user=current_user, details=details)
 
-    return jsonify(resp), 200
+    return jsonify(resp), 201
 
 
 @api.route('/check-email-validity/', methods=['POST'])
@@ -157,46 +157,45 @@ def api_login() -> Response:
             # Password is correct
             # Create JSON Web Token and prepare object to export to frontend
             resp = {'id': current_user.UserId, 'email': current_user.UserEmail, 'token': current_user.encode_jwt_token()}
-            status_code = '200'
+            status_code = 200
             logger_general.info(f'User {current_user} authentificated')
         else:
             # Password is incorrect
             resp = False
-            status_code = '401'
-            logger_general.info(f'Authentication failed for email {request.json["email"]}')
+            status_code = 401
+            logger_general.info(f'Authentication failed for email: {request.json["email"]}')
     
     # If user for specified email was not found
     if not current_user:
         resp = False
-        status_code = '404'
+        status_code = 204
         is_password_correct = False
-        logger_general.info(f'Authentication failed. No user with email {request.json["email"]}')
+        logger_general.info(f'Authentication failed. No user with email: {request.json["email"]}')
 
     # Record authentication in db
     auth_user = current_user if resp else None
     details = {'ip_address': request.remote_addr, 'user_agent': request.user_agent.string, 'status_code': status_code}
     Authentication.create(user=auth_user, details=details)
 
-    return jsonify(resp), 200
+    return jsonify(resp), status_code
 
 
 # API requests for app operations
 # ===============================
 
-@api.route('/get-session-options/<string:mode>/', methods=['GET'])
+@api.route('/session-options/<string:mode>/', methods=['GET'])
 @auth_required
-def api_get_session_options(mode: str) -> Response:
-    """Get lists of all available parameters (options) for custom session to show them on frontend"""
+def api_fetch_session_options(mode: str) -> Response:
+    """Get lists of all available parameters (options) for new session builder to show them on frontend"""
     session_options = cfg.SessionOptions()
     logger_general.info(f'List of session options for mode {mode} sent to frontend')
     return jsonify(session_options), 200
 
 
-@api.route('/start-new-session/', methods=['POST'])
+@api.route('/sessions/', methods=['POST'])
 @auth_required
-
 def api_start_new_session() -> Response:
-    """Start training session: Get json-object, create SQL record and download quotes data"""
+    """Start new session: Get mode and options, download quotes, create iterations"""
 
     assert request.json, 'Error: Wrong POST request received'
 
@@ -216,43 +215,13 @@ def api_start_new_session() -> Response:
     }
     
     logger_general.info(f'{current_session} started')
-    return jsonify(response), 200
+    return jsonify(response), 201
 
 
-@api.route('/get-chart/<int:session_id>/<int:iteration_num>/', methods=['GET'])
+@api.route('/iteration/<int:session_id>/<int:iteration_num>/', methods=['GET'])
 @auth_required
-def api_get_chart(session_id: int, iteration_num: int) -> Response:
-    """Send json with chart data to frontend"""
-
-    # Get current iteration and current session from db
-    current_iteration = Iteration.get_from_db(session_id, iteration_num)
-    current_session = Session.get_from_db(session_id)
-
-    # Check if there is requested iteration, if not - skip it at the frontend
-    if not current_iteration:
-        logger_general.warning(f'Chart generation for {current_session} failed (iteration not found)')
-        return jsonify(False), 200
-
-    # Check if session is not closed
-    if current_session.Status == cfg.SESSION_STATUS_CLOSED:
-        logger_general.warning(f'Chart generation for {current_iteration} failed (session is already closed)')
-        return jsonify('Something went wrong. Current session is already closed'), 500
-
-    # Write 'Active' status for new session in db
-    if current_session.Status == cfg.SESSION_STATUS_CREATED:
-        current_session.set_status(cfg.SESSION_STATUS_ACTIVE)
-
-    # Format data to draw it with plotly
-    chart = current_iteration.prepare_chart_plotly()
-    
-    logger_general.info(f'New chart for {current_iteration} generated')
-    return jsonify(chart), 200
-
-
-@api.route('/get-iteration-info/<int:session_id>/<int:iteration_num>/', methods=['GET'])
-@auth_required
-def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
-    """Get info about iteration for current session and send it back to frontend"""
+def api_render_chart(session_id: int, iteration_num: int) -> Response:
+    """Get info about iteration (including json with chart data) for current session to frontend"""
 
     # Get current iteration, current session and current user from db
     current_iteration = Iteration.get_from_db(session_id, iteration_num)
@@ -261,7 +230,7 @@ def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
 
     # Check if requested iteration exists
     if not current_iteration:
-        logger_general.warning(f'Requested iteration #{iteration_num} during {current_session} does not exist')
+        logger_general.warning(f'Chart generation for {current_session} failed (iteration #{iteration_num} not found)')
         return jsonify('Something went wrong. There is no such iteration.'), 404
 
     # Check if requested iteration (and session) owned by user who sent request
@@ -269,10 +238,10 @@ def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
         logger_general.warning(f'No access to {current_session} for {current_user}')
         return jsonify('You do not have no access to this session'), 401
     
-    # Check if session is already closed
+    # Check if session is not closed
     if current_session.Status == cfg.SESSION_STATUS_CLOSED:
-        logger_general.warning(f'Requested iteration info for closed {current_session}')
-        return jsonify('Something went wrong. Session is already closed.'), 500
+        logger_general.warning(f'Chart generation for {current_iteration} failed (session is already closed)')
+        return jsonify('Something went wrong. Current session is already closed.'), 500
 
     # Check if all decisions before requested iteration were already made (manual skips is forbidden)
     total_decisions = len(current_session.decisions)
@@ -280,17 +249,25 @@ def api_get_iteration_info(session_id: int, iteration_num: int) -> Response:
         logger_general.warning(f'Requested unexpected iteration info for {current_session}')
         return jsonify('Something went wrong. Please start new session.'), 500
 
+    # Write 'Active' status for new session in db
+    if current_session.Status == cfg.SESSION_STATUS_CREATED:
+        current_session.set_status(cfg.SESSION_STATUS_ACTIVE)
+
+    # Format data to draw it with plotly
+    chart = current_iteration.prepare_chart_plotly()
+
     # Prepare response to frontend
     response = {
         'values': current_session.convert_to_dict(),
-        'aliases': current_session.convert_to_dict_format()
+        'aliases': current_session.convert_to_dict_format(),
+        'chart': chart
     }
     
     logger_general.info(f'Info about {current_iteration} sent to frontend')
     return jsonify(response), 200
 
 
-@api.route('/record-decision/', methods=['POST'])
+@api.route('/decision/', methods=['POST'])
 @auth_required
 def api_record_decision() -> Response:
     """Save user`s decision in db and calc results for it"""
@@ -301,16 +278,16 @@ def api_record_decision() -> Response:
     # Check if decision is recorded in db. If not - handle it on the frontend.
     if new_decision:
         logger_general.info(f'New {new_decision} recorded with result {round(new_decision.ResultFinal * 100, 2)}%')
-        return jsonify(new_decision.ResultFinal), 200
+        return jsonify(new_decision.ResultFinal), 201
     else:
         session = Session.get_from_db(request.json["sessionId"])
         logger_general.warning(f'New decision recording for {session} failed')
-        return jsonify(False), 200
+        return jsonify(False), 204
 
 
-@api.route('/get-sessions-results/<int:session_id>/', methods=['GET'])
+@api.route('/session-results/<int:session_id>/', methods=['GET'])
 @auth_required
-def api_get_sessions_results(session_id: int) -> Response:
+def api_render_session_results(session_id: int) -> Response:
     """When session is finished collect it's summary in one object and send it back to frontend"""
 
     # Load session from db
@@ -326,9 +303,9 @@ def api_get_sessions_results(session_id: int) -> Response:
     return jsonify(session_results), 200
 
 
-@api.route('/get-scoreboard/<string:mode>/<int:user_id>/', methods=['GET'])
+@api.route('/scoreboard/<string:mode>/<int:user_id>/', methods=['GET'])
 @auth_required
-def api_get_scoreboard(mode: str, user_id: int) -> Response:
+def api_render_scoreboard(mode: str, user_id: int) -> Response:
     """Show global scoreboard and current user's results"""
 
     # Load user from db
@@ -342,7 +319,7 @@ def api_get_scoreboard(mode: str, user_id: int) -> Response:
         top3_users = sb.get_users_top3()
     except:
         logger_general.info(f'No scoreboard for {user} (mode: {mode})')
-        return jsonify(False), 200
+        return jsonify(False), 204
     
     # Check if current user has results for current mode
     try:
@@ -384,8 +361,8 @@ def api_check_db() -> Response:
         return jsonify(False), 500
 
 
-@api.route('/cleanup-tests-results/', methods=['GET'])
-def api_cleanup_tests_results() -> Response:
+@api.route('/tests-cleanup/', methods=['DELETE'])
+def api_tests_cleanup() -> Response:
     """Clean data generated during end2end tests"""
     # Delete test user
     user = User.get_user_by_email(cfg.USER_TEST_SIGNUP_EMAIL)

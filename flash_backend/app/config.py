@@ -23,6 +23,7 @@ PLATFORM = platform
 SAVE_FORMAT = 'json' # Options: 'json' or 'csv'
 PATH_APP = os.path.dirname(os.path.abspath(__file__))
 PATH_DOWNLOADS = os.path.join(os.path.dirname(PATH_APP), 'downloads')
+LOG_STRING_MAX_LENGTH = 500
 
 # Session parameters
 PARSE_OPTIONS_AT_STARTUP = False

@@ -161,7 +161,7 @@ class Authentication(db.Model):
         auth.IpAddress = details['ip_address']
         auth.UserAgent = details['user_agent']
 
-        assert details['status_code'] in ('200', '201', '401', '404', '500'), 'Wrong status code'
+        assert details['status_code'] in (200, 201, 204, 401, 404, 500), 'Wrong status code'
         auth.StatusCode = details['status_code']
         
         # Write record to db
@@ -718,24 +718,22 @@ class Iteration(db.Model):
 
         # Convert it to plotly formatted json
         chart_data = graph_objs.Figure(
-                        data=[graph_objs.Candlestick(
-                        x=df.id + 1,                    #x=df.id OR x=df.index
-                        open=df['<OPEN>'],
-                        close=df['<CLOSE>'],
-                        low=df['<LOW>'],
-                        high=df['<HIGH>'],
+                        data=[
+                            graph_objs.Candlestick(
+                                x=df.id + 1,
+                                open=df['<OPEN>'],
+                                close=df['<CLOSE>'],
+                                low=df['<LOW>'],
+                                high=df['<HIGH>'],
 
-                        increasing_line_color='#3c996e',
-                        decreasing_line_color='#e15361'
-                    )]
+                                increasing_line_color='#3c996e',
+                                decreasing_line_color='#e15361'
+                            )
+                        ]
         )
 
         # Export chart and iteration in one JSON
-
-        iteration_attributes = self._convert_to_dict()
-        data = (chart_data, iteration_attributes)
-
-        chart_JSON = json.dumps(data, cls=PlotlyJSONEncoder)
+        chart_JSON = json.dumps(chart_data, cls=PlotlyJSONEncoder)
         return chart_JSON
 
 

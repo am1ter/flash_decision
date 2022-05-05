@@ -107,7 +107,7 @@
 
 <script>
     import { mapState, mapMutations } from "vuex"
-    import { apiGetScoreboard } from "@/api"
+    import { apiRenderScoreboard } from "@/api"
 
     // Pages subcomponents
     import ModeSelector from "./subcomponents/ModeSelector.vue"
@@ -156,7 +156,7 @@
             ...mapMutations(["startLoading", "stopLoading"]),
             async loadScoreboard() {
                 // Load last session results
-                let response = await apiGetScoreboard(this.mode, this.user.id)
+                let response = await apiRenderScoreboard(this.mode, this.user.id)
                 // Check if there is data for current user and current mode
                 this.top3Users = (response) ? response.top3Users : false
                 this.userRank = (response) ? response.userRank : -1

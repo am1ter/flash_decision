@@ -78,58 +78,49 @@ export function apiLogin(form) {
 // API requests for app operations
 // ===============================
 
-export function apiGetSessionOptions(mode) {
-    console.log("Run apiGetSessionOptions")
-    let reqUrl = `/get-session-options/${mode}/`
-    console.log(reqUrl)
+export function apiFetchSessionOptions(mode) {
+    console.log("Run apiFetchSessionOptions")
+    let reqUrl = `/session-options/${mode}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
-export function apiPostStartNewSession(form) {
-    console.log("Run apiPostStartNewSession")
-    let reqUrl = "/start-new-session/"
+export function apiStartNewSession(form) {
+    console.log("Run apiStartNewSession")
+    let reqUrl = "/sessions/"
     let req = {"type": "post", "url": API_URL + reqUrl, "args": form}
     return handleResponse(req)
 }
 
 
-export function apiGetIterationChart(sessionId, iterationNum) {
-    console.log("Run apiGetIterationChart")
-    let reqUrl = `/get-chart/${sessionId}/${iterationNum}/`
+export function apiRenderChart(sessionId, iterationNum) {
+    console.log("Run apiRenderChart")
+    let reqUrl = `/iteration/${sessionId}/${iterationNum}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
-export function apiGetIterationInfo(sessionId, iterationNum) {
-    console.log("Run apiGetIterationInfo")
-    let reqUrl = `/get-iteration-info/${sessionId}/${iterationNum}/`
-    let req = {"type": "get", "url": API_URL + reqUrl}
-    return handleResponse(req)
-}
-
-
-export function apiPostRecordDecision(decision) {
-    console.log("apiPostRecordDecision")
-    let reqUrl = "/record-decision/"
+export function apiRecordDecision(decision) {
+    console.log("apiRecordDecision")
+    let reqUrl = "/decision/"
     let req = {"type": "post", "url": API_URL + reqUrl, "args": decision}
     return handleResponse(req)
 }
 
 
-export function apiGetSessionsResults(sessionId) {
-    console.log("Run apiGetSessionsResults")
-    let reqUrl = `/get-sessions-results/${sessionId}/`
+export function apiRenderSessionsResults(sessionId) {
+    console.log("Run apiRenderSessionsResults")
+    let reqUrl = `/session-results/${sessionId}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
-export function apiGetScoreboard(mode, userId) {
-    console.log("Run apiGetScoreboard")
-    let reqUrl = `/get-scoreboard/${mode}/${userId}/`
+export function apiRenderScoreboard(mode, userId) {
+    console.log("Run apiRenderScoreboard")
+    let reqUrl = `/scoreboard/${mode}/${userId}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
