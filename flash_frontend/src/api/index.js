@@ -86,33 +86,33 @@ export function apiFetchSessionOptions(mode) {
 }
 
 
-export function apiStartNewSession(form) {
+export function apiStartNewSession(mode, form) {
     console.log("Run apiStartNewSession")
-    let reqUrl = "/sessions/"
+    let reqUrl = `/sessions/${mode}/`
     let req = {"type": "post", "url": API_URL + reqUrl, "args": form}
     return handleResponse(req)
 }
 
 
-export function apiRenderChart(sessionId, iterationNum) {
+export function apiRenderChart(mode, sessionId, iterationNum) {
     console.log("Run apiRenderChart")
-    let reqUrl = `/iteration/${sessionId}/${iterationNum}/`
+    let reqUrl = `/sessions/${mode}/${sessionId}/iterations/${iterationNum}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
-export function apiRecordDecision(decision) {
-    console.log("apiRecordDecision")
-    let reqUrl = "/decision/"
+export function apiRecordDecision(mode, sessionId, iterationNum, decision) {
+    console.log("Run apiRecordDecision")
+    let reqUrl = `/sessions/${mode}/${sessionId}/decisions/${iterationNum}/`
     let req = {"type": "post", "url": API_URL + reqUrl, "args": decision}
     return handleResponse(req)
 }
 
 
-export function apiRenderSessionsResults(sessionId) {
+export function apiRenderSessionsResults(mode, sessionId) {
     console.log("Run apiRenderSessionsResults")
-    let reqUrl = `/session-results/${sessionId}/`
+    let reqUrl = `/session-results/${mode}/${sessionId}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
@@ -120,7 +120,7 @@ export function apiRenderSessionsResults(sessionId) {
 
 export function apiRenderScoreboard(mode, userId) {
     console.log("Run apiRenderScoreboard")
-    let reqUrl = `/scoreboard/${mode}/${userId}/`
+    let reqUrl = `/scoreboards/${mode}/${userId}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }

@@ -20,7 +20,8 @@
             </countdown>
             <ChartCandles :iterationChart="iterationChart"/>
             <b-progress class="squared mb-2" height="7px" :max="currentSession['options']['values']['iterations']">
-                <b-progress-bar :value="currentSession['currentIterationNum']" variant="dark"/>
+                <b-progress-bar :value="currentSession['currentIterationNum'] - 1" variant="dark"/>
+                <b-progress-bar :value="1" variant="success"/>
                 <b-progress-bar :value="currentSession['options']['values']['iterations'] - currentSession['currentIterationNum']" variant="secondary"/>
             </b-progress>
             <b-button-group class="w-100">
@@ -33,7 +34,7 @@
 </template>
 
 <script>
-    import { mapState, mapMutations } from "vuex"
+    import { mapState, mapMutations, mapGetters } from "vuex"
     import { apiRecordDecision, apiRenderChart } from "@/api"
 
     // Page subcomponents
@@ -50,7 +51,8 @@
             }
         },
         computed: {
-            ...mapState(["user", "currentSession", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"]),
+            ...mapGetters(["sessionMode"])
         },
         async beforeMount() {
             // Start page loading
@@ -82,7 +84,7 @@
             this.startCountdown()
         },
         methods: {
-            ...mapMutations(["startLoading", "stopLoading"]),
+            ...mapMutations(["startLoading", "stopLoading", "newApiError"]),
             enableHotkeys() {
                 window.addEventListener("keyup", event => {
                     if (event.key == "ArrowDown" || event.key == "ArrowRight" || event.key == "ArrowUp" ) {
@@ -104,12 +106,17 @@
                 // Check if no info for current session found. Page reloaded? Parse url and make api request
                 if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
                     this.currentSession["currentIterationNum"] = parseInt(this.$route.params.iteration_num)
+                    this.currentSession["mode"] = this.$route.params.mode
                     this.currentSession["iterations"] = {}
                     this.currentSession["decisions"] = {}
                     this.currentSession["decisions"][this.currentSession["currentIterationNum"]] = {"action": null, "timeSpent": null}
 
                     // Wait for async methods
-                    let response = await apiRenderChart(this.$route.params.session_id, this.currentSession["currentIterationNum"])
+                    let response = (await apiRenderChart(this.sessionMode, this.$route.params.session_id, this.currentSession["currentIterationNum"])).data
+                    // Check response
+                    if (response["isIterationFound"] == false) {
+                        this.newApiError("Iteration not found. Please start new session.")
+                    }
                     // Add attributes from response to the object
                     this.currentSession["options"]["values"]["sessionId"] = response["values"]["SessionId"]
                     this.currentSession["options"]["values"]["timelimit"] = response["values"]["Timelimit"]
@@ -134,11 +141,11 @@
             },
             async createChart() {
                 // Run async request - пet iteration chart over API
-                let response = await apiRenderChart(this.currentSession["options"]["values"]["sessionId"], this.currentSession["currentIterationNum"])
+                let response = (await apiRenderChart(this.sessionMode, this.$route.params.session_id, this.currentSession["currentIterationNum"])).data
                 let status = false
 
                 // Use response to draw chart and save values to vuex object
-                if (response) {
+                if (response['isIterationFound']) {
                     this.iterationChart = JSON.parse(response["chart"]);
                     this.currentSession["iterations"][this.currentSession["currentIterationNum"]] = response["values"]
                     status = true
@@ -154,7 +161,6 @@
             async saveDecision(event) {
                 // Decision has been made
 
-                let timeSpent = 0
                 let action = null;
 
                 // Check that current iteration is okay
@@ -186,21 +192,20 @@
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["sessionId"] = this.currentSession["options"]["values"]["sessionId"]
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["iterationNum"] = this.currentSession["currentIterationNum"]
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["action"] = action
-                this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["timeSpent"] = timeSpent
+                this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["timeSpent"] = this.$refs.pageTimer.runTimes
 
                 // Get the time spent from the Countdown component and finish countdown
                 if (!this.isLoading) {
-                    timeSpent = this.$refs.pageTimer.runTimes
                     this.$refs.pageTimer.finishCountdown()
                 }
 
                 // Send post request
-                await apiRecordDecision(this.currentSession["decisions"][this.currentSession["currentIterationNum"]])
+                await apiRecordDecision(this.sessionMode, this.$route.params.session_id, this.currentSession["currentIterationNum"], this.currentSession["decisions"][this.currentSession["currentIterationNum"]])
                 // When post request has been processed go to the next iteration or to the results page
                 if (this.currentSession["currentIterationNum"] < Number(this.currentSession["options"]["values"]["iterations"])) {
                     await this.goNextIteration()
                 } else {
-                    this.$router.push(`/sessions-results/${this.currentSession["options"]["values"]["sessionId"]}`)
+                    this.$router.push(`/sessions-results/${this.currentSession["mode"]}/${this.currentSession["options"]["values"]["sessionId"]}`)
                 }
             },
             goNextIteration() {
@@ -208,7 +213,7 @@
                 // Update vars
                 this.currentSession["currentIterationNum"] += 1
                 // Change route url
-                this.$router.push(`/decision/${this.currentSession["options"]["values"]["sessionId"]}/${this.currentSession["currentIterationNum"]}`)
+                this.$router.push(`/sessions/${this.sessionMode}/${this.currentSession["options"]["values"]["sessionId"]}/iterations/${this.currentSession["currentIterationNum"]}`)
             },
             startCountdown() {
                 // Start or restart countdown

@@ -1,7 +1,8 @@
 import requests as r
+from json.decoder import JSONDecodeError
 
 
-def send_request(method: str, url: str) -> str:
+def send_request(method: str, url: str) -> dict:
     """Send api request and check the answer"""
     # Define mapping: string arg to requests function
     method_map = {
@@ -9,13 +10,16 @@ def send_request(method: str, url: str) -> str:
         'post': r.post,
         'delete': r.delete
     }
+    # Send request to api and verify response
     try:
         resp = method_map[method](url)
-        if resp.status_code == 200:
-            result = True
+        if resp.status_code in [200, 201, 204]:
+            resp = resp.json()
         else:
-            result = False
+            resp = {'errors': 'Wrong response from API: ' + resp.json()}
     except r.exceptions.ConnectionError as e:
-        result = 'No response from API: ' + str(e)
+        resp = {'errors': 'No response from API: ' + str(e)}
+    except JSONDecodeError as e:
+        resp = {'errors': 'Wrong response from API: ' + str(e)}
 
-    return result
+    return resp

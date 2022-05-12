@@ -69,7 +69,7 @@ const routes = [
         }
     },
     {
-        path: "/decision/:session_id/:iteration_num",
+        path: "/sessions/:mode/:session_id/iterations/:iteration_num/",
         name: "Decision’s page",
         component: App.components.PageDecision,
         meta: {
@@ -83,7 +83,7 @@ const routes = [
         }
     },
     {
-        path: "/sessions-results/:session_id",
+        path: "/sessions-results/:mode/:session_id",
         name: "Session’s results page",
         component: App.components.PageResults,
         meta: {

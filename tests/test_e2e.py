@@ -6,19 +6,22 @@ import unittest
 
 
 class TestBackend(unittest.TestCase):
-    """Smoke API tests"""
+    """API smoke tests"""
 
-    def test_is_api_up(self):
+    @staticmethod
+    def test_is_api_up():
         """Test: Backend API is up"""
         url = cfg.URL_BACKEND + '/check-backend'
         resp = backend.send_request('get', url)
-        assert resp == True, resp
+        assert ('errors' not in resp) and resp['data']['isBackendUp'], 'API is down'
 
-    def test_is_db_up(self):
+    @staticmethod
+    def test_is_db_up():
         """Test: Connection between backend and db is up"""
         url = cfg.URL_BACKEND + '/check-db'
         resp = backend.send_request('get', url)
-        assert resp == True, resp
+        assert 'errors' not in resp, 'API is down'
+        assert resp['data']['isDbUp'], 'Database is down'
 
 
 class TestFrontend(unittest.TestCase):
@@ -33,10 +36,11 @@ class TestFrontend(unittest.TestCase):
         """Clean results of previous tests from db"""
         url = cfg.URL_BACKEND + '/tests-cleanup'
         resp = backend.send_request('delete', url)
-        assert resp == True, resp
+        assert 'errors' not in resp, 'Test results cleanup failed'
 
     def setUp(self):
         """Setup chrome driver and go to main page"""
+        TestBackend.test_is_db_up()
         frontend.PageBase.setup_driver()
         self._go_to_page('/')
 
@@ -97,7 +101,6 @@ class TestFrontend(unittest.TestCase):
         # On page Signup - try to create new user with already taken email
         frontend.PageSignup().sign_up(email='test@alekseisemenov.ru', name='test', password='uc8a&Q!W')
         frontend.PageSignup().check_error_messages(check='taken')
-
 
     def test_custom_session(self):
         """Test: start new custom session, make decisions, look at results, go to scoreboard"""

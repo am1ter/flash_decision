@@ -2,6 +2,7 @@ from app import db
 import app.config as cfg
 
 from sqlalchemy.exc import SQLAlchemyError 
+from sqlalchemy.sql import text
 import pandas as pd
 from pandas.tseries.offsets import BDay
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -17,6 +18,7 @@ from collections import OrderedDict
 from itertools import islice
 import random
 import jwt
+from flask import Request
 
 from finam.export import LookupComparator     # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
@@ -116,7 +118,7 @@ class User(db.Model):
         return token
 
     @classmethod
-    def get_user_by_jwt(cls, request) -> db.Model:
+    def get_user_by_jwt(cls, request: Request) -> db.Model:
         """Decode JSON Web Token from request`s header and find User object"""
 
         auth_headers = request.headers.get('Authorization', '').split()
@@ -370,7 +372,7 @@ class Session(db.Model):
         session.TradingType = session._determine_trading_type()
         session.FirstBarDatetime = session._calc_first_bar_datetime()
         # Set session's mode
-        session.Mode = options['mode']
+        session.Mode = cls.mode
 
         # Write form data to db
         write_object_to_db(session)
@@ -445,8 +447,9 @@ class SessionCustom(Session):
     User is able to set up all session options by himself.
     """
 
+    mode = 'custom'
     __mapper_args__ = {
-        'polymorphic_identity':'custom'
+        'polymorphic_identity': mode
     }
 
     @classmethod
@@ -462,8 +465,9 @@ class SessionClassic(Session):
     Balanced mode with common USA shares. Used as application default.
     """
 
+    mode = 'classic'
     __mapper_args__ = {
-        'polymorphic_identity':'classic'
+        'polymorphic_identity': mode
     }
 
     @classmethod
@@ -472,7 +476,7 @@ class SessionClassic(Session):
         # Collect all options for new session generation
         options = {
             'userId': request['userId'],
-            'mode': request['mode'],
+            'mode': cls.mode,
             'market': 'USA',
             'ticker': cls._select_random_security('USA'),
             'timeframe': 'HOURLY',
@@ -492,9 +496,10 @@ class SessionBlitz(Session):
     Subclass for preset session (blitz)
     High speed mode - time for decision making is very limited.
     """
-
+    
+    mode = 'blitz'
     __mapper_args__ = {
-        'polymorphic_identity':'blitz'
+        'polymorphic_identity': mode
     }
 
     @classmethod
@@ -503,7 +508,7 @@ class SessionBlitz(Session):
         # Collect all options for new session generation
         options = {
             'userId': request['userId'],
-            'mode': request['mode'],
+            'mode': cls.mode,
             'market': 'SHARES',
             'ticker': cls._select_random_security('SHARES'),
             'timeframe': 'MINUTES5',
@@ -524,8 +529,9 @@ class SessionCrypto(Session):
     Cryptocurrencies is high volatility securities, so results are less predictable.
     """
 
+    mode = 'crypto'
     __mapper_args__ = {
-        'polymorphic_identity':'crypto'
+        'polymorphic_identity': mode
     }
 
     @classmethod
@@ -534,7 +540,7 @@ class SessionCrypto(Session):
         # Collect all options for new session generation
         options = {
             'userId': request['userId'],
-            'mode': request['mode'],
+            'mode': cls.mode,
             'market': 'CRYPTO_CURRENCIES',
             'ticker': cls._select_random_security('CRYPTO_CURRENCIES'),
             'timeframe': 'MINUTES15',
@@ -761,37 +767,33 @@ class Decision(db.Model):
         """Return object description"""
         return f'<Decision #{self.DecisionId} for {self.Iteration}>'
 
-    @classmethod
-    def create(cls, props: dict) -> db.Model:
-        """Create new decision and write it to db"""
-        decision = cls()
-        current_iter = Iteration.get_from_db(session_id=props['sessionId'], iteration_num=props['iterationNum'])
-        if not current_iter:
-            return
-        decision.UserId = current_iter.Session.UserId
-        decision.SessionId = current_iter.SessionId
-        decision.IterationId = current_iter.IterationId
-        decision.Action = props['action']
-        decision.TimeSpent = props['timeSpent']
+    def create(self, iteration: Iteration, props: dict) -> db.Model:
+        """Create new self and write it to db"""
+
+        self.UserId = iteration.Session.UserId
+        self.SessionId = iteration.SessionId
+        self.IterationId = iteration.IterationId
+        self.Action = props['action']
+        self.TimeSpent = props['timeSpent']
         
         # Calc results taking into account the slippage level
-        price_change = round((current_iter.FixingBarPrice - current_iter.FinalBarPrice) / current_iter.StartBarPrice, 6)
-        if decision.Action == 'Buy':
-            decision.ResultRaw = price_change * 1
-            decision.ResultFinal = round(decision.ResultRaw - current_iter.Session.Slippage, 6)
-        elif decision.Action == 'Skip':
-            decision.ResultRaw = 0
-            decision.ResultFinal = 0
-        elif decision.Action == 'Sell':
-            decision.ResultRaw = price_change * -1
-            decision.ResultFinal = round(decision.ResultRaw - current_iter.Session.Slippage, 6)
+        price_change = round((iteration.FixingBarPrice - iteration.FinalBarPrice) / iteration.StartBarPrice, 6)
+        if self.Action == 'Buy':
+            self.ResultRaw = price_change * 1
+            self.ResultFinal = round(self.ResultRaw - iteration.Session.Slippage, 6)
+        elif self.Action == 'Skip':
+            self.ResultRaw = 0
+            self.ResultFinal = 0
+        elif self.Action == 'Sell':
+            self.ResultRaw = price_change * -1
+            self.ResultFinal = round(self.ResultRaw - iteration.Session.Slippage, 6)
         else:
             raise RuntimeError('Unsupported action')
 
         # Write data to db
-        write_object_to_db(decision)
+        write_object_to_db(self)
 
-        return decision
+        return self
 
 
 # Non-ORM classes
@@ -881,16 +883,17 @@ class Scoreboard:
         users_results = OrderedDict(sorted(users_results.items(), key=lambda r: r[1], reverse=True))
         return users_results
 
-    def get_users_top3(self) -> dict:
-        """Return list of top 3 leaders for selected mode"""
+    def get_top_users(self, count: int) -> dict:
+        """Return list of specified top users (leaders) for selected mode"""
 
         users_results = self._get_all_users_results()
         
-        # Cut dict to top3, round results and replace ids with names
-        users_results = OrderedDict(islice(users_results.items(), 3))
+        # Cut dict to users count, round results and replace ids with names
+        users_results = OrderedDict(islice(users_results.items(), count))
         users_results_final = {}
         for idx, user in enumerate(users_results):
-            users_results_final[idx] = {'name': User.get_user_by_id(user).UserName, 'result': round(users_results[user], 2)}
+            users_results_final[idx] = {'name': User.get_user_by_id(user).UserName, 
+                                        'result': round(users_results[user], 2)}
 
         return users_results_final  
 
@@ -946,8 +949,7 @@ class Scoreboard:
 def check_db_connection() -> None:
     """Check if connection to db can be established"""
     try:
-        conn = db.engine.connect()
-        conn.close()
+        db.engine.execute(text("SELECT 1"))
         return True
     except SQLAlchemyError:
         return False

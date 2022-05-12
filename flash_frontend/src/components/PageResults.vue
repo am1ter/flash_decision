@@ -4,7 +4,7 @@
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
             <b-button id="button-go-to-scoreboard" type="submit" squared class="col-12 gradient"
-                href="#" v-on:click="$router.push(`/scoreboard/${currentSession['sessionsResults']['mode']}/${user.id}/`)">
+                href="#" v-on:click="$router.push(`/scoreboard/${currentSession['mode']}/${user.id}/`)">
                 Go to the scoreboard
             </b-button>
             <b-button id="button-start-new-session" type="submit" squared variant="outline-secondary" class="col-12 mt-2" 
@@ -47,8 +47,9 @@
                 // Check if no info for current session found. Page reloaded? Parse url and make api request
                 if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
                     this.currentSession["options"]["values"]["sessionId"] = parseInt(this.$route.params.session_id)
+                    this.currentSession["mode"] = this.$route.params.mode
                 }
-                let response = await apiRenderSessionsResults(this.currentSession["options"]["values"]["sessionId"])
+                let response = (await apiRenderSessionsResults(this.currentSession["mode"], this.currentSession["options"]["values"]["sessionId"])).data
                 this.currentSession["sessionsResults"] = response
             },
             formatFigures(x) {

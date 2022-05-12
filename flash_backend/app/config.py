@@ -36,6 +36,9 @@ TRADINGDAY_DURATION_MINS = (9*60) - 15 - 5  # Standart trading day duration in m
 DOWNLOAD_SAFETY_FACTOR = 1.1    # Multiply on this value to ensure downloading df with enough data
 RANDOM_WORKDAY_LIMIT = 500  # How many business days in the past use to get random business day
 
+# Scoreboard parameters
+TOP_USERS_COUNT = 3
+
 
 # Flask configuration
 # ===================

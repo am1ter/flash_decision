@@ -7,7 +7,7 @@
 
             <!-- Empty scoreboard -->
             <div id="scoreboard-empty"
-                v-if="Object.keys(top3Users).length == 0"
+                v-if="Object.keys(topUsers).length == 0"
                 class="text-center shadow col-12 mt-3 pt-3 pb-1">
                 <h1>N/A</h1>
                 <p>
@@ -18,7 +18,7 @@
 
             <!-- Scoreboard data -->
             <!-- Top-3 users-->
-            <b-container fluid v-for="(user, idx) in top3Users" :key="user.name">
+            <b-container fluid v-for="(user, idx) in topUsers" :key="user.name">
                 <!-- All users in top-3 except current user -->
                 <b-row v-if="idx!=userRank" class="usercard" :class="{ 'usercard-champion': idx==0 }">
                     <b-col cols="2">
@@ -26,9 +26,9 @@
                         <img v-if="idx!=0" src="../assets/icons/i_ava_default.svg"/>
                     </b-col>
                     <b-col cols="6" class="usercard-col">
-                        <p class="user_name">{{top3Users[idx]["name"]}} #{{parseInt(idx) + 1}}</p>
+                        <p class="user_name">{{topUsers[idx]["name"]}} #{{parseInt(idx) + 1}}</p>
                         <p class="user-result">
-                            Result: <span :class="formatFiguresColor(formatFigures(top3Users[idx]['result']))">{{top3Users[idx]["result"]}}%</span>
+                            Result: <span :class="formatFiguresColor(formatFigures(topUsers[idx]['result']))">{{topUsers[idx]["result"]}}%</span>
                         </p>
                     </b-col>
                     <b-col cols="4">
@@ -87,7 +87,7 @@
                 />
             </b-container>
             <!-- Display card for case when user has no results for specified mode -->
-            <b-container fluid v-if="userRank == -1 & Object.keys(top3Users).length != 0">
+            <b-container fluid v-if="userRank == -1 & Object.keys(topUsers).length != 0">
                 ...
                 <b-row class="usercard">
                     <b-col cols="2">
@@ -96,7 +96,7 @@
                     <b-col cols="10" class="usercard-col">
                         <p class="user_name">{{user.email}}</p>
                         <p class="user-result">
-                            <a href="#" v-on:click="$router.push('/session/')">No results yes. Would you like to start start your first session?</a>
+                            <a href="#" v-on:click="$router.push('/session/')">No results yes. Would you like to start your first session?</a>
                         </p>
                     </b-col>
                 </b-row>
@@ -120,7 +120,7 @@
         data() {
             return {
                 mode: this.$route.params.mode,
-                top3Users: {},
+                topUsers: {},
                 userRank: -1,
                 userSummary: {},
                 fields: [
@@ -156,11 +156,11 @@
             ...mapMutations(["startLoading", "stopLoading"]),
             async loadScoreboard() {
                 // Load last session results
-                let response = await apiRenderScoreboard(this.mode, this.user.id)
+                let response = (await apiRenderScoreboard(this.mode, this.user.id)).data
                 // Check if there is data for current user and current mode
-                this.top3Users = (response) ? response.top3Users : false
-                this.userRank = (response) ? response.userRank : -1
-                this.userSummary = (response) ? response.userSummary : {}
+                this.topUsers = (response['isTopUsersRendered']) ? response.topUsers : {}
+                this.userRank = (response['isUserSummaryRendered']) ? response.userRank : -1
+                this.userSummary = (response['isUserSummaryRendered']) ? response.userSummary : {}
             },
             formatFigures(x) {
                 // Improve text display of figures

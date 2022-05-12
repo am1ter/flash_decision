@@ -33,14 +33,15 @@
         methods: {
             instruction() {
                 let title = this.$route.meta.instruction
-                // Return default titles for all routes except Decision`s page
-                if (this.$route.name != "Decision’s page") {
+                // Return default titles for all routes except Decision`s and Sessions results pages
+                if (["Decision’s page", "Session’s results page"].includes(this.$route.name) == false) {
                     return title
                 }
-
                 // Custom route for Decision`s page
-                if (!this.isLoading) {
+                if (!this.isLoading && this.$route.name == "Decision’s page") {
                     title = `${this.currentSession["options"]["aliases"]["ticker"]} (timeframe: ${this.currentSession["options"]["aliases"]["timeframe"]})`
+                } else if (!this.isLoading && this.$route.name == "Session’s results page") {
+                    title = `${this.currentSession["mode"]} session has been finished. Explore your results`
                 }
                 return title
             }
@@ -116,6 +117,10 @@
         text-align: center;
         font-size: 14px;
         font-weight: 500;
+    }
+
+    .subtitle:first-letter {
+        text-transform:capitalize;
     }
 
     @media (max-width: 380px) {

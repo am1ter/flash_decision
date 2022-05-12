@@ -48,8 +48,8 @@
             },
             async useDemoAccount() {
                 let creds = {"email": "demo@alekseisemenov.ru", "password": "demo"}
-                let user = await apiLogin(creds)
-                if (user) {
+                let user = (await apiLogin(creds)).data
+                if (user["isPasswordCorrect"]) {
                     this.$store.commit("setUserFromApi", user)
                     // Go to the main page
                     this.$router.push("/session/")
@@ -70,8 +70,8 @@
                 }
 
                 // Check form via api (authenticated or not)
-                let user = await apiLogin(form)
-                if (user) {
+                let user = (await apiLogin(form)).data
+                if (user["isPasswordCorrect"]) {
                     this.$store.commit("setUserFromApi", user)
                     // Go to the main page
                     this.$router.push("/session/")

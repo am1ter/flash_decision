@@ -114,7 +114,7 @@
 
                 // Check if email is free
                 if (this.formErrors.indexOf("input-email") < 0) { 
-                    this.emailIsFree = await apiCheckEmailValidity(this.registrationForm["email"])
+                    this.emailIsFree = (await apiCheckEmailValidity(this.registrationForm["email"])).data.isEmailFree
                     if (!this.emailIsFree) {
                         this.formErrors.push("input-email")
                     }
@@ -126,7 +126,7 @@
                 }
 
                 // If validation has passed send POST request, save response to vuex state and go to the next page
-                let user = await apiSignUp(this.registrationForm)
+                let user = (await apiSignUp(this.registrationForm)).data
                 this.$store.commit("setUserFromApi", user)
 
                 // Go to the main page

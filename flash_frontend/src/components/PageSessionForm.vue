@@ -3,7 +3,7 @@
         <ModeSelector :page="'session'"/>
 
         <!-- Countdown for presets starts before form loading -->
-        <countdown v-if="mode != 'custom'" 
+        <countdown v-if="sessionMode != 'custom'" 
             ref="pageTimer" 
             id="page-timer"
             :autoStart="true" 
@@ -27,7 +27,7 @@
                     <b-col class="my-auto col-4">
                         <label>Market</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown 
                             name="input-market"
                             :class="checkClassIsInputInvalid('input-market')"
@@ -37,7 +37,7 @@
                             placeholder="Select a securities market">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['market']"></b-form-input>
                     </b-col>
 
@@ -46,7 +46,7 @@
                     <b-col class="my-auto col-4">
                         <label>Ticker</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown 
                             name="input-ticker"
                             :class="checkClassIsInputInvalid('input-ticker')"
@@ -55,7 +55,7 @@
                             placeholder="Select a security">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['ticker']"></b-form-input>
                     </b-col>
                     
@@ -64,7 +64,7 @@
                     <b-col class="my-auto col-4">
                         <label>Timeframe</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown
                             name="input-timeframe"
                             :class="checkClassIsInputInvalid('input-timeframe')"
@@ -73,7 +73,7 @@
                             placeholder="Select a timeframe">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['timeframe']"></b-form-input>
                     </b-col>
                     
@@ -82,7 +82,7 @@
                     <b-col class="my-auto col-4">
                         <label>Bars number</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown 
                             name="input-barsnumber"
                             :class="checkClassIsInputInvalid('input-barsnumber')"
@@ -90,7 +90,7 @@
                             placeholder="Select a number of bars">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['barsnumber']"></b-form-input>
                     </b-col>
                     
@@ -99,7 +99,7 @@
                     <b-col class="my-auto col-4">
                         <label>Time limit</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown 
                             name="input-timelimit"
                             :class="checkClassIsInputInvalid('input-timelimit')"
@@ -107,7 +107,7 @@
                             placeholder="Select a session time limit">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['timelimit']"></b-form-input>
                     </b-col>
                     
@@ -116,7 +116,7 @@
                     <b-col class="my-auto col-4">
                         <label>Date</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <b-form-datepicker 
                             id="input-date" 
                             name="input-date"
@@ -134,7 +134,7 @@
                             locale="ru">
                         </b-form-datepicker>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['date']"></b-form-input>
                     </b-col>
                     
@@ -143,7 +143,7 @@
                     <b-col class="my-auto col-4">
                         <label>Iterations</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown 
                             name="input-iterations"
                             :class="checkClassIsInputInvalid('input-iterations')"
@@ -151,7 +151,7 @@
                             placeholder="Select a number of iterations">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['iterations']"></b-form-input>
                     </b-col>
                     
@@ -160,7 +160,7 @@
                     <b-col class="my-auto col-4">
                         <label>Slippage</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown 
                             name="input-slippage"
                             :class="checkClassIsInputInvalid('input-slippage')"
@@ -168,7 +168,7 @@
                             placeholder="Select a slippage level">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['slippage']"></b-form-input>
                     </b-col>
                     
@@ -177,7 +177,7 @@
                     <b-col class="my-auto col-4">
                         <label>Fixing bar</label>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode == 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode == 'custom'">
                         <Dropdown 
                             name="input-fixingbar"
                             :class="checkClassIsInputInvalid('input-fixingbar')"
@@ -185,7 +185,7 @@
                             placeholder="Select a result fixing bar">
                         </Dropdown>
                     </b-col>
-                    <b-col class="my-auto col-8" v-if="mode != 'custom'">
+                    <b-col class="my-auto col-8" v-if="sessionMode != 'custom'">
                         <b-form-input disabled :value="currentSession['options']['aliases']['fixingbar']"></b-form-input>
                     </b-col>
                 </b-row>
@@ -198,7 +198,7 @@
 
 <script>
 
-    import { mapState, mapMutations } from "vuex"
+    import { mapState, mapMutations, mapGetters } from "vuex"
     import { apiFetchSessionOptions, apiStartNewSession } from "@/api"
 
     // Page subcomponents
@@ -219,18 +219,18 @@
                 selectedMarket: "SHARES",
                 dateMax: new Date(),
                 dateMin: new Date(2019, 0, 1),
-                formErrors: [],
-                mode: this.$route.params.mode
+                formErrors: []
                 }
         },
         computed: {
-            ...mapState(["user", "currentSession", "isLoading"])
+            ...mapState(["user", "currentSession", "isLoading"]),
+            ...mapGetters(["sessionMode"])
         },
         async beforeRouteUpdate(to, from, next) {
             // Ask for confirm before mode changing
             let answer = window.confirm("Do you really want to switch to another mode?")
             if (answer) {
-                this.mode = to.params.mode
+                this.setSessionMode(to.params.mode)
                 // Clean results of previeous sessions
                 await this.cleanSessionInfo()
                 await this.prepareSession()         
@@ -243,19 +243,20 @@
             // Clean results of previeous sessions
             await this.cleanSessionInfo()
             // Create new session
+            await this.setSessionMode(this.$route.params.mode)
             await this.prepareSession() 
             // Display page
             this.stopLoading()
         },
         methods: {
-            ...mapMutations(["startLoading", "stopLoading"]),
+            ...mapMutations(["startLoading", "stopLoading", "setSessionMode"]),
             cleanResults() {
                 // Clean results of previeous sessions
                 this.currentSession["sessionsResults"] = {}
             },
             async prepareSession() {
                 // Call functions to prepare page with session settings
-                if (this.mode == "custom") {
+                if (this.sessionMode == "custom") {
                     await this.prepareSessionCustom()
                 } else {
                     await this.prepareSessionPreset()
@@ -263,14 +264,13 @@
             },
             async prepareSessionCustom() {
                 // Custom session preparation
-                let response = await apiFetchSessionOptions(this.mode)
-                this.sessionOptionsAll = response
+                let options = (await apiFetchSessionOptions(this.sessionMode)).data
+                this.sessionOptionsAll = options
                 this.inputMarketsLen = this.sessionOptionsAll.markets.length
             },
             async prepareSessionPreset() {
                 // Preseted (not custom) session preparation
-                // Add userid and mode to object
-                this.currentSession["options"]["values"] = {"userId": this.user.id, "mode": this.mode}
+                this.currentSession["options"]["values"]["userId"] = this.user.id
                 this.prepareDecisions()
             },
             dateDisabled(ymd, date) {
@@ -301,8 +301,8 @@
                 // Clean list of validation errors
                 this.formErrors = []
 
-                // Add userid and mode to object
-                this.currentSession["options"]["values"] = {"userId": this.user.id, "mode": this.mode}
+                // Add userid to vuex object
+                this.currentSession["options"]["values"]["userId"] = this.user.id
 
                 // Get values from form and validate them (forEach context = this)
                 this.$children.forEach(function(item) {
@@ -343,7 +343,7 @@
                 // If form validation has passed send POST request, check the response and go to the Decision page
                 
                 // Wait for async methods
-                let response = await apiStartNewSession(this.currentSession["options"]["values"])
+                let response = (await apiStartNewSession(this.sessionMode, this.currentSession["options"]["values"])).data
                 // Add attributes from response to the object
                 this.currentSession["options"]["values"]["sessionId"] = response.values["SessionId"]
                 this.currentSession["options"]["values"]["timelimit"] = response.values["Timelimit"]
@@ -369,7 +369,7 @@
             },
             goToDecisions() {
                 // Go to the decision making page
-                this.$router.push(`/decision/${this.currentSession["options"]["values"]["sessionId"]}/1`)
+                this.$router.push(`/sessions/${this.sessionMode}/${this.currentSession["options"]["values"]["sessionId"]}/iterations/1`)
             },
             checkClassIsInputInvalid(element) {
                 // Change class of dropdown if validation has failed

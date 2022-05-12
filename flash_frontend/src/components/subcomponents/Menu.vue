@@ -74,7 +74,7 @@
                 let isSessionFinished = Object.keys(this.currentSession["sessionsResults"]).length > 0
 
                 if (isSessionFinished) {
-                    url = `/sessions-results/${this.insUrlParamSessionId()}/`
+                    url = `/sessions-results/${this.currentSession["mode"]}/${this.insUrlParamSessionId()}/`
                 } else if (isSessionStarted) {
                     url = `/decision/${this.insUrlParamSessionId()}/${this.currentSession["currentIterationNum"]}`
                 }

@@ -7,10 +7,14 @@ Vue.use(Vuex)
 
 const state = {
     // single source of data
-    version: "0.7.12",
+    version: "0.7.13",
     user: {},
     apiErrors: [],
-    currentSession: {"options": {"values": {}, "aliases": ""}, 'sessionsResults': {}},
+    currentSession: {"userId": {},
+                     "mode": {},
+                     "options": {"values": {},
+                                 "aliases": {}}, 
+                     "sessionsResults": {}},
     copyright_year: new Date().getFullYear(),
     isLoading: false
 }
@@ -47,6 +51,9 @@ const mutations = {
     },
     stopLoading () {
         state.isLoading = false
+    },
+    setSessionMode (state, mode) {
+        state.currentSession["mode"] = mode
     }
 }
 
@@ -54,7 +61,11 @@ const getters = {
     // reusable data accessors
     isAuth (state) {
         return isValidJwt(state.user.token)
-      }
+    },
+    sessionMode (state) {
+        let mode = state.currentSession["mode"]
+        return mode
+    }
 }
 
 const store = new Vuex.Store({
