@@ -37,6 +37,8 @@ Every service runs in a personal docker container.
 - All python code formatted with ["The Black code style"](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html). Line length is enlarged up to 100 symblos. Single quotes are used instead of double quotes.
 - All API endpoints designed according JSON:API specification (as RESTful as possible).
 - The app is adapted to mobile devices (responsive design).
+- 100% of code covered by comments.
+- All use cases covered by end2end tests.
 - Uniform code cases: 
     - Python: snake_case
     - API routes: kebab-case

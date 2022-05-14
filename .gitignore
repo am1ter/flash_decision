@@ -7,7 +7,6 @@ workspace.code-workspace
 
 # Backend: Main
 /flash_backend/.venv/
-/flash_backend/downloads/
 
 # Frontend: Main
 /flash_frontend/.DS_Store/

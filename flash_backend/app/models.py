@@ -14,6 +14,7 @@ from statistics import median
 from flask import Request
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
+from sqlalchemy.dialects.postgresql import JSONB
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 from pandas.tseries.offsets import BDay
@@ -268,40 +269,8 @@ class Session(db.Model):
 
         return first_bar_dt
 
-    def _generate_filename_session(self) -> str:
-        """Get filename for current session"""
-
-        # Generate dirname
-        if cfg.PLATFORM == 'win32':
-            dir_path = (
-                cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Ticker) + '\\'
-            )
-        else:
-            dir_path = cfg.PATH_DOWNLOADS + '/' + str(self.SessionId) + '_' + str(self.Ticker) + '/'
-
-        # Create dirs if not exist
-        for dir in (cfg.PATH_DOWNLOADS, dir_path):
-            if not os.path.exists(dir):
-                os.mkdir(dir)
-
-        # Generate filename
-        if cfg.SAVE_FORMAT == 'csv':
-            filename = 'session_' + str(self.SessionId) + '.csv'
-        elif cfg.SAVE_FORMAT == 'json':
-            filename = 'session_' + str(self.SessionId) + '.json'
-
-        # Return full path
-        return dir_path + filename
-
-    def _download_quotes(self) -> pd.DataFrame:
-        """Download qoutes data using finam.export lib and save it to HDD"""
-
-        # Set path to save/load downloaded quotes data
-        save_path = self._generate_filename_session()
-
-        # Check: Pass if file for this session hasn't downloaded yet or it's size is smaller than 48 bytes
-        is_no_quotes_downloaded = not os.path.exists(save_path) or os.stat(save_path).st_size > 48
-        assert is_no_quotes_downloaded, 'Error: Quotes already downloaded'
+    def _download_quotes(self) -> None:
+        """Download qoutes data using finam.export lib and save it into session instance"""
 
         # Parse quotes with finam.export lib
         exporter = cfg.SessionOptions.get_exporter()
@@ -330,34 +299,29 @@ class Session(db.Model):
             raise RuntimeError('Unable to download quotes')
 
         # Check if downloaded quotes is correct
-        assert len(df_quotes) > 0, 'There are no quotes for this security for the selected period'
+        assert_msg_no_data = 'There are no quotes for this security for the selected period'
+        assert_msg_small_df = 'Not enough data for this security to start session'
+        assert len(df_quotes) != 0, assert_msg_no_data
+        assert len(df_quotes) >= self.Barsnumber + self.Fixingbar, assert_msg_small_df
 
-        # Save full df to file
-        if cfg.SAVE_FORMAT == 'csv':
-            df_quotes.to_csv(save_path, index=True, index_label='index')
-        elif cfg.SAVE_FORMAT == 'json':
-            df_quotes.to_json(save_path, index=True, orient='records')
-        else:
-            raise RuntimeError('Error: Unsupported export file format')
+        # Temporary save dataframe with quotes in instance
+        self.df_quotes = df_quotes
 
-        # Return DF to create iterations
-        return df_quotes
-
-    def _update_session_with_df_data(self, df_quotes: pd.DataFrame) -> None:
+    def _update_session_with_df_data(self) -> None:
         """Update current session options in the db"""
         # Write count of bars in the downloaded df
-        self.TotalSessionBars = len(df_quotes)
+        self.TotalSessionBars = len(self.df_quotes)
         # Write LastFixingBarDatetime with a precise time with last bar of downloaded df
-        self.LastFixingBarDatetime = df_quotes.iloc[-1].name
+        self.LastFixingBarDatetime = self.df_quotes.iloc[-1].name
         # Write FirstBarDatetime with a precise time with first bar of downloaded df
-        self.FirstBarDatetime = df_quotes.iloc[1].name
+        self.FirstBarDatetime = self.df_quotes.iloc[1].name
         # Write to db
         write_object_to_db(self)
 
-    def _create_iterations(self, df_quotes: pd.DataFrame) -> None:
+    def _create_iterations(self) -> None:
         """Create all iterations for current session (self)"""
         for i in range(1, self.Iterations + 1):
-            Iteration.create(session=self, iter_num=i, df_quotes=df_quotes)
+            Iteration.create(session=self, iter_num=i, df_quotes=self.df_quotes)
 
     @staticmethod
     def _get_last_workday():
@@ -402,14 +366,14 @@ class Session(db.Model):
         # Write form data to db
         write_object_to_db(session)
 
-        # Download quotes and update current session options in db
-        df_quotes = session._download_quotes()
+        # Download quotes
+        session._download_quotes()
 
         # Update current session options in db
-        session._update_session_with_df_data(df_quotes)
+        session._update_session_with_df_data()
 
         # Create all iterations
-        session._create_iterations(df_quotes)
+        session._create_iterations()
 
         return session
 
@@ -434,26 +398,6 @@ class Session(db.Model):
             'Mode': self.Mode,
         }
         return as_dict
-
-    def load_csv(self) -> pd.DataFrame:
-        """Get dataframe by reading data from hdd file"""
-
-        # Set path to save/load downloaded ticker data
-        save_path = self._generate_filename_session()
-
-        # Load dataframe from hdd
-        try:
-            return pd.read_csv(save_path, parse_dates=True, index_col='index')
-        except FileNotFoundError:
-            raise FileNotFoundError('File not found: ' + save_path)
-
-    def remove_csv(self) -> None:
-        """Delete downloaded file with quotes"""
-        if self.SessionId and self.Ticker:
-            save_path = self._generate_filename_session()
-            os.remove(save_path)
-        else:
-            raise FileNotFoundError('No information about id and ticker of the current session')
 
     @classmethod
     def get_from_db(cls, session_id: int) -> db.Model:
@@ -591,6 +535,7 @@ class Iteration(db.Model):
     StartBarPrice = db.Column(db.Float)
     FinalBarPrice = db.Column(db.Float)
     FixingBarPrice = db.Column(db.Float)
+    JsonQuotes = db.Column(JSONB)
 
     decisions = db.relationship(
         'Decision', backref='Iteration', lazy='dynamic', passive_deletes=True
@@ -608,7 +553,7 @@ class Iteration(db.Model):
         assert_condition = len(session.iterations.all()) <= session.Iterations
         assert assert_condition, 'Error: All iterations for this sessions was already created'
 
-        # Fill basic options
+        # Create new instnace and fill basic options
         iter = cls()
         iter.SessionId = session.SessionId
         iter.IterationNum = iter_num
@@ -627,7 +572,7 @@ class Iteration(db.Model):
             df_nearest_bar = df_quotes.index.get_indexer([iter.FixingBarDatetime], method='nearest')
             iter.FixingBarNum = int(df_nearest_bar[0])
 
-            # Skip dates with no data for chart
+            # Skip dates when no data for chart was found
             if iter.FixingBarNum - last_iter.FixingBarNum > session.Fixingbar * -1:
                 log_msg = f'Skip iteration generation for <Iteration #{iter_num} of {session}>. No data for {iter.FixingBarDatetime}'
                 logger.warning(log_msg)
@@ -646,20 +591,16 @@ class Iteration(db.Model):
         # Write data to db
         write_object_to_db(iter)
 
-        # Save iteration quotes df to file
+        # Slice df for determined period
         df_slice = df_quotes.iloc[iter.StartBarNum + 1 : iter.FixingBarNum + 1]
-        save_path = iter._generate_filename_iteration()
-        if cfg.SAVE_FORMAT == 'csv':
-            df_slice.to_csv(save_path, index=True, index_label='index')
-        elif cfg.SAVE_FORMAT == 'json':
-            df_slice.to_json(save_path, index=True, orient='records')
-        else:
-            raise RuntimeError('Error: Unsupported export file format')
 
         # Save iterations' prices
         iter.StartBarPrice = df_slice.iloc[:1]['<CLOSE>'].values[0]
         iter.FinalBarPrice = df_slice.iloc[session.Barsnumber - 1 : session.Barsnumber]['<CLOSE>'].values[0]  # fmt: skip
         iter.FixingBarPrice = df_slice.iloc[-1:]['<CLOSE>'].values[0]
+
+        # Save df with quotes to db column 
+        iter.JsonQuotes = df_slice.to_json(index=True, orient='records')
 
         # Update db object
         write_object_to_db(iter)
@@ -696,42 +637,6 @@ class Iteration(db.Model):
             Iteration.SessionId == session_id, Iteration.IterationNum == iter_num
         ).first()
 
-    def _generate_filename_iteration(self) -> str:
-        """Get filename for current iteration"""
-
-        # Generate dirname
-        if cfg.PLATFORM == 'win32':
-            dir_path = cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '\\'  # fmt: skip
-        else:
-            dir_path = cfg.PATH_DOWNLOADS + '/' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '/'  # fmt: skip
-
-        # Create dirs if not exist
-        for dir in (cfg.PATH_DOWNLOADS, dir_path):
-            if not os.path.exists(dir):
-                os.mkdir(dir)
-
-        # Generate filename
-        if cfg.SAVE_FORMAT == 'csv':
-            filename = 'iteration_' + str(self.SessionId) + '_' + str(self.IterationNum) + '.csv'
-        elif cfg.SAVE_FORMAT == 'json':
-            filename = 'iteration_' + str(self.SessionId) + '_' + str(self.IterationNum) + '.json'
-
-        # Return full path
-        return dir_path + filename
-
-    def _read_data_file(self) -> pd.DataFrame:
-        """Get dataframe by reading data from hdd file"""
-        # Set path to save/load downloaded ticker data
-        save_path = self._generate_filename_iteration()
-        # Load dataframe from hdd
-        try:
-            if cfg.SAVE_FORMAT == 'csv':
-                return pd.read_csv(save_path, parse_dates=True, index_col='index')
-            elif cfg.SAVE_FORMAT == 'json':
-                return pd.read_json(save_path, orient='records')
-        except FileNotFoundError:
-            raise FileNotFoundError('File not found: ' + save_path)
-
     def _convert_to_dict(self) -> dict:
         """Convet SQLAlchemy object to dict"""
         as_dict = {i.name: str(getattr(self, i.name)) for i in self.__table__.columns}
@@ -741,7 +646,7 @@ class Iteration(db.Model):
         """Prepare JSON with chart data to export into HTML-file"""
 
         # Read iteration df
-        df = self._read_data_file()
+        df = pd.read_json(self.JsonQuotes, orient='records')
         # Show bars only between Start and Final (hide bars between Final and Fixing)
         df = df.iloc[: self.Session.Barsnumber]
         # Add numerical id instead date

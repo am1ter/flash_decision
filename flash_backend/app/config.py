@@ -1,6 +1,4 @@
-import os
 from os import environ as env
-from sys import platform
 
 from finam.export import Exporter  # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe  # https://github.com/ffeast/finam-export
@@ -21,10 +19,6 @@ USER_TEST_PASS = 'uc8a&Q!W'
 USER_SIGNUP_EMAIL = 'test-signup@alekseisemenov.ru'
 
 # Files
-PLATFORM = platform
-SAVE_FORMAT = 'json'  # Options: 'json' or 'csv'
-PATH_APP = os.path.dirname(os.path.abspath(__file__))
-PATH_DOWNLOADS = os.path.join(os.path.dirname(PATH_APP), 'downloads')
 LOG_STRING_MAX_LENGTH = 500
 
 # Session parameters
