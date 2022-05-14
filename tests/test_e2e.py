@@ -1,6 +1,6 @@
 import config as cfg
-import backend_functions as backend
-import frontend_pages as frontend
+from tests.modules import backend_functions as backend
+from tests.modules import frontend_pages as frontend
 
 import unittest
 
@@ -50,17 +50,17 @@ class TestFrontend(unittest.TestCase):
 
     def test_login_via_form_correct(self):
         """Test: try to login with correct credentials"""
-        frontend.PageLogin().login_via_form(email='test@alekseisemenov.ru', password='uc8a&Q!W')
+        frontend.PageLogin().login_form(email=cfg.USER_TEST_EMAIL, password=cfg.USER_TEST_PASS)
         frontend.PageSession()
 
     def test_login_via_form_incorrect(self):
         """Test: try to login with incorrect credentials"""
-        frontend.PageLogin().login_via_form(email='wrong@alekseisemenov.ru', password='wrong')
+        frontend.PageLogin().login_form(email=cfg.USER_WRONG_EMAIL, password=cfg.USER_WRONG_PASS)
         frontend.PageLogin().check_error_message()
 
     def test_login_via_demo_button(self):
         """Test: try to login with demo button"""
-        frontend.PageLogin().login_via_demo_button()
+        frontend.PageLogin().login_demo_button()
         frontend.PageSession()
 
     def test_logout(self):
@@ -80,11 +80,15 @@ class TestFrontend(unittest.TestCase):
         # On page Login
         frontend.PageLogin().go_to_signup()
         # On page Signup - create new user
-        frontend.PageSignup().sign_up(email='test-signup@alekseisemenov.ru', name='test-signup', password='uc8a&Q!W')
+        frontend.PageSignup().sign_up(
+            email=cfg.USER_SIGNUP_EMAIL,
+            name=cfg.USER_SIGNUP_NAME,
+            password=cfg.USER_SIGNUP_PASS,
+        )
         # On page Session - logout
         frontend.PageSession().logout()
         # On page Login - login with new user credentials
-        frontend.PageLogin().login_via_form(email='test-signup@alekseisemenov.ru', password='uc8a&Q!W')
+        frontend.PageLogin().login_form(email=cfg.USER_SIGNUP_EMAIL, password=cfg.USER_SIGNUP_PASS)
         # Delete created test user
         self._cleanup_test_results()
 
@@ -93,13 +97,21 @@ class TestFrontend(unittest.TestCase):
         # On page Login
         frontend.PageLogin().go_to_signup()
         # On page Signup - try to create new user with invalid creds
-        frontend.PageSignup().sign_up(email='wrong', name='', password='wrong')
+        frontend.PageSignup().sign_up(
+            email=cfg.USER_WRONG_EMAIL,
+            name=cfg.USER_WRONG_NAME,
+            password=cfg.USER_WRONG_PASS,
+        )
         frontend.PageSignup().check_error_messages(check='invalid')
         frontend.PageSignup().go_back_to_login()
         # On page Login
         frontend.PageLogin().go_to_signup()
         # On page Signup - try to create new user with already taken email
-        frontend.PageSignup().sign_up(email='test@alekseisemenov.ru', name='test', password='uc8a&Q!W')
+        frontend.PageSignup().sign_up(
+            email=cfg.USER_TEST_EMAIL,
+            name=cfg.USER_TEST_NAME,
+            password=cfg.USER_TEST_PASS,
+        )
         frontend.PageSignup().check_error_messages(check='taken')
 
     def test_custom_session(self):
@@ -207,7 +219,7 @@ class TestFrontend(unittest.TestCase):
         frontend.PageSignup().refresh_page()
         frontend.PageSignup().go_back_to_login()
         # On page Login
-        frontend.PageLogin().login_via_form(email='test@alekseisemenov.ru', password='uc8a&Q!W')
+        frontend.PageLogin().login_form(email=cfg.USER_TEST_EMAIL, password=cfg.USER_TEST_PASS)
         # On page Session
         frontend.PageSession().refresh_page()
         frontend.PageSession().select_mode(mode='custom')
@@ -233,7 +245,7 @@ class TestFrontend(unittest.TestCase):
         frontend.PageScoreboard().select_mode(mode='blitz')
         frontend.PageScoreboard().refresh_page()
         frontend.PageScoreboard().select_mode(mode='custom')
-        
+
     def tearDown(self):
         frontend.PageBase.driver.close()
 

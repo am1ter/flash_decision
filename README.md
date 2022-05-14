@@ -33,8 +33,13 @@ Every service runs in a personal docker container.
     docker-compose up -d
     ```
 
-### Code cases
-- Backend: snake_case
-- Frontend: camelCase
-- SQL: PascalCase
-- API urls: kebab-case
+### Codebase features
+- All python code formatted with ["The Black code style"](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html). Line length is enlarged up to 100 symblos. Single quotes are used instead of double quotes.
+- All API endpoints designed according JSON:API specification (as RESTful as possible).
+- The app is adapted to mobile devices (responsive design).
+- Uniform code cases: 
+    - Python: snake_case
+    - API routes: kebab-case
+    - SQL: PascalCase
+    - JS: camelCase
+    - CSS: kebab-case

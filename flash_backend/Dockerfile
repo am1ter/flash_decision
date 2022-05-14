@@ -2,8 +2,8 @@ FROM python:3.8
 
 # Install all requirements
 RUN apt-get update \
- && apt-get install unixodbc -y \
- && apt-get install unixodbc-dev -y
+    && apt-get install unixodbc -y \
+    && apt-get install unixodbc-dev -y
 
 # Create app folder and copy app's files
 RUN mkdir -p /usr/src/flash_backend

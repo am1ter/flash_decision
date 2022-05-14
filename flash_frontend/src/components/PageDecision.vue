@@ -105,7 +105,7 @@
             async updateIfPageRefresh() {
                 // Check if no info for current session found. Page reloaded? Parse url and make api request
                 if (Object.keys(this.currentSession["options"]["values"]).length == 0) {
-                    this.currentSession["currentIterationNum"] = parseInt(this.$route.params.iteration_num)
+                    this.currentSession["currentIterationNum"] = parseInt(this.$route.params.iter_num)
                     this.currentSession["mode"] = this.$route.params.mode
                     this.currentSession["iterations"] = {}
                     this.currentSession["decisions"] = {}
@@ -190,7 +190,7 @@
 
                 // Save decision to the vuex object
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["sessionId"] = this.currentSession["options"]["values"]["sessionId"]
-                this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["iterationNum"] = this.currentSession["currentIterationNum"]
+                this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["iterNum"] = this.currentSession["currentIterationNum"]
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["action"] = action
                 this.currentSession["decisions"][this.currentSession["currentIterationNum"]]["timeSpent"] = this.$refs.pageTimer.runTimes
 

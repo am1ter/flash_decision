@@ -1,36 +1,40 @@
 from app import db
 import app.config as cfg
 
-from sqlalchemy.exc import SQLAlchemyError 
-from sqlalchemy.sql import text
-import pandas as pd
-from pandas.tseries.offsets import BDay
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
-import os
-from math import ceil
-import json
-from plotly.utils import PlotlyJSONEncoder
-from plotly import graph_objs
-from statistics import median
 import logging
+import random
+import os
+import json
 from collections import OrderedDict
 from itertools import islice
-import random
-import jwt
-from flask import Request
+from datetime import datetime, timedelta
+from math import ceil
+from statistics import median
 
-from finam.export import LookupComparator     # https://github.com/ffeast/finam-export
-from finam.const import Market, Timeframe               # https://github.com/ffeast/finam-export
+from flask import Request
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.sql import text
+from werkzeug.security import generate_password_hash, check_password_hash
+import pandas as pd
+from pandas.tseries.offsets import BDay
+from plotly.utils import PlotlyJSONEncoder
+from plotly import graph_objs
+import jwt
+
+from finam.export import LookupComparator  # https://github.com/ffeast/finam-export
+from finam.const import Market, Timeframe  # https://github.com/ffeast/finam-export
 
 
 # Set up logger
 # =============
+
+
 logger = logging.getLogger('Models')
 
 
 # Database related classes (ORM)
 # ==============================
+
 
 class User(db.Model):
     """
@@ -47,7 +51,9 @@ class User(db.Model):
     UserPassword = db.Column(db.String(128))
 
     sessions = db.relationship('Session', backref='User', lazy='dynamic', passive_deletes=True)
-    authentications = db.relationship('Authentication', backref='User', lazy='dynamic', passive_deletes=True)
+    authentications = db.relationship(
+        'Authentication', backref='User', lazy='dynamic', passive_deletes=True
+    )
 
     def __repr__(self) -> str:
         """Return the user email"""
@@ -87,7 +93,7 @@ class User(db.Model):
         self.UserName = name
         # Write to db
         write_object_to_db(self)
-    
+
     def set_password(self, password: str) -> None:
         """Set new password for the user"""
         self.UserPassword = generate_password_hash(password)
@@ -108,13 +114,16 @@ class User(db.Model):
 
     def encode_jwt_token(self) -> str:
         """Create JSON Web Token for current user"""
-    
-        token = jwt.encode(
-            payload={'sub': self.UserEmail, 
-                     'iat': datetime.utcnow(), 
-                     'exp': datetime.utcnow() + timedelta(minutes=cfg.USER_AUTH_TIMEOUT)},
-            key=cfg.FlaskConfig.SECRET_KEY)
-        
+        payload = {
+            'sub': self.UserEmail,
+            'iat': datetime.utcnow(),
+            'iat': datetime.utcnow(),
+            'iat': datetime.utcnow(),
+            'iat': datetime.utcnow(),
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(minutes=cfg.USER_AUTH_TIMEOUT),
+        }
+        token = jwt.encode(payload=payload, key=cfg.FlaskConfig.SECRET_KEY)
         return token
 
     @classmethod
@@ -157,7 +166,7 @@ class Authentication(db.Model):
     @classmethod
     def create(cls, user: db.Model, details: dict) -> db.Model:
         """Create new record in db with authentication details"""
-        
+
         auth = cls()
         auth.UserId = user.UserId if user else None
         auth.IpAddress = details['ip_address']
@@ -165,16 +174,16 @@ class Authentication(db.Model):
 
         assert details['status_code'] in (200, 201, 204, 401, 404, 500), 'Wrong status code'
         auth.StatusCode = details['status_code']
-        
+
         # Write record to db
         write_object_to_db(auth)
-        
+
         return auth
 
 
 class Session(db.Model):
     """
-    ORM object `Session` is core object of the application. 
+    ORM object `Session` is core object of the application.
     All users` app interactions use session`s data. Create new session is main function of the app.
     Class attributes is options which determine most application functions behavior.
     Sessions has different modes - each of them is subclass.
@@ -200,19 +209,25 @@ class Session(db.Model):
     TotalSessionBars = db.Column(db.Integer)
     Mode = db.Column(db.String)
 
-    iterations = db.relationship('Iteration', backref='Session', lazy='dynamic', order_by='Iteration.IterationId', passive_deletes=True)
-    decisions = db.relationship('Decision', backref='Session', lazy='selectin', passive_deletes=True)
-    
-    __mapper_args__ = {
-        'polymorphic_on': Mode,
-    }
+    iterations = db.relationship(
+        'Iteration',
+        backref='Session',
+        lazy='dynamic',
+        order_by='Iteration.IterationId',
+        passive_deletes=True,
+    )
+    decisions = db.relationship(
+        'Decision', backref='Session', lazy='selectin', passive_deletes=True
+    )
+
+    __mapper_args__ = {'polymorphic_on': Mode}
 
     # Random security generation attributes
     _random_security = {
         'USA': ('AMZN', 'NVDA', 'FB', 'MSFT', 'AAPL', 'DIS', 'XOM', 'GS', 'BA', 'NKE'),
         'SHARES': ('SBER', 'AFLT', 'GAZP', 'ROSN', 'YNDX', 'MOEX', 'MGNT', 'GMKN'),
-        'CRYPTO_CURRENCIES': ('ETHUSD', 'BTCUSD', 'LTCUSD')
-        }
+        'CRYPTO_CURRENCIES': ('ETHUSD', 'BTCUSD', 'LTCUSD'),
+    }
 
     def __repr__(self) -> str:
         """Return object description"""
@@ -242,22 +257,25 @@ class Session(db.Model):
         """Calculate datetime of the first bar in downloaded quotes dataset"""
 
         days_before = {
-            'daytrading': ceil(self.Iterations / 5) * 7, # One iteration per day (round up)
-            'swingtrading': self.Iterations * 7, # One iteration per week
-            'shortinvesting': self.Iterations * 31, # One iteration per month
-            'longinvesting': self.Iterations * 31 * 3 # One iteration per 3 months
+            'daytrading': ceil(self.Iterations / 5) * 7,  # One iteration per day (round up)
+            'swingtrading': self.Iterations * 7,  # One iteration per week
+            'shortinvesting': self.Iterations * 31,  # One iteration per month
+            'longinvesting': self.Iterations * 31 * 3,  # One iteration per 3 months
         }
-    
-        safety_factor = cfg.DOWNLOAD_SAFETY_FACTOR
 
-        return self.LastFixingBarDatetime - timedelta(days=days_before[self.TradingType] * safety_factor)
+        delta = timedelta(days=days_before[self.TradingType] * cfg.DOWNLOAD_SAFETY_FACTOR)
+        first_bar_dt = self.LastFixingBarDatetime - delta
+
+        return first_bar_dt
 
     def _generate_filename_session(self) -> str:
-        """ Get filename for current session """
+        """Get filename for current session"""
 
         # Generate dirname
         if cfg.PLATFORM == 'win32':
-            dir_path = cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Ticker) + '\\'
+            dir_path = (
+                cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Ticker) + '\\'
+            )
         else:
             dir_path = cfg.PATH_DOWNLOADS + '/' + str(self.SessionId) + '_' + str(self.Ticker) + '/'
 
@@ -282,12 +300,14 @@ class Session(db.Model):
         save_path = self._generate_filename_session()
 
         # Check: Pass if file for this session hasn't downloaded yet or it's size is smaller than 48 bytes
-        assert not os.path.exists(save_path) or os.stat(save_path).st_size <= 48, 'Error: Quotes already downloaded'   
+        is_no_quotes_downloaded = not os.path.exists(save_path) or os.stat(save_path).st_size > 48
+        assert is_no_quotes_downloaded, 'Error: Quotes already downloaded'
 
         # Parse quotes with finam.export lib
         exporter = cfg.SessionOptions.get_exporter()
-        security = exporter.lookup(code=self.Ticker, market=Market[self.Market],
-                            code_comparator=LookupComparator.EQUALS)
+        security = exporter.lookup(
+            code=self.Ticker, market=Market[self.Market], code_comparator=LookupComparator.EQUALS
+        )
 
         # If there are more than 1 security with the following ticker, use the first one
         if len(security) == 0:
@@ -297,13 +317,18 @@ class Session(db.Model):
 
         # Download quotes
         try:
-            df_quotes = exporter.download(id_=security.name, market=Market[self.Market],
-                                    start_date=self.FirstBarDatetime, end_date=self.LastFixingBarDatetime,
-                                    timeframe=Timeframe[self.Timeframe])
-            df_quotes.index = pd.to_datetime(df_quotes['<DATE>'].astype(str) + ' ' + df_quotes['<TIME>'])
+            df_quotes = exporter.download(
+                id_=security.name,
+                market=Market[self.Market],
+                start_date=self.FirstBarDatetime,
+                end_date=self.LastFixingBarDatetime,
+                timeframe=Timeframe[self.Timeframe],
+            )
+            df_col_dt_str = df_quotes['<DATE>'].astype(str) + ' ' + df_quotes['<TIME>']
+            df_quotes.index = pd.to_datetime(df_col_dt_str)
         except:
             raise RuntimeError('Unable to download quotes')
-        
+
         # Check if downloaded quotes is correct
         assert len(df_quotes) > 0, 'There are no quotes for this security for the selected period'
 
@@ -332,7 +357,7 @@ class Session(db.Model):
     def _create_iterations(self, df_quotes: pd.DataFrame) -> None:
         """Create all iterations for current session (self)"""
         for i in range(1, self.Iterations + 1):
-            Iteration.create(session=self, iteration_num=i, df_quotes=df_quotes)
+            Iteration.create(session=self, iter_num=i, df_quotes=df_quotes)
 
     @staticmethod
     def _get_last_workday():
@@ -406,7 +431,7 @@ class Session(db.Model):
             'Iterations': str(self.Iterations),
             'Slippage': str(float(self.Slippage) * 100) + '%',
             'Fixingbar': str(self.Fixingbar),
-            'Mode': self.Mode
+            'Mode': self.Mode,
         }
         return as_dict
 
@@ -415,7 +440,7 @@ class Session(db.Model):
 
         # Set path to save/load downloaded ticker data
         save_path = self._generate_filename_session()
-        
+
         # Load dataframe from hdd
         try:
             return pd.read_csv(save_path, parse_dates=True, index_col='index')
@@ -443,14 +468,12 @@ class Session(db.Model):
 
 class SessionCustom(Session):
     """
-    Subclass for session with manually selected options (custom). 
+    Subclass for session with manually selected options (custom).
     User is able to set up all session options by himself.
     """
 
     mode = 'custom'
-    __mapper_args__ = {
-        'polymorphic_identity': mode
-    }
+    __mapper_args__ = {'polymorphic_identity': mode}
 
     @classmethod
     def create(cls, request: dict) -> db.Model:
@@ -466,9 +489,7 @@ class SessionClassic(Session):
     """
 
     mode = 'classic'
-    __mapper_args__ = {
-        'polymorphic_identity': mode
-    }
+    __mapper_args__ = {'polymorphic_identity': mode}
 
     @classmethod
     def create(cls, request: dict) -> db.Model:
@@ -485,8 +506,8 @@ class SessionClassic(Session):
             'date': cls._get_last_workday(),
             'iterations': '5',
             'slippage': '0.005',
-            'fixingbar': '50'
-            }
+            'fixingbar': '50',
+        }
         session = super().create(options=options)
         return session
 
@@ -496,11 +517,9 @@ class SessionBlitz(Session):
     Subclass for preset session (blitz)
     High speed mode - time for decision making is very limited.
     """
-    
+
     mode = 'blitz'
-    __mapper_args__ = {
-        'polymorphic_identity': mode
-    }
+    __mapper_args__ = {'polymorphic_identity': mode}
 
     @classmethod
     def create(cls, request: dict) -> db.Model:
@@ -517,8 +536,8 @@ class SessionBlitz(Session):
             'date': cls._get_random_workday(),
             'iterations': '10',
             'slippage': '0.001',
-            'fixingbar': '15'
-            }
+            'fixingbar': '15',
+        }
         session = super().create(options=options)
         return session
 
@@ -530,9 +549,7 @@ class SessionCrypto(Session):
     """
 
     mode = 'crypto'
-    __mapper_args__ = {
-        'polymorphic_identity': mode
-    }
+    __mapper_args__ = {'polymorphic_identity': mode}
 
     @classmethod
     def create(cls, request: dict) -> db.Model:
@@ -549,8 +566,8 @@ class SessionCrypto(Session):
             'date': cls._get_random_workday(),
             'iterations': '10',
             'slippage': '0.001',
-            'fixingbar': '50'
-            }
+            'fixingbar': '50',
+        }
         session = super().create(options=options)
         return session
 
@@ -565,7 +582,7 @@ class Iteration(db.Model):
 
     IterationId = db.Column(db.Integer, primary_key=True, index=True)
     CreateDatetime = db.Column(db.DateTime, default=datetime.utcnow)
-    SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)
+    SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)  # fmt: skip
     IterationNum = db.Column(db.Integer)
     StartBarNum = db.Column(db.Integer)
     FinalBarNum = db.Column(db.Integer)
@@ -575,40 +592,45 @@ class Iteration(db.Model):
     FinalBarPrice = db.Column(db.Float)
     FixingBarPrice = db.Column(db.Float)
 
-    decisions = db.relationship('Decision', backref='Iteration', lazy='dynamic', passive_deletes=True)
+    decisions = db.relationship(
+        'Decision', backref='Iteration', lazy='dynamic', passive_deletes=True
+    )
 
     def __repr__(self) -> str:
         """Return object description"""
         return f'<Iteration #{self.IterationNum} of {self.Session}>'
 
     @classmethod
-    def create(cls, session: Session, iteration_num: int, df_quotes: pd.DataFrame) -> db.Model:
+    def create(cls, session: Session, iter_num: int, df_quotes: pd.DataFrame) -> db.Model:
         """Create new iteration and write it to db"""
-        
+
         # Check how much iterations is already created for this session
-        assert len(session.iterations.all()) <= session.Iterations, 'Error: All iterations for this sessions was already created'
+        assert_condition = len(session.iterations.all()) <= session.Iterations
+        assert assert_condition, 'Error: All iterations for this sessions was already created'
 
         # Fill basic options
         iter = cls()
         iter.SessionId = session.SessionId
-        iter.IterationNum = iteration_num
+        iter.IterationNum = iter_num
 
         # Start iterations generation from the end of df
-        if iteration_num == 1:
+        if iter_num == 1:
             # For first iteration use session options
             iter.FixingBarDatetime = session.LastFixingBarDatetime
-            iter.FixingBarNum = session.TotalSessionBars - 1   # first bar num = 0
+            iter.FixingBarNum = session.TotalSessionBars - 1  # first bar num = 0
         else:
             # For other iterations find last created iteration for current session and use it to calc new values
-            last_iteration = session.iterations.filter(cls.Session == session).all()[-1:][0]
-            # Calc new iteration fixing date and bar number considering if there is a skipped iterations 
-            iterations_distance = iter.IterationNum - last_iteration.IterationNum
-            iter.FixingBarDatetime = last_iteration._calc_new_iteration_fixbardatetime(iterations_distance)
-            iter.FixingBarNum = int(df_quotes.index.get_indexer([iter.FixingBarDatetime], method='nearest')[0])
-        
+            last_iter = session.iterations.filter(cls.Session == session).all()[-1:][0]
+            # Calc new iteration fixing date and bar number considering if there is a skipped iterations
+            iter_distance = iter.IterationNum - last_iter.IterationNum
+            iter.FixingBarDatetime = last_iter._calc_new_iteration_fixbardatetime(iter_distance)
+            df_nearest_bar = df_quotes.index.get_indexer([iter.FixingBarDatetime], method='nearest')
+            iter.FixingBarNum = int(df_nearest_bar[0])
+
             # Skip dates with no data for chart
-            if iter.FixingBarNum - last_iteration.FixingBarNum > session.Fixingbar * -1:
-                logger.warning(f'Skip iteration generation for <Iteration #{iteration_num} of {session}> because of no data for {iter.FixingBarDatetime}')
+            if iter.FixingBarNum - last_iter.FixingBarNum > session.Fixingbar * -1:
+                log_msg = f'Skip iteration generation for <Iteration #{iter_num} of {session}>. No data for {iter.FixingBarDatetime}'
+                logger.warning(log_msg)
                 return None
 
         # Fill other required bars numbers
@@ -617,27 +639,28 @@ class Iteration(db.Model):
             iter.StartBarNum = iter.FinalBarNum - session.Barsnumber
         else:
             # Stop iteration generation if not enough data in df
-            logger.warning(f'Skip iteration generation for <Iteration #{iteration_num} of {session}> because not enough data in dataframe')
+            log_msg = f'Skip iteration generation for <Iteration #{iter_num} of {session}>. Not enough data in dataframe'
+            logger.warning(log_msg)
             return None
 
         # Write data to db
         write_object_to_db(iter)
 
         # Save iteration quotes df to file
-        df_quotes_cut = df_quotes.iloc[iter.StartBarNum + 1:iter.FixingBarNum + 1]
+        df_slice = df_quotes.iloc[iter.StartBarNum + 1 : iter.FixingBarNum + 1]
         save_path = iter._generate_filename_iteration()
         if cfg.SAVE_FORMAT == 'csv':
-            df_quotes_cut.to_csv(save_path, index=True, index_label='index')
+            df_slice.to_csv(save_path, index=True, index_label='index')
         elif cfg.SAVE_FORMAT == 'json':
-            df_quotes_cut.to_json(save_path, index=True, orient='records')
+            df_slice.to_json(save_path, index=True, orient='records')
         else:
             raise RuntimeError('Error: Unsupported export file format')
 
         # Save iterations' prices
-        iter.StartBarPrice = df_quotes_cut.iloc[:1]['<CLOSE>'].values[0]
-        iter.FinalBarPrice = df_quotes_cut.iloc[session.Barsnumber-1:session.Barsnumber]['<CLOSE>'].values[0]
-        iter.FixingBarPrice = df_quotes_cut.iloc[-1:]['<CLOSE>'].values[0]
-        
+        iter.StartBarPrice = df_slice.iloc[:1]['<CLOSE>'].values[0]
+        iter.FinalBarPrice = df_slice.iloc[session.Barsnumber - 1 : session.Barsnumber]['<CLOSE>'].values[0]  # fmt: skip
+        iter.FixingBarPrice = df_slice.iloc[-1:]['<CLOSE>'].values[0]
+
         # Update db object
         write_object_to_db(iter)
 
@@ -658,8 +681,8 @@ class Iteration(db.Model):
         else:
             # One iteration per 3 months
             days_before = cfg.DAYS_IN_MONTH * 3
-        
-        # Add to days number amount of skipped iterations (distance between iterations) 
+
+        # Add to days number amount of skipped iterations (distance between iterations)
         days_before = days_before + (distance - 1)
 
         # Skip weekends
@@ -667,24 +690,26 @@ class Iteration(db.Model):
 
         return bar_date
 
-    def get_from_db(session_id: int, iteration_num: int) -> db.Model:
+    def get_from_db(session_id: int, iter_num: int) -> db.Model:
         """Get iterations's options from db and fill with them the object"""
-        return Iteration.query.filter(Iteration.SessionId == session_id, Iteration.IterationNum == iteration_num).first()
+        return Iteration.query.filter(
+            Iteration.SessionId == session_id, Iteration.IterationNum == iter_num
+        ).first()
 
     def _generate_filename_iteration(self) -> str:
-        """ Get filename for current iteration """
+        """Get filename for current iteration"""
 
         # Generate dirname
         if cfg.PLATFORM == 'win32':
-            dir_path = cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '\\'
+            dir_path = cfg.PATH_DOWNLOADS + '\\' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '\\'  # fmt: skip
         else:
-            dir_path = cfg.PATH_DOWNLOADS + '/' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '/'
+            dir_path = cfg.PATH_DOWNLOADS + '/' + str(self.SessionId) + '_' + str(self.Session.Ticker) + '/'  # fmt: skip
 
         # Create dirs if not exist
         for dir in (cfg.PATH_DOWNLOADS, dir_path):
             if not os.path.exists(dir):
                 os.mkdir(dir)
-        
+
         # Generate filename
         if cfg.SAVE_FORMAT == 'csv':
             filename = 'iteration_' + str(self.SessionId) + '_' + str(self.IterationNum) + '.csv'
@@ -718,24 +743,23 @@ class Iteration(db.Model):
         # Read iteration df
         df = self._read_data_file()
         # Show bars only between Start and Final (hide bars between Final and Fixing)
-        df = df.iloc[:self.Session.Barsnumber]
+        df = df.iloc[: self.Session.Barsnumber]
         # Add numerical id instead date
-        df['id'] = df.reset_index().index
+        df['id'] = df.reset_index().index + 1
 
         # Convert it to plotly formatted json
         chart_data = graph_objs.Figure(
-                        data=[
-                            graph_objs.Candlestick(
-                                x=df.id + 1,
-                                open=df['<OPEN>'],
-                                close=df['<CLOSE>'],
-                                low=df['<LOW>'],
-                                high=df['<HIGH>'],
-
-                                increasing_line_color='#3c996e',
-                                decreasing_line_color='#e15361'
-                            )
-                        ]
+            data=[
+                graph_objs.Candlestick(
+                    x=df.id,
+                    open=df['<OPEN>'],
+                    close=df['<CLOSE>'],
+                    low=df['<LOW>'],
+                    high=df['<HIGH>'],
+                    increasing_line_color='#3c996e',
+                    decreasing_line_color='#e15361',
+                )
+            ]
         )
 
         # Export chart and iteration in one JSON
@@ -747,7 +771,7 @@ class Decision(db.Model):
     """
     For every session user make several decisions (ORM objects).
     There are 3 types of decisions - to buy, to sell or do nothing.
-    For every decision app calculates financial result - 
+    For every decision app calculates financial result -
     how much user would earn if open position right now and close it after a while.
     """
 
@@ -756,8 +780,8 @@ class Decision(db.Model):
     DecisionId = db.Column(db.Integer, primary_key=True, index=True)
     CreateDatetime = db.Column(db.DateTime, default=datetime.utcnow)
     UserId = db.Column(db.Integer, db.ForeignKey('User.UserId', ondelete='CASCADE'), index=True)
-    SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)
-    IterationId = db.Column(db.Integer, db.ForeignKey('Iteration.IterationId', ondelete='CASCADE'), index=True)
+    SessionId = db.Column(db.Integer, db.ForeignKey('Session.SessionId', ondelete='CASCADE'), index=True)  # fmt: skip
+    IterationId = db.Column(db.Integer, db.ForeignKey('Iteration.IterationId', ondelete='CASCADE'), index=True)  # fmt: skip
     Action = db.Column(db.String)
     TimeSpent = db.Column(db.Float)
     ResultRaw = db.Column(db.Float)
@@ -775,9 +799,10 @@ class Decision(db.Model):
         self.IterationId = iteration.IterationId
         self.Action = props['action']
         self.TimeSpent = props['timeSpent']
-        
+
         # Calc results taking into account the slippage level
-        price_change = round((iteration.FixingBarPrice - iteration.FinalBarPrice) / iteration.StartBarPrice, 6)
+        price_dif = iteration.FixingBarPrice - iteration.FinalBarPrice
+        price_change = round(price_dif / iteration.StartBarPrice, 6)
         if self.Action == 'Buy':
             self.ResultRaw = price_change * 1
             self.ResultFinal = round(self.ResultRaw - iteration.Session.Slippage, 6)
@@ -799,6 +824,7 @@ class Decision(db.Model):
 # Non-ORM classes
 # ===============
 
+
 class SessionResults:
     """
     `SessionResults` is not an ORM object - no tables in db for storing session results.
@@ -818,9 +844,9 @@ class SessionResults:
 
         total_result = round(sum([d.ResultFinal for d in decisions]) * 100, 4)
         total_decisions = len(decisions)
-        profitable_decisions = len([d for d in decisions if d.ResultFinal>0])
-        unprofitable_decisions = len([d for d in decisions if d.ResultFinal<=0 and d.Action!='Skip'])
-        skipped_decisions = len([d for d in decisions if d.Action=='Skip'])
+        profitable_decisions = len([d for d in decisions if d.ResultFinal > 0])
+        unprofitable_decisions = len([d for d in decisions if d.ResultFinal < 0])
+        skipped_decisions = len([d for d in decisions if d.Action == 'Skip'])
         median_decisions_result = round(median([d.ResultFinal for d in decisions]), 4)
         best_decisions_result = round(max([d.ResultFinal for d in decisions]) * 100, 4)
         worst_decisions_result = round(min([d.ResultFinal for d in decisions]) * 100, 4)
@@ -839,8 +865,8 @@ class SessionResults:
             'medianDecisionsResult': median_decisions_result,
             'bestDecisionsResult': best_decisions_result,
             'worstDecisionsResult': worst_decisions_result,
-            'totalTimeSpent': total_time_spent
-            }
+            'totalTimeSpent': total_time_spent,
+        }
 
         return session_summary
 
@@ -861,23 +887,27 @@ class Scoreboard:
         self.mode = mode
         self.user = user
         self.closed_sessions = []
-        self.sessions_results = []
+        self.ses_results = []
 
     def _get_all_users_results(self) -> dict:
         """Return list of all users results"""
 
         # Check current Scoreboard instance for cached objects
-        if not any((self.closed_sessions, self.sessions_results)):
-            self.closed_sessions = Session.query.filter(Session.Mode == self.mode, Session.Status == cfg.SESSION_STATUS_CLOSED).all()
-            self.sessions_results = [SessionResults(s) for s in self.closed_sessions]
-        
+        if not any((self.closed_sessions, self.ses_results)):
+            closed_sessions_query = Session.query.filter(
+                Session.Mode == self.mode,
+                Session.Status == cfg.SESSION_STATUS_CLOSED,
+            )
+            self.closed_sessions = closed_sessions_query.all()
+            self.ses_results = [SessionResults(s) for s in self.closed_sessions]
+
         # Sum results of all sessions for every user
         users_results = {}
-        for r in self.sessions_results:
+        for r in self.ses_results:
             if r['userId'] not in users_results:
-                users_results[r['userId']] = r['totalResult'] 
+                users_results[r['userId']] = r['totalResult']
             else:
-                users_results[r['userId']] += r['totalResult'] 
+                users_results[r['userId']] += r['totalResult']
 
         # Order users by result
         users_results = OrderedDict(sorted(users_results.items(), key=lambda r: r[1], reverse=True))
@@ -887,15 +917,17 @@ class Scoreboard:
         """Return list of specified top users (leaders) for selected mode"""
 
         users_results = self._get_all_users_results()
-        
+
         # Cut dict to users count, round results and replace ids with names
         users_results = OrderedDict(islice(users_results.items(), count))
         users_results_final = {}
         for idx, user in enumerate(users_results):
-            users_results_final[idx] = {'name': User.get_user_by_id(user).UserName, 
-                                        'result': round(users_results[user], 2)}
+            users_results_final[idx] = {
+                'name': User.get_user_by_id(user).UserName,
+                'result': round(users_results[user], 2),
+            }
 
-        return users_results_final  
+        return users_results_final
 
     def get_user_rank(self) -> int:
         """Return rank of user in global scoreboard"""
@@ -911,33 +943,37 @@ class Scoreboard:
         user = self.user
 
         # Check current Scoreboard instance for cached objects
-        if not any((self.closed_sessions, self.sessions_results)):
-            self.closed_sessions = user.sessions.filter(Session.Status == cfg.SESSION_STATUS_CLOSED, Session.Mode == self.mode).all()
-            self.sessions_results = [SessionResults(s) for s in self.closed_sessions]
+        if not any((self.closed_sessions, self.ses_results)):
+            closed_sessions_query = Session.query.filter(
+                Session.Mode == self.mode,
+                Session.Status == cfg.SESSION_STATUS_CLOSED,
+            )
+            self.closed_sessions = closed_sessions_query.all()
+            self.ses_results = [SessionResults(s) for s in self.closed_sessions]
 
         # Check if there is results for current user
-        if not any((self.closed_sessions, self.sessions_results)):
+        if not any((self.closed_sessions, self.ses_results)):
             return False
 
-        total_sessions = len(self.closed_sessions)
-        profitalbe_sessions = len([s['totalResult'] for s in self.sessions_results if s['totalResult'] > 0])
-        unprofitalbe_sessions = len([s['totalResult'] for s in self.sessions_results if s['totalResult'] <= 0])
-        total_result = round(sum([s['totalResult'] for s in self.sessions_results]), 2)
-        median_result = round(median([s['totalResult'] for s in self.sessions_results]), 2)
-        best_result = round(max([s['totalResult'] for s in self.sessions_results]), 2)
-        first_session = min([s.CreateDatetime for s in self.closed_sessions]).strftime("%d.%m.%Y")
+        total_ses = len(self.closed_sessions)
+        profit_ses = len([s['totalResult'] for s in self.ses_results if s['totalResult'] > 0])
+        unprofit_ses = len([s['totalResult'] for s in self.ses_results if s['totalResult'] <= 0])
+        total_result = round(sum([s['totalResult'] for s in self.ses_results]), 2)
+        median_result = round(median([s['totalResult'] for s in self.ses_results]), 2)
+        best_result = round(max([s['totalResult'] for s in self.ses_results]), 2)
+        first_ses = min([s.CreateDatetime for s in self.closed_sessions]).strftime("%d.%m.%Y")
 
         user_summary = {
             'mode': self.mode,
             'userId': user.UserId,
             'userName': user.UserName,
-            'totalSessions': total_sessions,
-            'profitableSessions': profitalbe_sessions,
-            'unprofitableSessions': unprofitalbe_sessions,
+            'totalSessions': total_ses,
+            'profitableSessions': profit_ses,
+            'unprofitableSessions': unprofit_ses,
             'totalResult': total_result,
             'medianResult': median_result,
             'bestSessionResult': best_result,
-            'firstSession': first_session
+            'firstSession': first_ses,
         }
 
         return user_summary
@@ -945,6 +981,7 @@ class Scoreboard:
 
 # General functions
 # ==================
+
 
 def check_db_connection() -> None:
     """Check if connection to db can be established"""
@@ -959,7 +996,7 @@ def write_object_to_db(object: db.Model) -> None:
     """Default way to write SQLAlchemy object to db"""
     db.session.add(object)
     db.session.commit()
-        
+
 
 def delete_object_from_db(object: db.Model) -> None:
     """Default way to write SQLAlchemy object to db"""
@@ -969,7 +1006,7 @@ def delete_object_from_db(object: db.Model) -> None:
 
 def create_system_users() -> None:
     """Create system users during first run of the script"""
-    
+
     # Check if there is tables in db
     meta = db.MetaData(bind=db.engine)
     meta.reflect()
@@ -979,12 +1016,20 @@ def create_system_users() -> None:
 
     # Create demo user
     if User.get_user_by_email(cfg.USER_DEMO_EMAIL) is None:
-        creds = {'email': cfg.USER_DEMO_EMAIL, 'name': cfg.USER_DEMO_NAME, 'password': cfg.USER_DEMO_PASSWORD}
+        creds = {
+            'email': cfg.USER_DEMO_EMAIL,
+            'name': cfg.USER_DEMO_NAME,
+            'password': cfg.USER_DEMO_PASS,
+        }
         demo_user = User.create(creds=creds)
         logger.info(f'Demo user "{demo_user}" created')
-        
+
     # Create test user
     if User.get_user_by_email(cfg.USER_TEST_EMAIL) is None:
-        creds = {'email': cfg.USER_TEST_EMAIL, 'name': cfg.USER_TEST_NAME, 'password': cfg.USER_TEST_PASSWORD}
+        creds = {
+            'email': cfg.USER_TEST_EMAIL,
+            'name': cfg.USER_TEST_NAME,
+            'password': cfg.USER_TEST_PASS,
+        }
         test_user = User.create(creds=creds)
         logger.info(f'Test user "{test_user}" created')

@@ -1,12 +1,13 @@
 import time
-from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
 
 class ElementBase(object):
     """Base element class"""
+
     def __init__(self, page, locator) -> None:
         """Element setup"""
         self.page = page
@@ -16,6 +17,7 @@ class ElementBase(object):
 
 class ElementInput(ElementBase):
     """Base element class for inputs. Using custom setters and getters (val) for interactions with inputs"""
+
     def __init__(self, page, locator) -> None:
         """Init"""
         ElementBase.__init__(self, page, locator)
@@ -35,19 +37,21 @@ class ElementInput(ElementBase):
 
 class ElementButton(ElementBase):
     """Base element class for buttons"""
+
     def __init__(self, page, locator) -> None:
         """Element setup"""
         ElementBase.__init__(self, page, locator)
-    
+
     def click(self):
         """Click on the button"""
         self.element = self.page.wait.until(EC.element_to_be_clickable(self.locator))
         self.element.click()
-        time.sleep(1/8)
+        time.sleep(1 / 8)
 
 
 class ElementDatePicker(ElementBase):
     """Base page class for bootstrap datapicker"""
+
     def __init__(self, page, locator) -> None:
         """Init"""
         ElementBase.__init__(self, page, locator)
@@ -62,7 +66,7 @@ class ElementDatePicker(ElementBase):
 
         # Send keyboard keys without bounding with element (ActionChains)
         actions = ActionChains(self.driver)
-        actions.pause(1/8)
+        actions.pause(1 / 8)
 
         # Select last workday - send additional ARROW_LEFT keys depending on weekday
         if weekday in (2, 3, 4, 5, 6):

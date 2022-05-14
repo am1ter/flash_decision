@@ -69,7 +69,7 @@ const routes = [
         }
     },
     {
-        path: "/sessions/:mode/:session_id/iterations/:iteration_num/",
+        path: "/sessions/:mode/:session_id/iterations/:iter_num/",
         name: "Decision’s page",
         component: App.components.PageDecision,
         meta: {

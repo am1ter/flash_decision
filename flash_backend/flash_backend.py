@@ -4,4 +4,4 @@ if __name__ == '__main__':
     from waitress import serve
 
     # Run backend server using waitress lib
-    serve(flask_app, host=flask_app.config['HOST'], port=flask_app.config['PORT'])
+    serve(flask_app, host=flask_app.config['FLASK_HOST'], port=flask_app.config['FLASK_PORT'])

@@ -16,7 +16,7 @@ services:
     ports:
       - ${PORT_DB}:5432
     environment:
-      - POSTGRES_PASSWORD=flash!Pass
+      - POSTGRES_PASSWORD=${PASSWORD_DB}
     restart: always
 
   # Run webserver with backend (API)
@@ -33,7 +33,7 @@ services:
       - DATABASE_URL=flash_db
       - DATABASE_PORT=${PORT_DB}
       - DATABASE_USER=postgres
-      - DATABASE_PASS=flash!Pass
+      - DATABASE_PASS=${PASSWORD_DB}
 
   # Run webserver with frontend
   flash_frontend:

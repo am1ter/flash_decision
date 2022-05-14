@@ -3,11 +3,11 @@
         <div class="col-12">
             <b-table outlined striped no-border-collapse hover :items="calcSessionsSummary" :fields="fields" thead-class="d-none" class="shadow">
             </b-table>
-            <b-button id="button-go-to-scoreboard" type="submit" squared class="col-12 gradient"
+            <b-button id="button-to-scoreboard" type="submit" squared class="col-12 gradient"
                 href="#" v-on:click="$router.push(`/scoreboard/${currentSession['mode']}/${user.id}/`)">
                 Go to the scoreboard
             </b-button>
-            <b-button id="button-start-new-session" type="submit" squared variant="outline-secondary" class="col-12 mt-2" 
+            <b-button id="button-new-session" type="submit" squared variant="outline-secondary" class="col-12 mt-2" 
                 href="#" v-on:click="$router.push(`/session/`)">
                 Start new session
             </b-button>

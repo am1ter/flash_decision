@@ -1,8 +1,9 @@
 from selenium.webdriver.common.by import By
 
 
-class LocatorsPageBase(object):
+class LocPageBase(object):
     """Locators for all pages"""
+
     div_errors = (By.ID, 'errors')
     div_loader = (By.ID, 'vld-icon')
     div_footer = (By.ID, 'credits')
@@ -12,8 +13,10 @@ class LocatorsPageBase(object):
     button_menu_decision = (By.ID, 'button-menu-decision')
     button_menu_scoreboard = (By.ID, 'button-menu-scoreboard')
 
-class LocatorsPageLogin(object):
+
+class LocPageLogin(object):
     """Locators for Login page"""
+
     input_email = (By.ID, 'input-email')
     input_password = (By.ID, 'input-password')
     button_signin = (By.ID, 'button-login')
@@ -21,8 +24,9 @@ class LocatorsPageLogin(object):
     button_signin_demo = (By.ID, 'button-login-demo')
 
 
-class LocatorsPageSignup(object):
+class LocPageSignup(object):
     """Locators for Signup page"""
+
     input_email = (By.ID, 'input-email')
     input_name = (By.ID, 'input-name')
     input_password = (By.ID, 'input-password')
@@ -30,16 +34,18 @@ class LocatorsPageSignup(object):
     button_go_back = (By.ID, 'button-go-back')
 
 
-class LocatorsPageSession(object):
+class LocPageSession(object):
     """Locators for main page (Session page)"""
+
     button_mode_custom = (By.ID, 'button-custom')
     button_mode_classic = (By.ID, 'button-classic')
     button_mode_blitz = (By.ID, 'button-blitz')
     button_mode_crypto = (By.ID, 'button-crypto')
 
 
-class LocatorsPageSessionCustom(object):
+class LocPageSessionCustom(object):
     """Locators for Session Custom page"""
+
     input_market = (By.NAME, 'input-market')
     input_ticker = (By.NAME, 'input-ticker')
     input_timeframe = (By.NAME, 'input-timeframe')
@@ -52,21 +58,24 @@ class LocatorsPageSessionCustom(object):
     button_start = (By.ID, 'button-start')
 
 
-class LocatorsPageDecision(object):
+class LocPageDecision(object):
     """Locators for Decision page"""
+
     button_sell = (By.ID, 'button-sell')
     button_skip = (By.ID, 'button-skip')
     button_buy = (By.ID, 'button-buy')
 
 
-class LocatorsPageResults(object):
+class LocPageResults(object):
     """Locators for Session Results page"""
-    button_go_to_scoreboard = (By.ID, 'button-go-to-scoreboard')
-    button_start_new_session = (By.ID, 'button-start-new-session')
+
+    button_to_scoreboard = (By.ID, 'button-to-scoreboard')
+    button_new_session = (By.ID, 'button-new-session')
 
 
-class LocatorsPageScoreboard(object):
+class LocPageScoreboard(object):
     """Locators for Scoreboard page"""
+
     button_mode_custom = (By.ID, 'button-mode-custom')
     button_mode_classic = (By.ID, 'button-mode-classic')
     button_mode_blitz = (By.ID, 'button-mode-blitz')

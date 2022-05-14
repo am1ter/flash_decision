@@ -29,20 +29,26 @@ async function handleResponse(req) {
             return false
         }
     } catch (err) {
-        // Clean cookies for auth info if have got "401 Unauthorized" response
-        console.log(err.toJSON())
-        if (err.toJSON().message == 'Network Error') {
-            store.commit("newApiError", err)
-            store.commit("stopLoading")
-        } else {
+        // Show error on the DOM
+        let err_msg
+        if (Object.keys(err.response).length > 0) {
+            // Clean cookies for auth info if have got "401 Unauthorized" response
             if (err.response.status == 401) {
                 cookie.delete("user_id")
                 cookie.delete("user_email")
                 cookie.delete("user_token")
             }
-            store.commit("newApiError", err.response.data)
-            store.commit("stopLoading")
+            err_msg = (Object.keys(err.response.data.errors).length > 0) ? 
+                       store.commit("newApiError", err.response.data.errors) :
+                       store.commit("newApiError", err.response.data)
+        } else if (err.toJSON().message != undefined && err.toJSON().message != '') {
+            err_msg = err.toJSON().message
+        } else {
+            err_msg = 'Error: Connection to server failed. Please try again.'
         }
+
+        store.commit("newApiError", err_msg)
+        store.commit("stopLoading")
     }
 }
 
@@ -94,17 +100,17 @@ export function apiStartNewSession(mode, form) {
 }
 
 
-export function apiRenderChart(mode, sessionId, iterationNum) {
+export function apiRenderChart(mode, sessionId, iterNum) {
     console.log("Run apiRenderChart")
-    let reqUrl = `/sessions/${mode}/${sessionId}/iterations/${iterationNum}/`
+    let reqUrl = `/sessions/${mode}/${sessionId}/iterations/${iterNum}/`
     let req = {"type": "get", "url": API_URL + reqUrl}
     return handleResponse(req)
 }
 
 
-export function apiRecordDecision(mode, sessionId, iterationNum, decision) {
+export function apiRecordDecision(mode, sessionId, iterNum, decision) {
     console.log("Run apiRecordDecision")
-    let reqUrl = `/sessions/${mode}/${sessionId}/decisions/${iterationNum}/`
+    let reqUrl = `/sessions/${mode}/${sessionId}/decisions/${iterNum}/`
     let req = {"type": "post", "url": API_URL + reqUrl, "args": decision}
     return handleResponse(req)
 }
