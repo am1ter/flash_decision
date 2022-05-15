@@ -1,6 +1,6 @@
 import config as cfg
-from tests.modules import backend_functions as backend
-from tests.modules import frontend_pages as frontend
+from modules import backend_functions as backend
+from modules import frontend_pages as frontend
 
 import unittest
 

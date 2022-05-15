@@ -1,6 +1,6 @@
 import config as cfg
-from tests.modules import frontend_locators as loc
-from tests.modules.frontend_elements import ElementInput, ElementButton, ElementDatePicker
+from modules import frontend_locators as loc
+from modules.frontend_elements import ElementInput, ElementButton, ElementDatePicker
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
