@@ -845,28 +845,22 @@ class Scoreboard:
     def calc_user_summary(self) -> dict:
         """Calculate user`s activity summary"""
 
+        # Filter sessions and results for current user
         user = self.user
-
-        # Check current Scoreboard instance for cached objects
-        if not any((self.closed_sessions, self.ses_results)):
-            closed_sessions_query = Session.query.filter(
-                Session.Mode == self.mode,
-                Session.Status == cfg.SESSION_STATUS_CLOSED,
-            )
-            self.closed_sessions = closed_sessions_query.all()
-            self.ses_results = [SessionResults(s) for s in self.closed_sessions]
+        user_sessions = [s for s in self.closed_sessions if s.UserId == user.UserId]
+        user_results = [r for r in self.ses_results if r['userId'] == user.UserId]
 
         # Check if there is results for current user
-        if not any((self.closed_sessions, self.ses_results)):
+        if not any((user_sessions, user_results)):
             return False
 
-        total_ses = len(self.closed_sessions)
-        profit_ses = len([s['totalResult'] for s in self.ses_results if s['totalResult'] > 0])
-        unprofit_ses = len([s['totalResult'] for s in self.ses_results if s['totalResult'] <= 0])
-        total_result = round(sum([s['totalResult'] for s in self.ses_results]), 2)
-        median_result = round(median([s['totalResult'] for s in self.ses_results]), 2)
-        best_result = round(max([s['totalResult'] for s in self.ses_results]), 2)
-        first_ses = min([s.CreateDatetime for s in self.closed_sessions]).strftime("%d.%m.%Y")
+        total_ses = len(user_sessions)
+        profit_ses = len([s['totalResult'] for s in user_results if s['totalResult'] > 0])
+        unprofit_ses = len([s['totalResult'] for s in user_results if s['totalResult'] <= 0])
+        total_result = round(sum([s['totalResult'] for s in user_results]), 2)
+        median_result = round(median([s['totalResult'] for s in user_results]), 2)
+        best_result = round(max([s['totalResult'] for s in user_results]), 2)
+        first_ses = min([s.CreateDatetime for s in user_sessions]).strftime("%d.%m.%Y")
 
         user_summary = {
             'mode': self.mode,
