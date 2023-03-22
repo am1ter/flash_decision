@@ -101,10 +101,10 @@ def auth_required(f: FunctionType) -> FunctionType:
             return jsonify(invalid_msg), 401
         except (AssertionError) as e:
             assertion_msg = 'Error: ' + e.args[0]
-            logger_general.error(assertion_msg + ' ' + user_id_alias)
+            logger_general.error(assertion_msg)
             return jsonify(assertion_msg), 500
         except (FinamParsingError, FinamDownloadError):
-            logger_general.error(finam_error_msg + ' ' + user_id_alias)
+            logger_general.error(finam_error_msg)
             return jsonify(finam_error_msg), 500
 
     return _verify
@@ -290,14 +290,18 @@ def api_render_chart(mode: str, session_id: int, iter_num: int) -> Response:
     # Check if session is not closed
     if current_session.Status == cfg.SESSION_STATUS_CLOSED:
         logger_general.warning(f'Chart generation for {current_iter} failed (session is closed)')
-        return jsonify('Something went wrong. Current session is already closed.'), 500
+        error_msg = 'Something went wrong. Current session is already closed.'
+        resp = {'data': {'isIterationFound': False}, 'error': error_msg}
+        return jsonify(resp), 200
 
     # Check if all decisions before requested iteration were already made (manual skips is forbidden)
     total_decisions = len(current_session.decisions)
     blank_iterations = current_session.Iterations - len(current_session.iterations[:iter_num])
     if (total_decisions != iter_num - 1) and (total_decisions != iter_num - 1 - blank_iterations):
         logger_general.warning(f'Requested unexpected iteration info for {current_session}')
-        return jsonify('Something went wrong. Please start new session.'), 500
+        error_msg = 'Something went wrong. Current session is already closed.'
+        resp = {'data': {'isIterationFound': False}, 'error': error_msg}
+        return jsonify(resp), 200
 
     # Write 'Active' status for new session in db
     if current_session.Status == cfg.SESSION_STATUS_CREATED:
@@ -341,14 +345,18 @@ def api_record_decision(mode: str, session_id: int, iter_num: int) -> Response:
     # Check if session is not closed
     if current_session.Status == cfg.SESSION_STATUS_CLOSED:
         logger_general.warning(f'Decision recording for {current_iter} failed (session is closed)')
-        return jsonify('Something went wrong. Current session is already closed.'), 500
+        error_msg = 'Something went wrong. Current session is already closed.'
+        resp = {'data': {'isIterationFound': False}, 'error': error_msg}
+        return jsonify(resp), 200
 
     # Check if all decisions before requested iteration were already made (manual skips is forbidden)
     total_decisions = len(current_session.decisions)
     blank_iterations = current_session.Iterations - len(current_session.iterations[:iter_num])
     if (total_decisions != iter_num - 1) and (total_decisions != iter_num - 1 - blank_iterations):
         logger_general.warning(f'Decision recording failed. {current_session} is inconsistent')
-        return jsonify('Something went wrong. Please start new session.'), 500
+        error_msg = 'Something went wrong. Current session is already closed.'
+        resp = {'data': {'isIterationFound': False}, 'error': error_msg}
+        return jsonify(resp), 200
 
     # Save user`s decision in db and calc results for it
     new_decision = Decision().create(iteration=current_iter, props=request.json)

@@ -6,8 +6,9 @@
         <countdown v-if="sessionMode != 'custom'" 
             ref="pageTimer" 
             id="page-timer"
-            :autoStart="true" 
+            :autoStart="false" 
             :left-time="5000"
+            @before="prepareDecisions()"
             @finish="goToDecisions()">
             <template v-slot:process="pageTimer">
                 <span v-if="pageTimer.timeObj.ceil.s > 3">Ready</span>
@@ -219,7 +220,8 @@
                 selectedMarket: "SHARES",
                 dateMax: new Date(),
                 dateMin: new Date(2019, 0, 1),
-                formErrors: []
+                formErrors: [],
+                responseDecisions: null,
                 }
         },
         computed: {
@@ -271,7 +273,8 @@
             async prepareSessionPreset() {
                 // Preseted (not custom) session preparation
                 this.currentSession["options"]["values"]["userId"] = this.user.id
-                this.prepareDecisions()
+                await this.prepareDecisions()
+
             },
             dateDisabled(ymd, date) {
                 // Disable weekends in date input
@@ -334,8 +337,7 @@
                 
                 // Go to Decision page
                 if (this.formErrors.length == 0) {
-                    await this.prepareDecisions()
-                    this.goToDecisions()
+                    await this.goToDecisions()
                 }
             },
             async prepareDecisions() {
@@ -343,7 +345,8 @@
                 // If form validation has passed send POST request, check the response and go to the Decision page
                 
                 // Wait for async methods
-                let response = (await apiStartNewSession(this.sessionMode, this.currentSession["options"]["values"])).data
+                this.responseDecisions = await apiStartNewSession(this.sessionMode, this.currentSession["options"]["values"])
+                let response = this.responseDecisions.data
                 // Add attributes from response to the object
                 this.currentSession["options"]["values"]["sessionId"] = response.values["SessionId"]
                 this.currentSession["options"]["values"]["timelimit"] = response.values["Timelimit"]
@@ -366,10 +369,16 @@
                 // Create first iteration in the current session (counter and storage)
                 this.currentSession["currentIterationNum"] = 1
                 this.currentSession["iterations"] = {1: {}}
+                // Start timer
+                this.startCountdown()
             },
             goToDecisions() {
                 // Go to the decision making page
                 this.$router.push(`/sessions/${this.sessionMode}/${this.currentSession["options"]["values"]["sessionId"]}/iterations/1`)
+            },
+            startCountdown() {
+                // Start or restart countdown
+                this.$refs.pageTimer.startCountdown(true)
             },
             checkClassIsInputInvalid(element) {
                 // Change class of dropdown if validation has failed

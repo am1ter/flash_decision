@@ -18,5 +18,9 @@ RUN bash -c "echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stabl
 RUN apt -y update 
 RUN apt -y install google-chrome-stable 
 
+# Alternative chrome driver installation
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN dpkg -i google-chrome-stable_current_amd64.deb
+
 # Prevent docker containter from exit
 ENTRYPOINT ["tail", "-f", "/dev/null"]

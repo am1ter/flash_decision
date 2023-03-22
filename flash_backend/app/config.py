@@ -1,5 +1,14 @@
 from os import environ as env
 
+import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+
 from finam.export import Exporter  # https://github.com/ffeast/finam-export
 from finam.const import Market, Timeframe  # https://github.com/ffeast/finam-export
 
@@ -22,7 +31,7 @@ USER_SIGNUP_EMAIL = 'test-signup@alekseisemenov.ru'
 LOG_STRING_MAX_LENGTH = 500
 
 # Session parameters
-PARSE_OPTIONS_AT_STARTUP = False
+PARSE_OPTIONS_AT_STARTUP = True
 SESSION_STATUS_CREATED = 'created'
 SESSION_STATUS_ACTIVE = 'active'
 SESSION_STATUS_CLOSED = 'closed'
@@ -59,6 +68,8 @@ class FlaskConfig(object):
 
 class SessionOptions:
     """Collect in one instance all session options"""
+
+    driver: WebDriver = None
 
     # Limit new session creation perimeter
     _MARKETS_EXCLUDE_LIST = ('FUTURES_ARCHIVE', 'FUTURES_USA', 'CURRENCIES', 'SPB')
@@ -252,11 +263,49 @@ class SessionOptions:
         }
         return minutes_in_timeframe[tf]
 
+    @staticmethod
+    def setup_driver() -> None:
+        """Setup chrome driver with webdriver service"""
+        chromeService = Service(ChromeDriverManager().install())
+        options = webdriver.ChromeOptions()
+        options.headless = False
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument('--disable-translate')
+        options.add_argument('--lang=en-US')
+        options.add_argument('--no-sandbox')
+        options.add_argument("--disable-gpu")
+        options.add_argument("--disable-dev-shm-usage")
+        driver = webdriver.Chrome(service=chromeService, options=options)
+        return driver
+
+    @classmethod
+    def fetcher(cls, url, lines=False):
+        if cls.driver:
+            return cls.driver
+        driver = SessionOptions.setup_driver()
+        print ('>>>', url)
+        driver.get(url)
+        res = WebDriverWait(driver, 15).until( lambda driver: driver.find_element(By.XPATH, "//*").get_attribute('outerHTML'))
+        if lines:
+            res = res.encode('cp1252').decode('cp1251')
+            res = res.split('\n')
+            return res
+        return res
+    
+    @staticmethod
+    def fetcher_download(url, lines = False):
+        print ('>>>', url)
+        r = requests.get(url, headers = {'User-Agent':'Mozilla 8'}, stream=True)
+        if lines:
+            return r.content.decode('utf8').split('\n\r')
+        else :
+            return r.content.decode('utf8')
+
     @classmethod
     def get_exporter(cls) -> Exporter:
         """Return finam exporter for data parsing"""
         if cls.exporter:
             return cls.exporter
-        else:
-            cls.exporter = Exporter()
-            return cls.exporter
+        cls.exporter = Exporter(fetcher = cls.fetcher)
+        cls.exporter._fetcher = cls.fetcher_download
+        return cls.exporter

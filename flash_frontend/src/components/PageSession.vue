@@ -28,13 +28,13 @@
         <div class="mt-3">
             <h3 class="desc-header pb-1 mb-1">Modes description</h3>
             <h4 class="desc-subheader">Classic</h4>
-            <p>Would you like to practice in trading of preset shares on USA market? Start a classic session right now.</p>
+            <p>Would you like to practice trading preset shares on the USA market? Start a classic session right now.</p>
             <h4 class="desc-subheader">Blitz</h4>
-            <p>Listen to your intuition and make fast decisions. You will get 10 chances and only 5 second for each decision.</p>
+            <p>Listen to your intuition and make quick decisions. You will get 10 chances, and only 5 seconds for each decision</p>
             <h4 class="desc-subheader">Crypto</h4>
-            <p>High volatility, unpredictability, high returns - is that what you looking for? All this is related to cryptocurrencies.</p>
+            <p>High volatility, unpredictability, and high returns - is that what you're looking for? All of this is related to cryptocurrencies.</p>
             <h4 class="desc-subheader">Custom</h4>
-            <p>Choose from thousands securities and set up all other options manually for your own individual session.</p>
+            <p>Choose from thousands of securities and set up all other options manually for your own individual session.</p>
         </div>
 
     </section>
