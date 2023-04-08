@@ -1,12 +1,15 @@
 # Service
-__pycache__
-*.log*
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.vscode/
 .idea/
-/.vscode/
-workspace.code-workspace
+workspace.code-workspace/
+*.pyc
+*.log*
 
-# Backend: Main
-/flash_backend/.venv/
+# Backend
+.venv/
 
 # Frontend: Main
 /flash_frontend/.DS_Store/
@@ -25,4 +28,4 @@ workspace.code-workspace
 /flash_frontend/*.sw?
 
 # Tests
-/tests/.pytest_cache
+.pytest_cache/

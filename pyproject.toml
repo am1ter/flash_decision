@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "flash-decision"
+version = "1.0.0"
+description = "Application for training securities trading skills"
+authors = ["Aleksei Semenov <amiter@yandex.ru>"]
+readme = "README.md"
+packages = [{include = "flash_decision"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.95.0"
+uvicorn = "^0.21.1"
+sqlalchemy = "^2.0.9"
+asyncpg = "^0.27.0"
+pandas = "^2.0.0"
+structlog = "^23.1.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.2.0"
+ruff = "^0.0.261"
+black = "^23.3.0"
+selenium = "^4.8.3"
+webdriver-manager = "^3.8.5"
+requests = "^2.28.2"
+types-requests = "^2.28.11.17"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+exclude = ["flash_backend_archive", "tests"]
+
+[tool.ruff]
+select = ["E", "F", "SIM", "TCH", "ANN", "Q"]
+ignore = ["E501", "ANN101", "ANN102", "ANN002", "ANN003", "ANN401"]
+fixable = ["A", "B", "C", "D", "E", "F"]
+unfixable = []
+line-length = 100
+
+[tool.black]
+line-length = 100
