@@ -1,16 +1,20 @@
-import config as cfg
-from modules import frontend_locators as loc
-from modules.frontend_elements import ElementInput, ElementButton, ElementDatePicker
-
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+import e2e.config as cfg
+from e2e.modules import frontend_locators as loc
+from e2e.modules.frontend_elements import ElementInput, ElementButton, ElementDatePicker
+
 
 class PageBase:
     """Base class to initialize the base page that will be called from all pages"""
+
+    driver = None
+    wait: WebDriverWait | None = None
+    title: str
 
     def __init__(self) -> None:
         # Basic setup
@@ -26,10 +30,8 @@ class PageBase:
     def _set_wait_timer(self, timeout: int) -> None:
         """Reset webdriver wait timer with new timeout (seconds) value"""
         # Delete existed wait timer and replace it with new one
-        try:
+        if self.wait:
             del self.wait
-        except AttributeError:
-            pass
         self.wait = WebDriverWait(self.driver, timeout)
 
     @classmethod
@@ -39,9 +41,9 @@ class PageBase:
         options = webdriver.ChromeOptions()
         options.headless = cfg.DRIVER_HEADLESS
         options.add_argument("--window-size=1920,1080")
-        options.add_argument('--disable-translate')
-        options.add_argument('--lang=en-US')
-        options.add_argument('--no-sandbox')
+        options.add_argument("--disable-translate")
+        options.add_argument("--lang=en-US")
+        options.add_argument("--no-sandbox")
         if cfg.DRIVER_HEADLESS and cfg.DRIVER_START_MAXIMIZED:
             options.add_argument("--start-maximized")
         cls.driver = webdriver.Chrome(service=chromeService, options=options)
@@ -49,44 +51,47 @@ class PageBase:
     def is_page_loaded(self) -> None:
         """Verifies that the page is loaded"""
 
+        assert self.driver and self.wait, "Driver is not set up"
+
         # Wait until page is loaded
         self.wait.until(
             method=EC.invisibility_of_element_located(loc.LocPageBase.div_errors),
-            message=f'Page is not loaded. Errors on the page: {self.driver.current_url}',
+            message=f"Page is not loaded. Errors on the page: {self.driver.current_url}",
         )
         self.wait.until(
             method=EC.title_contains(self.title),
-            message=f'Unexpected page title. No `{self.title}` in `{self.driver.title}`',
+            message=f"Unexpected page title. No `{self.title}` in `{self.driver.title}`",
         )
         self.wait.until(
             method=EC.visibility_of_element_located(loc.LocPageBase.div_footer),
-            message=f'No footer found on the page: {self.driver.current_url}',
+            message=f"No footer found on the page: {self.driver.current_url}",
         )
         self.wait.until(
             method=EC.invisibility_of_element_located(loc.LocPageBase.div_loader),
-            message=f'Loading did not finish: {self.driver.current_url}',
+            message=f"Loading did not finish: {self.driver.current_url}",
         )
 
         # Make checks
         fails = []
         no_errors = len(self.driver.find_elements(*loc.LocPageBase.div_errors)) == 0
         is_page_length_enough = len(self.driver.page_source) > 100
-        is_url_correct = 'undefined' not in self.driver.current_url
-        no_undefined = 'undefined' not in self.driver.page_source.lower()
+        is_url_correct = "undefined" not in self.driver.current_url
+        no_undefined = "undefined" not in self.driver.page_source.lower()
 
-        if no_errors == False:
-            fails.append('Errors displayed on the page')
-        elif is_page_length_enough == False:
-            fails.append('Page length <= 100 symbols')
-        elif is_url_correct == False:
-            fails.append('URL is incorrect. There is `undefined` in the URL.')
-        elif no_undefined == False:
-            fails.append('There are undefined values on the page')
+        if no_errors is False:
+            fails.append("Errors displayed on the page")
+        elif is_page_length_enough is False:
+            fails.append("Page length <= 100 symbols")
+        elif is_url_correct is False:
+            fails.append("URL is incorrect. There is `undefined` in the URL.")
+        elif no_undefined is False:
+            fails.append("There are undefined values on the page")
 
-        assert len(fails) == 0, f'Error during {self} loading: {fails}'
+        assert len(fails) == 0, f"Error during {self} loading: {fails}"
 
     def refresh_page(self) -> None:
         """Press F5 to reload page"""
+        assert self.driver and self.wait, "Driver is not set up"
         self.driver.refresh()
         # Check if page loaded
         self.is_page_loaded()
@@ -98,9 +103,9 @@ class PageBase:
     def go_to_page(self, page: str) -> None:
         """Click on the logout button"""
         menu_to_click = {
-            'session': self.button_menu_session,
-            'decision': self.button_menu_decision,
-            'scoreboard': self.button_menu_scoreboard,
+            "session": self.button_menu_session,
+            "decision": self.button_menu_decision,
+            "scoreboard": self.button_menu_scoreboard,
         }
         menu_to_click[page].click()
 
@@ -108,11 +113,11 @@ class PageBase:
 class PageLogin(PageBase):
     """Login page"""
 
-    title = 'Login'
+    title = "Login"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page Login>'
+        return f"<Page Login>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -139,18 +144,19 @@ class PageLogin(PageBase):
 
     def check_error_message(self) -> None:
         """Check if there is an alert on the page"""
-        check_passed = 'incorrect email or password' in self.driver.page_source.lower()
-        assert check_passed, 'Login with incorrect credentials has failed'
+        assert self.driver and self.wait, "Driver is not set up"
+        check_passed = "incorrect email or password" in self.driver.page_source.lower()
+        assert check_passed, "Login with incorrect credentials has failed"
 
 
 class PageSignup(PageBase):
     """Signup page"""
 
-    title = 'Create account'
+    title = "Create account"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page Signup>'
+        return f"<Page Signup>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -174,30 +180,31 @@ class PageSignup(PageBase):
 
     def check_error_messages(self, check: str) -> None:
         """Check if there is an alert on the page"""
-        msg_email_taken = 'Email has already been taken'.lower()
-        msg_email_invalid = 'Please enter a valid email'.lower()
-        msg_name_invalid = 'Please enter your name'.lower()
-        msg_password_invalid = 'Password must contain at least 6 symbols'.lower()
+        assert self.driver and self.wait, "Driver is not set up"
+        msg_email_taken = "Email has already been taken".lower()
+        msg_email_invalid = "Please enter a valid email".lower()
+        msg_name_invalid = "Please enter your name".lower()
+        msg_password_invalid = "Password must contain at least 6 symbols".lower()
         errors = []
         for msg in (msg_email_invalid, msg_email_taken, msg_name_invalid, msg_password_invalid):
             if msg in self.driver.page_source.lower():
                 errors.append(msg)
-        if check == 'invalid':
+        if check == "invalid":
             invalid_list = [msg_email_invalid, msg_name_invalid, msg_password_invalid]
-            assert invalid_list == errors, 'Check sign up with invalid credentials failed'
-        elif check == 'invalid':
+            assert invalid_list == errors, "Check sign up with invalid credentials failed"
+        elif check == "invalid":
             taken_list = [msg_email_taken]
-            assert taken_list == errors, 'Check sign up with already taken email failed'
+            assert taken_list == errors, "Check sign up with already taken email failed"
 
 
 class PageSession(PageBase):
     """Session page"""
 
-    title = 'Start new training session'
+    title = "Start new training session"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page SessionCustom>'
+        return f"<Page SessionCustom>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -210,10 +217,10 @@ class PageSession(PageBase):
     def select_mode(self, mode: str) -> None:
         """Select mode by clicking mode button"""
         button_to_click = {
-            'custom': self.button_mode_custom,
-            'classic': self.button_mode_classic,
-            'blitz': self.button_mode_blitz,
-            'crypto': self.button_mode_crypto,
+            "custom": self.button_mode_custom,
+            "classic": self.button_mode_classic,
+            "blitz": self.button_mode_blitz,
+            "crypto": self.button_mode_crypto,
         }
         button_to_click[mode].click()
 
@@ -221,11 +228,11 @@ class PageSession(PageBase):
 class PageSessionCustom(PageBase):
     """Custom Session page"""
 
-    title = 'Start new training session'
+    title = "Start new training session"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page SessionCustom>'
+        return f"<Page SessionCustom>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -242,26 +249,26 @@ class PageSessionCustom(PageBase):
         self.button_start = ElementButton(self, loc.LocPageSessionCustom.button_start)
 
     def start(self) -> None:
-        self.input_market.val = 'Russian shares'
-        self.input_ticker.val = 'SBER'
-        self.input_timeframe.val = '5'
-        self.input_barsnumber.val = '50'
-        self.input_timelimit.val = '120'
+        self.input_market.val = "Russian shares"
+        self.input_ticker.val = "SBER"
+        self.input_timeframe.val = "5"
+        self.input_barsnumber.val = "50"
+        self.input_timelimit.val = "120"
         self.input_date.last_workday()
-        self.input_iterations.val = '5'
-        self.input_slippage.val = '0.1'
-        self.input_fixingbar.val = '15'
+        self.input_iterations.val = "5"
+        self.input_slippage.val = "0.1"
+        self.input_fixingbar.val = "15"
         self.button_start.click()
 
 
 class PageSessionPreset(PageBase):
     """Page for waiting before preset session"""
 
-    title = 'Start new training session'
+    title = "Start new training session"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page Session Preseted>'
+        return f"<Page Session Preseted>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -269,17 +276,18 @@ class PageSessionPreset(PageBase):
 
     def wait_for_start(self) -> None:
         """Wait until session is started"""
-        self.wait.until(method=EC.title_contains(PageDecision.title), message='Session start error')
+        assert self.driver and self.wait, "Driver is not set up"
+        self.wait.until(method=EC.title_contains(PageDecision.title), message="Session start error")
 
 
 class PageDecision(PageBase):
     """Search results page action methods come here"""
 
-    title = 'Make your decisions'
+    title = "Make your decisions"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page Decision>'
+        return f"<Page Decision>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -303,18 +311,19 @@ class PageDecision(PageBase):
     def no_action(self) -> None:
         """Decision has not made - Skip"""
         # Wait until url has changed
+        assert self.driver and self.wait, "Driver is not set up"
         url = self.driver.current_url
-        self.wait.until(method=EC.url_changes(url), message='Auto skip failed')
+        self.wait.until(method=EC.url_changes(url), message="Auto skip failed")
 
 
 class PageResults(PageBase):
     """Search results page action methods come here"""
 
-    title = 'Session’s summary'
+    title = "Session’s summary"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page Results>'
+        return f"<Page Results>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -334,11 +343,11 @@ class PageResults(PageBase):
 class PageScoreboard(PageBase):
     """Search results page action methods come here"""
 
-    title = 'Scoreboard'
+    title = "Scoreboard"
 
     def __repr__(self) -> str:
         """Return formated object name"""
-        return f'<Page Scoreboard>'
+        return f"<Page Scoreboard>"
 
     def __init__(self) -> None:
         """Page setup"""
@@ -350,13 +359,15 @@ class PageScoreboard(PageBase):
 
     def select_mode(self, mode: str) -> None:
         """Select mode by clicking mode button"""
+        assert self.driver and self.wait, "Driver is not set up"
+
         button_to_click = {
-            'custom': self.button_mode_custom,
-            'classic': self.button_mode_classic,
-            'blitz': self.button_mode_blitz,
-            'crypto': self.button_mode_crypto,
+            "custom": self.button_mode_custom,
+            "classic": self.button_mode_classic,
+            "blitz": self.button_mode_blitz,
+            "crypto": self.button_mode_crypto,
         }
         button_to_click[mode].click()
 
         # Wait until url has changed
-        self.wait.until(method=EC.url_contains(mode), message='Mode selection failed')
+        self.wait.until(method=EC.url_contains(mode), message="Mode selection failed")

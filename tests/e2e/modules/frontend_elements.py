@@ -1,14 +1,23 @@
+from __future__ import annotations
+
 import time
 from datetime import datetime
+from typing import TYPE_CHECKING
+
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
 
-class ElementBase(object):
+if TYPE_CHECKING:
+    from frontend_locators import Locator
+    from frontend_pages import PageBase
+
+
+class ElementBase:
     """Base element class"""
 
-    def __init__(self, page, locator) -> None:
+    def __init__(self, page: PageBase, locator: Locator) -> None:
         """Element setup"""
         self.page = page
         self.driver = page.driver
@@ -18,18 +27,18 @@ class ElementBase(object):
 class ElementInput(ElementBase):
     """Base element class for inputs. Using custom setters and getters (val) for interactions with inputs"""
 
-    def __init__(self, page, locator) -> None:
+    def __init__(self, page: PageBase, locator: Locator) -> None:
         """Init"""
         ElementBase.__init__(self, page, locator)
         self.element = self.page.wait.until(EC.element_to_be_clickable(self.locator))
 
     @property
-    def val(self):
+    def val(self) -> str:
         """Custom getter: get the value of input as text"""
-        return self.element.get_attribute('value')
+        return self.element.get_attribute("value")
 
     @val.setter
-    def val(self, value):
+    def val(self, value: str) -> None:
         """Custom setter: send keys as assignation to text _val attribute"""
         self.element.clear()
         self.element.send_keys(value)
@@ -38,11 +47,11 @@ class ElementInput(ElementBase):
 class ElementButton(ElementBase):
     """Base element class for buttons"""
 
-    def __init__(self, page, locator) -> None:
+    def __init__(self, page: PageBase, locator: Locator) -> None:
         """Element setup"""
         ElementBase.__init__(self, page, locator)
 
-    def click(self):
+    def click(self) -> None:
         """Click on the button"""
         self.element = self.page.wait.until(EC.element_to_be_clickable(self.locator))
         self.element.click()
@@ -52,12 +61,12 @@ class ElementButton(ElementBase):
 class ElementDatePicker(ElementBase):
     """Base page class for bootstrap datapicker"""
 
-    def __init__(self, page, locator) -> None:
+    def __init__(self, page: PageBase, locator: Locator) -> None:
         """Init"""
         ElementBase.__init__(self, page, locator)
         self.element = self.page.wait.until(EC.element_to_be_clickable(self.locator))
 
-    def last_workday(self):
+    def last_workday(self) -> None:
         """Custom setter: send keys as assignation to text _val attribute"""
         weekday = datetime.today().isoweekday()
 
