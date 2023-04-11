@@ -16,6 +16,7 @@ pandas = "^2.0.0"
 structlog = "^23.1.0"
 python-dotenv = "^1.0.0"
 rich = "^13.3.3"
+asgi-logger = "^0.1.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.2.0"
