@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Application for training securities trading skills"
 authors = ["Aleksei Semenov <amiter@yandex.ru>"]
 readme = "README.md"
-packages = [{include = "flash_decision"}]
+packages = [{ include = "flash_decision" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -23,6 +23,8 @@ pydantic = "^1.10.7"
 mypy = "^1.2.0"
 ruff = "^0.0.261"
 black = "^23.3.0"
+pre-commit = "^3.2.2"
+isort = "^5.12.0"
 
 [tool.poetry.group.test.dependencies]
 pydantic = "^1.10.7"
@@ -47,11 +49,121 @@ warn_required_dynamic_aliases = true
 warn_untyped_fields = true
 
 [tool.ruff]
-select = ["E", "F", "SIM", "TCH", "ANN", "Q"]
-ignore = ["E501", "ANN101", "ANN102", "ANN002", "ANN003", "ANN401", "F541"]
-fixable = ["A", "B", "C", "D", "E", "F"]
+select = [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "G",
+    "N",
+    "Q",
+    "S",
+    "T",
+    "W",
+    "ANN",
+    "ARG",
+    "BLE",
+    "COM",
+    "DJ",
+    "DTZ",
+    "EM",
+    "ERA",
+    "EXE",
+    "FBT",
+    "ICN",
+    "INP",
+    "ISC",
+    "NPY",
+    "PD",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLF",
+    "TCH",
+    "TID",
+    "TRY",
+    "UP",
+    "YTT",
+]
+ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN101",
+    "ANN102",
+    "ANN401",
+    "ARG002",
+    "COM812",
+    "E501",
+    "EM102",
+    "F541",
+    "PLR2004",
+    "PT009",
+    "RET504",
+    "RET505",
+    "S101",
+    "S113",
+    "TRY003",
+]
+fixable = [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "G",
+    "N",
+    "Q",
+    "S",
+    "T",
+    "W",
+    "ANN",
+    "ARG",
+    "BLE",
+    "COM",
+    "DJ",
+    "DTZ",
+    "EM",
+    "ERA",
+    "EXE",
+    "FBT",
+    "ICN",
+    "INP",
+    "ISC",
+    "NPY",
+    "PD",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLF",
+    "TCH",
+    "TID",
+    "TRY",
+    "UP",
+    "YTT",
+]
 unfixable = []
 line-length = 100
 
 [tool.black]
 line-length = 100
+
+[tool.isort]
+line_length = 100
+profile = "black"
+src_paths = ["flash_backend", "flash_backend/app/"]
+known_third_party = "fastapi"
