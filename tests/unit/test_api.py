@@ -4,8 +4,8 @@ import unittest
 
 import requests
 
-from flash_backend.app.schemas.support import RespDataHealthcheck
 from flash_backend.app.config import settings
+from flash_backend.app.schemas.support import RespDataHealthcheck
 
 
 class Response:
@@ -27,4 +27,4 @@ class TestBackend(unittest.TestCase):
         response.assert_status_code(200)
         data_model = RespDataHealthcheck(**response.data)
         self.assertIsNotNone(data_model)
-        self.assertEqual(data_model.isAppUp, True)
+        self.assertEqual(data_model.is_app_up, True)

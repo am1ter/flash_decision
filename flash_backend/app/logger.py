@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import lru_cache
 from logging import LogRecord
 from types import TracebackType
-from typing import Any, Literal, Type
+from typing import Any, Literal
 
 import fastapi
 import starlette
@@ -23,7 +23,7 @@ from .config import settings
 
 
 def rich_excepthook(
-    type_: Type[BaseException], value: BaseException, traceback: TracebackType | None, *args: Any
+    type_: type[BaseException], value: BaseException, traceback: TracebackType | None
 ) -> None:
     """Format exception using rich lib"""
     rich_tb = Traceback.from_exception(
@@ -35,7 +35,7 @@ def rich_excepthook(
 class UvicornCustomDefaultFormatter(DefaultFormatter):
     """Custom unicorn logger for system messages"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
@@ -53,8 +53,8 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         # Custom logger could be used only for formatting exception
         self.logger = custom_logger if custom_logger else logger
 
-    def formatException(  # type: ignore[override]
-        self, ei: tuple[Type[BaseException], BaseException, TracebackType | None]
+    def formatException(  # type: ignore[override]  # noqa: N802
+        self, ei: tuple[type[BaseException], BaseException, TracebackType | None]
     ) -> None:
         """Override exception formatting for uvicorn"""
         if sys.stdout.isatty():
@@ -63,7 +63,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         else:
             self.logger.exception(str(ei[1]), exc_info=ei)
 
-    def formatMessage(self, record: LogRecord) -> str:
+    def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for system logs"""
         record_source = super().formatMessage(record)
         if sys.stdout.isatty():
@@ -106,7 +106,7 @@ class UvicornCustomFormatterAccess(AccessFormatter):
         self.access_formatter = AccessFormatter(fmt_access)
         super().__init__(fmt, datefmt, style, use_colors)
 
-    def formatMessage(self, record: LogRecord) -> str:
+    def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for access logs"""
         record_default = self.default_formatter.formatMessage(record)
         record_access = self.access_formatter.formatMessage(record)
@@ -134,7 +134,7 @@ class UvicornCustomFormatterAccess(AccessFormatter):
 
 
 class CustomTimeStamper(structlog.processors.TimeStamper):
-    def __init__(self, fmt: str | None, key: str = "timestamp", utc: bool = False) -> None:
+    def __init__(self, fmt: str | None, *, key: str = "timestamp", utc: bool = False) -> None:
         super().__init__(fmt=fmt, key=key, utc=utc)
 
     def __call__(

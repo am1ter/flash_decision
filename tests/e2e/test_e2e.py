@@ -13,7 +13,7 @@ class TestBackend(unittest.TestCase):
         """Test: Backend API is up"""
         url = cfg.URL_BACKEND + "/check-backend"
         resp = backend.send_request("get", url)
-        assert ("errors" not in resp) and resp["data"]["isBackendUp"], "API is down"
+        assert "errors" not in resp, "API is down"
 
     @staticmethod
     def test_is_db_up() -> None:

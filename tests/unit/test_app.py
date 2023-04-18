@@ -5,9 +5,9 @@ import logging
 import os
 import re
 import sys
+from collections.abc import Generator
 from contextlib import contextmanager
 from logging import LogRecord
-from typing import Generator
 from unittest import TestCase, mock
 
 from structlog.stdlib import BoundLogger
@@ -227,7 +227,7 @@ class TestLogs(TestCase):
 
         # Trigger exception
         try:
-            1 / 0
+            1 / 0  # noqa: B018
         except ZeroDivisionError as e:
             # Capture stdout messages
             log_text_str = self._capture_stdout_log_msg(e)
@@ -243,7 +243,7 @@ class TestLogs(TestCase):
 
         # Trigger exception
         try:
-            1 / 0
+            1 / 0  # noqa: B018
         except ZeroDivisionError as e:
             # Simulate production env (for example, docker-like)
             with self._prod_stdout_simulation():
@@ -264,7 +264,7 @@ class TestLogs(TestCase):
 
         formatter = UvicornCustomDefaultFormatter()
         try:
-            1 / 0
+            1 / 0  # noqa: B018
         except ZeroDivisionError as e:
             # Create mock record
             log_msg = "Exception in ASGI application\n"
@@ -289,7 +289,7 @@ class TestLogs(TestCase):
         """Test Uvicorn rich exception for prod env"""
 
         try:
-            1 / 0
+            1 / 0  # noqa: B018
         except ZeroDivisionError as e:
             # Create mock record
             log_msg = "Exception in ASGI application\n"

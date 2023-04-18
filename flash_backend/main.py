@@ -3,7 +3,6 @@ import uvicorn
 from app.config import settings
 from app.logger import uvicorn_log_config
 
-
 if __name__ == "__main__":
     if settings.ENVIRONMENT == "development":
         uvicorn.run(
