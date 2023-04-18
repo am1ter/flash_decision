@@ -2,15 +2,34 @@ import logging
 import re
 import sys
 from copy import deepcopy
+from datetime import datetime
+from functools import lru_cache
 from logging import LogRecord
-from typing import Any, Literal
+from types import TracebackType
+from typing import Any, Literal, Type
 
+import fastapi
+import starlette
 import structlog
+import uvicorn
+from rich import print as rprint
+from rich.traceback import Traceback
 from structlog.stdlib import LoggerFactory
+from structlog.typing import EventDict
 from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import AccessFormatter, DefaultFormatter
 
 from .config import settings
+
+
+def rich_excepthook(
+    type_: Type[BaseException], value: BaseException, traceback: TracebackType | None, *args: Any
+) -> None:
+    """Format exception using rich lib"""
+    rich_tb = Traceback.from_exception(
+        type_, value, traceback, show_locals=True, suppress=[uvicorn, fastapi, starlette]
+    )
+    rprint(rich_tb)
 
 
 class UvicornCustomDefaultFormatter(DefaultFormatter):
@@ -22,14 +41,30 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         datefmt: str | None = None,
         style: Literal["%", "{", "$"] = "%",
         use_colors: bool | None = None,
+        custom_logger: structlog.stdlib.BoundLogger | None = None,
     ) -> None:
         """Change format for Uvicorn logs to unify it with structlog format"""
+
         # Source record has format like: [\x1b[32mINFO\x1b[0m:    ]
         self.regex_level = re.compile(r"[0-9]{1,2}m.*[0-9]{1,2}m:")
         self.tags_escape = re.compile(r"\x1b\[([0-9]{1,2})[m]")
         super().__init__(fmt, datefmt, style, use_colors)
 
+        # Custom logger could be used only for formatting exception
+        self.logger = custom_logger if custom_logger else logger
+
+    def formatException(  # type: ignore[override]
+        self, ei: tuple[Type[BaseException], BaseException, TracebackType | None]
+    ) -> None:
+        """Override exception formatting for uvicorn"""
+        if sys.stdout.isatty():
+            # Use rich print which support suppressing external lib attributes
+            rich_excepthook(ei[0], ei[1], ei[2])
+        else:
+            self.logger.exception(str(ei[1]), exc_info=ei)
+
     def formatMessage(self, record: LogRecord) -> str:
+        """Override default formatting method for system logs"""
         record_source = super().formatMessage(record)
         if sys.stdout.isatty():
             # Reformat level
@@ -72,6 +107,7 @@ class UvicornCustomFormatterAccess(AccessFormatter):
         super().__init__(fmt, datefmt, style, use_colors)
 
     def formatMessage(self, record: LogRecord) -> str:
+        """Override default formatting method for access logs"""
         record_default = self.default_formatter.formatMessage(record)
         record_access = self.access_formatter.formatMessage(record)
         if sys.stdout.isatty():
@@ -80,6 +116,7 @@ class UvicornCustomFormatterAccess(AccessFormatter):
             if record.args and len(record.args) == 5:
                 access_args = [arg for arg in record.args if arg]
             else:
+                # Extra verification, incl. because of the mypy requirements.
                 raise RuntimeError(f"Wrong access arguments for {record=}")
             record_new_as_dict = {
                 "logger": record.name,
@@ -96,20 +133,33 @@ class UvicornCustomFormatterAccess(AccessFormatter):
             return str(record_new_as_dict)
 
 
-def create_logger() -> structlog.stdlib.BoundLogger:
+class CustomTimeStamper(structlog.processors.TimeStamper):
+    def __init__(self, fmt: str | None, key: str = "timestamp", utc: bool = False) -> None:
+        super().__init__(fmt=fmt, key=key, utc=utc)
+
+    def __call__(
+        self, logger: structlog.stdlib.BoundLogger, name: str, event_dict: EventDict
+    ) -> EventDict:
+        time_func = datetime.utcnow if self.utc else datetime.now
+        event_dict[self.key] = time_func().strftime(self.fmt)[:-3]  # type: ignore[operator]
+        return event_dict
+
+
+# @lru_cache()
+def create_logger(logger_name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Create structlog logger"""
 
     # Set log level and remove extra data from output using format argument
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
 
     # Configure structlog
-    processors_shared: list[structlog.Processor] = [
+    processors_shared: list = [
         structlog.processors.add_log_level,
         structlog.processors.StackInfoRenderer(),
         structlog.dev.set_exc_info,
-        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M.%S,%MS", utc=False),
+        CustomTimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f", utc=False),
     ]
-    processors_mode: list[structlog.Processor]
+    processors_mode: list[Any]
     if sys.stdout.isatty():
         processors_mode = [
             structlog.dev.ConsoleRenderer(),
@@ -128,9 +178,10 @@ def create_logger() -> structlog.stdlib.BoundLogger:
         logger_factory=LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
     )
-    return structlog.get_logger("backend")
+    return structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
 
 
+@lru_cache
 def update_uvicorn_log_config() -> dict[str, Any]:
     """Change uvicorn log settings to conform with structlog"""
 
@@ -148,5 +199,6 @@ def update_uvicorn_log_config() -> dict[str, Any]:
     return uvicorn_log_config
 
 
-logger = create_logger()
+logger = create_logger("backend")
 uvicorn_log_config = update_uvicorn_log_config()
+sys.excepthook = rich_excepthook
