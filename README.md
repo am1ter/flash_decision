@@ -21,14 +21,14 @@ Every service runs in a personal docker container.
    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
    sudo apt update
-   
+
    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
    ```
-2. Clone repository 
+2. Clone repository
     ```
     git clone https://github.com/am1ter/flash_decision.git
     ```
-3. Go to local copy of repository 
+3. Go to local copy of repository
     ```
     cd flash_decision
     ```
@@ -47,7 +47,7 @@ Every service runs in a personal docker container.
 - The app is adapted to mobile devices (responsive design).
 - 100% of code covered by comments.
 - All use cases covered by end2end tests.
-- Uniform code cases: 
+- Uniform code cases:
     - Python: snake_case
     - API routes: kebab-case
     - SQL: PascalCase

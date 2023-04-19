@@ -104,8 +104,10 @@ ignore = [
     "E501",
     "EM102",
     "F541",
+    "N812",
     "PLR2004",
     "PT009",
+    "PT018",
     "RET504",
     "RET505",
     "S101",
@@ -165,5 +167,5 @@ line-length = 100
 [tool.isort]
 line_length = 100
 profile = "black"
-src_paths = ["flash_backend", "flash_backend/app/"]
+src_paths = ["flash_backend", "flash_backend/app/", "tests/e2e"]
 known_third_party = "fastapi"

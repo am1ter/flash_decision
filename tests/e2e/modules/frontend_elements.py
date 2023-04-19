@@ -4,10 +4,9 @@ import time
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
 
 if TYPE_CHECKING:
     from frontend_locators import Locator
@@ -68,7 +67,7 @@ class ElementDatePicker(ElementBase):
 
     def last_workday(self) -> None:
         """Custom setter: send keys as assignation to text _val attribute"""
-        weekday = datetime.today().isoweekday()
+        weekday = datetime.today().isoweekday()  # noqa: DTZ002
 
         # Activate datetime dropdown
         self.driver.execute_script("arguments[0].click();", self.element)

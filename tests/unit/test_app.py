@@ -8,7 +8,7 @@ import sys
 from collections.abc import Generator
 from contextlib import contextmanager
 from logging import LogRecord
-from unittest import TestCase, mock
+from unittest import TestCase, main, mock
 
 from structlog.stdlib import BoundLogger
 
@@ -135,10 +135,11 @@ class TestLogs(TestCase):
         with self._prod_stdout_simulation():
             # Capture stdout messages
             log_text_str = self._capture_stdout_log_msg("test_logs", custom="custom")
+            log_test_dict = json.loads(log_text_str)
 
             # Verify
             expected = {"level": "info", "event": "test_logs", "custom": "custom"}
-            self.assertDictContainsSubset(expected, json.loads(log_text_str))
+            self.assertEqual(log_test_dict, log_test_dict | expected)
 
     @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
     def test_logs_uvicorn_default_dev(self) -> None:
@@ -177,7 +178,7 @@ class TestLogs(TestCase):
                 "level_number": 20,
                 "timestamp": "2000-01-01 00:00:00,000",
             }
-            self.assertDictContainsSubset(expected, log_msg_fmt_dict)
+            self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
 
     @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
     def test_logs_uvicorn_access_dev(self) -> None:
@@ -219,7 +220,7 @@ class TestLogs(TestCase):
                 "http_version": "1.1",
                 "status_code": 200,
             }
-            self.assertDictContainsSubset(expected, log_msg_fmt_dict)
+            self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
 
     @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
     def test_exceptions_basic_dev(self) -> None:
@@ -249,6 +250,7 @@ class TestLogs(TestCase):
             with self._prod_stdout_simulation():
                 # Capture stdout messages
                 log_text_str = self._capture_stdout_log_msg(e)
+                log_text_dict = json.loads(log_text_str)
 
         # Verify
         expected = {
@@ -256,7 +258,7 @@ class TestLogs(TestCase):
             "level": "error",
             "level_number": 40,
         }
-        self.assertDictContainsSubset(expected, json.loads(log_text_str))
+        self.assertEqual(log_text_dict, log_text_dict | expected)
 
     @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
     def test_exceptions_uvicorn_dev(self) -> None:
@@ -303,6 +305,7 @@ class TestLogs(TestCase):
             # Fomatter use custom logger which output to stdout and to the IO object simultaniously
             formatter.format(mock_record)
             log_text_str = log_text_io.getvalue()
+            log_text_dict = json.loads(log_text_str)
 
         # Verify
         expected = {
@@ -310,8 +313,8 @@ class TestLogs(TestCase):
             "level": "error",
             "level_number": 40,
         }
-        self.assertDictContainsSubset(expected, json.loads(log_text_str))
+        self.assertEqual(log_text_dict, log_text_dict | expected)
 
 
 if __name__ == "__main__":
-    TestLogs().test_exceptions_uvicorn_dev()
+    main()

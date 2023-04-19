@@ -37,7 +37,7 @@ services:
 
   # Run webserver with frontend
   flash_frontend:
-    build: 
+    build:
       context: ./flash_frontend/
       args:
         - URL_BACKEND=${URL_BACKEND}
@@ -51,7 +51,7 @@ services:
 
   # Run end2end tests
   flash_tests:
-    build: 
+    build:
       context: ./tests/
       args:
         - URL_BACKEND=${URL_BACKEND}

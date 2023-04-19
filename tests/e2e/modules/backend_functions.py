@@ -1,7 +1,10 @@
 from json.decoder import JSONDecodeError
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import requests as r
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def send_request(method: str, url: str) -> dict[str, Any]:

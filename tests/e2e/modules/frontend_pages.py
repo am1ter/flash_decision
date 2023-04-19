@@ -1,12 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 import e2e.config as cfg
 from e2e.modules import frontend_locators as loc
-from e2e.modules.frontend_elements import ElementInput, ElementButton, ElementDatePicker
+from e2e.modules.frontend_elements import ElementButton, ElementDatePicker, ElementInput
 
 
 class PageBase:
@@ -37,7 +37,7 @@ class PageBase:
     @classmethod
     def setup_driver(cls) -> None:
         """Setup chrome driver with webdriver service"""
-        chromeService = Service(ChromeDriverManager().install())
+        chrome_service = Service(ChromeDriverManager().install())
         options = webdriver.ChromeOptions()
         options.headless = cfg.DRIVER_HEADLESS
         options.add_argument("--window-size=1920,1080")
@@ -46,7 +46,7 @@ class PageBase:
         options.add_argument("--no-sandbox")
         if cfg.DRIVER_HEADLESS and cfg.DRIVER_START_MAXIMIZED:
             options.add_argument("--start-maximized")
-        cls.driver = webdriver.Chrome(service=chromeService, options=options)
+        cls.driver = webdriver.Chrome(service=chrome_service, options=options)
 
     def is_page_loaded(self) -> None:
         """Verifies that the page is loaded"""
@@ -319,7 +319,7 @@ class PageDecision(PageBase):
 class PageResults(PageBase):
     """Search results page action methods come here"""
 
-    title = "Session’s summary"
+    title = "Session`s summary"
 
     def __repr__(self) -> str:
         """Return formated object name"""
