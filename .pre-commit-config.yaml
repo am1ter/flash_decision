@@ -35,3 +35,5 @@ repos:
       - id: check-json
       - id: check-toml
       - id: check-yaml
+
+exclude: '^flash_backend_archive/*|^flash_frontend/*'

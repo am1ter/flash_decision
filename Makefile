@@ -1,25 +1,31 @@
-.PHONY: help
-help:  # Show help
-		echo 'TBD'
-
 .PHONY: run-prod
-run-prod:  # Lint backend code
+run-prod:  # Run backend in production environment
 		cd flash_backend \
 		&& export ENVIRONMENT=production \
 		&& export WORK_DIR=. \
 		&& poetry run python -m main
 
 .PHONY: run-dev
-run-dev:  # Lint backend code
+run-dev:  # Run backend in dev environment
 		cd flash_backend \
 		&& export ENVIRONMENT=development \
 		&& export WORK_DIR=. \
 		&& poetry run python -m main
 
-.PHONY: lint-backend
-lint-backend:  # Lint backend code
-		poetry run ruff ./flash_backend
+.PHONY: run-tests-unit
+run-tests-unit:  # Run backend server in prod environment and run unit tests
+		make run-prod \
+		& poetry run python -m unittest discover ./tests/unit/ \
+		&& make shutdown
 
-.PHONY: lint-tests
-lint-tests:  # Lint tests code
-		poetry run ruff ./tests
+.PHONY: shutdown
+shutdown:  # Shutdown python backend server
+		kill $$(lsof -i :$(PORT_BACKEND) | grep "^python" |  awk '{print $$2}') || true \
+		&& echo "Shutdown server completed"
+
+.PHONY: pre-commit
+pre-commit:  # Run pre-commit checks
+		pre-commit run --all-files
+
+# Default environments variables
+PORT_BACKEND ?= 8001
