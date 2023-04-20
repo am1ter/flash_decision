@@ -9,7 +9,7 @@ fastapi_app.include_router(router_support)
 
 @fastapi_app.on_event("startup")
 async def event_startup() -> None:
-    logger.info(f"Application ready for startup", env=settings.ENVIRONMENT)
+    logger.info(f"Application ready for startup", env=settings.ENVIRONMENT.value)
 
 
 @fastapi_app.on_event("shutdown")

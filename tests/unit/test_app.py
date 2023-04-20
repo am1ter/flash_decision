@@ -2,16 +2,14 @@ import contextlib
 import io
 import json
 import logging
-import os
 import re
-import sys
-from collections.abc import Generator
-from contextlib import contextmanager
 from logging import LogRecord
 from unittest import TestCase, main, mock
 
 from structlog.stdlib import BoundLogger
 
+from flash_backend.app.config import settings
+from flash_backend.app.constants import Environment
 from flash_backend.app.logger import (
     UvicornCustomDefaultFormatter,
     UvicornCustomFormatterAccess,
@@ -22,28 +20,22 @@ from flash_backend.app.logger import (
 class TestLogs(TestCase):
     def _create_custom_logger(self) -> tuple[BoundLogger, io.StringIO]:
         """Create custom logger that might be used in some tests and add additional IO handler"""
-        custom_logger = create_logger(f"test_{id(self)}")
+        # Remove root handlers from `logging` module to keep console clean
+        logging.root.handlers = []
+        # Create structlog without output to stdout
+        _ = io.StringIO()
+        with contextlib.redirect_stdout(_):
+            custom_logger = create_logger(f"test_{id(self)}")
+        # Read only structlog logger`s output
         log_text_io = io.StringIO()
         handler = logging.StreamHandler(log_text_io)
         custom_logger.addHandler(handler)
         return (custom_logger, log_text_io)
 
-    @staticmethod
-    @contextmanager
-    def _prod_stdout_simulation() -> Generator[None, None, None]:
-        """Use context manager for simulation not tty-like console (docker-like)"""
-
-        orig_stdout = sys.stdout
-        try:
-            sys.stdout = io.StringIO()
-            yield
-        finally:
-            sys.stdout = orig_stdout
-
     def _capture_stdout_log_msg(self, event: str | Exception, **kwargs) -> str:
         """Temporary replace stdout with IO object, send"""
 
-        # New logger must be created, because test require consoles with different tty-like status
+        # New logger must be created, because different tests use differenent properties
         custom_logger, log_text_io = self._create_custom_logger()
 
         # Custom logger output to stdout and to the IO object simultaniously
@@ -112,7 +104,7 @@ class TestLogs(TestCase):
         mock_record.__dict__.update(additional_attrs_any)
         return mock_record
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
     def test_logs_app_dev(self) -> None:
         """Test App pretty logs for dev env"""
 
@@ -127,21 +119,19 @@ class TestLogs(TestCase):
         for word in expected_words:
             self.assertIn(word, log_text_str_clean)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "production"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
     def test_logs_app_prod(self) -> None:
         """Test App structured logs for prod env"""
 
-        # Simulate production env (for example, docker-like)
-        with self._prod_stdout_simulation():
-            # Capture stdout messages
-            log_text_str = self._capture_stdout_log_msg("test_logs", custom="custom")
-            log_test_dict = json.loads(log_text_str)
+        # Capture stdout messages
+        log_text_str = self._capture_stdout_log_msg("test_logs", custom="custom")
+        log_test_dict = json.loads(log_text_str)
 
-            # Verify
-            expected = {"level": "info", "event": "test_logs", "custom": "custom"}
-            self.assertEqual(log_test_dict, log_test_dict | expected)
+        # Verify
+        expected = {"level": "info", "event": "test_logs", "custom": "custom"}
+        self.assertEqual(log_test_dict, log_test_dict | expected)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
     def test_logs_uvicorn_default_dev(self) -> None:
         """Test Uvicorn pretty system logs for dev env"""
 
@@ -157,30 +147,28 @@ class TestLogs(TestCase):
         expected = "2000-01-01 00:00:00,000 [info     ] Will watch for changes:[]"
         self.assertEqual(log_msg_fmt_clean, expected)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "production"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
     def test_logs_uvicorn_default_prod(self) -> None:
         """Test Uvicorn pretty system logs for prod env"""
 
-        # Simulate production env (for example, docker-like)
-        with self._prod_stdout_simulation():
-            formatter = UvicornCustomDefaultFormatter()
+        formatter = UvicornCustomDefaultFormatter()
 
-            # Create mock record
-            log_msg = "Will watch for changes in these directories: []"
-            mock_record = self._create_mock_log_record_uvicorn_default(log_msg)
+        # Create mock record
+        log_msg = "Will watch for changes in these directories: []"
+        mock_record = self._create_mock_log_record_uvicorn_default(log_msg)
 
-            # Format record object, convert output string to dict and verify it
-            log_msg_fmt = formatter.formatMessage(mock_record)
-            log_msg_fmt_dict = json.loads(log_msg_fmt.replace("'", '"'))
-            expected = {
-                "event": log_msg,
-                "level": "info",
-                "level_number": 20,
-                "timestamp": "2000-01-01 00:00:00,000",
-            }
-            self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
+        # Format record object, convert output string to dict and verify it
+        log_msg_fmt = formatter.formatMessage(mock_record)
+        log_msg_fmt_dict = json.loads(log_msg_fmt.replace("'", '"'))
+        expected = {
+            "event": log_msg,
+            "level": "info",
+            "level_number": 20,
+            "timestamp": "2000-01-01 00:00:00,000",
+        }
+        self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
     def test_logs_uvicorn_access_dev(self) -> None:
         """Test Uvicorn pretty access logs for dev env"""
 
@@ -195,7 +183,7 @@ class TestLogs(TestCase):
         expected = "2000-01-01 00:00:00,000 [info     ] 127.0.0.1:43136 | GET / HTTP/1.1 | 200 OK"
         self.assertEqual(log_msg_fmt_clean, expected)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "production"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
     def test_logs_uvicorn_access_prod(self) -> None:
         """Test Uvicorn pretty access logs for prod env"""
 
@@ -204,25 +192,23 @@ class TestLogs(TestCase):
         # Create mock record with color tags
         mock_record = self._create_mock_log_record_uvicorn_access()
 
-        # Simulate production env (for example, docker-like)
-        with self._prod_stdout_simulation():
-            # Format record object, delete style tags and verify it
-            log_msg_fmt = formatter.formatMessage(mock_record)
-            log_msg_fmt_dict = json.loads(log_msg_fmt.replace("'", '"').replace("\\", "\\\\"))
-            expected = {
-                "logger": "uvicorn.default",
-                "level": "info",
-                "level_number": 20,
-                "timestamp": "2000-01-01 00:00:00,000",
-                "client_addr": "127.0.0.1:43136",
-                "method": "GET",
-                "full_path": "/",
-                "http_version": "1.1",
-                "status_code": 200,
-            }
-            self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
+        # Format record object, delete style tags and verify it
+        log_msg_fmt = formatter.formatMessage(mock_record)
+        log_msg_fmt_dict = json.loads(log_msg_fmt.replace("'", '"').replace("\\", "\\\\"))
+        expected = {
+            "logger": "uvicorn.default",
+            "level": "info",
+            "level_number": 20,
+            "timestamp": "2000-01-01 00:00:00,000",
+            "client_addr": "127.0.0.1:43136",
+            "method": "GET",
+            "full_path": "/",
+            "http_version": "1.1",
+            "status_code": 200,
+        }
+        self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
     def test_exceptions_basic_dev(self) -> None:
         """Test that app use `rich` to format exception"""
 
@@ -234,11 +220,16 @@ class TestLogs(TestCase):
             log_text_str = self._capture_stdout_log_msg(e)
 
         # Verify
-        expected_words = ["ZeroDivisionError", "division by zero", self._testMethodName, "\x1b["]
+        expected_words = [
+            "ZeroDivisionError",
+            "division by zero",
+            self._testMethodName,
+            "\x1b[",
+        ]
         for word in expected_words:
             self.assertIn(word, log_text_str)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "production"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
     def test_exceptions_basic_prod(self) -> None:
         """Test that app format exceptions as jsons"""
 
@@ -246,11 +237,9 @@ class TestLogs(TestCase):
         try:
             1 / 0  # noqa: B018
         except ZeroDivisionError as e:
-            # Simulate production env (for example, docker-like)
-            with self._prod_stdout_simulation():
-                # Capture stdout messages
-                log_text_str = self._capture_stdout_log_msg(e)
-                log_text_dict = json.loads(log_text_str)
+            # Capture stdout messages
+            log_text_str = self._capture_stdout_log_msg(e)
+            log_text_dict = json.loads(log_text_str)
 
         # Verify
         expected = {
@@ -260,7 +249,7 @@ class TestLogs(TestCase):
         }
         self.assertEqual(log_text_dict, log_text_dict | expected)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "development"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
     def test_exceptions_uvicorn_dev(self) -> None:
         """Test Uvicorn rich exception for dev env"""
 
@@ -278,6 +267,7 @@ class TestLogs(TestCase):
 
         # Catch console output
         with contextlib.redirect_stdout(log_text_io):
+            # Format method print exception to the console
             formatter.format(mock_record)
         log_text_str = log_text_io.getvalue()
 
@@ -286,7 +276,7 @@ class TestLogs(TestCase):
         for word in expected_words:
             self.assertIn(word, log_text_str)
 
-    @mock.patch.dict(os.environ, {"ENVIRONMENT": "production"})
+    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
     def test_exceptions_uvicorn_prod(self) -> None:
         """Test Uvicorn rich exception for prod env"""
 
@@ -297,15 +287,14 @@ class TestLogs(TestCase):
             log_msg = "Exception in ASGI application\n"
             mock_record = self._create_mock_log_record_uvicorn_exception(log_msg, e)
 
-        # Simulate production env (for example, docker-like)
-        with self._prod_stdout_simulation():
-            # New logger must be created, because this test require console with tty
-            custom_logger, log_text_io = self._create_custom_logger()
-            formatter = UvicornCustomDefaultFormatter(custom_logger=custom_logger)
+        # New logger must be created, because this test require console with tty
+        custom_logger, log_text_io = self._create_custom_logger()
+        formatter = UvicornCustomDefaultFormatter(custom_logger=custom_logger)
+        with contextlib.redirect_stdout(io.StringIO()):
             # Fomatter use custom logger which output to stdout and to the IO object simultaniously
             formatter.format(mock_record)
-            log_text_str = log_text_io.getvalue()
-            log_text_dict = json.loads(log_text_str)
+        log_text_str = log_text_io.getvalue()
+        log_text_dict = json.loads(log_text_str)
 
         # Verify
         expected = {

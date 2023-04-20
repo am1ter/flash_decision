@@ -112,6 +112,7 @@ ignore = [
     "RET505",
     "S101",
     "S113",
+    "SIM300",
     "TRY003",
 ]
 fixable = [

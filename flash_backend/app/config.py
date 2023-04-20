@@ -1,10 +1,10 @@
-from typing import Literal
-
 from pydantic import BaseSettings
+
+from .constants import Environment
 
 
 class Settings(BaseSettings):
-    ENVIRONMENT: Literal["development", "production"] = "development"
+    ENVIRONMENT: Environment = Environment.development
     WORK_DIR: str = "./flash_backend"
     URL_BACKEND: str = "http://localhost:8001/api/v1"
     PORT_BACKEND: int = 8001

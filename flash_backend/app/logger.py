@@ -20,6 +20,7 @@ from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import AccessFormatter, DefaultFormatter
 
 from .config import settings
+from .constants import Environment
 
 
 def rich_excepthook(
@@ -57,7 +58,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         self, ei: tuple[type[BaseException], BaseException, TracebackType | None]
     ) -> None:
         """Override exception formatting for uvicorn"""
-        if sys.stdout.isatty():
+        if settings.ENVIRONMENT == Environment.development:
             # Use rich print which support suppressing external lib attributes
             rich_excepthook(ei[0], ei[1], ei[2])
         else:
@@ -66,7 +67,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
     def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for system logs"""
         record_source = super().formatMessage(record)
-        if sys.stdout.isatty():
+        if settings.ENVIRONMENT == Environment.development:
             # Reformat level
             try:
                 level_raw = self.regex_level.findall(record_source)[0]
@@ -110,7 +111,7 @@ class UvicornCustomFormatterAccess(AccessFormatter):
         """Override default formatting method for access logs"""
         record_default = self.default_formatter.formatMessage(record)
         record_access = self.access_formatter.formatMessage(record)
-        if sys.stdout.isatty():
+        if settings.ENVIRONMENT == Environment.development:
             return record_default + record_access
         else:
             if record.args and len(record.args) == 5:
@@ -160,7 +161,7 @@ def create_logger(logger_name: str | None = None) -> structlog.stdlib.BoundLogge
         CustomTimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f", utc=False),
     ]
     processors_mode: list[Any]
-    if sys.stdout.isatty():
+    if settings.ENVIRONMENT == Environment.development:
         processors_mode = [
             structlog.dev.ConsoleRenderer(),
         ]
