@@ -1,29 +1,34 @@
 import os
 from distutils.util import strtobool
+from functools import cached_property
 
 from pydantic import BaseSettings, PostgresDsn
 
-from .constants import Environment
+from app.constants import Environment
 
 
 class SettingsGeneral(BaseSettings):
     # Env
-    ENVIRONMENT: Environment = Environment.development
+    ENVIRONMENT: Environment = Environment.production
     WORK_DIR: str = "./flash_backend"
     # HTTP
     URL_BACKEND: str = "http://localhost:8001/api/v1"
     PORT_BACKEND: int = 8001
 
-    @property
+    @cached_property
     def DEV_MODE(self) -> bool:  # noqa: N802
-        return bool(self.ENVIRONMENT == Environment.development)
+        return self.ENVIRONMENT == Environment.development
 
-    @property
+    @cached_property
     def DEBUG_MODE(self) -> bool:  # noqa: N802
         if self.DEV_MODE and bool(strtobool(os.getenv("DEBUG_MODE", default="False"))):
             os.environ["PYTHONASYNCIODEBUG"] = "1"
             return True
         return False
+
+    class Config:
+        # Allow use cached_property
+        keep_untouched = (cached_property,)
 
 
 settings_general = SettingsGeneral()

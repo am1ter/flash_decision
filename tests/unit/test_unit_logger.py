@@ -2,22 +2,30 @@ import contextlib
 import io
 import json
 import logging
+import os
 import re
+from distutils.util import strtobool
 from logging import LogRecord
 from unittest import TestCase, main, mock
 
 from structlog.stdlib import BoundLogger
 
-from flash_backend.app.config import settings
-from flash_backend.app.constants import Environment
 from flash_backend.app.logger import (
     UvicornCustomDefaultFormatter,
     UvicornCustomFormatterAccess,
     create_logger,
 )
 
+# Vars for patching env vars using `@mock.patch.object` decorator
+dev_mode = {"DEV_MODE": "True"}
+prod_mode = {"DEV_MODE": "False"}
+
 
 class TestLogger(TestCase):
+    def is_dev_mode(self) -> bool:
+        """Read env var"""
+        return bool(strtobool(os.getenv("DEV_MODE", default="False")))
+
     def _create_custom_logger(self) -> tuple[BoundLogger, io.StringIO]:
         """Create custom logger that might be used in some tests and add additional IO handler"""
         # Remove root handlers from `logging` module to keep console clean
@@ -25,7 +33,7 @@ class TestLogger(TestCase):
         # Create structlog without output to stdout
         _ = io.StringIO()
         with contextlib.redirect_stdout(_):
-            custom_logger = create_logger(f"test_{id(self)}")
+            custom_logger = create_logger(f"test_{id(self)}", dev_mode=self.is_dev_mode())
         # Read only structlog logger`s output
         log_text_io = io.StringIO()
         handler = logging.StreamHandler(log_text_io)
@@ -104,7 +112,7 @@ class TestLogger(TestCase):
         mock_record.__dict__.update(additional_attrs_any)
         return mock_record
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
+    @mock.patch.dict(os.environ, dev_mode)
     def test_logs_app_dev(self) -> None:
         """Test App pretty logs for dev env"""
 
@@ -119,7 +127,7 @@ class TestLogger(TestCase):
         for word in expected_words:
             self.assertIn(word, log_text_str_clean)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
+    @mock.patch.dict(os.environ, prod_mode)
     def test_logs_app_prod(self) -> None:
         """Test App structured logs for prod env"""
 
@@ -131,11 +139,11 @@ class TestLogger(TestCase):
         expected = {"level": "info", "event": "test_logs", "custom": "custom"}
         self.assertEqual(log_test_dict, log_test_dict | expected)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
+    @mock.patch.dict(os.environ, dev_mode)
     def test_logs_uvicorn_default_dev(self) -> None:
         """Test Uvicorn pretty system logs for dev env"""
 
-        formatter = UvicornCustomDefaultFormatter()
+        formatter = UvicornCustomDefaultFormatter(dev_mode=self.is_dev_mode())
 
         # Create mock record
         log_msg = "2000-01-01 00:00:00,000 [\x1b[32mINFO\x1b[0m:    ] Will watch for changes:[]"
@@ -147,11 +155,11 @@ class TestLogger(TestCase):
         expected = "2000-01-01 00:00:00,000 [info     ] Will watch for changes:[]"
         self.assertEqual(log_msg_fmt_clean, expected)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
+    @mock.patch.dict(os.environ, prod_mode)
     def test_logs_uvicorn_default_prod(self) -> None:
         """Test Uvicorn pretty system logs for prod env"""
 
-        formatter = UvicornCustomDefaultFormatter()
+        formatter = UvicornCustomDefaultFormatter(dev_mode=self.is_dev_mode())
 
         # Create mock record
         log_msg = "Will watch for changes in these directories: []"
@@ -168,11 +176,11 @@ class TestLogger(TestCase):
         }
         self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
+    @mock.patch.dict(os.environ, dev_mode)
     def test_logs_uvicorn_access_dev(self) -> None:
         """Test Uvicorn pretty access logs for dev env"""
 
-        formatter = UvicornCustomFormatterAccess()
+        formatter = UvicornCustomFormatterAccess(dev_mode=self.is_dev_mode())
 
         # Create mock record with color tags
         mock_record = self._create_mock_log_record_uvicorn_access()
@@ -183,11 +191,11 @@ class TestLogger(TestCase):
         expected = "2000-01-01 00:00:00,000 [info     ] 127.0.0.1:43136 | GET / HTTP/1.1 | 200 OK"
         self.assertEqual(log_msg_fmt_clean, expected)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
+    @mock.patch.dict(os.environ, prod_mode)
     def test_logs_uvicorn_access_prod(self) -> None:
         """Test Uvicorn pretty access logs for prod env"""
 
-        formatter = UvicornCustomFormatterAccess()
+        formatter = UvicornCustomFormatterAccess(dev_mode=self.is_dev_mode())
 
         # Create mock record with color tags
         mock_record = self._create_mock_log_record_uvicorn_access()
@@ -208,7 +216,7 @@ class TestLogger(TestCase):
         }
         self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
+    @mock.patch.dict(os.environ, dev_mode)
     def test_exceptions_basic_dev(self) -> None:
         """Test that app use `rich` to format exception"""
 
@@ -229,7 +237,7 @@ class TestLogger(TestCase):
         for word in expected_words:
             self.assertIn(word, log_text_str)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
+    @mock.patch.dict(os.environ, prod_mode)
     def test_exceptions_basic_prod(self) -> None:
         """Test that app format exceptions as jsons"""
 
@@ -249,11 +257,11 @@ class TestLogger(TestCase):
         }
         self.assertEqual(log_text_dict, log_text_dict | expected)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.development)
+    @mock.patch.dict(os.environ, dev_mode)
     def test_exceptions_uvicorn_dev(self) -> None:
         """Test Uvicorn rich exception for dev env"""
 
-        formatter = UvicornCustomDefaultFormatter()
+        formatter = UvicornCustomDefaultFormatter(dev_mode=self.is_dev_mode())
         try:
             1 / 0  # noqa: B018
         except ZeroDivisionError as e:
@@ -276,7 +284,7 @@ class TestLogger(TestCase):
         for word in expected_words:
             self.assertIn(word, log_text_str)
 
-    @mock.patch.object(settings, Environment.__name__.upper(), Environment.production)
+    @mock.patch.dict(os.environ, prod_mode)
     def test_exceptions_uvicorn_prod(self) -> None:
         """Test Uvicorn rich exception for prod env"""
 

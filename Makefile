@@ -22,13 +22,18 @@ run-debug:  # Run backend in debug mode (dev environment + additional logs)
 
 .PHONY: run-tests-unit
 run-tests-unit:  # Run backend server in prod environment and run unit tests
-		make run-prod \
-		& poetry run python -m unittest discover ./tests/unit/ \
-		&& make shutdown
+		export ENVIRONMENT=test \
+		& poetry run python -m unittest discover -v -s ./tests -p test_unit_*.py -t . \
+
+.PHONY: run-tests-integration
+run-tests-integration:  # Run backend server in prod environment and run integration tests
+		export ENVIRONMENT=test \
+		& poetry run python -m unittest discover -v -s ./tests -p test_integration_*.py -t . \
 
 .PHONY: shutdown
 shutdown:  # Shutdown python backend server
 		kill $$(lsof -i :$(PORT_BACKEND) | grep "^python" |  awk '{print $$2}') || true \
+		&& clear \
 		&& echo "Shutdown server completed"
 
 .PHONY: pre-commit

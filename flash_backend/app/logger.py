@@ -18,7 +18,7 @@ from structlog.typing import EventDict
 from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import AccessFormatter, DefaultFormatter
 
-from .config import settings
+from app.config import settings
 
 
 def rich_excepthook(
@@ -41,6 +41,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         style: Literal["%", "{", "$"] = "%",
         use_colors: bool | None = None,
         custom_logger: structlog.stdlib.BoundLogger | None = None,
+        dev_mode: bool | None = None,
     ) -> None:
         """Change format for Uvicorn logs to unify it with structlog format"""
 
@@ -49,6 +50,9 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         self.tags_escape = re.compile(r"\x1b\[([0-9]{1,2})[m]")
         super().__init__(fmt, datefmt, style, use_colors)
 
+        # Force setup dev_mode
+        self.dev_mode = dev_mode
+
         # Custom logger could be used only for formatting exception
         self.logger = custom_logger if custom_logger else logger
 
@@ -56,7 +60,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         self, ei: tuple[type[BaseException], BaseException, TracebackType | None]
     ) -> None:
         """Override exception formatting for uvicorn"""
-        if settings.DEV_MODE:
+        if self.dev_mode or settings.DEV_MODE:
             # Use rich print which support suppressing external lib attributes
             rich_excepthook(ei[0], ei[1], ei[2])
         else:
@@ -65,7 +69,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
     def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for system logs"""
         record_source = super().formatMessage(record)
-        if settings.DEV_MODE:
+        if self.dev_mode or settings.DEV_MODE:
             # Reformat level
             try:
                 level_raw = self.regex_level.findall(record_source)[0]
@@ -89,27 +93,33 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
 class UvicornCustomFormatterAccess(AccessFormatter):
     """Custom unicorn logger for access messages"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
         style: Literal["%", "{", "$"] = "%",
         use_colors: bool | None = None,
+        dev_mode: bool | None = None,
     ) -> None:
         """
         Final access message is a combination of formatted prefix and formatted raw access message
         Prefix formatted with UvicornCustomDefaultFormatter
         """
         fmt_access = fmt.replace(settings.LOG_FMT_DEV_PREF, "") if fmt else None
-        self.default_formatter = UvicornCustomDefaultFormatter(settings.LOG_FMT_DEV_PREF)
+        self.default_formatter = UvicornCustomDefaultFormatter(
+            fmt=settings.LOG_FMT_DEV_PREF, dev_mode=dev_mode
+        )
         self.access_formatter = AccessFormatter(fmt_access)
         super().__init__(fmt, datefmt, style, use_colors)
+
+        # Force setup dev_mode
+        self.dev_mode = dev_mode
 
     def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for access logs"""
         record_default = self.default_formatter.formatMessage(record)
         record_access = self.access_formatter.formatMessage(record)
-        if settings.DEV_MODE:
+        if self.dev_mode or settings.DEV_MODE:
             return record_default + record_access
         else:
             if record.args and len(record.args) == 5:
@@ -144,7 +154,9 @@ class CustomTimeStamper(structlog.processors.TimeStamper):
         return event_dict
 
 
-def create_logger(logger_name: str | None = None) -> structlog.stdlib.BoundLogger:
+def create_logger(
+    logger_name: str | None = None, dev_mode: bool | None = None
+) -> structlog.stdlib.BoundLogger:
     """Create structlog logger"""
 
     # Set log level and remove extra data from output using format argument
@@ -158,7 +170,7 @@ def create_logger(logger_name: str | None = None) -> structlog.stdlib.BoundLogge
         CustomTimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f", utc=False),
     ]
     processors_mode: list[Any]
-    if settings.DEV_MODE:
+    if dev_mode or settings.DEV_MODE:
         processors_mode = [
             structlog.dev.ConsoleRenderer(),
         ]
@@ -186,16 +198,18 @@ def update_uvicorn_log_config() -> dict[str, Any]:
     uvicorn_log_config["formatters"]["custom_default"] = {
         "()": UvicornCustomDefaultFormatter,
         "format": settings.LOG_FMT_DEV_DEFAULT,
+        "dev_mode": False,
     }
     uvicorn_log_config["formatters"]["custom_access"] = {
         "()": UvicornCustomFormatterAccess,
         "format": settings.LOG_FMT_DEV_ACCESS,
+        "dev_mode": False,
     }
     uvicorn_log_config["handlers"]["default"]["formatter"] = "custom_default"
     uvicorn_log_config["handlers"]["access"]["formatter"] = "custom_access"
     return uvicorn_log_config
 
 
-logger = create_logger("backend")
+logger = create_logger("backend", dev_mode=False)
 uvicorn_log_config = update_uvicorn_log_config()
 sys.excepthook = rich_excepthook

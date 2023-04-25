@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from .api.support import router as router_support
-from .db import engine
-from .logger import logger, settings
+from app.api.support import router as router_support
+from app.db import engine
+from app.logger import logger, settings
 
 fastapi_app = FastAPI(title="Flash decision")
 fastapi_app.include_router(router_support)
