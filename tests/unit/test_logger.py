@@ -17,7 +17,7 @@ from flash_backend.app.logger import (
 )
 
 
-class TestLogs(TestCase):
+class TestLogger(TestCase):
     def _create_custom_logger(self) -> tuple[BoundLogger, io.StringIO]:
         """Create custom logger that might be used in some tests and add additional IO handler"""
         # Remove root handlers from `logging` module to keep console clean
