@@ -1,3 +1,6 @@
+import os
+from distutils.util import strtobool
+
 from pydantic import BaseSettings, PostgresDsn
 
 from .constants import Environment
@@ -6,18 +9,28 @@ from .constants import Environment
 class SettingsGeneral(BaseSettings):
     # Env
     ENVIRONMENT: Environment = Environment.development
-    DEV_MODE: bool = bool(ENVIRONMENT == Environment.development)
     WORK_DIR: str = "./flash_backend"
     # HTTP
     URL_BACKEND: str = "http://localhost:8001/api/v1"
     PORT_BACKEND: int = 8001
+
+    @property
+    def DEV_MODE(self) -> bool:  # noqa: N802
+        return bool(self.ENVIRONMENT == Environment.development)
+
+    @property
+    def DEBUG_MODE(self) -> bool:  # noqa: N802
+        if self.DEV_MODE and bool(strtobool(os.getenv("DEBUG_MODE", default="False"))):
+            os.environ["PYTHONASYNCIODEBUG"] = "1"
+            return True
+        return False
 
 
 settings_general = SettingsGeneral()
 
 
 class SettingsLog(BaseSettings):
-    LOG_DB_ACCESS: bool = bool(settings_general.DEV_MODE)
+    LOG_DB_ACCESS: bool = settings_general.DEBUG_MODE
     LOG_FMT_DEV_PREF: str = "%(asctime)s [%(levelprefix)s]"
     LOG_FMT_DEV_DEFAULT: str = LOG_FMT_DEV_PREF + " %(message)s"
     LOG_FMT_DEV_ACCESS: str = (

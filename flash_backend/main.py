@@ -1,10 +1,11 @@
 import uvicorn
 
 from app.config import settings
+from app.fastapi import fastapi_app
 from app.logger import uvicorn_log_config
 
 if __name__ == "__main__":
-    if settings.ENVIRONMENT == "development":
+    if settings.DEV_MODE:
         uvicorn.run(
             "app.fastapi:fastapi_app",
             port=settings.PORT_BACKEND,
@@ -14,7 +15,7 @@ if __name__ == "__main__":
         )
     else:
         uvicorn.run(
-            "app.fastapi:fastapi_app",
+            fastapi_app,
             port=settings.PORT_BACKEND,
             log_config=uvicorn_log_config,
         )

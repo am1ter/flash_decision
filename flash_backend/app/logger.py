@@ -3,7 +3,6 @@ import re
 import sys
 from copy import deepcopy
 from datetime import datetime
-from functools import lru_cache
 from logging import LogRecord
 from types import TracebackType
 from typing import Any, Literal
@@ -20,7 +19,6 @@ from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import AccessFormatter, DefaultFormatter
 
 from .config import settings
-from .constants import Environment
 
 
 def rich_excepthook(
@@ -58,7 +56,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         self, ei: tuple[type[BaseException], BaseException, TracebackType | None]
     ) -> None:
         """Override exception formatting for uvicorn"""
-        if settings.ENVIRONMENT == Environment.development:
+        if settings.DEV_MODE:
             # Use rich print which support suppressing external lib attributes
             rich_excepthook(ei[0], ei[1], ei[2])
         else:
@@ -67,7 +65,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
     def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for system logs"""
         record_source = super().formatMessage(record)
-        if settings.ENVIRONMENT == Environment.development:
+        if settings.DEV_MODE:
             # Reformat level
             try:
                 level_raw = self.regex_level.findall(record_source)[0]
@@ -111,7 +109,7 @@ class UvicornCustomFormatterAccess(AccessFormatter):
         """Override default formatting method for access logs"""
         record_default = self.default_formatter.formatMessage(record)
         record_access = self.access_formatter.formatMessage(record)
-        if settings.ENVIRONMENT == Environment.development:
+        if settings.DEV_MODE:
             return record_default + record_access
         else:
             if record.args and len(record.args) == 5:
@@ -146,7 +144,6 @@ class CustomTimeStamper(structlog.processors.TimeStamper):
         return event_dict
 
 
-# @lru_cache()
 def create_logger(logger_name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Create structlog logger"""
 
@@ -161,7 +158,7 @@ def create_logger(logger_name: str | None = None) -> structlog.stdlib.BoundLogge
         CustomTimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f", utc=False),
     ]
     processors_mode: list[Any]
-    if settings.ENVIRONMENT == Environment.development:
+    if settings.DEV_MODE:
         processors_mode = [
             structlog.dev.ConsoleRenderer(),
         ]
@@ -182,7 +179,6 @@ def create_logger(logger_name: str | None = None) -> structlog.stdlib.BoundLogge
     return structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
 
 
-@lru_cache
 def update_uvicorn_log_config() -> dict[str, Any]:
     """Change uvicorn log settings to conform with structlog"""
 

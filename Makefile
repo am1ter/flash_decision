@@ -12,6 +12,14 @@ run-dev:  # Run backend in dev environment
 		&& export WORK_DIR=. \
 		&& poetry run python -m main
 
+.PHONY: run-debug
+run-debug:  # Run backend in debug mode (dev environment + additional logs)
+		cd flash_backend \
+		&& export ENVIRONMENT=development \
+		&& export WORK_DIR=. \
+		&& export DEBUG_MODE=True \
+		&& poetry run python -m main
+
 .PHONY: run-tests-unit
 run-tests-unit:  # Run backend server in prod environment and run unit tests
 		make run-prod \

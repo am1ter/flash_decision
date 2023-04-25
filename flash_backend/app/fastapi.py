@@ -10,7 +10,12 @@ fastapi_app.include_router(router_support)
 
 @fastapi_app.on_event("startup")
 async def event_startup() -> None:
-    logger.info(f"Application ready for startup", env=settings.ENVIRONMENT.value)
+    logger.info(
+        f"Application ready for startup",
+        env=settings.ENVIRONMENT.value,
+        dev_mode=settings.DEV_MODE,
+        debug_mode=settings.DEBUG_MODE,
+    )
     logger.info(
         f"Connection to db established",
         db_url=engine.engine.url,
