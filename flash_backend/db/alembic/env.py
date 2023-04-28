@@ -21,12 +21,20 @@ target_metadata = Base.metadata
 
 
 def do_run_migrations(connection: AsyncConnection) -> None:
+    def include_name(name: str, type_: str, parent_names: dict) -> bool:  # noqa: ARG001
+        """Filter tables only in current db schema"""
+        if type_ == "schema":
+            return name in [settings_db.DB_SCHEMA]
+        else:
+            return True
+
     context.configure(
-        compare_type=True,
-        dialect_opts={"paramstyle": "named"},
         connection=connection,  # type: ignore[arg-type]
+        dialect_opts={"paramstyle": "named"},
         target_metadata=target_metadata,
+        compare_type=True,
         include_schemas=True,
+        include_name=include_name,
         version_table_schema=settings_db.DB_SCHEMA,
     )
 

@@ -10,7 +10,7 @@ from app.config import settings_db
 # Custom `python types` to `database columns` mappings
 int_pk = Annotated[int, mapped_column(primary_key=True)]
 str_unq = Annotated[str, mapped_column(unique=True, index=True)]
-datetime_current = Annotated[datetime, mapped_column(insert_default=func.now())]
+datetime_current = Annotated[datetime, mapped_column(server_default=func.now())]
 
 
 @as_declarative()

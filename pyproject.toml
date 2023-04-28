@@ -10,7 +10,7 @@ packages = [{ include = "flash_decision" }]
 python = "^3.11"
 fastapi = "^0.95.0"
 uvicorn = "^0.21.1"
-sqlalchemy = "^2.0.9"
+sqlalchemy = "^2.0.10"
 asyncpg = "^0.27.0"
 pandas = "^2.0.0"
 structlog = "^23.1.0"
@@ -106,6 +106,7 @@ ignore = [
     "E501",
     "EM102",
     "F541",
+    "INP001",
     "N812",
     "PLR2004",
     "PT009",
