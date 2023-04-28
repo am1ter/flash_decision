@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from sqlalchemy import func
+from sqlalchemy import MetaData, func
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import mapped_column
 
@@ -16,6 +16,7 @@ datetime_current = Annotated[datetime, mapped_column(server_default=func.now())]
 @as_declarative()
 class Base:
     __name__: str  # noqa: A003
+    metadata: MetaData
 
     @declared_attr.directive
     def __tablename__(self) -> str:

@@ -3,9 +3,10 @@ import logging
 import logging.config
 
 from alembic import context
-from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.config import settings_db
+from app.db import get_connection, get_new_engine
 from app.models.base import Base
 
 # Read logger config with json-formatter from alembic.ini and create logger
@@ -49,10 +50,9 @@ async def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = create_async_engine(settings_db.DB_URL, future=True)
-
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+    engine = get_new_engine()
+    async with get_connection(engine) as conn:
+        await conn.run_sync(do_run_migrations)
 
 
 # Run using asyncio

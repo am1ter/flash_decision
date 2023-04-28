@@ -7,7 +7,9 @@ from logging import LogRecord
 from types import TracebackType
 from typing import Any, Literal
 
+import asyncpg
 import fastapi
+import sqlalchemy
 import starlette
 import structlog
 import uvicorn
@@ -26,7 +28,11 @@ def rich_excepthook(
 ) -> None:
     """Format exception using rich lib"""
     rich_tb = Traceback.from_exception(
-        type_, value, traceback, show_locals=True, suppress=[uvicorn, fastapi, starlette]
+        type_,
+        value,
+        traceback,
+        show_locals=True,
+        suppress=[uvicorn, fastapi, starlette, sqlalchemy, asyncpg],
     )
     rprint(rich_tb)
 

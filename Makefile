@@ -22,12 +22,12 @@ run-debug:  # Run backend in debug mode (dev environment + additional logs)
 
 .PHONY: run-tests-unit
 run-tests-unit:  # Run backend server in prod environment and run unit tests
-		export ENVIRONMENT=test \
+		export ENVIRONMENT=production \
 		& poetry run python -m unittest discover -v -s ./tests -p test_unit_*.py -t . \
 
 .PHONY: run-tests-integration
 run-tests-integration:  # Run backend server in prod environment and run integration tests
-		export ENVIRONMENT=test \
+		export ENVIRONMENT=production \
 		& poetry run python -m unittest discover -v -s ./tests -p test_integration_*.py -t . \
 
 .PHONY: shutdown
@@ -41,14 +41,14 @@ pre-commit:  # Run pre-commit checks
 		pre-commit run --all-files
 
 .PHONY: migrate-create
-migrate-create:  # Create db migations using db scheme from env. Use arg `msg=` to set message text
+migrate-create:  # Create db migations using db scheme from env. Use args: `env=` to `msg=`
 		cd flash_backend/db \
 		&& export ENVIRONMENT=$(env) \
 		&& alembic --name $(env) revision --autogenerate -m "$(msg)"
 
 
 .PHONY: migrate-apply
-migrate-apply:  # Apply alembic migrations using db scheme from env.
+migrate-apply:  # Apply alembic migrations using db scheme from env. Use args: `env=` to `msg=`
 		cd flash_backend/db \
 		&& export ENVIRONMENT=$(env) \
 		&& alembic --name $(env) upgrade head
