@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+import traceback
 from copy import deepcopy
 from datetime import datetime
 from logging import LogRecord
@@ -149,6 +150,8 @@ class UvicornCustomFormatterAccess(AccessFormatter):
 
 
 class CustomTimeStamper(structlog.processors.TimeStamper):
+    """Reformat logs from structlog to contain miliseconds (3 digit fraction)"""
+
     def __init__(self, fmt: str | None, *, key: str = "timestamp", utc: bool = False) -> None:
         super().__init__(fmt=fmt, key=key, utc=utc)
 
@@ -160,9 +163,37 @@ class CustomTimeStamper(structlog.processors.TimeStamper):
         return event_dict
 
 
+class CustomStructlogLogger(structlog.stdlib.BoundLogger):
+    """Custom structlog logger with additional methods and other tweaks"""
+
+    def info(self, event: str | None = None, *args: Any, **kw: Any) -> Any:
+        """Custom wrapper for logger method"""
+        # Show class name
+        if kw.get("cls") and isinstance(kw.get("cls"), type):
+            kw["cls"] = kw["cls"].__name__
+
+        # Show the name of the function, where info() called
+        if kw.get("show_func_name", False):
+            del kw["show_func_name"]
+            callstack_depth = 3
+            kw["function"] = traceback.extract_stack(None, callstack_depth)[0].name
+
+        # Output to logger
+        return self._logger.info(event, *args, **kw)
+
+    def info_finish(self, *args, **kw) -> None:
+        """To log function/method results"""
+        event = "Operation completed"
+        self.info(event, *args, **kw)
+
+    def exception(self, event: str | None = None, *args: Any, **kw: Any) -> Any:
+        """Use parent logger of wrapped custom logger"""
+        return self._logger.exception(event, *args, **kw)
+
+
 def create_logger(
     logger_name: str | None = None, dev_mode: bool | None = None
-) -> structlog.stdlib.BoundLogger:
+) -> CustomStructlogLogger:
     """Create structlog logger"""
 
     # Set log level and remove extra data from output using format argument
@@ -194,7 +225,8 @@ def create_logger(
         logger_factory=LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
     )
-    return structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
+    logger = structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
+    return structlog.wrap_logger(logger, wrapper_class=CustomStructlogLogger)
 
 
 def update_uvicorn_log_config() -> dict[str, Any]:

@@ -8,7 +8,7 @@ from distutils.util import strtobool
 from logging import LogRecord
 from unittest import TestCase, main, mock
 
-from structlog.stdlib import BoundLogger
+import structlog
 
 from flash_backend.app.logger import (
     UvicornCustomDefaultFormatter,
@@ -21,12 +21,17 @@ dev_mode = {"DEV_MODE": "True"}
 prod_mode = {"DEV_MODE": "False"}
 
 
-class TestLogger(TestCase):
+class TestLoggerStandartCases(TestCase):
+    """
+    Test standart use cases for logging functions.
+    Print to stdout log messages and exceptions in prod/dev modes (json- and text-formatted).
+    """
+
     def is_dev_mode(self) -> bool:
         """Read env var"""
         return bool(strtobool(os.getenv("DEV_MODE", default="False")))
 
-    def _create_custom_logger(self) -> tuple[BoundLogger, io.StringIO]:
+    def _create_custom_logger(self) -> tuple[structlog.stdlib.BoundLogger, io.StringIO]:
         """Create custom logger that might be used in some tests and add additional IO handler"""
         # Remove root handlers from `logging` module to keep console clean
         logging.root.handlers = []
@@ -311,6 +316,24 @@ class TestLogger(TestCase):
             "level_number": 40,
         }
         self.assertEqual(log_text_dict, log_text_dict | expected)
+
+
+class TestLoggerCustomCases(TestCase):
+    """Test custom use cases for logging functions (custom log methods, etc.)"""
+
+    def test_info_finish(self) -> None:
+        """Test custom method info_finish() with additional tweaks"""
+        logger = create_logger()
+        with structlog.testing.capture_logs() as logs:
+            logger.info_finish(cls=self.__class__, show_func_name=True, result=True)
+        excepted = {
+            "event": "Operation completed",
+            "log_level": "info",
+            "cls": self.__class__.__name__,
+            "function": "test_info_finish",
+            "result": True,
+        }
+        self.assertEqual(logs[0], logs[0] | excepted)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 from app.db import get_connection
+from app.logger import logger
 
 
 class Healthchecker:
@@ -14,4 +15,6 @@ class Healthchecker:
                 check_result = False
             else:
                 check_result = True
+
+        logger.info_finish(cls=self.__class__, show_func_name=True, result=check_result)
         return check_result
