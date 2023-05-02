@@ -23,7 +23,11 @@ async def get_connection(engine: AsyncEngine) -> AsyncGenerator[AsyncConnection,
         await conn.close()
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, Any]:
+async def get_db() -> AsyncGenerator[AsyncSession, Any]:
+    """
+    Give db session using single app-related db engine.
+    The name `get_session` cannot be used, because the term `session` is already used inside app.
+    """
     async with AsyncSessionFactory() as session:
         yield session
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import get_session
+from app.db import get_db
 from app.schemas.base import Resp
 from app.schemas.support import RespDataHealthcheck
 
@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/v1/support")
 
 
 @router.get("/healthcheck", response_model=Resp)
-async def make_healthcheck(session: AsyncSession = Depends(get_session)) -> Resp:
+async def make_healthcheck(session: AsyncSession = Depends(get_db)) -> Resp:
     """Check system coditions"""
 
     # Always true
