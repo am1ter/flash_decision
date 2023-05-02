@@ -1,29 +1,21 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 
-from app.db import get_db
+from fastapi import APIRouter, Depends
+
 from app.schemas.base import Resp
 from app.schemas.support import RespDataHealthcheck
+from app.services.healthchecker import Healthchecker
 
 router = APIRouter(prefix="/api/v1/support")
+healthchecker = Annotated[Healthchecker, Depends()]
 
 
 @router.get("/healthcheck", response_model=Resp)
-async def make_healthcheck(session: AsyncSession = Depends(get_db)) -> Resp:
-    """Check system coditions"""
+async def run_healthcheck(healthchecker: healthchecker) -> Resp:
+    """Run system self check"""
 
-    # Always true
     is_app_up = True
+    is_db_up = await healthchecker.check_db_connection()
 
-    # Try to connect to db
-    async with session as conn:
-        try:
-            await conn.execute(text("SELECT 1"))
-            is_db_up = True
-        except Exception:  # noqa: BLE001
-            is_db_up = False
-
-    # Response
     data = RespDataHealthcheck(is_app_up=is_app_up, is_db_up=is_db_up)
     return Resp(data=data)
