@@ -10,7 +10,7 @@ from unittest import TestCase, main, mock
 
 import structlog
 
-from flash_backend.app.logger import (
+from flash_backend.app.system.logger import (
     UvicornCustomDefaultFormatter,
     UvicornCustomFormatterAccess,
     create_logger,

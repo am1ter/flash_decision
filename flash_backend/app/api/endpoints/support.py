@@ -2,8 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.schemas.base import Resp
-from app.schemas.support import RespDataHealthcheck
+from app.api.schemas.base import Resp
+from app.api.schemas.support import RespDataHealthcheck
 from app.services.healthchecker import Healthchecker
 
 router = APIRouter(prefix="/api/v1/support")

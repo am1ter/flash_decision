@@ -4,7 +4,7 @@ from functools import cached_property
 
 from pydantic import BaseSettings, PostgresDsn
 
-from app.constants import Environment
+from app.system.constants import Environment
 
 
 class SettingsGeneral(BaseSettings):

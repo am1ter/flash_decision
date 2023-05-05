@@ -1,7 +1,7 @@
 from sqlalchemy import text
 
-from app.db import get_connection
-from app.logger import logger
+from app.infrastructure.db import get_connection
+from app.system.logger import logger
 
 
 class Healthchecker:

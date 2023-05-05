@@ -21,7 +21,7 @@ from structlog.typing import EventDict
 from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import AccessFormatter, DefaultFormatter
 
-from app.config import settings
+from app.system.config import settings
 
 
 def rich_excepthook(

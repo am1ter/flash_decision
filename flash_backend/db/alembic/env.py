@@ -5,9 +5,9 @@ import logging.config
 from alembic import context
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.config import settings_db
-from app.db import get_connection, get_new_engine
-from app.models.base import Base
+from app.infrastructure.db import get_connection, get_new_engine
+from app.infrastructure.orm.base import Base
+from app.system.config import settings_db
 
 # Read logger config with json-formatter from alembic.ini and create logger
 logging.config.fileConfig(context.config.config_file_name)  # type: ignore[arg-type]

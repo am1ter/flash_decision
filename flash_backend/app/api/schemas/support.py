@@ -1,4 +1,4 @@
-from app.schemas.base import RespData
+from app.api.schemas.base import RespData
 
 
 class RespDataHealthcheck(RespData):

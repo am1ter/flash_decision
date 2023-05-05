@@ -1,17 +1,11 @@
-from enum import Enum
 from typing import Annotated
 
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.config import settings_db
-from app.models.base import Base, datetime_current, int_pk, str_unq
-
-
-class UserStatus(Enum):
-    active = "active"
-    disabled = "disabled"
-
+from app.domain.user import UserStatus
+from app.infrastructure.orm.base import Base, datetime_current, int_pk, str_unq
+from app.system.config import settings_db
 
 user_status = Annotated[
     UserStatus,
