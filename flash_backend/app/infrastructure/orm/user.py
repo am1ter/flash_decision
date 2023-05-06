@@ -18,9 +18,9 @@ user_status = Annotated[
 
 
 class User(Base):
-    Id: Mapped[int_pk]
-    Name: Mapped[str]
-    Email: Mapped[str_unq]
-    Password: Mapped[str]
-    DatetimeCreate: Mapped[datetime_current]
-    Status: Mapped[user_status]
+    id: Mapped[int_pk]
+    name: Mapped[str]
+    email: Mapped[str_unq]
+    password: Mapped[str]
+    datetime_create: Mapped[datetime_current]
+    status: Mapped[user_status]

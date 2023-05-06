@@ -19,7 +19,7 @@ reg = registry()
 @reg.mapped_as_dataclass
 @as_declarative()
 class Base:
-    __name__: str  # noqa: A003
+    __name__: str
     metadata: MetaData
 
     @declared_attr.directive

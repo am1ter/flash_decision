@@ -46,9 +46,8 @@ migrate-create:  # Create db migations using db scheme from env. Use args: `env=
 		&& export ENVIRONMENT=$(env) \
 		&& alembic --name $(env) revision --autogenerate -m "$(msg)"
 
-
 .PHONY: migrate-apply
-migrate-apply:  # Apply alembic migrations using db scheme from env. Use args: `env=` to `msg=`
+migrate-apply:  # Apply alembic migrations using db scheme from env. Use args: `env=`
 		cd flash_backend/db \
 		&& export ENVIRONMENT=$(env) \
 		&& alembic --name $(env) upgrade head
