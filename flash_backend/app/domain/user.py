@@ -1,6 +1,8 @@
 from enum import Enum
 
-from attr import define
+from attrs import define
+
+from app.domain.base import Entity
 
 
 class UserStatus(Enum):
@@ -8,11 +10,9 @@ class UserStatus(Enum):
     disabled = "disabled"
 
 
-@define
-class User:
-    Id: int
-    Name: str
-    Email: str
-    Password: str
-    DatetimeCreate: str
-    Status: UserStatus
+@define(kw_only=True, hash=True)
+class User(Entity):
+    name: str
+    email: str
+    password: str
+    status: UserStatus

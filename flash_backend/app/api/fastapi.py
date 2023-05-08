@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 
 from app.api.endpoints.support import router as router_support
+from app.api.endpoints.user import router as router_user
 from app.infrastructure.db import engine
 from app.system.logger import logger, settings
 
 fastapi_app = FastAPI(title="Flash decision")
 fastapi_app.include_router(router_support)
+fastapi_app.include_router(router_user)
 
 
 @fastapi_app.on_event("startup")

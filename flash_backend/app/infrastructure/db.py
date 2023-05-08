@@ -1,7 +1,8 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Annotated, Any
 
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -38,3 +39,6 @@ async def get_db() -> AsyncGenerator[AsyncSession, Any]:
     """
     async with AsyncSessionFactory() as session:
         yield session
+
+
+db = Annotated[AsyncSession, Depends(get_db)]

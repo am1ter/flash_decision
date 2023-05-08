@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.user import UserStatus
-from app.infrastructure.orm.base import Base, datetime_current, int_pk, str_unq
+from app.infrastructure.orm.base import Base, str_unq
 from app.system.config import settings_db
 
 user_status = Annotated[
@@ -18,9 +18,7 @@ user_status = Annotated[
 
 
 class User(Base):
-    id: Mapped[int_pk]
     name: Mapped[str]
     email: Mapped[str_unq]
     password: Mapped[str]
-    datetime_create: Mapped[datetime_current]
     status: Mapped[user_status]
