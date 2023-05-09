@@ -2,6 +2,7 @@ import dataclasses
 from abc import ABC, abstractmethod
 from typing import Any
 
+import attrs
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
@@ -27,15 +28,21 @@ class Repository(ABC):
 
 
 class RepositorySQLAlchemy(Repository):
-    """Parent `Repository` class implementation using SQLAlchemy as storage"""
+    """
+    Parent `Repository` class implementation using SQLAlchemy as storage.
+    In each children class must be defined attributes `cls_orm` and `cls_domain`.
+    """
+
+    cls_orm: type[Base]
+    cls_domain: type[Entity]
 
     def __init__(self, db: db) -> None:
         self.db = db
 
-    async def _get_by_condition(
+    async def _get_by_condition_eq(
         self,
-        cls_domain: Entity,
-        cls_orm: Base,
+        cls_domain: type[Entity],
+        cls_orm: type[Base],
         col: InstrumentedAttribute,
         value: Any,
     ) -> Entity | None:
@@ -47,3 +54,18 @@ class RepositorySQLAlchemy(Repository):
             return None
         else:
             return domain_obj
+
+    def add(self, domain_obj: Entity) -> None:
+        orm_obj = self.__class__.cls_orm.create(**attrs.asdict(domain_obj))
+        self.db.add(orm_obj)
+
+    async def get_by_id(self, id: int) -> Entity | None:
+        cls = self.__class__
+        orm_obj = await self._get_by_condition_eq(cls.cls_domain, cls.cls_orm, cls.cls_orm.id, id)
+        return orm_obj
+
+    async def flush(self) -> None:
+        await self.db.flush()
+
+    async def save(self) -> None:
+        await self.db.commit()

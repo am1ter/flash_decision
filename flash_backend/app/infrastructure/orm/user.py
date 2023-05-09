@@ -18,6 +18,12 @@ user_status = Annotated[
 
 
 class User(Base):
+    """
+    ORM object `User` is used to identify individuals who use application.
+    Sign up is available for everyone, but not required (there is a demo user).
+    All users have the same privileges.
+    """
+
     name: Mapped[str]
     email: Mapped[str_unq]
     password: Mapped[str]
