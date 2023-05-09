@@ -14,7 +14,7 @@ class Repository(ABC):
     """Abstract class for repositories"""
 
     @abstractmethod
-    async def add(self, entity: Entity) -> None:
+    def add(self, entity: Entity) -> None:
         raise NotImplementedError
 
     @abstractmethod

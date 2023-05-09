@@ -1,6 +1,6 @@
 from enum import Enum
 
-from attrs import define
+from attrs import define, field
 
 from app.domain.base import Entity
 
@@ -15,4 +15,4 @@ class User(Entity):
     name: str
     email: str
     password: str
-    status: UserStatus
+    status: UserStatus = field(converter=UserStatus)

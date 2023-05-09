@@ -16,7 +16,7 @@ class ServiceUser:
 
     async def create_user(self, req: ReqSignUp) -> None:
         new_user = User(**req.dict(), status=UserStatus.active)
-        await self.repository.add(new_user)
+        self.repository.add(new_user)
         await self.repository.save()
 
     async def get_user_by_request(self, req: ReqMeta) -> User | None:
