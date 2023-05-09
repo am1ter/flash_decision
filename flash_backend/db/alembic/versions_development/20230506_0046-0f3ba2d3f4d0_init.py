@@ -21,7 +21,7 @@ def upgrade() -> None:
         "active", "disabled", name="user_status", schema="development"
     )
     op.create_table(
-        "User",
+        "user",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("email", sa.String(), nullable=False),
@@ -34,7 +34,7 @@ def upgrade() -> None:
         schema="development",
     )
     op.create_index(
-        op.f("ix_development_User_email"), "User", ["email"], unique=True, schema="development"
+        op.f("ix_development_user_email"), "user", ["email"], unique=True, schema="development"
     )
 
 
@@ -42,6 +42,6 @@ def downgrade() -> None:
     enum_user_status = postgresql.ENUM(
         "active", "disabled", name="user_status", schema="development"
     )
-    op.drop_index(op.f("ix_development_User_email"), table_name="User", schema="development")
-    op.drop_table("User", schema="development")
+    op.drop_index(op.f("ix_development_user_email"), table_name="user", schema="development")
+    op.drop_table("user", schema="development")
     enum_user_status.drop(op.get_bind())

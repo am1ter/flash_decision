@@ -31,7 +31,7 @@ class Base:
     @declared_attr.directive
     def __tablename__(self) -> str:
         """Generate __tablename__ automatically"""
-        return self.__name__.capitalize()
+        return self.__name__.lower()
 
     @declared_attr.directive
     def __table_args__(self) -> dict:
