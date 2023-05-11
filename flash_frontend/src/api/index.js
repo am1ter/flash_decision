@@ -57,80 +57,80 @@ async function handleResponse(req) {
 }
 
 
-    // API requests for authentication
-    // ===============================
+// API requests for authentification
+// ===============================
 
-    export function apiSignUp(form) {
-        console.log("Run apiSignUp")
-        let reqUrl = "/sign-up/"
-        let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
-        return handleResponse(req)
-    }
-
-
-    export function apiCheckEmailValidity(email) {
-        console.log("Run apiCheckEmailValidity")
-        let reqUrl = "/check-email-validity/"
-        let email_obj = { "email": email }
-        let req = { "type": "post", "url": API_URL + reqUrl, "args": email_obj }
-        return handleResponse(req)
-    }
+export function apiSignUp(form) {
+    console.log("Run apiSignUp")
+    let reqUrl = "/sign-up/"
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
+    return handleResponse(req)
+}
 
 
-    export function apiLogin(form) {
-        console.log("Run apiLogin")
-        let reqUrl = "/login/"
-        let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
-        return handleResponse(req)
-    }
+export function apiCheckEmailValidity(email) {
+    console.log("Run apiCheckEmailValidity")
+    let reqUrl = "/check-email-validity/"
+    let email_obj = { "email": email }
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": email_obj }
+    return handleResponse(req)
+}
 
 
-    // API requests for app operations
-    // ===============================
-
-    export function apiFetchSessionOptions(mode) {
-        console.log("Run apiFetchSessionOptions")
-        let reqUrl = `/session-options/${mode}/`
-        let req = { "type": "get", "url": API_URL + reqUrl }
-        return handleResponse(req)
-    }
+export function apiLogin(form) {
+    console.log("Run apiLogin")
+    let reqUrl = "/login/"
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
+    return handleResponse(req)
+}
 
 
-    export function apiStartNewSession(mode, form) {
-        console.log("Run apiStartNewSession")
-        let reqUrl = `/sessions/${mode}/`
-        let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
-        return handleResponse(req)
-    }
+// API requests for app operations
+// ===============================
+
+export function apiFetchSessionOptions(mode) {
+    console.log("Run apiFetchSessionOptions")
+    let reqUrl = `/session-options/${mode}/`
+    let req = { "type": "get", "url": API_URL + reqUrl }
+    return handleResponse(req)
+}
 
 
-    export function apiRenderChart(mode, sessionId, iterNum) {
-        console.log("Run apiRenderChart")
-        let reqUrl = `/sessions/${mode}/${sessionId}/iterations/${iterNum}/`
-        let req = { "type": "get", "url": API_URL + reqUrl }
-        return handleResponse(req)
-    }
+export function apiStartNewSession(mode, form) {
+    console.log("Run apiStartNewSession")
+    let reqUrl = `/sessions/${mode}/`
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": form }
+    return handleResponse(req)
+}
 
 
-    export function apiRecordDecision(mode, sessionId, iterNum, decision) {
-        console.log("Run apiRecordDecision")
-        let reqUrl = `/sessions/${mode}/${sessionId}/decisions/${iterNum}/`
-        let req = { "type": "post", "url": API_URL + reqUrl, "args": decision }
-        return handleResponse(req)
-    }
+export function apiRenderChart(mode, sessionId, iterNum) {
+    console.log("Run apiRenderChart")
+    let reqUrl = `/sessions/${mode}/${sessionId}/iterations/${iterNum}/`
+    let req = { "type": "get", "url": API_URL + reqUrl }
+    return handleResponse(req)
+}
 
 
-    export function apiRenderSessionsResults(mode, sessionId) {
-        console.log("Run apiRenderSessionsResults")
-        let reqUrl = `/session-results/${mode}/${sessionId}/`
-        let req = { "type": "get", "url": API_URL + reqUrl }
-        return handleResponse(req)
-    }
+export function apiRecordDecision(mode, sessionId, iterNum, decision) {
+    console.log("Run apiRecordDecision")
+    let reqUrl = `/sessions/${mode}/${sessionId}/decisions/${iterNum}/`
+    let req = { "type": "post", "url": API_URL + reqUrl, "args": decision }
+    return handleResponse(req)
+}
 
 
-    export function apiRenderScoreboard(mode, userId) {
-        console.log("Run apiRenderScoreboard")
-        let reqUrl = `/scoreboards/${mode}/${userId}/`
-        let req = { "type": "get", "url": API_URL + reqUrl }
-        return handleResponse(req)
-    }
+export function apiRenderSessionsResults(mode, sessionId) {
+    console.log("Run apiRenderSessionsResults")
+    let reqUrl = `/session-results/${mode}/${sessionId}/`
+    let req = { "type": "get", "url": API_URL + reqUrl }
+    return handleResponse(req)
+}
+
+
+export function apiRenderScoreboard(mode, userId) {
+    console.log("Run apiRenderScoreboard")
+    let reqUrl = `/scoreboards/${mode}/${userId}/`
+    let req = { "type": "get", "url": API_URL + reqUrl }
+    return handleResponse(req)
+}

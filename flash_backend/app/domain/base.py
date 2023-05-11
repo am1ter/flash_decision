@@ -3,7 +3,7 @@ from datetime import datetime
 from attrs import define
 
 
-@define(kw_only=True, hash=True)
+@define(kw_only=True, hash=True, slots=False)
 class Entity:
     """Meta class for all domain entities"""
 

@@ -2,7 +2,6 @@ import dataclasses
 from abc import ABC, abstractmethod
 from typing import Any
 
-import attrs
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
@@ -56,8 +55,7 @@ class RepositorySQLAlchemy(Repository):
             return domain_obj
 
     def add(self, domain_obj: Entity) -> None:
-        orm_obj = self.__class__.cls_orm.create(**attrs.asdict(domain_obj))
-        self.db.add(orm_obj)
+        self.db.add(domain_obj)
 
     async def get_by_id(self, id: int) -> Entity | None:
         cls = self.__class__

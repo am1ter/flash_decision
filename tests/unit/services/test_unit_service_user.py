@@ -3,15 +3,15 @@ from random import randint
 from unittest import IsolatedAsyncioTestCase
 
 from flash_backend.app.api.schemas.user import ReqSignUp
-from flash_backend.app.domain.user import User
+from flash_backend.app.domain.user import DomainUser
 from flash_backend.app.infrastructure.repositories.base import Repository
 from flash_backend.app.services.user import ServiceUser
 
 
 class RepositoryUserFake(Repository):
-    storage: dict[int, User] = {}
+    storage: dict[int, DomainUser] = {}
 
-    def add(self, user: User) -> None:
+    def add(self, user: DomainUser) -> None:
         user.id = randint(1, 1000)
         user.datetime_create = datetime.utcnow()
         self.storage[user.id] = user
@@ -19,10 +19,10 @@ class RepositoryUserFake(Repository):
     async def save(self) -> None:
         pass
 
-    async def get_by_id(self, id: int) -> User:
+    async def get_by_id(self, id: int) -> DomainUser:
         return self.storage[id]
 
-    async def get_by_email(self, email: str) -> User | None:
+    async def get_by_email(self, email: str) -> DomainUser | None:
         user = {v for v in self.storage.values() if v.email == email}.pop()
         return user
 

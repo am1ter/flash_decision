@@ -4,7 +4,7 @@ from fastapi import Depends
 
 from app.api.schemas.base import ReqMeta
 from app.api.schemas.user import ReqSignUp
-from app.domain.user import User, UserStatus
+from app.domain.user import DomainUser, UserStatus
 from app.infrastructure.repositories.user import repository_user
 
 
@@ -15,11 +15,11 @@ class ServiceUser:
         self.repository = repository
 
     async def create_user(self, req: ReqSignUp) -> None:
-        new_user = User(**req.dict(), status=UserStatus.active)
+        new_user = DomainUser(**req.dict(), status=UserStatus.active)
         self.repository.add(new_user)
         await self.repository.save()
 
-    async def get_user_by_request(self, req: ReqMeta) -> User | None:
+    async def get_user_by_request(self, req: ReqMeta) -> DomainUser | None:
         user = await self.repository.get_by_email(req.email)
         return user
 

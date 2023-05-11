@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Extra
 
 from app.api.schemas.base import ReqMeta, RespData
+from app.domain.user import UserStatus
 
 
 class BaseUser(BaseModel):
@@ -19,5 +20,5 @@ class ReqSignUp(BaseUser, ReqMeta):
 
 class RespSignUp(BaseUser, RespData):
     id: int
-    status: str
+    status: UserStatus
     token: str

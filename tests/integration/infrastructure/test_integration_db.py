@@ -12,6 +12,7 @@ from flash_backend.app.system.config import Environment, settings
 
 class TestDbConnection(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
+        """IsolatedAsyncioTestCases require for indvidual engines for each test"""
         self.engine = get_new_engine()
 
     async def test_connection(self) -> None:

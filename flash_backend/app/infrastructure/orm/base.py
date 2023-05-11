@@ -1,6 +1,5 @@
 from datetime import datetime
-from enum import Enum
-from typing import Annotated, Self
+from typing import Annotated
 
 from sqlalchemy import MetaData, func
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
@@ -26,29 +25,18 @@ class Base:
     # General columns
     id: Mapped[int_pk]
     datetime_create: Mapped[datetime_current]
-    auto_columns = ["id", "datetime_create"]
 
     @declared_attr.directive
     def __tablename__(self) -> str:
-        """Generate __tablename__ automatically"""
-        return self.__name__.lower()
+        """Generate __tablename__ automatically using class name. Remove `ORM` prefix from it."""
+        orm_class_name_prefix = "orm"
+        cls_name = self.__name__.lower()
+        if cls_name[: len(orm_class_name_prefix)] == orm_class_name_prefix:
+            return cls_name[len(orm_class_name_prefix) :]
+        else:
+            return cls_name
 
     @declared_attr.directive
     def __table_args__(self) -> dict:
         """Generate __table_args__ with infomation about database schema"""
         return {"schema": settings_db.DB_SCHEMA}
-
-    @classmethod
-    def create(cls, *args, **kwargs) -> Self:
-        """Universal method to create new ORM objects"""
-
-        # Allow to map domain model`s enums to orm`s columns
-        for kw_name, kw_value in kwargs.items():
-            if isinstance(kw_value, Enum):
-                kwargs[kw_name] = kw_value.value
-
-        # Allow server set some column value automatically
-        for col in cls.auto_columns:
-            kwargs[col] = None
-
-        return cls(*args, **kwargs)

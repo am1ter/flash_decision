@@ -19,7 +19,10 @@ engine = get_new_engine()
 
 @asynccontextmanager
 async def get_connection(engine: AsyncEngine = engine) -> AsyncGenerator[AsyncConnection, Any]:
-    """Create connection with a new engine or with the default engine if new engine is not set up"""
+    """
+    Create connection with a new engine or with the default engine if new engine is not set up.
+    Could be used for custom SQL code.
+    """
     conn = await engine.connect()
     try:
         yield conn
@@ -27,9 +30,18 @@ async def get_connection(engine: AsyncEngine = engine) -> AsyncGenerator[AsyncCo
         await conn.close()
 
 
-AsyncSessionFactory = sessionmaker(  # type: ignore[call-overload]
-    bind=engine, autoflush=False, expire_on_commit=False, class_=AsyncSession
-)
+def get_sessionmaker(engine: AsyncEngine = engine) -> sessionmaker:
+    """
+    Create session factory with a new engine or with the default engine if new engine is not set up.
+    Could be used in the case, when you need to use multiple engines.
+    """
+    async_sessionmaker = sessionmaker(  # type: ignore[call-overload]
+        bind=engine, autoflush=False, expire_on_commit=False, class_=AsyncSession
+    )
+    return async_sessionmaker
+
+
+AsyncSessionFactory = get_sessionmaker()
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, Any]:

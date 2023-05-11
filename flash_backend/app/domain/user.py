@@ -10,8 +10,8 @@ class UserStatus(Enum):
     disabled = "disabled"
 
 
-@define(kw_only=True, hash=True)
-class User(Entity):
+@define(kw_only=True, hash=True, slots=False)
+class DomainUser(Entity):
     name: str
     email: str
     password: str
