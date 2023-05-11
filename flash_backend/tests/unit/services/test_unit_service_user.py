@@ -2,10 +2,10 @@ from datetime import datetime
 from random import randint
 from unittest import IsolatedAsyncioTestCase
 
-from flash_backend.app.api.schemas.user import ReqSignUp
-from flash_backend.app.domain.user import DomainUser
-from flash_backend.app.infrastructure.repositories.base import Repository
-from flash_backend.app.services.user import ServiceUser
+from app.api.schemas.user import ReqSignUp
+from app.domain.user import DomainUser
+from app.infrastructure.repositories.base import Repository
+from app.services.user import ServiceUser
 
 
 class RepositoryUserFake(Repository):

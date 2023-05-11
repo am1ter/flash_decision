@@ -4,8 +4,8 @@ import unittest
 
 import requests
 
-from flash_backend.app.api.schemas.support import RespDataHealthcheck
-from flash_backend.app.system.config import settings
+from app.api.schemas.support import RespDataHealthcheck
+from app.system.config import settings
 
 
 class Response:

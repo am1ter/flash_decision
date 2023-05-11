@@ -180,5 +180,5 @@ line-length = 100
 line_length = 100
 profile = "black"
 src_paths = ["flash_backend", "flash_backend/app/"]
-known_first_party = ["tests.e2e", "tests.e2e.config", "tests.e2e.modules"]
+known_first_party = []
 known_third_party = ["fastapi"]

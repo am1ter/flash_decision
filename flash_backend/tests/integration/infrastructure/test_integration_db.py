@@ -5,9 +5,9 @@ from alembic.runtime.migration import MigrationContext
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from flash_backend.app.infrastructure.db import get_connection, get_new_engine
-from flash_backend.app.infrastructure.orm import Base
-from flash_backend.app.system.config import Environment, settings
+from app.infrastructure.db import get_connection, get_new_engine
+from app.infrastructure.orm import Base
+from app.system.config import Environment, settings
 
 
 class TestDbConnection(IsolatedAsyncioTestCase):

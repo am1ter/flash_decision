@@ -2,11 +2,11 @@ from unittest import IsolatedAsyncioTestCase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from flash_backend.app.domain.auth import AuthStatus, DomainAuth
-from flash_backend.app.domain.user import DomainUser, UserStatus
-from flash_backend.app.infrastructure.db import get_new_engine, get_sessionmaker
-from flash_backend.app.infrastructure.repositories.auth import RepositoryAuthSQL
-from flash_backend.app.infrastructure.repositories.user import RepositoryUserSQL
+from app.domain.auth import AuthStatus, DomainAuth
+from app.domain.user import DomainUser, UserStatus
+from app.infrastructure.db import get_new_engine, get_sessionmaker
+from app.infrastructure.repositories.auth import RepositoryAuthSQL
+from app.infrastructure.repositories.user import RepositoryUserSQL
 
 
 class TestRepositorySQL(IsolatedAsyncioTestCase):
