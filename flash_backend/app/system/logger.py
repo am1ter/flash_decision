@@ -169,25 +169,32 @@ class CustomTimeStamper(structlog.processors.TimeStamper):
 class CustomStructlogLogger(structlog.stdlib.BoundLogger):
     """Custom structlog logger with additional methods and other tweaks"""
 
-    def info(self, event: str | None = None, *args: Any, **kw: Any) -> Any:
+    def info(self, event: str | None = None, *args: Any, **kwargs: Any) -> Any:
         """Custom wrapper for logger method"""
+
         # Show class name
-        if kw.get("cls") and isinstance(kw.get("cls"), type):
-            kw["cls"] = kw["cls"].__name__
+        if kwargs.get("cls") and isinstance(kwargs.get("cls"), type):
+            kwargs["cls"] = kwargs["cls"].__name__
+
+        # Convert attrs object to dicts for production mode logs
+        if not self._logger.dev_mode and not settings.DEV_MODE:  # type: ignore[attr-defined]
+            for kw_key, kw_value in kwargs.items():
+                if attrs.has(type(kw_value)):
+                    kwargs[kw_key] = attrs.asdict(kw_value, recurse=False)
 
         # Show the name of the function, where info() called
-        if kw.get("show_func_name", False):
-            del kw["show_func_name"]
+        if kwargs.get("show_func_name", False):
+            del kwargs["show_func_name"]
             callstack_depth = 3
-            kw["function"] = traceback.extract_stack(None, callstack_depth)[0].name
+            kwargs["function"] = traceback.extract_stack(None, callstack_depth)[0].name
 
         # Output to logger
-        return self._logger.info(event, *args, **kw)
+        return self._logger.info(event, *args, **kwargs)
 
-    def info_finish(self, *args, **kw) -> None:
+    def info_finish(self, *args, **kwargs) -> None:
         """To log function/method results"""
         event = "Operation completed"
-        self.info(event, *args, **kw)
+        self.info(event, *args, **kwargs)
 
     def exception(self, event: str | None = None, *args: Any, **kw: Any) -> Any:
         """Use parent logger of wrapped custom logger"""
@@ -229,6 +236,7 @@ def create_logger(
         wrapper_class=structlog.stdlib.BoundLogger,
     )
     logger = structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
+    logger.dev_mode = dev_mode
     return structlog.wrap_logger(logger, wrapper_class=CustomStructlogLogger)
 
 

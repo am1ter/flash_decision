@@ -63,13 +63,13 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
 
             # Create auth for new user
             auth_domain_sign_up = DomainAuth(
-                user_id=user_repo.id,
+                user=user_domain,
                 http_user_agent="Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)",
                 ip_address="127.0.0.1",
                 status=AuthStatus.sign_up,
             )
             auth_domain_sign_in = DomainAuth(
-                user_id=user_repo.id,
+                user=user_domain,
                 http_user_agent="Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)",
                 ip_address="127.0.0.1",
                 status=AuthStatus.sign_in,

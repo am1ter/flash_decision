@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/v1/user")
 
 
 @router.post("/sign-up", response_model=Resp)
-async def test(payload: ReqSignUp, raw_request: Request, service_user: ServiceUserDep) -> Resp:
+async def sign_up(payload: ReqSignUp, raw_request: Request, service_user: ServiceUserDep) -> Resp:
     """Create new user and record it to db"""
 
     # Extract system info from request
@@ -18,8 +18,8 @@ async def test(payload: ReqSignUp, raw_request: Request, service_user: ServiceUs
         ip_address=raw_request.client.host, user_agent=raw_request.headers["User-Agent"]
     )
 
-    # Business logic
-    new_user = await service_user.create_user(req=payload, req_system_info=req_system_info)
+    # Business logic processing
+    new_user = await service_user.sign_up(req=payload, req_system_info=req_system_info)
 
     data = RespSignUp(**asdict(new_user, recurse=False), token="")
     return Resp(data=data)

@@ -50,7 +50,7 @@ class TestServiceUser(IsolatedAsyncioTestCase):
             password="uc8a&Q!W",  # noqa: S106
         )
         req_system_info = ReqSystemInfo(ip_address="127.0.0.1", user_agent="Test")
-        new_user = await service.create_user(req, req_system_info)
+        new_user = await service.sign_up(req, req_system_info)
 
         # Check user
         self.assertIsNotNone(new_user, "New user not created")

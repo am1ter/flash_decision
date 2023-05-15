@@ -8,6 +8,7 @@ from distutils.util import strtobool
 from logging import LogRecord
 from unittest import TestCase, main, mock
 
+import attrs
 import structlog
 
 from app.system.logger import (
@@ -21,15 +22,16 @@ dev_mode = {"DEV_MODE": "True"}
 prod_mode = {"DEV_MODE": "False"}
 
 
+def is_dev_mode() -> bool:
+    """Read env var"""
+    return bool(strtobool(os.getenv("DEV_MODE", default="False")))
+
+
 class TestLoggerStandartCases(TestCase):
     """
     Test standart use cases for logging functions.
     Print to stdout log messages and exceptions in prod/dev modes (json- and text-formatted).
     """
-
-    def is_dev_mode(self) -> bool:
-        """Read env var"""
-        return bool(strtobool(os.getenv("DEV_MODE", default="False")))
 
     def _create_custom_logger(self) -> tuple[structlog.stdlib.BoundLogger, io.StringIO]:
         """Create custom logger that might be used in some tests and add additional IO handler"""
@@ -38,7 +40,7 @@ class TestLoggerStandartCases(TestCase):
         # Create structlog without output to stdout
         _ = io.StringIO()
         with contextlib.redirect_stdout(_):
-            custom_logger = create_logger(f"test_{id(self)}", dev_mode=self.is_dev_mode())
+            custom_logger = create_logger(f"test_{id(self)}", dev_mode=is_dev_mode())
         # Read only structlog logger`s output
         log_text_io = io.StringIO()
         handler = logging.StreamHandler(log_text_io)
@@ -148,7 +150,7 @@ class TestLoggerStandartCases(TestCase):
     def test_logs_uvicorn_default_dev(self) -> None:
         """Test Uvicorn pretty system logs for dev env"""
 
-        formatter = UvicornCustomDefaultFormatter(dev_mode=self.is_dev_mode())
+        formatter = UvicornCustomDefaultFormatter(dev_mode=is_dev_mode())
 
         # Create mock record
         log_msg = "2000-01-01 00:00:00,000 [\x1b[32mINFO\x1b[0m:    ] Will watch for changes:[]"
@@ -164,7 +166,7 @@ class TestLoggerStandartCases(TestCase):
     def test_logs_uvicorn_default_prod(self) -> None:
         """Test Uvicorn pretty system logs for prod env"""
 
-        formatter = UvicornCustomDefaultFormatter(dev_mode=self.is_dev_mode())
+        formatter = UvicornCustomDefaultFormatter(dev_mode=is_dev_mode())
 
         # Create mock record
         log_msg = "Will watch for changes in these directories: []"
@@ -185,7 +187,7 @@ class TestLoggerStandartCases(TestCase):
     def test_logs_uvicorn_access_dev(self) -> None:
         """Test Uvicorn pretty access logs for dev env"""
 
-        formatter = UvicornCustomFormatterAccess(dev_mode=self.is_dev_mode())
+        formatter = UvicornCustomFormatterAccess(dev_mode=is_dev_mode())
 
         # Create mock record with color tags
         mock_record = self._create_mock_log_record_uvicorn_access()
@@ -200,7 +202,7 @@ class TestLoggerStandartCases(TestCase):
     def test_logs_uvicorn_access_prod(self) -> None:
         """Test Uvicorn pretty access logs for prod env"""
 
-        formatter = UvicornCustomFormatterAccess(dev_mode=self.is_dev_mode())
+        formatter = UvicornCustomFormatterAccess(dev_mode=is_dev_mode())
 
         # Create mock record with color tags
         mock_record = self._create_mock_log_record_uvicorn_access()
@@ -266,7 +268,7 @@ class TestLoggerStandartCases(TestCase):
     def test_exceptions_uvicorn_dev(self) -> None:
         """Test Uvicorn rich exception for dev env"""
 
-        formatter = UvicornCustomDefaultFormatter(dev_mode=self.is_dev_mode())
+        formatter = UvicornCustomDefaultFormatter(dev_mode=is_dev_mode())
         try:
             1 / 0  # noqa: B018
         except ZeroDivisionError as e:
@@ -318,21 +320,58 @@ class TestLoggerStandartCases(TestCase):
         self.assertEqual(log_text_dict, log_text_dict | expected)
 
 
+@attrs.define
+class FakeDomainClass:
+    """Used for imitate real domain class"""
+
+    x: str
+
+
 class TestLoggerCustomCases(TestCase):
     """Test custom use cases for logging functions (custom log methods, etc.)"""
 
-    def test_info_finish(self) -> None:
-        """Test custom method info_finish() with additional tweaks"""
+    def test_info_finish_general_dev(self) -> None:
+        """Test attribute `event` inside custom method info_finish()"""
         logger = create_logger()
         with structlog.testing.capture_logs() as logs:
-            logger.info_finish(cls=self.__class__, show_func_name=True, result=True)
-        excepted = {
-            "event": "Operation completed",
-            "log_level": "info",
-            "cls": self.__class__.__name__,
-            "function": "test_info_finish",
-            "result": True,
-        }
+            logger.info_finish()
+        excepted = {"event": "Operation completed", "log_level": "info"}
+        self.assertEqual(logs[0], logs[0] | excepted)
+
+    def test_info_finish_cls_name(self) -> None:
+        """Test attribute `cls` inside custom method info_finish()"""
+        logger = create_logger()
+        with structlog.testing.capture_logs() as logs:
+            logger.info_finish(cls=self.__class__)
+        excepted = {"cls": self.__class__.__name__}
+        self.assertEqual(logs[0], logs[0] | excepted)
+
+    def test_info_finish_func_name_prod(self) -> None:
+        """Test attribute `show_func_name` inside custom method info_finish()"""
+        logger = create_logger(dev_mode=is_dev_mode())
+        with structlog.testing.capture_logs() as logs:
+            logger.info_finish(show_func_name=True)
+        excepted = {"function": self.test_info_finish_func_name_prod.__name__}
+        self.assertEqual(logs[0], logs[0] | excepted)
+
+    @mock.patch.dict(os.environ, dev_mode)
+    def test_info_finish_domain_obj_dev(self) -> None:
+        """Test attribute `domain_obj` inside custom method info_finish() in dev mode"""
+        logger = create_logger(dev_mode=is_dev_mode())
+        domain_obj = FakeDomainClass(x="test")  # type: ignore[call-arg]
+        with structlog.testing.capture_logs() as logs:
+            logger.info_finish(domain_obj=domain_obj)
+        excepted = {"domain_obj": domain_obj}
+        self.assertEqual(logs[0], logs[0] | excepted)
+
+    @mock.patch.dict(os.environ, prod_mode)
+    def test_info_finish_domain_obj_prod(self) -> None:
+        """Test attribute `domain_obj` inside custom method info_finish() in prod mode"""
+        logger = create_logger(dev_mode=is_dev_mode())
+        domain_obj = FakeDomainClass(x="test")  # type: ignore[call-arg]
+        with structlog.testing.capture_logs() as logs:
+            logger.info_finish(domain_obj=domain_obj)
+        excepted = {"domain_obj": attrs.asdict(domain_obj)}
         self.assertEqual(logs[0], logs[0] | excepted)
 
 

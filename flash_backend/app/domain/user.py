@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from app.domain.auth import DomainAuth
 
 
-@define(kw_only=True, hash=True, slots=False)
+@define(kw_only=True, slots=False)
 class DomainUser(Entity):
     name: str
     email: str
