@@ -2,11 +2,11 @@ from unittest import IsolatedAsyncioTestCase
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.auth import AuthStatus, DomainAuth
-from app.domain.user import DomainUser, UserStatus
+from app.domain.auth import DomainAuth
+from app.domain.user import DomainUser
 from app.infrastructure.db import get_new_engine, get_sessionmaker
-from app.infrastructure.repositories.auth import RepositoryAuthSQL
 from app.infrastructure.repositories.user import RepositoryUserSQL
+from app.system.constants import AuthStatus, UserStatus
 
 
 class TestRepositorySQL(IsolatedAsyncioTestCase):
@@ -35,50 +35,56 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
         await repository_user.flush()
         return repository_user
 
-    async def test_repository_auth(self) -> None:
-        """Check if it is possible to create db objects using domain models using SQL repository"""
-        async with self.sessionmaker() as db_session:
-            user_domain = self._create_test_user()
-            repository_user = await self._create_user_repository(db_session, user_domain)
-            user_orm = await repository_user.get_by_email(user_domain.email)
-            assert user_orm, "User not found"
-
-            # Create auth for new user
-            repository_auth = RepositoryAuthSQL(db_session)
-            test_auth = DomainAuth(
-                user_id=user_orm.id,
-                http_user_agent="Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)",
-                ip_address="127.0.0.1",
-                status=AuthStatus.sign_up,
-            )
-            repository_auth.add(test_auth)
-            await repository_auth.flush()
-
-            # Get by user
-            auth = await repository_auth.get_by_user(user_orm)
-            assert auth.id, "Auth id not set"
-            assert auth.status.value == test_auth.status.value, "Wrong status (enum)"
-            assert auth, "Auth not created"
-
     async def test_repository_user(self) -> None:
-        """Check if it is possible to create db objects using domain models using SQL repository"""
+        """Check if it is possible to create single db object using domain model"""
+
         async with self.sessionmaker() as db_session:
             user_domain = self._create_test_user()
             repository_user = await self._create_user_repository(db_session, user_domain)
 
             # Get by email
-            user_by_email = await repository_user.get_by_email(user_domain.email)
-            assert user_by_email, "User not found"
-            assert user_by_email.email == user_domain.email, "User with wrong email returned"
-            assert user_by_email.id, "User id not set"
-            assert user_by_email.datetime_create, "Creation datetime not set"
-            assert user_by_email.status.value == user_domain.status.value, "Wrong status (enum)"
+            user_repo_by_email = await repository_user.get_by_email(user_domain.email)
+            assert user_repo_by_email, "User not found"
+            assert user_domain == user_repo_by_email, "Domain user is not the same as user from db"
 
             # Get by id
-            user_by_id = await repository_user.get_by_id(user_by_email.id)
-            assert user_by_id, "User not found"
+            user_repo_by_id = await repository_user.get_by_id(user_repo_by_email.id)
+            assert user_repo_by_id, "User not found"
+            assert user_domain == user_repo_by_id, "Domain user is not the same as user from db"
 
-            await db_session.rollback()
+    async def test_repository_user_auths(self) -> None:
+        """Check if it is possible to create multiple db objects using domain models"""
+
+        async with self.sessionmaker() as db_session:
+            user_domain = self._create_test_user()
+            repository_user = await self._create_user_repository(db_session, user_domain)
+            user_repo = await repository_user.get_by_email(user_domain.email)
+            assert user_repo, "User not found"
+
+            # Create auth for new user
+            auth_domain_sign_up = DomainAuth(
+                user_id=user_repo.id,
+                http_user_agent="Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)",
+                ip_address="127.0.0.1",
+                status=AuthStatus.sign_up,
+            )
+            auth_domain_sign_in = DomainAuth(
+                user_id=user_repo.id,
+                http_user_agent="Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)",
+                ip_address="127.0.0.1",
+                status=AuthStatus.sign_in,
+            )
+            repository_user.add(auth_domain_sign_up)
+            repository_user.add(auth_domain_sign_in)
+            await repository_user.flush()
+
+            # Get by user
+            await repository_user.refresh(user_repo)
+            auths_repo = user_repo.auths
+            assert auths_repo, "Auth not created"
+            assert len(auths_repo) == 2, "Auths do not inserted correctly"
+            assert auths_repo[0].id, "Auth id not set"
+            assert auths_repo[0].status.value == auth_domain_sign_up.status.value, "Wrong status"
 
     async def asyncTearDown(self) -> None:
         await self.engine.dispose()

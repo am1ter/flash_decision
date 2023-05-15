@@ -3,9 +3,9 @@ from typing import Annotated
 from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.domain.user import DomainUser, UserStatus
-from app.infrastructure.orm.base import Base, mapper_registry, str_unq
+from app.infrastructure.orm.base import Base, str_unq
 from app.system.config import settings_db
+from app.system.constants import UserStatus
 
 user_status = Annotated[
     UserStatus,
@@ -28,7 +28,3 @@ class OrmUser(Base):
     email: Mapped[str_unq]
     password: Mapped[str]
     status: Mapped[user_status]
-
-
-# Domain <-> ORM models mapping
-mapper_registry.map_imperatively(DomainUser, OrmUser)

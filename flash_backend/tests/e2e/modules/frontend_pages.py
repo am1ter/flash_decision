@@ -4,9 +4,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-import tests.e2e.config as cfg
-from tests.e2e.modules import frontend_locators as loc
-from tests.e2e.modules.frontend_elements import ElementButton, ElementDatePicker, ElementInput
+import e2e.config as cfg
+from e2e.modules import frontend_locators as loc
+from e2e.modules.frontend_elements import ElementButton, ElementDatePicker, ElementInput
 
 
 class PageBase:

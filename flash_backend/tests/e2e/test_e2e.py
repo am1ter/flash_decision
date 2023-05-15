@@ -1,8 +1,8 @@
 import unittest
 
-import tests.e2e.config as cfg
-from tests.e2e.modules import backend_functions as backend
-from tests.e2e.modules import frontend_pages as frontend
+from e2e import config as cfg
+from e2e.modules import backend_functions as backend
+from e2e.modules import frontend_pages as frontend
 
 
 class TestBackend(unittest.TestCase):

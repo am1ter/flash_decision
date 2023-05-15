@@ -2,7 +2,6 @@ from fastapi import FastAPI
 
 from app.api.endpoints.support import router as router_support
 from app.api.endpoints.user import router as router_user
-from app.infrastructure.db import engine
 from app.system.logger import logger, settings
 
 fastapi_app = FastAPI(title="Flash decision")
@@ -20,7 +19,7 @@ async def event_startup() -> None:
     )
     logger.info(
         f"Connection to db established",
-        db_url=engine.engine.url,
+        db_url=settings.DB_URL,
         db_schema=settings.DB_SCHEMA,
     )
 

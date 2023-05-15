@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 import sys
@@ -9,6 +10,7 @@ from types import TracebackType
 from typing import Any, Literal
 
 import asyncpg
+import attr
 import attrs
 import fastapi
 import sqlalchemy
@@ -34,7 +36,7 @@ def rich_excepthook(
         value,
         traceback,
         show_locals=True,
-        suppress=[uvicorn, fastapi, starlette, sqlalchemy, asyncpg, attrs],
+        suppress=[uvicorn, fastapi, starlette, sqlalchemy, asyncpg, attrs, attr, asyncio],
     )
     rprint(rich_tb)
 
