@@ -22,7 +22,7 @@ target_metadata = Base.metadata
 
 
 def do_run_migrations(connection: AsyncConnection) -> None:
-    def include_name(name: str, type_: str, parent_names: dict) -> bool:  # noqa: ARG001
+    def include_name(name: str, type_: str, parent_names: dict) -> bool:
         """Filter tables only in current db schema"""
         if type_ == "schema":
             return name in [settings_db.DB_SCHEMA]

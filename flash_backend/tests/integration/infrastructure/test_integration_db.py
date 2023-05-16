@@ -30,7 +30,7 @@ class TestDbConnection(IsolatedAsyncioTestCase):
         self.assertEqual(settings.ENVIRONMENT, Environment.production, "Wrong env configuration")
         self.assertEqual(settings.DB_SCHEMA, Environment.production.value, "Wrong db schema")
 
-        def include_name(name: str, type_: str, parent_names: dict) -> bool:  # noqa: ARG001
+        def include_name(name: str, type_: str, parent_names: dict) -> bool:
             """Filter only current db schema tables"""
             if type_ == "schema":
                 return name in [settings.DB_SCHEMA]
