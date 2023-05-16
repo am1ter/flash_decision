@@ -41,6 +41,16 @@ class SettingsLog(BaseSettings):
     LOG_FMT_DEV_ACCESS: str = (
         LOG_FMT_DEV_PREF + " %(client_addr)s | %(request_line)s | %(status_code)s"
     )
+    SUPPRESS_TRACEBACK_FROM_LIBS = [
+        "uvicorn",
+        "fastapi",
+        "starlette",
+        "sqlalchemy",
+        "asyncpg",
+        "attrs",
+        "attr",
+        "asyncio",
+    ]
 
 
 settings_log = SettingsLog()

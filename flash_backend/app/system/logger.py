@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import re
 import sys
@@ -6,17 +5,13 @@ import traceback
 from copy import deepcopy
 from datetime import datetime
 from logging import LogRecord
+from pathlib import Path
+from site import getsitepackages
 from types import TracebackType
 from typing import Any, Literal
 
-import asyncpg
-import attr
 import attrs
-import fastapi
-import sqlalchemy
-import starlette
 import structlog
-import uvicorn
 from rich import print as rprint
 from rich.traceback import Traceback
 from structlog.stdlib import LoggerFactory
@@ -31,13 +26,11 @@ def rich_excepthook(
     type_: type[BaseException], value: BaseException, traceback: TracebackType | None
 ) -> None:
     """Format exception using rich lib"""
-    rich_tb = Traceback.from_exception(
-        type_,
-        value,
-        traceback,
-        show_locals=True,
-        suppress=[uvicorn, fastapi, starlette, sqlalchemy, asyncpg, attrs, attr, asyncio],
-    )
+
+    # To use strings as suppress arguments instead of libs itself, must be used paths to modules
+    path_to_libs = getsitepackages()[0]
+    suppress = [str(Path(path_to_libs) / Path(s)) for s in settings.SUPPRESS_TRACEBACK_FROM_LIBS]
+    rich_tb = Traceback.from_exception(type_, value, traceback, show_locals=True, suppress=suppress)
     rprint(rich_tb)
 
 
