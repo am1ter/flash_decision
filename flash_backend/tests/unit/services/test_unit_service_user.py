@@ -10,9 +10,10 @@ from app.services.user import ServiceUser
 
 
 class RepositoryUserFake(Repository):
-    storage_user: dict[int, DomainUser] = {}
-    storage_auth: dict[int, DomainAuth] = {}
-    storage = {"DomainUser": storage_user, "DomainAuth": storage_auth}
+    def __init__(self) -> None:
+        self.storage_user: dict[int, DomainUser] = {}
+        self.storage_auth: dict[int, DomainAuth] = {}
+        self.storage = {"DomainUser": self.storage_user, "DomainAuth": self.storage_auth}
 
     def add(self, obj: DomainUser | DomainAuth) -> None:
         obj.id = randint(1, 1000)
@@ -38,25 +39,38 @@ class RepositoryUserFake(Repository):
 
 
 class TestServiceUser(IsolatedAsyncioTestCase):
-    async def test_create_user(self) -> None:
-        # Init dependencies
-        repository = RepositoryUserFake()
-        service = ServiceUser(repository=repository)
-
-        # Run func
-        req = ReqSignUp(
+    def setUp(self) -> None:
+        self.repository = RepositoryUserFake()
+        self.service = ServiceUser(repository=self.repository)
+        self.test_request = ReqSignUp(
             email="test-signup@alekseisemenov.ru",
             name="test-signup",
             password="uc8a&Q!W",  # noqa: S106
         )
-        req_system_info = ReqSystemInfo(ip_address="127.0.0.1", user_agent="Test")
-        new_user = await service.sign_up(req, req_system_info)
+        self.req_system_info = ReqSystemInfo(ip_address="127.0.0.1", user_agent="Test")
+
+    async def test_sign_up(self) -> None:
+        user = await self.service.sign_up(self.test_request, self.req_system_info)
 
         # Check user
-        self.assertIsNotNone(new_user, "New user not created")
-        self.assertEqual(req.email, new_user.email)
-        self.assertEqual(req.name, new_user.name)
-        self.assertEqual(req.password, new_user.password)
+        self.assertIsNotNone(user, "New user not created")
+        self.assertEqual(self.test_request.email, user.email)
+        self.assertEqual(self.test_request.name, user.name)
+
+        # Check password
+        self.assertNotEqual(self.test_request.password, user.password, "Password is not hashed")
 
         # Check auth
-        self.assertEqual(len(repository.storage_auth), 1, "Auths for new user not created")
+        self.assertEqual(len(self.repository.storage_auth), 1, "Auth not created")
+
+    async def test_sign_in(self) -> None:
+        user_sign_up = await self.service.sign_up(self.test_request, self.req_system_info)
+        user_sign_in = await self.service.sign_in(self.test_request, self.req_system_info)
+
+        # Check user signed in
+        self.assertEqual(user_sign_up, user_sign_in)
+
+        # Check auth record created
+        self.assertEqual(len(self.repository.storage_auth), 2, "Auths not created")
+        _, sign_in_auth = self.repository.storage_auth.popitem()
+        self.assertEqual(sign_in_auth.user, user_sign_in, "Auths for sign in not created")

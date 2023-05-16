@@ -8,12 +8,12 @@ from app.infrastructure.orm.user import OrmUser
 
 
 def init_orm_mappers() -> None:
-    """Domain <-> ORM model mapping"""
+    """Single point to setup all domain <-> ORM model mappings"""
     mapper_registry.map_imperatively(
         DomainUser,
         OrmUser,
         properties={
-            "auths": relationship(DomainAuth, back_populates="user", lazy="joined", uselist=True)
+            "auths": relationship(DomainAuth, back_populates="user", lazy="dynamic", uselist=True)
         },
     )
     mapper_registry.map_imperatively(

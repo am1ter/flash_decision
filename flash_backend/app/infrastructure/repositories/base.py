@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity
 from app.infrastructure.db import db
@@ -47,6 +48,12 @@ class RepositorySQLAlchemy(Repository):
     async def _select_one(self, col: InstrumentedAttribute, value: Any) -> Entity | None:
         """Return ONE db object using `WHERE` condition"""
         return await self.db.scalar(select(col.parent).where(col == value))
+
+    async def load_relationship(self, relationship: AppenderQuery) -> list[Entity]:
+        """Load lazy relationship using async session"""
+        query = await self.db.execute(relationship)
+        # All() method returns list of tuples with a single object inside every tuple
+        return [obj[0] for obj in query.all()]
 
     def add(self, domain_obj: Entity) -> None:
         self.db.add(domain_obj)
