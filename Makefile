@@ -31,7 +31,7 @@ run-tests-integration:  # Run backend server in prod environment and run integra
 
 .PHONY: shutdown
 shutdown:  # Shutdown python backend server
-		kill $$(lsof -i :$(PORT_BACKEND) | grep "^python" |  awk '{print $$2}') || true \
+		kill $$(lsof -i :$(BACKEND_PORT) | grep "^python" |  awk '{print $$2}') || true \
 		&& clear \
 		&& echo "Shutdown server completed"
 
@@ -42,15 +42,15 @@ pre-commit:  # Run pre-commit checks
 
 .PHONY: migrate-create
 migrate-create:  # Create db migations using db scheme from env. Use args: `env=` to `msg=`
-		cd flash_backend/db \
+		cd flash_backend \
 		&& export ENVIRONMENT=$(env) \
 		&& alembic --name $(env) revision --autogenerate -m "$(msg)"
 
 .PHONY: migrate-apply
 migrate-apply:  # Apply alembic migrations using db scheme from env. Use args: `env=`
-		cd flash_backend/db \
+		cd flash_backend \
 		&& export ENVIRONMENT=$(env) \
 		&& alembic --name $(env) upgrade head
 
 # Default environments variables
-PORT_BACKEND ?= 8001
+BACKEND_PORT ?= 8001

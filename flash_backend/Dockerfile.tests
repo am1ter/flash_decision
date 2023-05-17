@@ -1,0 +1,20 @@
+FROM python:3.11
+
+# Allow install additional packages
+RUN apt-get update
+
+# Install Poetry
+RUN pip install poetry
+
+# Create the app folder and copy the app's files
+RUN mkdir -p /usr/src/flash_backend_tests
+WORKDIR /usr/src/flash_backend_tests
+
+# Copy the app files
+COPY . .
+
+# Install required Python libraries
+RUN poetry install --with test
+
+# Run the app (use CMD in shell form)
+CMD poetry run python -m unittest discover -v -s ./tests -p test_integration_*.py -t .

@@ -11,14 +11,14 @@ class TestBackend(unittest.TestCase):
     @staticmethod
     def test_is_api_up() -> None:
         """Test: Backend API is up"""
-        url = cfg.URL_BACKEND + "/check-backend"
+        url = cfg.BACKEND_URL + "/check-backend"
         resp = backend.send_request("get", url)
         assert "errors" not in resp, "API is down"
 
     @staticmethod
     def test_is_db_up() -> None:
         """Test: Connection between backend and db is up"""
-        url = cfg.URL_BACKEND + "/check-db"
+        url = cfg.BACKEND_URL + "/check-db"
         resp = backend.send_request("get", url)
         assert "errors" not in resp, "API is down"
         assert resp["data"]["isDbUp"], "Database is down"
@@ -30,12 +30,12 @@ class TestFrontend(unittest.TestCase):
     def _go_to_page(self, page: str) -> None:
         """Define URL of the main page"""
         assert frontend.PageBase.driver, "Driver is not set up"
-        url = cfg.URL_FRONTEND + page
+        url = cfg.FRONTEND_URL + page
         frontend.PageBase.driver.get(url)
 
     def _cleanup_test_results(self) -> None:
         """Clean results of previous tests from db"""
-        url = cfg.URL_BACKEND + "/tests-cleanup"
+        url = cfg.BACKEND_URL + "/tests-cleanup"
         resp = backend.send_request("delete", url)
         assert "errors" not in resp, "Test results cleanup failed"
 

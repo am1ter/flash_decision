@@ -7,13 +7,29 @@ from pydantic import BaseSettings, PostgresDsn
 from app.system.constants import Environment
 
 
-class SettingsGeneral(BaseSettings):
+class BaseSettingsCustom(BaseSettings):
+    """Parent class for all settings subclasses"""
+
+    class Config:
+        # Allow use cached_property
+        keep_untouched = (cached_property,)
+
+
+class SettingsGeneral(BaseSettingsCustom):
     # Env
     ENVIRONMENT: Environment = Environment.production
     WORK_DIR: str = "./flash_backend"
     # HTTP
-    URL_BACKEND: str = "http://localhost:8001/api/v1"
-    PORT_BACKEND: int = 8001
+    BACKEND_PORT: int = 8001
+    BACKEND_HOST: str = "localhost"
+
+    @cached_property
+    def BACKEND_URL(self) -> str:  # noqa: N802
+        backend_url_from_env = os.getenv("BACKEND_URL")
+        if backend_url_from_env:
+            return backend_url_from_env
+        else:
+            return f"http://{self.BACKEND_HOST}:{self.BACKEND_PORT!s}/api/v1"
 
     @cached_property
     def DEV_MODE(self) -> bool:  # noqa: N802
@@ -26,15 +42,11 @@ class SettingsGeneral(BaseSettings):
             return True
         return False
 
-    class Config:
-        # Allow use cached_property
-        keep_untouched = (cached_property,)
-
 
 settings_general = SettingsGeneral()
 
 
-class SettingsLog(BaseSettings):
+class SettingsLog(BaseSettingsCustom):
     LOG_DB_ACCESS: bool = settings_general.DEBUG_MODE
     LOG_FMT_DEV_PREF: str = "%(asctime)s [%(levelprefix)s]"
     LOG_FMT_DEV_DEFAULT: str = LOG_FMT_DEV_PREF + " %(message)s"
@@ -56,7 +68,7 @@ class SettingsLog(BaseSettings):
 settings_log = SettingsLog()
 
 
-class SettingsDb(BaseSettings):
+class SettingsDb(BaseSettingsCustom):
     DB_ENGINE_SCHEMA: str = "postgresql+asyncpg"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
@@ -64,14 +76,17 @@ class SettingsDb(BaseSettings):
     DB_PASS: str = "flash!Pass"
     DB_NAME: str = "flash_decision"
     DB_SCHEMA: str = settings_general.ENVIRONMENT.value
-    DB_URL: str = PostgresDsn.build(
-        scheme=DB_ENGINE_SCHEMA,
-        host=DB_HOST,
-        port=str(DB_PORT),
-        user=DB_USER,
-        password=DB_PASS,
-        path=f"/{DB_NAME}",
-    )
+
+    @cached_property
+    def DB_URL(self) -> str:  # noqa: N802
+        return PostgresDsn.build(
+            scheme=self.DB_ENGINE_SCHEMA,
+            host=self.DB_HOST,
+            port=str(self.DB_PORT),
+            user=self.DB_USER,
+            password=self.DB_PASS,
+            path=f"/{self.DB_NAME}",
+        )
 
 
 settings_db = SettingsDb()

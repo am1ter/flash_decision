@@ -1,0 +1,61 @@
+services:
+  # Run container with database
+  flash_db_tests:
+    build:
+      context: ./flash_backend/
+      dockerfile: Dockerfile.db
+    container_name: flash_db_tests
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+      - POSTGRES_PASSWORD=${DB_PASS}
+    tmpfs:
+      - /var/lib/postgresql/data
+    networks:
+      - network_flash_tests
+
+  # Run webserver with backend (API)
+  flash_backend_tests:
+    build:
+      context: ./flash_backend/
+      dockerfile: Dockerfile.backend
+      args:
+        - ENVIRONMENT=${ENVIRONMENT}
+    container_name: flash_backend_tests
+    restart: "no"
+    depends_on:
+      - flash_db_tests
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+      - BACKEND_HOST=flash_backend_tests
+      - DB_HOST=flash_db_tests
+    networks:
+      - network_flash_tests
+
+  # Run integration tests
+  flash_tests_integration:
+    build:
+      context: ./flash_backend/
+      dockerfile: Dockerfile.tests
+    container_name: flash_tests_integration
+    restart: "no"
+    depends_on:
+      - flash_db_tests
+      - flash_backend_tests
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+      - BACKEND_HOST=flash_backend_tests
+      - DB_HOST=flash_db_tests
+      - BACKEND_URL=http://flash_backend_tests:${BACKEND_PORT}/api/v1
+    networks:
+      - network_flash_tests
+
+networks:
+  network_flash_tests:
+    internal: true

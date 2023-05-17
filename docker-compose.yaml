@@ -5,7 +5,6 @@ volumes:
   flash_db:
     name: flash_db
 
-
 services:
   # Run container with database
   flash_db:
@@ -14,9 +13,9 @@ services:
     volumes:
       - flash_db:/var/lib/postgresql/data
     ports:
-      - ${PORT_DB}:5432
+      - ${DB_PORT}:5432
     environment:
-      - POSTGRES_PASSWORD=${PASSWORD_DB}
+      - POSTGRES_PASSWORD=${DB_PASS}
     restart: always
 
   # Run webserver with backend (API)
@@ -27,35 +26,35 @@ services:
     depends_on:
       - flash_db
     ports:
-      - ${PORT_BACKEND}:8001
+      - ${BACKEND_PORT}:8001
     environment:
       - TZ=Europe/Moscow
       - DATABASE_URL=flash_db
-      - DATABASE_PORT=${PORT_DB}
+      - DATABASE_PORT=${DB_PORT}
       - DATABASE_USER=postgres
-      - DATABASE_PASS=${PASSWORD_DB}
+      - DATABASE_PASS=${DB_PASS}
 
   # Run webserver with frontend
   flash_frontend:
     build:
       context: ./flash_frontend/
       args:
-        - URL_BACKEND=${URL_BACKEND}
+        - BACKEND_URL=${BACKEND_URL}
     container_name: flash_frontend
     restart: "no"
     depends_on:
       - flash_db
       - flash_backend
     ports:
-      - ${PORT_FRONTEND}:8000
+      - ${FRONTEND_PORT}:8000
 
   # Run end2end tests
   flash_tests:
     build:
       context: ./tests/
       args:
-        - URL_BACKEND=${URL_BACKEND}
-        - URL_FRONTEND=${URL_FRONTEND}
+        - BACKEND_URL=${BACKEND_URL}
+        - FRONTEND_URL=${FRONTEND_URL}
     container_name: flash_tests
     restart: "no"
     depends_on:

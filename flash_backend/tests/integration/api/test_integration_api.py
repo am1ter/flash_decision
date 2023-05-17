@@ -22,7 +22,7 @@ class Response:
 
 class TestBackend(unittest.TestCase):
     def test_healthcheck(self) -> None:
-        r = requests.get(f"{settings.URL_BACKEND}/support/healthcheck")
+        r = requests.get(f"{settings.BACKEND_URL}/support/healthcheck")
         response = Response(r)
         response.assert_status_code(200)
         data_model = RespDataHealthcheck(**response.data)

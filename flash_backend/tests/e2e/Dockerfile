@@ -1,10 +1,10 @@
 FROM python:3.8
 
 # Read environment variables from docker-compose file
-ARG URL_BACKEND
-ARG URL_FRONTEND
-ENV URL_BACKEND=${URL_BACKEND}
-ENV URL_FRONTEND=${URL_FRONTEND}
+ARG BACKEND_URL
+ARG FRONTEND_URL
+ENV BACKEND_URL=${BACKEND_URL}
+ENV FRONTEND_URL=${FRONTEND_URL}
 
 # Install selenium requirements (chromedriver)
 RUN apt-get update \

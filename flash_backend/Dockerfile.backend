@@ -1,0 +1,27 @@
+FROM python:3.11
+
+# Read environment variables from the docker-compose file
+ARG ENVIRONMENT
+
+# Allow install additional packages
+RUN apt-get update
+
+# Install Poetry
+RUN pip install poetry
+
+# Create the app folder and copy the app's files
+RUN mkdir -p /usr/src/flash_backend
+WORKDIR /usr/src/flash_backend
+
+# Copy the app files
+COPY . .
+
+# Install required Python libraries
+RUN poetry install --only main
+
+# Open port
+EXPOSE 8001
+
+# Apply DB migrations using the env var as the DB schema and start the app (use CMD in shell form)
+CMD poetry run alembic --name $ENVIRONMENT upgrade head \
+    & poetry run python -m main

@@ -6,7 +6,7 @@ import axios from "axios"
 // Read docker enviroment variables
 // ================================
 
-let API_URL = (process.env.VUE_APP_URL_BACKEND) ? process.env.VUE_APP_URL_BACKEND : "http://127.0.0.1:8001/api"
+let API_URL = (process.env.VUE_APP_BACKEND_URL) ? process.env.VUE_APP_BACKEND_URL : "http://127.0.0.1:8001/api"
 
 
 // API errors handling

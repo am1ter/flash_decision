@@ -8,7 +8,8 @@ if __name__ == "__main__":
     if settings.DEV_MODE:
         uvicorn.run(
             "app.api.fastapi:fastapi_app",
-            port=settings.PORT_BACKEND,
+            host=settings.BACKEND_HOST,
+            port=settings.BACKEND_PORT,
             reload=True,
             reload_dirs=[settings.WORK_DIR],
             log_config=uvicorn_log_config,
@@ -16,6 +17,7 @@ if __name__ == "__main__":
     else:
         uvicorn.run(
             fastapi_app,
-            port=settings.PORT_BACKEND,
+            host=settings.BACKEND_HOST,
+            port=settings.BACKEND_PORT,
             log_config=uvicorn_log_config,
         )

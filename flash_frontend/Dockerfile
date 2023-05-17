@@ -1,8 +1,8 @@
 FROM node:14
 
 # Read environment variables from docker-compose file
-ARG URL_BACKEND
-ENV VUE_APP_URL_BACKEND=${URL_BACKEND}
+ARG BACKEND_URL
+ENV VUE_APP_BACKEND_URL=${BACKEND_URL}
 
 # Install simple http server for serving static content
 RUN npm install -g http-server
