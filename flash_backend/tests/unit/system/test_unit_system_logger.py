@@ -153,13 +153,17 @@ class TestLoggerStandartCases(TestCase):
         formatter = UvicornCustomDefaultFormatter(dev_mode=is_dev_mode())
 
         # Create mock record
-        log_msg = "2000-01-01 00:00:00,000 [\x1b[32mINFO\x1b[0m:    ] Will watch for changes:[]"
+        if formatter.use_colors:
+            log_msg = "2000-01-01 00:00:00,000 [\x1b[32mINFO\x1b[0m:    ] Will watch for changes:[]"
+        else:
+            log_msg = "2000-01-01 00:00:00,000 [INFO:    ] Will watch for changes:[]"
         mock_record = self._create_mock_log_record_uvicorn_default(log_msg)
 
         # Format record object, delete style tags and verify it
         log_msg_fmt = formatter.formatMessage(mock_record)
         log_msg_fmt_clean = self._clean_log_msg(log_msg_fmt)
         expected = "2000-01-01 00:00:00,000 [info     ] Will watch for changes:[]"
+        self.assertNotIn("INFO:", log_msg_fmt_clean, "Reformat level func does not work")
         self.assertEqual(log_msg_fmt_clean, expected)
 
     @mock.patch.dict(os.environ, prod_mode)
@@ -196,6 +200,7 @@ class TestLoggerStandartCases(TestCase):
         log_msg_fmt = formatter.formatMessage(mock_record)
         log_msg_fmt_clean = self._clean_log_msg(log_msg_fmt)
         expected = "2000-01-01 00:00:00,000 [info     ] 127.0.0.1:43136 | GET / HTTP/1.1 | 200 OK"
+        self.assertNotIn("INFO:", log_msg_fmt_clean, "Reformat level func does not work")
         self.assertEqual(log_msg_fmt_clean, expected)
 
     @mock.patch.dict(os.environ, prod_mode)

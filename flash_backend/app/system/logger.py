@@ -47,11 +47,12 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         dev_mode: bool | None = None,
     ) -> None:
         """Change format for Uvicorn logs to unify it with structlog format"""
-
-        # Source record has format like: [\x1b[32mINFO\x1b[0m:    ]
-        self.regex_level = re.compile(r"[0-9]{1,2}m.*[0-9]{1,2}m:")
-        self.tags_escape = re.compile(r"\x1b\[([0-9]{1,2})[m]")
         super().__init__(fmt, datefmt, style, use_colors)
+
+        # Source record has format like: [\x1b[32mINFO\x1b[0m:    ] or [INFO:    ]
+        regex_pattern = r"[0-9]{1,2}m.*[0-9]{1,2}m:" if self.use_colors else r"(?<=\[)\w+:"
+        self.regex_level = re.compile(regex_pattern)
+        self.tags_escape = re.compile(r"\x1b\[([0-9]{1,2})[m]")
 
         # Force setup dev_mode
         self.dev_mode = dev_mode
