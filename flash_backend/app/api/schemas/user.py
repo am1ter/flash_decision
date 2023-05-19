@@ -10,8 +10,6 @@ class ReqSystemInfo(BaseModel):
 
 
 class BaseSign(BaseModel):
-    email: str
-
     class Config:
         """Disable Extra.allow which is inherited from meta classes"""
 
@@ -19,20 +17,24 @@ class BaseSign(BaseModel):
 
 
 class ReqSignUp(BaseSign, ReqMeta):
+    email: str
     name: str
     password: str = Field(repr=False)
 
 
 class RespSignUp(BaseSign, RespData):
     id: int
+    email: str
     status: UserStatus
     token: str
 
 
 class ReqSignIn(BaseSign, ReqMeta):
+    email: str
     password: str = Field(repr=False)
 
 
 class RespSignIn(BaseSign, ReqMeta):
+    email: str
     status: UserStatus
     token: str

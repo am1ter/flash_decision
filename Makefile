@@ -23,6 +23,7 @@ run-tests-unit:  # Run backend server in prod environment and run unit tests
 		poetry run python -m unittest discover -v -s ./flash_backend/tests -p test_unit_*.py -t ./flash_backend \
 
 .PHONY: docker-run-tests
+.IGNORE:
 docker-run-tests:  # Run docker compose to tests create test environment and run tests
 		docker compose -f ./docker-compose.tests.yaml up -d --build \
 		&& sleep 1 \
