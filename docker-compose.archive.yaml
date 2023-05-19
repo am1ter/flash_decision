@@ -47,17 +47,17 @@ services:
       - flash_backend
     ports:
       - ${FRONTEND_PORT}:8000
-
+  #
   # Run end2end tests
-  flash_tests:
-    build:
-      context: ./tests/
-      args:
-        - BACKEND_URL=${BACKEND_URL}
-        - FRONTEND_URL=${FRONTEND_URL}
-    container_name: flash_tests
-    restart: "no"
-    depends_on:
-      - flash_db
-      - flash_backend
-      - flash_frontend
+  # flash_tests:
+  #   build:
+  #     context: ./tests/
+  #     args:
+  #       - BACKEND_URL=${BACKEND_URL}
+  #       - FRONTEND_URL=${FRONTEND_URL}
+  #   container_name: flash_tests
+  #   restart: "no"
+  #   depends_on:
+  #     - flash_db
+  #     - flash_backend
+  #     - flash_frontend

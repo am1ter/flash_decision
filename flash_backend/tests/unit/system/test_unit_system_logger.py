@@ -11,6 +11,10 @@ from unittest import TestCase, main, mock
 import attrs
 import structlog
 
+# Logger tests must be run only in `production` mode
+os.environ["ENVIRONMENT"] = "production"
+
+# Import 1st party modules after setting env vars
 from app.system.logger import (
     UvicornCustomDefaultFormatter,
     UvicornCustomFormatterAccess,

@@ -18,10 +18,9 @@ class BaseSettingsCustom(BaseSettings):
 class SettingsGeneral(BaseSettingsCustom):
     # Env
     ENVIRONMENT: Environment = Environment.production
-    WORK_DIR: str = "./flash_backend"
     # HTTP
-    BACKEND_PORT: int = 8001
     BACKEND_HOST: str = "localhost"
+    BACKEND_PORT: int = 8001
 
     @cached_property
     def BACKEND_URL(self) -> str:  # noqa: N802

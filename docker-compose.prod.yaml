@@ -1,0 +1,38 @@
+services:
+  # Run container with database
+  prod_db:
+    build:
+      context: ./flash_backend/
+      dockerfile: Dockerfile.db
+    container_name: flash_db
+    volumes:
+      - flash_db:/var/lib/postgresql/data
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}
+    restart: always
+
+  # Run webserver with backend (API)
+  prod_backend:
+    build:
+      context: ./flash_backend/
+      dockerfile: Dockerfile.backend
+      args:
+        - ENVIRONMENT=${ENVIRONMENT}
+    container_name: flash_backend
+    restart: always
+    depends_on:
+      - flash_db
+    ports:
+      - ${BACKEND_PORT}:8001
+    env_file:
+      - .env
+    environment:
+      - BACKEND_HOST=flash_backend
+      - DB_HOST=flash_db
+
+volumes:
+  # local database is stored in volume
+  flash_db:
+    name: flash_db

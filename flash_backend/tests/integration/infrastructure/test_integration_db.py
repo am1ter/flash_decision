@@ -1,3 +1,4 @@
+import os
 from unittest import IsolatedAsyncioTestCase
 
 from alembic.autogenerate import compare_metadata
@@ -5,6 +6,10 @@ from alembic.runtime.migration import MigrationContext
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+# Logger tests must be run only in `production` mode
+os.environ["ENVIRONMENT"] = "production"
+
+# Import 1st party modules after setting env vars
 from app.infrastructure.db import get_connection, get_new_engine
 from app.infrastructure.orm import Base
 from app.system.config import Environment, settings
