@@ -11,7 +11,7 @@ if __name__ == "__main__":
             host=settings.BACKEND_HOST,
             port=settings.BACKEND_PORT,
             reload=True,
-            reload_dirs=["flash_backend/app"],
+            reload_dirs=["backend/app"],
             log_config=uvicorn_log_config,
         )
     else:

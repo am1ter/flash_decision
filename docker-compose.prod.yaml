@@ -2,9 +2,9 @@ services:
   # Run container with database
   prod_db:
     build:
-      context: ./flash_backend/
+      context: ./backend/
       dockerfile: Dockerfile.db
-    container_name: flash_db
+    container_name: prod_db
     volumes:
       - flash_db:/var/lib/postgresql/data
     ports:
@@ -16,11 +16,11 @@ services:
   # Run webserver with backend (API)
   prod_backend:
     build:
-      context: ./flash_backend/
+      context: ./backend/
       dockerfile: Dockerfile.backend
       args:
         - ENVIRONMENT=${ENVIRONMENT}
-    container_name: flash_backend
+    container_name: prod_backend
     restart: always
     depends_on:
       - flash_db
@@ -29,7 +29,7 @@ services:
     env_file:
       - .env
     environment:
-      - BACKEND_HOST=flash_backend
+      - BACKEND_HOST=prod_backend
       - DB_HOST=flash_db
 
 volumes:

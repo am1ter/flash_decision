@@ -10,8 +10,8 @@ RUN apt-get update
 RUN pip install poetry
 
 # Create the app folder and copy the app's files
-RUN mkdir -p /usr/src/flash_backend
-WORKDIR /usr/src/flash_backend
+RUN mkdir -p /usr/src/backend
+WORKDIR /usr/src/backend
 
 # Copy dependency files
 COPY poetry.lock pyproject.toml ./
@@ -21,7 +21,7 @@ RUN poetry install --with test
 
 # Copy the app files
 COPY . .
-RUN rm -rf /usr/src/flash_backend/tests/e2e
+RUN rm -rf /usr/src/backend/tests/e2e
 
 # Open port
 EXPOSE 8001

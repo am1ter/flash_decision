@@ -2,7 +2,7 @@ services:
   # Run container with database
   tests_db:
     build:
-      context: ./flash_backend/
+      context: ./backend/
       dockerfile: Dockerfile.db
     container_name: tests_db
     restart: "no"
@@ -19,7 +19,7 @@ services:
   # Tests run in the same container with `docker compose run --rm` command
   tests_backend:
     build:
-      context: ./flash_backend/
+      context: ./backend/
       dockerfile: Dockerfile.backend
       args:
         - ENVIRONMENT=${ENVIRONMENT}

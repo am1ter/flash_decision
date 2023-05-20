@@ -40,9 +40,9 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-exclude = ["flash_backend_archive"]
 ignore_missing_imports = true
 follow_imports = "silent"
+exclude = []
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

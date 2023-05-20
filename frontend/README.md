@@ -1,4 +1,4 @@
-# flash_frontend
+# frontend
 
 ## Project setup
 ```
