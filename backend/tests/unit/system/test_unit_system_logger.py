@@ -21,7 +21,7 @@ from app.system.logger import (
     create_logger,
 )
 
-# Vars for patching env vars using `@mock.patch.object` decorator
+# Vars for patching env vars using `@mock.patch.dict` decorator
 dev_mode = {"DEV_MODE": "True"}
 prod_mode = {"DEV_MODE": "False"}
 

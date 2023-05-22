@@ -2,7 +2,7 @@ from starlette import status
 
 
 class BaseHTTPError(Exception):
-    message: str
+    msg: str
     status_code: int
 
 
@@ -19,3 +19,18 @@ class UserDisabledError(BaseHTTPError):
 class WrongPasswordError(BaseHTTPError):
     msg = "The password you entered is incorrect. Please double-check your input and try again."
     status_code = status.HTTP_403_FORBIDDEN
+
+
+class BaseValidationError(ValueError):
+    msg: str
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(self.msg, *args)
+
+
+class ConfigHTTPInconsistentError(BaseValidationError):
+    msg = "BACKEND_HOST and BACKEND_URL are inconsistent"
+
+
+class ConfigHTTPWrongURLError(BaseValidationError):
+    msg = "BACKEND_URL has wrong format"

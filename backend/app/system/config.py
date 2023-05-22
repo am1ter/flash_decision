@@ -1,10 +1,12 @@
 import os
+from copy import copy
 from distutils.util import strtobool
 from functools import cached_property
 
-from pydantic import BaseSettings, PostgresDsn
+from pydantic import BaseSettings, HttpUrl, PostgresDsn, ValidationError, parse_obj_as
 
 from app.system.constants import Environment
+from app.system.exceptions import ConfigHTTPInconsistentError, ConfigHTTPWrongURLError
 
 
 class BaseSettingsCustom(BaseSettings):
@@ -25,10 +27,25 @@ class SettingsGeneral(BaseSettingsCustom):
     @cached_property
     def BACKEND_URL(self) -> str:  # noqa: N802
         backend_url_from_env = os.getenv("BACKEND_URL")
-        if backend_url_from_env:
-            return backend_url_from_env
-        else:
+
+        # If backend url is not set up create it dynamically
+        if not backend_url_from_env:
             return f"http://{self.BACKEND_HOST}:{self.BACKEND_PORT!s}/api/v1"
+
+        # Parse URL and validate it
+        try:
+            # Allow urls without `top level domain` like `localhost`
+            http_url_no_tld = copy(HttpUrl)
+            http_url_no_tld.tld_required = False
+            backend_url_from_env_obj = parse_obj_as(http_url_no_tld, backend_url_from_env)
+        except ValidationError as e:
+            raise ConfigHTTPWrongURLError from e
+
+        # Check if backend_url and backend_host are consistent with each other
+        if backend_url_from_env_obj.host.lower() != self.BACKEND_HOST:
+            raise ConfigHTTPInconsistentError
+
+        return backend_url_from_env
 
     @cached_property
     def DEV_MODE(self) -> bool:  # noqa: N802

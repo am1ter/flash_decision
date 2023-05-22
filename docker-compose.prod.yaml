@@ -36,6 +36,13 @@ services:
       - DB_HOST=fd_db_main
     ports:
       - ${BACKEND_PORT}:8001
+    healthcheck:
+      disable: ${HEALTHCHECK_DISABLE}
+      test: [ "CMD-SHELL", "curl -f ${BACKEND_URL}${HEALTHCHECK_URL}" ]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   # Database data is stored in volume
