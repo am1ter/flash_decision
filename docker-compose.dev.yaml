@@ -1,6 +1,6 @@
 # IMPORTANT!
 # Use `--env-file` agument during build with  `docker compose` to set arguments for Dockerfiles
-# Example: docker compose --env-file=.prod.tests -f ./docker-compose.prod.yaml up -d --build
+# Example: docker compose --env-file=.dev.tests -f ./docker-compose.dev.yaml up -d --build
 
 services:
   # Run container with database
@@ -20,24 +20,24 @@ services:
       - fd_db_main:/var/lib/postgresql/data
 
   # Run webserver with backend (API)
-  fd_backend_prod:
+  fd_backend_dev:
     build:
       context: ./backend/
       dockerfile: Dockerfile.backend
       args:
         - ENVIRONMENT=${ENVIRONMENT}
-    container_name: fd_backend_prod
+    container_name: fd_backend_dev
     restart: always
     depends_on:
       - fd_db_main
     env_file:
-      - .env.prod
+      - .env.dev
     environment:
       - DB_HOST=fd_db_main
     ports:
       - ${BACKEND_PORT}:8001
 
 volumes:
-  # Database data is stored in volume
+  # local database is stored in volume
   fd_db_main:
     name: fd_db_main

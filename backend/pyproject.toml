@@ -1,9 +1,11 @@
 [tool.poetry]
-name = "flash-decision"
+name = "app"
 version = "1.0.0"
 description = "Application for training securities trading skills"
 authors = ["Aleksei Semenov <amiter@yandex.ru>"]
-readme = "README.md"
+
+[tool.poetry.scripts]
+app="app.main:run"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -181,5 +183,5 @@ line-length = 100
 line_length = 100
 profile = "black"
 src_paths = ["app/"]
-known_first_party = ["e2e"]
+known_first_party = ["e2e", "app"]
 known_third_party = ["fastapi"]

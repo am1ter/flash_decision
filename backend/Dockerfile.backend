@@ -27,4 +27,5 @@ RUN rm -rf /usr/src/backend/tests/e2e
 EXPOSE 8001
 
 # Apply DB migrations using the env var as the DB schema and start the app (use CMD in shell form)
-CMD poetry run alembic --name $ENVIRONMENT upgrade head && poetry run python -m main
+CMD poetry run alembic --name $ENVIRONMENT upgrade head \
+    && poetry run app

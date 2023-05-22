@@ -4,14 +4,15 @@ from app.api.fastapi import fastapi_app
 from app.system.config import settings
 from app.system.logger import uvicorn_log_config
 
-if __name__ == "__main__":
+
+def run() -> None:
     if settings.DEV_MODE:
         uvicorn.run(
-            "app.api.fastapi:fastapi_app",
+            "api.fastapi:fastapi_app",
             host=settings.BACKEND_HOST,
             port=settings.BACKEND_PORT,
             reload=True,
-            reload_dirs=["backend/app"],
+            reload_dirs=["app"],
             log_config=uvicorn_log_config,
         )
     else:
@@ -21,3 +22,7 @@ if __name__ == "__main__":
             port=settings.BACKEND_PORT,
             log_config=uvicorn_log_config,
         )
+
+
+if __name__ == "__main__":
+    run()

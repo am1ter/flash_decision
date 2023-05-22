@@ -1,35 +1,34 @@
-.PHONY: run-prod
-run-prod:  # Run backend in production environment
-		cd backend;
-		export ENVIRONMENT=production;
-		poetry run python -m main
+.PHONY: docker-up-db
+docker-up-db:  # Run docker compose to run db
+		docker compose --env-file=.env.prod -f ./docker-compose.prod.yaml up -d fd_db_main --build
 
-.PHONY: run-dev
-run-dev:  # Run backend in dev environment
-		cd backend;
-		export ENVIRONMENT=development;
-		poetry run python -m main
+.PHONY: docker-up-prod
+docker-up-prod:  # Run docker compose to run backend in prod environment
+		docker compose --env-file=.env.prod -f ./docker-compose.prod.yaml up -d --build
 
-.PHONY: run-debug
-run-debug:  # Run backend in debug mode (dev environment + additional logs)
-		cd backend;
-		export ENVIRONMENT=development;
-		export DEBUG_MODE=True;
-		poetry run python -m main
-
-.PHONY: run-tests-unit
-run-tests-unit:  # Run backend server in prod environment and run unit tests
-		export ENVIRONMENT=production;
-		poetry run python -m unittest discover -v -s ./backend/tests -p test_unit_*.py -t ./backend \
+.PHONY: docker-up-dev
+docker-up-dev:  # Run docker compose to run backend in dev environment
+		docker compose --env-file=.env.dev -f ./docker-compose.dev.yaml up -d --build
 
 .PHONY: docker-run-tests
 .IGNORE:
 docker-run-tests:  # Run docker compose to tests create test environment and run tests
-		docker compose -f ./docker-compose.tests.yaml up -d --build \
+		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml up -d --build \
 		&& sleep 1 \
-		&& docker compose -f ./docker-compose.tests.yaml run --rm \
-			tests_backend poetry run python -m unittest discover -v -s ./tests -p test_*.py -t . ;
-		docker compose -f ./docker-compose.tests.yaml down;
+		&& docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml run --rm fd_backend_tests \
+			poetry run python -m unittest discover -v -s ./tests -p test_*.py -t . ;
+		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml down;
+
+.PHONY: docker-down
+docker-down:  # Shutdown and remove containers for backend in prod environment
+		docker compose --env-file=.env.prod -f ./docker-compose.prod.yaml down;
+		docker compose --env-file=.env.dev -f ./docker-compose.dev.yaml down;
+
+.PHONY: run-tests-unit
+run-tests-unit:  # Run backend server in prod environment and run unit tests
+		export ENVIRONMENT=production;
+		poetry -C ./backend run \
+			python -m unittest discover -v -s ./backend/tests -p test_unit_*.py -t ./backend
 
 .PHONY: shutdown
 shutdown:  # Shutdown python backend server
