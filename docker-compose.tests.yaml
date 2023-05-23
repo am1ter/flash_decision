@@ -1,9 +1,9 @@
 # IMPORTANT!
-# Use `--env-file` agument during build with  `docker compose` to set arguments for Dockerfiles
+# Use `--env-file` agument during build with `docker compose` to set arguments for Dockerfiles
 # Example: docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml up -d --build
 
 services:
-  # Run container with database
+  # Run database
   fd_db_tests:
     build:
       context: ./backend/
@@ -20,18 +20,13 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
 
-  # Run webserver with backend (API)
-  # Tests run in the same container with `docker compose run --rm` command
-  fd_backend_tests:
+  # Basic defention for containers with python
+  fd_tmpl_tests:
     build:
       context: ./backend/
       dockerfile: Dockerfile.backend
-      args:
-        - ENVIRONMENT=${ENVIRONMENT}
-    container_name: fd_backend_tests
+    command: []
     restart: "no"
-    depends_on:
-      - fd_db_tests
     env_file:
       - .env.tests
     environment:
@@ -39,6 +34,34 @@ services:
       - DB_HOST=fd_db_tests
     networks:
       - tests
+
+  # Apply db migrations
+  fd_migrations_tests:
+    extends:
+      service: fd_tmpl_tests
+    container_name: fd_migrations_tests
+    command: poetry run alembic --name ${ENVIRONMENT} upgrade head
+    depends_on:
+      - fd_db_tests
+
+  # Run webserver with backend (API)
+  fd_backend_tests:
+    extends:
+      service: fd_migrations_tests
+    container_name: fd_backend_tests
+    command: poetry run app
+    depends_on:
+      fd_migrations_tests:
+        condition: service_completed_successfully
+
+  # Run tests when test environment is ready
+  fd_tests:
+    extends:
+      service: fd_migrations_tests
+    container_name: fd_tests
+    command: poetry run python -m unittest discover -v -s ./tests -p test_*.py -t .
+    depends_on:
+      - fd_backend_tests
 
 # Tests use isolated docker network
 networks:

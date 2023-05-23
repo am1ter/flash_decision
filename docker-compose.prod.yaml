@@ -1,5 +1,5 @@
 # IMPORTANT!
-# Use `--env-file` agument during build with  `docker compose` to set arguments for Dockerfiles
+# Use `--env-file` agument during build with `docker compose` to set arguments for Dockerfiles
 # Example: docker compose --env-file=.prod.tests -f ./docker-compose.prod.yaml up -d --build
 
 services:
@@ -14,26 +14,53 @@ services:
       - .env.prod
     environment:
       - POSTGRES_PASSWORD=${DB_PASS}
+      - PGPORT=${DB_PORT}
     ports:
       - ${DB_PORT}:5432
     volumes:
       - fd_db_main:/var/lib/postgresql/data
+    profiles:
+      - db
+      - backend
 
-  # Run webserver with backend (API)
-  fd_backend_prod:
+  # Basic defention for containers with python
+  # By default this container is ignored during `docker compose up` commands, because of the profile
+  fd_tmpl:
     build:
       context: ./backend/
       dockerfile: Dockerfile.backend
-      args:
-        - ENVIRONMENT=${ENVIRONMENT}
-    container_name: fd_backend_prod
-    restart: always
-    depends_on:
-      - fd_db_main
+    command: []
     env_file:
       - .env.prod
     environment:
+      - BACKEND_HOST=fd_backend
       - DB_HOST=fd_db_main
+    profiles:
+      - tmpl
+
+  # Apply db migrations
+  fd_migrations:
+    extends:
+      service: fd_tmpl
+    container_name: fd_migrations_prod
+    command: poetry run alembic --name ${ENVIRONMENT} upgrade head
+    restart: "no"
+    depends_on:
+      - fd_db_main
+    profiles:
+      - db
+      - backend
+
+  # Run webserver with backend (API)
+  fd_backend:
+    extends:
+      service: fd_tmpl
+    container_name: fd_backend_prod
+    command: poetry run app
+    restart: always
+    depends_on:
+      fd_migrations:
+        condition: service_completed_successfully
     ports:
       - ${BACKEND_PORT}:8001
     healthcheck:
@@ -43,6 +70,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    profiles:
+      - backend
 
 volumes:
   # Database data is stored in volume

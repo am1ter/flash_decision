@@ -1,8 +1,5 @@
 FROM python:3.11
 
-# Read environment variables from the docker-compose file
-ARG ENVIRONMENT
-
 # Allow install additional packages
 RUN apt-get update
 
@@ -22,10 +19,3 @@ RUN poetry install --with test
 # Copy the app files
 COPY . .
 RUN rm -rf /usr/src/backend/tests/e2e
-
-# Open port
-EXPOSE 8001
-
-# Apply DB migrations using the env var as the DB schema and start the app (use CMD in shell form)
-CMD poetry run alembic --name $ENVIRONMENT upgrade head \
-    && poetry run app
