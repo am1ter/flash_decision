@@ -1,10 +1,10 @@
-from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
 from attrs import define, field
 
 
-def field_relationship(*, init: bool) -> Callable:
+def field_relationship(*, init: bool) -> Any:
     """Mark domain attribute as ORM relationships (mapped with ORM in map_imperatively() func)"""
     return field(init=init, repr=False, eq=False)
 

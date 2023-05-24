@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import logging.config
+from collections.abc import MutableMapping
+from typing import Literal
 
 from alembic import context
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -22,7 +24,15 @@ target_metadata = Base.metadata
 
 
 def do_run_migrations(connection: AsyncConnection) -> None:
-    def include_name(name: str, type_: str, parent_names: dict) -> bool:
+    def include_name(
+        name: str | None,
+        type_: Literal[
+            "schema", "table", "column", "index", "unique_constraint", "foreign_key_constraint"
+        ],
+        parent_names: MutableMapping[
+            Literal["schema_name", "table_name", "schema_qualified_table_name"], str | None
+        ],
+    ) -> bool:
         """Filter tables only in current db schema"""
         if type_ == "schema":
             return name in [settings_db.DB_SCHEMA]

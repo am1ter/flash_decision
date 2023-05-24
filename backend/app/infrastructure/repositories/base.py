@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from typing import Any
 
 from sqlalchemy import select
@@ -8,6 +9,7 @@ from sqlalchemy.orm.dynamic import AppenderQuery
 from app.domain.base import Entity
 from app.infrastructure.db import db
 from app.infrastructure.orm.mapper import init_orm_mappers
+from app.system.exceptions import DbObjectNotFoundError
 
 # Run orm mappers as the part of RepositorySQLAlchemy
 # Repository is the place where domain models and orm models works together.
@@ -39,18 +41,27 @@ class RepositorySQLAlchemy(Repository):
     def __init__(self, db: db) -> None:
         self.db = db
 
-    async def _select_all(self, col: InstrumentedAttribute, value: Any) -> list[Entity]:
+    async def _select_all(self, col: Any, value: Any) -> Sequence[Entity]:
         """Return ALL db objects using `WHERE` condition"""
-        objs = await self.db.scalars(select(col.parent).where(col == value))
+        assert isinstance(col, InstrumentedAttribute), f"{col=} is not a valid db column"
+        objs_db = await self.db.scalars(select(col.parent).where(col == value))
         # AsyncSession requires to call unique() method on `uselist` quieres results
-        return objs.unique().all()
+        objs = objs_db.unique().all()
+        if not objs:
+            raise DbObjectNotFoundError
+        return objs
 
-    async def _select_one(self, col: InstrumentedAttribute, value: Any) -> Entity | None:
+    async def _select_one(self, col: Any, value: Any) -> Entity:
         """Return ONE db object using `WHERE` condition"""
-        return await self.db.scalar(select(col.parent).where(col == value))
+        assert isinstance(col, InstrumentedAttribute), f"{col=} is not a valid db column"
+        entity = await self.db.scalar(select(col.parent).where(col == value))
+        if not entity:
+            raise DbObjectNotFoundError
+        return entity
 
-    async def load_relationship(self, relationship: AppenderQuery) -> list[Entity]:
+    async def load_relationship(self, relationship: Any) -> list[Entity]:
         """Load lazy relationship using async session"""
+        assert isinstance(relationship, AppenderQuery), f"{relationship=} is not a relationship"
         query = await self.db.execute(relationship)
         # All() method returns list of tuples with a single object inside every tuple
         return [obj[0] for obj in query.all()]

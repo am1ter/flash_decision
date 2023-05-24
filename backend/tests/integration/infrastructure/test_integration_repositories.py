@@ -83,6 +83,7 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
             auths_repo = await repository_user.load_relationship(user_repo.auths)
             assert auths_repo, "Auth not created"
             assert len(auths_repo) == 2, "Auths do not inserted correctly"
+            assert isinstance(auths_repo[0], DomainAuth), "Auth has wrong type"
             assert auths_repo[0].id, "Auth id not set"
             assert auths_repo[0].status.value == auth_domain_sign_up.status.value, "Wrong status"
 

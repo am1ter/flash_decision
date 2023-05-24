@@ -45,6 +45,7 @@ build-backend = "poetry.core.masonry.api"
 ignore_missing_imports = true
 follow_imports = "silent"
 exclude = []
+mypy_path="backend"
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

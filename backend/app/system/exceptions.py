@@ -21,6 +21,11 @@ class WrongPasswordError(BaseHTTPError):
     status_code = status.HTTP_403_FORBIDDEN
 
 
+class DbObjectNotFoundError(BaseHTTPError):
+    msg = "This object could not be found in the database."
+    status_code = status.HTTP_404_NOT_FOUND
+
+
 class BaseValidationError(ValueError):
     msg: str
 
