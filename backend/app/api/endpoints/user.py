@@ -1,7 +1,7 @@
 from attrs import asdict
 from fastapi import APIRouter, Request
 
-from app.api.schemas.base import Resp
+from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo, RespSignIn, RespSignUp
 from app.services.user import ServiceUserDep
 
@@ -17,8 +17,10 @@ def parse_request_system_info(raw_request: Request) -> ReqSystemInfo:
     return req_system_info
 
 
-@router.post("/sign-up", response_model=Resp)
-async def sign_up(payload: ReqSignUp, raw_request: Request, service_user: ServiceUserDep) -> Resp:
+@router.post("/sign-up")
+async def sign_up(
+    payload: ReqSignUp, raw_request: Request, service_user: ServiceUserDep
+) -> Resp[RespMeta, RespSignUp]:
     """Create new user and record it to db"""
 
     req_system_info = parse_request_system_info(raw_request)
@@ -28,8 +30,10 @@ async def sign_up(payload: ReqSignUp, raw_request: Request, service_user: Servic
     return Resp(data=data)
 
 
-@router.post("/sign-in", response_model=Resp)
-async def sign_in(payload: ReqSignIn, raw_request: Request, service_user: ServiceUserDep) -> Resp:
+@router.post("/sign-in")
+async def sign_in(
+    payload: ReqSignIn, raw_request: Request, service_user: ServiceUserDep
+) -> Resp[RespMeta, RespSignIn]:
     """Create new user and record it to db"""
 
     req_system_info = parse_request_system_info(raw_request)

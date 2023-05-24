@@ -9,32 +9,31 @@ class ReqSystemInfo(BaseModel):
     user_agent: str
 
 
-class BaseSign(BaseModel):
-    class Config:
-        """Disable Extra.allow which is inherited from meta classes"""
-
-        extra = Extra.ignore
-
-
-class ReqSignUp(BaseSign, ReqMeta):
+class ReqSignUp(ReqMeta):
     email: str
     name: str
     password: str = Field(repr=False)
 
 
-class RespSignUp(BaseSign, RespData):
+class RespSignUp(RespData):
     id: int
     email: str
     status: UserStatus
     token: str
 
+    class Config:  # Disable Extra.allow which is inherited from meta class
+        extra = Extra.ignore
 
-class ReqSignIn(BaseSign, ReqMeta):
+
+class ReqSignIn(ReqMeta):
     email: str
     password: str = Field(repr=False)
 
 
-class RespSignIn(BaseSign, ReqMeta):
+class RespSignIn(RespData):
     email: str
     status: UserStatus
     token: str
+
+    class Config:  # Disable Extra.allow which is inherited from meta class
+        extra = Extra.ignore
