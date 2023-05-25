@@ -1,9 +1,19 @@
 from starlette import status
 
 
-class BaseHTTPError(Exception):
+class BaseError(Exception):
     msg: str
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(self.msg, *args)
+
+
+class BaseHTTPError(BaseError):
     status_code: int
+
+
+class BaseValidationError(BaseError):
+    pass
 
 
 class UserNotFoundError(BaseHTTPError):
@@ -21,16 +31,19 @@ class WrongPasswordError(BaseHTTPError):
     status_code = status.HTTP_403_FORBIDDEN
 
 
+class DbConnectionError(BaseHTTPError):
+    msg = "The connection to the database could not be established."
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+
 class DbObjectNotFoundError(BaseHTTPError):
     msg = "This object could not be found in the database."
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class BaseValidationError(ValueError):
-    msg: str
-
-    def __init__(self, *args: object) -> None:
-        super().__init__(self.msg, *args)
+class DbObjectDuplicateError(BaseHTTPError):
+    msg = "This object could not be saved in the database, because such an object already exists."
+    status_code = status.HTTP_404_NOT_FOUND
 
 
 class ConfigHTTPInconsistentError(BaseValidationError):
