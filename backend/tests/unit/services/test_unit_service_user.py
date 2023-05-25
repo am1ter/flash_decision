@@ -3,25 +3,23 @@ from random import randint
 from unittest import IsolatedAsyncioTestCase
 
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
-from app.domain.auth import DomainAuth
-from app.domain.user import DomainUser
+from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.repositories.base import Repository
 from app.services.user import ServiceUser
+from app.system.constants import UserStatus
+from app.system.exceptions import UserDisabledError, WrongPasswordError
 
 
 class RepositoryUserFake(Repository):
     def __init__(self) -> None:
         self.storage_user: dict[int, DomainUser] = {}
-        self.storage_auth: dict[int, DomainAuth] = {}
+        self.storage_auth: dict[int, list[DomainAuth]] = {}
 
-    def add(self, obj: DomainUser | DomainAuth) -> None:  # type: ignore[override]
+    def add(self, obj: DomainUser) -> None:  # type: ignore[override]
         obj.id = randint(1, 1000)
         obj.datetime_create = datetime.utcnow()
-        match obj:
-            case DomainUser():
-                self.storage_user[obj.id] = obj
-            case DomainAuth():
-                self.storage_auth[obj.id] = obj
+        self.storage_user[obj.id] = obj
+        self.storage_auth[obj.id] = list(obj.auths)
 
     async def save(self) -> None:
         pass
@@ -52,7 +50,7 @@ class TestServiceUser(IsolatedAsyncioTestCase):
         self.req_sign_in = ReqSignIn(**self.req_sign_up.dict())
         self.req_system_info = ReqSystemInfo(ip_address="127.0.0.1", user_agent="Test")
 
-    async def test_sign_up(self) -> None:
+    async def test_sign_up_success(self) -> None:
         user = await self.service.sign_up(self.req_sign_up, self.req_system_info)
 
         # Check user
@@ -66,7 +64,7 @@ class TestServiceUser(IsolatedAsyncioTestCase):
         # Check auth
         self.assertEqual(len(self.repository.storage_auth), 1, "Auth not created")
 
-    async def test_sign_in(self) -> None:
+    async def test_sign_in_success(self) -> None:
         user_sign_up = await self.service.sign_up(self.req_sign_up, self.req_system_info)
         user_sign_in = await self.service.sign_in(self.req_sign_in, self.req_system_info)
 
@@ -74,6 +72,20 @@ class TestServiceUser(IsolatedAsyncioTestCase):
         self.assertEqual(user_sign_up, user_sign_in)
 
         # Check auth record created
-        self.assertEqual(len(self.repository.storage_auth), 2, "Auths not created")
-        _, sign_in_auth = self.repository.storage_auth.popitem()
-        self.assertEqual(sign_in_auth.user, user_sign_in, "Auths for sign in not created")
+        sign_in_auths = self.repository.storage_auth[user_sign_up.id]
+        self.assertEqual(len(sign_in_auths), 2, "Auths not created")
+        self.assertEqual(sign_in_auths[0].user, user_sign_in, "Auths for sign in not created")
+
+    async def test_sign_in_failure(self) -> None:
+        user_sign_up = await self.service.sign_up(self.req_sign_up, self.req_system_info)
+
+        # User disabled
+        user_sign_up.status = UserStatus.disabled
+        with self.assertRaises(UserDisabledError):
+            await self.service.sign_in(self.req_sign_in, self.req_system_info)
+        user_sign_up.status = UserStatus.active
+
+        # Wrong password
+        self.req_sign_in.password = "wrongPass"  # noqa: S105
+        with self.assertRaises(WrongPasswordError):
+            await self.service.sign_in(self.req_sign_in, self.req_system_info)

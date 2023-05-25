@@ -37,7 +37,7 @@ def rich_excepthook(
 class UvicornCustomDefaultFormatter(DefaultFormatter):
     """Custom unicorn logger for system messages"""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
@@ -97,7 +97,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
 class UvicornCustomFormatterAccess(AccessFormatter):
     """Custom unicorn logger for access messages"""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         fmt: str | None = None,
         datefmt: str | None = None,

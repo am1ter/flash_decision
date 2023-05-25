@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Extra, Field
 
-from app.api.schemas.base import ReqMeta, RespData
+from app.api.schemas.base import RespData
 from app.system.constants import UserStatus
 
 
@@ -9,7 +9,7 @@ class ReqSystemInfo(BaseModel):
     user_agent: str
 
 
-class ReqSignUp(ReqMeta):
+class ReqSignUp(BaseModel):
     email: str
     name: str
     password: str = Field(repr=False)
@@ -21,11 +21,11 @@ class RespSignUp(RespData):
     status: UserStatus
     token: str
 
-    class Config:  # Disable Extra.allow which is inherited from meta class
-        extra = Extra.ignore
+    class Config:
+        extra = Extra.ignore  # Disable `Extra.allow`` which is inherited from meta class
 
 
-class ReqSignIn(ReqMeta):
+class ReqSignIn(BaseModel):
     email: str
     password: str = Field(repr=False)
 
@@ -35,5 +35,5 @@ class RespSignIn(RespData):
     status: UserStatus
     token: str
 
-    class Config:  # Disable Extra.allow which is inherited from meta class
-        extra = Extra.ignore
+    class Config:
+        extra = Extra.ignore  # Disable `Extra.allow`` which is inherited from meta class

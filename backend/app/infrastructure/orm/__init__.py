@@ -1,6 +1,5 @@
 # For Alembic and tests only
-from app.infrastructure.orm.auth import OrmAuth
 from app.infrastructure.orm.base import Base
-from app.infrastructure.orm.user import OrmUser
+from app.infrastructure.orm.user import OrmAuth, OrmUser
 
-__all__ = ("OrmAuth", "Base", "OrmUser")
+__all__ = ("Base", "OrmAuth", "OrmUser")

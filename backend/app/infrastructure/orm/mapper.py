@@ -1,10 +1,8 @@
 from sqlalchemy.orm import relationship
 
-from app.domain.auth import DomainAuth
-from app.domain.user import DomainUser
-from app.infrastructure.orm.auth import OrmAuth
+from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.orm.base import mapper_registry
-from app.infrastructure.orm.user import OrmUser
+from app.infrastructure.orm.user import OrmAuth, OrmUser
 
 
 def init_orm_mappers() -> None:
