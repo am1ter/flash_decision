@@ -12,7 +12,7 @@ def run() -> None:
             host=settings.BACKEND_HOST,
             port=settings.BACKEND_PORT,
             reload=True,
-            reload_dirs=["app"],
+            reload_dirs=["backend/app", "app"],  # local / docker path
             log_config=uvicorn_log_config,
         )
     else:
