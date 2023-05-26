@@ -10,7 +10,7 @@ from app.system.exceptions import UserDisabledError, WrongPasswordError
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-@define(kw_only=True, slots=False)
+@define(kw_only=True, slots=False, hash=True)
 class DomainUser(Entity):
     """
     This class is the DDD Agregate.
@@ -63,7 +63,7 @@ class DomainUser(Entity):
         return auth
 
 
-@define(kw_only=True, slots=False)
+@define(kw_only=True, slots=False, hash=True)
 class DomainAuth(Entity):
     """
     This class is the part of the DDD Agregate `User`.
