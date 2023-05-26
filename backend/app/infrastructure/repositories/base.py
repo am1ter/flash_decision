@@ -66,96 +66,93 @@ class RepositorySQLAlchemy(Repository):
 
         return inner
 
-    @catch_db_errors
-    async def _select_all(self, col: InstrumentedAttribute, value: Any) -> Sequence[Entity]:
-        """Return ALL database objects using `WHERE` condition"""
-        assert isinstance(col, InstrumentedAttribute), f"{col=} is not a valid database column"
-
-        # Try to extract objects from the identity map; if not found, query the database
-        try:
-            entities = self._identity_map_query[col][value]
-        except KeyError:
-            entities_db = await self.db.scalars(select(col.parent).where(col == value))
-            # AsyncSession requires to call unique() method on `uselist` quieres results
-            entities = entities_db.unique().all()
-            if not entities:
-                raise DbObjectNotFoundError  # noqa: B904
-            # Save query and its results to the identity maps
-            self._identity_map_query[col][value] = entities
-            for entity in entities:
-                self._identity_map_entity[type(entity)][entity.id] = entity
-        else:
-            # If from identity map was extracted single Entity convert it to list
-            if not isinstance(entities, Sequence):
-                entities = [entities]
-
-        return entities
-
     async def _select_one_by_id(self, col: InstrumentedAttribute, value: Any) -> Entity:
         """Return ONE database object by its `id` column"""
-        try:
-            entity = self._identity_map_entity[col.parent.class_][value]
-        except KeyError:
-            entity_db = await self.db.scalar(select(col.parent).where(col == value))
-            if not entity_db:
-                raise DbObjectNotFoundError  # noqa: B904
-            entity = entity_db
-            # Save query results to the identity map
-            self._identity_map_entity[type(entity)][entity.id] = entity
-
+        entity = await self._get_from_identity_map(self._select_one_by_id, col, value)
+        assert isinstance(entity, Entity)
         return entity
 
-    @catch_db_errors
     async def _select_one(self, col: InstrumentedAttribute, value: Any) -> Entity:
         """Return ONE database object using `WHERE` condition"""
-        assert isinstance(col, InstrumentedAttribute), f"{col=} is not a valid database column"
-
         # For selecting by id, use another method
         if col.name == "id":
             return await self._select_one_by_id(col, value)
-
-        # Try to extract object from the identity map; if not found, query the database
-        try:
-            entity = self._identity_map_query[col][value]
-        except KeyError:
-            entity_db: Entity | None = await self.db.scalar(select(col.parent).where(col == value))
-            if not entity_db:
-                raise DbObjectNotFoundError  # noqa: B904
-            entity = entity_db
-            # Save query and its results to the identity maps
-            self._identity_map_query[col][value] = entity
-            self._identity_map_entity[type(entity)][entity.id] = entity
-        else:
-            # If from identity map was extracted list of entities return only first
-            if isinstance(entity, Sequence) and len(entity):
-                entity = entity[0]
-
-        assert isinstance(entity, Entity), f"{entity} is not an Entity"
+        entity = await self._get_from_identity_map(self._select_one, col, value)
+        assert isinstance(entity, Entity)
         return entity
 
-    @catch_db_errors
+    async def _select_all(self, col: InstrumentedAttribute, value: Any) -> Sequence[Entity]:
+        """Return ALL database objects using `WHERE` condition"""
+        entities = await self._get_from_identity_map(self._select_all, col, value)
+        assert isinstance(entities, Sequence)
+        return entities
+
     async def load_relationship(self, relationship: AppenderQuery) -> Sequence[Entity]:
         """Load lazy relationship using async session"""
         assert isinstance(relationship, AppenderQuery), f"{relationship=} is not a relationship"
+        col = relationship.instance
+        entities = await self._get_from_identity_map(self.load_relationship, col, relationship)
+        assert isinstance(entities, Sequence)
+        return entities
 
-        # Try to extract object from identity map, if not found ask db
-        obj_from = relationship.instance
-        obj_attr = relationship.attr.key
+    @catch_db_errors
+    async def _get_from_identity_map(
+        self, func: Callable, col: InstrumentedAttribute | type[Entity] | Entity, value: Any
+    ) -> Sequence[Entity] | Entity:
+        match func:
+            case self._select_one:
+                assert isinstance(col, InstrumentedAttribute)
+                m = {
+                    "identity_map": self._identity_map_query[col],
+                    "identity_map_value": value,
+                    "sql_query": self.db.scalar(select(col.parent).where(col == value)),
+                    "sql_query_processing": lambda query: query,
+                }
+            case self._select_one_by_id:
+                assert isinstance(col, InstrumentedAttribute)
+                m = {
+                    "identity_map": self._identity_map_entity[col.parent.class_],
+                    "identity_map_value": value,
+                    "sql_query": self.db.scalar(select(col.parent).where(col == value)),
+                    "sql_query_processing": lambda query: query,
+                }
+            case self._select_all:
+                assert isinstance(col, InstrumentedAttribute)
+                m = {
+                    "identity_map": self._identity_map_query[col],
+                    "identity_map_value": value,
+                    "sql_query": self.db.scalars(select(col.parent).where(col == value)),
+                    "sql_query_processing": lambda query: query.unique().all(),
+                }
+            case self.load_relationship:
+                assert isinstance(col, Entity)
+                m = {
+                    "identity_map": self._identity_map_relationship[col],
+                    "identity_map_value": value.attr.key,
+                    "sql_query": self.db.execute(value),
+                    "sql_query_processing": lambda query: [obj[0] for obj in query.unique().all()],
+                }
+
+        # Logic of the loading process
+        # Try to find query/entity in the related identity map
         try:
-            entities = self._identity_map_relationship[obj_from][obj_attr]
+            entities: Sequence[Entity] | Entity = m["identity_map"][m["identity_map_value"]]
         except KeyError:
-            query = await self.db.execute(relationship)
-            # All() method returns list of tuples with a single object inside every tuple
-            entities = [obj[0] for obj in query.unique().all()]
-            # Save query and its results to the identity maps
-            self._identity_map_relationship[obj_from][obj_attr] = entities
-            for entity in entities:
+            # If not found run SQL query and convert db records to entities
+            query = await m["sql_query"]
+            entities = m["sql_query_processing"](query)
+
+            # If enities not found in the database, raise exception
+            if not entities:
+                raise DbObjectNotFoundError  # noqa: B904
+
+            # Save query to the related identity map
+            m["identity_map"][m["identity_map_value"]] = entities
+
+            # Save entities from the query to the identity map with entities
+            entities_as_list = entities if isinstance(entities, Sequence) else [entities]
+            for entity in entities_as_list:
                 self._identity_map_entity[type(entity)][entity.id] = entity
-
-        # Lazy relationships always must be a list (it cannot be used with one-to-one relationships)
-        if not isinstance(entities, Sequence):
-            entities = [entities]
-
         return entities
 
     def add(self, domain_obj: Entity) -> None:
