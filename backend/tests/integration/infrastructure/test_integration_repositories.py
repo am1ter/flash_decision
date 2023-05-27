@@ -86,7 +86,7 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
             repository_user.add(user_from_repo)
             await repository_user.flush()
 
-            # Get by user
+            # Get auth by user
             await repository_user.refresh(user_from_repo)
             auths_repo = await repository_user.load_relationship(user_from_repo.auths)
             assert auths_repo, "Auth not created"
