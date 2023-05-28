@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.db import get_new_engine, get_sessionmaker
+from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
 from app.infrastructure.repositories.user import RepositoryUserSQL
 from app.system.constants import AuthStatus, UserStatus
 from app.system.exceptions import DbObjectNotFoundError
@@ -30,7 +31,8 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
         db_session: AsyncSession, user: DomainUser
     ) -> RepositoryUserSQL:
         """Create SQL repository and add user inside"""
-        repository_user = RepositoryUserSQL(db_session)
+        identity_map = IdentityMapSQLAlchemy()
+        repository_user = RepositoryUserSQL(db_session, identity_map)
         repository_user.add(user)
         await repository_user.flush()
         return repository_user

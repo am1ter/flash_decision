@@ -19,4 +19,4 @@ class RepositoryUserSQL(RepositorySQLAlchemy):
 
 
 # For dependency injection
-repository_user = Annotated[RepositoryUserSQL, Depends()]
+RepositoryUserDep = Annotated[RepositoryUserSQL, Depends()]

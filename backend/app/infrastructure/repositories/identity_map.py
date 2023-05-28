@@ -1,21 +1,21 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Any
+from typing import Annotated, Any
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity
-from app.system.exceptions import DbObjectNotFoundError
 
 
 class IdentityMapSQLAlchemyABC(ABC):
     """
+    Abstract base class for SQLAlchemy Identity Map.
     Ensures that each object gets loaded only once by keeping every loaded object in a map.
-    Looks up objects using the map when referring to them and if not found query the database.
-    In fact, it works as local cache for SQLAlchemy repositories.
+    Looks up objects using the map when referring to them and if not found, query the database.
+    In fact, it works as a local cache for SQLAlchemy repositories.
     https://martinfowler.com/eaaCatalog/identityMap.html
     """
 
@@ -24,15 +24,13 @@ class IdentityMapSQLAlchemyABC(ABC):
         self.map: dict = defaultdict(dict)
 
     @abstractmethod
-    def add_to_map(self, *args, **kwargs) -> None:
+    def add(self, *args, **kwargs) -> None:
+        """Add entities or query parameters to the identity map"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_from_map(self, *args, **kwargs) -> Any:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def load_from_db(self, *args, **kwargs) -> Entity | Sequence[Entity]:
+    def get(self, *args, **kwargs) -> Sequence[Entity] | Entity:
+        """Retrieve entities or query results from the identity map"""
         raise NotImplementedError
 
 
@@ -41,80 +39,63 @@ class IdentityMapSQLAlchemyQueries(IdentityMapSQLAlchemyABC):
 
     map: dict[InstrumentedAttribute, dict[Any, Sequence[Entity]]]
 
-    def add_to_map(self, key: Any, subkey: Any, entities: Sequence[Entity]) -> None:
-        self.map[key][subkey] = entities
+    def add(self, col: InstrumentedAttribute, val: Any, entities: Sequence[Entity]) -> None:
+        """Add query parameters to its identity map and also add all entities to a separate map."""
+        self.map[col][val] = entities
         for entity in entities:
-            self._identity_map.entities.add_to_map(entity)
+            self._identity_map.entities.add(entity)
 
-    def get_from_map(self, key: Any, subkey: Any) -> Sequence[Entity]:
-        # For selecting by id, firstly try to find in entity identity map
-        if key.name == "id":
-            entity = self._identity_map.entities.get_from_map(cls_type=key.parent.class_, id=subkey)
+    def get(self, col: InstrumentedAttribute, val: Any) -> Sequence[Entity]:
+        """Find the entities in the local storage by query parameters"""
+        # For selecting by ID, use the entity identity map instead
+        if col.name == "id":
+            entity = self._identity_map.entities.get(cls_type=col.parent.class_, id=val)
             return [entity]
         # Try to find in the identity map with queries
-        entities = self.map[key][subkey]
-        return entities
-
-    async def load_from_db(self, key: Any, subkey: Any) -> Sequence[Entity]:
-        query = await self._identity_map._db.scalars(select(key.parent).where(key == subkey))
-        entities = query.unique().all()
-        # If entities are not found in the database, raise an exception
-        if not entities:
-            raise DbObjectNotFoundError
-        self.add_to_map(key, subkey, entities)
+        entities = self.map[col][val]
         return entities
 
 
 class IdentityMapSQLAlchemyRelationships(IdentityMapSQLAlchemyABC):
-    """Cache entities loaded via ORM relationships"""
+    """Cache entities loaded via ORM relationships."""
 
     map: dict[Entity, dict[str, Sequence[Entity]]]
 
-    def add_to_map(self, key: Any, entities: Sequence[Entity]) -> None:
-        obj_from, relationship_attr_name = key.instance, key.attr.key  # i.e.: DomainUser, auths
-        self.map[obj_from][relationship_attr_name] = entities
+    def add(self, relationship: AppenderQuery, entities: Sequence[Entity]) -> None:
+        """Add the relationship to its identity map and also add all entities to a separate map."""
+        self.map[relationship.instance][relationship.attr.key] = entities  # i.e.: DomainUser, auths
         for entity in entities:
-            self._identity_map.entities.add_to_map(entity)
+            self._identity_map.entities.add(entity)
 
-    def get_from_map(self, key: Any) -> Sequence[Entity]:
-        entities = self.map[key.instance][key.attr.key]
-        return entities
-
-    async def load_from_db(self, key: Any) -> Sequence[Entity]:
-        query = await self._identity_map._db.execute(key)
-        entities = [obj[0] for obj in query.unique().all()]
-        # If entities are not found in the database, raise an exception
-        if not entities:
-            raise DbObjectNotFoundError
-        self.add_to_map(key, entities)
+    def get(self, relationship: AppenderQuery) -> Sequence[Entity]:
+        """Find the entities in the local storage by relationship."""
+        entities = self.map[relationship.instance][relationship.attr.key]  # i.e.: DomainUser, auths
         return entities
 
 
 class IdentityMapSQLAlchemyEntities(IdentityMapSQLAlchemyABC):
-    """Store every domain object loaded from db using its type and id"""
+    """Store every domain object loaded from the database using its type and ID."""
 
     map: dict[type, dict[int, Entity]]
 
-    def add_to_map(self, entity: Entity) -> None:
+    def add(self, entity: Entity) -> None:
+        """Add an entity to its identity map."""
         self.map[type(entity)][entity.id] = entity
 
-    def get_from_map(self, cls_type: type, id: int) -> Entity:
-        return self.map[cls_type][id]
-
-    async def load_from_db(self, key: Any, subkey: Any) -> Entity:
-        entity = await self._identity_map._db.scalar(select(key.parent).where(key == subkey))
-        # If the entity is not found in the database, raise an exception
-        if not entity:
-            raise DbObjectNotFoundError
-        self.add_to_map(entity)
+    def get(self, cls_type: type, id: int) -> Entity:
+        """Find the entity in the local storage by type and ID."""
+        entity = self.map[cls_type][id]
         return entity
 
 
 class IdentityMapSQLAlchemy:
-    """Collection of 3 identity maps for SQLAlchemy"""
+    """Collection of 3 identity maps for SQLAlchemy."""
 
-    def __init__(self, db: AsyncSession) -> None:
-        self._db = db
+    def __init__(self) -> None:
         self.queries = IdentityMapSQLAlchemyQueries(self)
         self.relationships = IdentityMapSQLAlchemyRelationships(self)
         self.entities = IdentityMapSQLAlchemyEntities(self)
+
+
+# For dependency injection
+IdentityMapDep = Annotated[IdentityMapSQLAlchemy, Depends()]

@@ -4,7 +4,7 @@ from fastapi import Depends
 
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.user import repository_user
+from app.infrastructure.repositories.user import RepositoryUserDep
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError
 from app.system.logger import logger
 
@@ -12,7 +12,7 @@ from app.system.logger import logger
 class ServiceUser:
     """User manager class"""
 
-    def __init__(self, repository: repository_user) -> None:
+    def __init__(self, repository: RepositoryUserDep) -> None:
         self.repository = repository
 
     async def sign_up(self, req: ReqSignUp, req_system_info: ReqSystemInfo) -> DomainUser:
