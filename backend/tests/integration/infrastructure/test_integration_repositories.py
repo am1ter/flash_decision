@@ -1,6 +1,8 @@
 from unittest import IsolatedAsyncioTestCase
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.db import get_new_engine, get_sessionmaker
@@ -36,6 +38,37 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
         repository_user.add(user)
         await repository_user.flush()
         return repository_user
+
+    def test_identity_map(self) -> None:
+        """Chech if identity map works as expected"""
+
+        identity_map = IdentityMapSQLAlchemy()
+        user_domain = self._create_test_user()
+        if not isinstance(DomainUser.email, InstrumentedAttribute):
+            self.fail("Domain model is not mapped with ORM")
+        if not isinstance(user_domain.auths, AppenderQuery):
+            self.fail("Domain model relationships is not supported by ORM mapper")
+
+        # Test entities identity map
+        identity_map.entities.add(user_domain)
+        user_from_im_entities = identity_map.entities.get(DomainUser, user_domain.id)
+        assert user_domain == user_from_im_entities, "Entities identity map works incorrectly"
+
+        # Test sql queries identity map
+        identity_map.queries.add(DomainUser.email, user_domain.email, [user_domain])
+        user_from_im_queries = identity_map.queries.get(DomainUser.email, user_domain.email)
+        assert [user_domain] == user_from_im_queries, "Queries identity map works incorrectly"
+
+        # Test sql relationships identity map
+        auth_domain = DomainAuth(
+            ip_address="127.0.0.1",
+            http_user_agent="Test",
+            status=AuthStatus.sign_in,
+            user=user_domain,
+        )
+        identity_map.relationships.add(user_domain.auths, [auth_domain])
+        auths_from_im_relationships = identity_map.relationships.get(user_domain.auths)
+        assert len(auths_from_im_relationships) == 1, "Relationships identity map works incorrectly"
 
     async def test_repository_user(self) -> None:
         """Check if it is possible to create single db object using domain model"""

@@ -78,7 +78,7 @@ class RepositorySQLAlchemy(Repository):
             entities = query.unique().all()
         else:
             entity = await self._db.scalar(select(col.parent).where(col == val))
-            entities = [entity]  # Convert to list to use single type for all return variants
+            entities = [entity] if entity else []  # Use single type for all return variants
         if not entities:  # If entities are not found in the database, raise an exception
             raise DbObjectNotFoundError
         self._identity_map.queries.add(col, val, entities)
