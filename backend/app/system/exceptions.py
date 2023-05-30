@@ -16,6 +16,10 @@ class BaseValidationError(BaseError):
     pass
 
 
+class BaseHTTPValidationError(BaseHTTPError, BaseValidationError):
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
 class UserNotFoundError(BaseHTTPError):
     msg = "The user you are trying to access could not be found."
     status_code = status.HTTP_404_NOT_FOUND
@@ -47,8 +51,16 @@ class DbObjectDuplicateError(BaseHTTPError):
 
 
 class ConfigHTTPInconsistentError(BaseValidationError):
-    msg = "BACKEND_HOST and BACKEND_URL are inconsistent"
+    msg = "Environment variables `BACKEND_HOST` and `BACKEND_URL` are inconsistent."
 
 
 class ConfigHTTPWrongURLError(BaseValidationError):
-    msg = "BACKEND_URL has wrong format"
+    msg = "Environment variable `BACKEND_URL` has wrong format."
+
+
+class EmailValidationError(BaseHTTPValidationError):
+    msg = "The email address you entered does not match the expected format."
+
+
+class IpAddressValidationError(BaseHTTPValidationError):
+    msg = "The http request has invalid IP address format."

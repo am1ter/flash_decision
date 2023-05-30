@@ -9,6 +9,11 @@ def field_relationship(*, init: bool) -> Any:
     return field(init=init, repr=False, eq=False)
 
 
+@define(kw_only=False, slots=False, frozen=True)
+class ValueObject:
+    pass
+
+
 @define(kw_only=True, slots=False)
 class Entity:
     """Meta class for all domain entities"""

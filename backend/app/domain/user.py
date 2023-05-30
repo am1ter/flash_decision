@@ -1,13 +1,44 @@
 from __future__ import annotations
 
+import re
+
 from attrs import define, field
 from passlib.context import CryptContext
+from pydantic import IPvAnyAddress, ValidationError, parse_obj_as
 
-from app.domain.base import Entity, field_relationship
+from app.domain.base import Entity, ValueObject, field_relationship
 from app.system.constants import AuthStatus, UserStatus
-from app.system.exceptions import UserDisabledError, WrongPasswordError
+from app.system.exceptions import (
+    EmailValidationError,
+    IpAddressValidationError,
+    UserDisabledError,
+    WrongPasswordError,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+email_regex = re.compile(r"([A-Za-z0-9]+[-._])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+")
+
+
+@define(kw_only=False, slots=False, frozen=True)
+class Email(ValueObject):
+    """Value Object to ensure invariants"""
+
+    email: str = field()
+
+    @email.validator
+    def _validate_email(self, attribute: str, value: str) -> None:
+        if not re.fullmatch(email_regex, value):
+            raise EmailValidationError
+
+
+@define(kw_only=False, slots=False, frozen=True)
+class Password(ValueObject):
+    """Value Object to ensure that password is always hashed"""
+
+    password: str = field(converter=lambda string: pwd_context.hash(string))
+
+    def verify_password(self, password_to_verify: str) -> bool:
+        return pwd_context.verify(password_to_verify, self.password)
 
 
 @define(kw_only=True, slots=False, hash=True)
@@ -18,8 +49,8 @@ class DomainUser(Entity):
     """
 
     name: str
-    email: str
-    password: str = field(repr=False)
+    email: Email = field(converter=Email)
+    password: Password = field(repr=False, converter=Password)
     status: UserStatus
     auths: list[DomainAuth] = field_relationship(init=False)
 
@@ -27,9 +58,7 @@ class DomainUser(Entity):
     def create(
         cls, name: str, email: str, password: str, ip_address: str, http_user_agent: str
     ) -> DomainUser:
-        password_hashed = pwd_context.hash(password)
-        new_user = cls(name=name, email=email, password=password_hashed, status=UserStatus.active)
-
+        new_user = cls(name=name, email=email, password=password, status=UserStatus.active)
         DomainAuth.create_sign_up(
             user=new_user,
             http_user_agent=http_user_agent,
@@ -37,9 +66,6 @@ class DomainUser(Entity):
         )
 
         return new_user
-
-    def _verify_password(self, password_to_verify: str) -> bool:
-        return pwd_context.verify(password_to_verify, self.password)
 
     def _verify_user_is_enabled(self) -> bool:
         return self.status != UserStatus.disabled
@@ -50,7 +76,7 @@ class DomainUser(Entity):
             raise UserDisabledError
 
         # Check password
-        if not self._verify_password(password):
+        if not self.password.verify_password(password):
             raise WrongPasswordError
 
         # Create auth
@@ -63,6 +89,20 @@ class DomainUser(Entity):
         return auth
 
 
+@define(kw_only=False, slots=False, frozen=True)
+class IpAddress(ValueObject):
+    """Value Object to ensure invariants"""
+
+    ip: str = field()
+
+    @ip.validator
+    def _validate_ip(self, attribute: str, value: str) -> None:
+        try:
+            parse_obj_as(IPvAnyAddress, value)
+        except ValidationError as e:
+            raise IpAddressValidationError from e
+
+
 @define(kw_only=True, slots=False, hash=True)
 class DomainAuth(Entity):
     """
@@ -70,7 +110,7 @@ class DomainAuth(Entity):
     Represents information about each user's sign-in.
     """
 
-    ip_address: str
+    ip_address: IpAddress = field(converter=IpAddress)
     http_user_agent: str
     status: AuthStatus
     user: DomainUser = field_relationship(init=True)

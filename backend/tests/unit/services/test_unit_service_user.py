@@ -1,3 +1,4 @@
+from copy import copy
 from datetime import datetime
 from random import randint
 from unittest import IsolatedAsyncioTestCase
@@ -7,7 +8,12 @@ from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.repositories.base import Repository
 from app.services.user import ServiceUser
 from app.system.constants import UserStatus
-from app.system.exceptions import UserDisabledError, WrongPasswordError
+from app.system.exceptions import (
+    EmailValidationError,
+    IpAddressValidationError,
+    UserDisabledError,
+    WrongPasswordError,
+)
 
 
 class RepositoryUserFake(Repository):
@@ -34,7 +40,7 @@ class RepositoryUserFake(Repository):
         return self.storage_user[id]
 
     async def get_by_email(self, email: str) -> DomainUser | None:
-        user = [v for v in self.storage_user.values() if v.email == email]
+        user = [v for v in self.storage_user.values() if v.email.email == email]
         return user[0]
 
 
@@ -55,14 +61,25 @@ class TestServiceUser(IsolatedAsyncioTestCase):
 
         # Check user
         self.assertIsNotNone(user, "New user not created")
-        self.assertEqual(self.req_sign_up.email, user.email)
+        self.assertEqual(self.req_sign_up.email, user.email.email)
         self.assertEqual(self.req_sign_up.name, user.name)
 
         # Check password
-        self.assertNotEqual(self.req_sign_up.password, user.password, "Password is not hashed")
+        self.assertNotEqual(
+            self.req_sign_up.password, user.password.password, "Password is not hashed"
+        )
+        self.assertTrue(
+            user.password.verify_password(self.req_sign_up.password), "Password hashed incorrectly"
+        )
 
         # Check auth
         self.assertEqual(len(self.repository.storage_auth), 1, "Auth not created")
+
+    async def test_sign_up_failure_wrong_email(self) -> None:
+        req_sign_up_wrong_email = copy(self.req_sign_up)
+        req_sign_up_wrong_email.email = "wrong@wrong"
+        with self.assertRaises(EmailValidationError):
+            await self.service.sign_up(req_sign_up_wrong_email, self.req_system_info)
 
     async def test_sign_in_success(self) -> None:
         user_sign_up = await self.service.sign_up(self.req_sign_up, self.req_system_info)
@@ -76,16 +93,23 @@ class TestServiceUser(IsolatedAsyncioTestCase):
         self.assertEqual(len(sign_in_auths), 2, "Auths not created")
         self.assertEqual(sign_in_auths[0].user, user_sign_in, "Auths for sign in not created")
 
-    async def test_sign_in_failure(self) -> None:
+    async def test_sign_in_failure_user_disabled(self) -> None:
         user_sign_up = await self.service.sign_up(self.req_sign_up, self.req_system_info)
-
-        # User disabled
+        self.assertIsNotNone(user_sign_up, "User is not created")
         user_sign_up.status = UserStatus.disabled
         with self.assertRaises(UserDisabledError):
             await self.service.sign_in(self.req_sign_in, self.req_system_info)
         user_sign_up.status = UserStatus.active
 
-        # Wrong password
+    async def test_sign_in_failure_wrong_password(self) -> None:
+        user_sign_up = await self.service.sign_up(self.req_sign_up, self.req_system_info)
+        self.assertIsNotNone(user_sign_up, "User is not created")
         self.req_sign_in.password = "wrongPass"  # noqa: S105
         with self.assertRaises(WrongPasswordError):
             await self.service.sign_in(self.req_sign_in, self.req_system_info)
+
+    async def test_auth_failure_wrong_ip(self) -> None:
+        req_system_info_wrong_ip = copy(self.req_system_info)
+        req_system_info_wrong_ip.ip_address = "192.168.0."
+        with self.assertRaises(IpAddressValidationError):
+            await self.service.sign_up(self.req_sign_up, req_system_info_wrong_ip)
