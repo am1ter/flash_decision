@@ -49,6 +49,7 @@ class SettingsGeneral(BaseSettingsCustom):
 
     @cached_property
     def DEV_MODE(self) -> bool:  # noqa: N802
+        os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
         return self.ENVIRONMENT == Environment.development
 
     @cached_property
