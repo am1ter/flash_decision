@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import re
-
 from attrs import define, field
 from passlib.context import CryptContext
-from pydantic import IPvAnyAddress, ValidationError, parse_obj_as
+from pydantic import EmailStr, IPvAnyAddress, ValidationError, parse_obj_as
 
 from app.domain.base import Entity, ValueObject, field_relationship
 from app.system.constants import AuthStatus, UserStatus
@@ -16,29 +14,30 @@ from app.system.exceptions import (
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-email_regex = re.compile(r"([A-Za-z0-9]+[-._])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+")
 
 
 @define(kw_only=False, slots=False, frozen=True)
 class Email(ValueObject):
     """Value Object to ensure invariants"""
 
-    email: str = field()
+    value: str = field()
 
-    @email.validator
+    @value.validator
     def _validate_email(self, attribute: str, value: str) -> None:
-        if not re.fullmatch(email_regex, value):
-            raise EmailValidationError
+        try:
+            parse_obj_as(EmailStr, value)
+        except ValidationError as e:
+            raise EmailValidationError from e
 
 
 @define(kw_only=False, slots=False, frozen=True)
 class Password(ValueObject):
     """Value Object to ensure that password is always hashed"""
 
-    password: str = field(converter=lambda string: pwd_context.hash(string))
+    value: str = field(converter=lambda string: pwd_context.hash(string))
 
     def verify_password(self, password_to_verify: str) -> bool:
-        return pwd_context.verify(password_to_verify, self.password)
+        return pwd_context.verify(password_to_verify, self.value)
 
 
 @define(kw_only=True, slots=False, hash=True)
@@ -93,9 +92,9 @@ class DomainUser(Entity):
 class IpAddress(ValueObject):
     """Value Object to ensure invariants"""
 
-    ip: str = field()
+    value: str = field()
 
-    @ip.validator
+    @value.validator
     def _validate_ip(self, attribute: str, value: str) -> None:
         try:
             parse_obj_as(IPvAnyAddress, value)

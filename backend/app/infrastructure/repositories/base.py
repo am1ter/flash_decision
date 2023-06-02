@@ -12,7 +12,11 @@ from app.domain.base import Entity
 from app.infrastructure.db import DbDep
 from app.infrastructure.orm.mapper import init_orm_mappers
 from app.infrastructure.repositories.identity_map import IdentityMapDep
-from app.system.exceptions import DbConnectionError, DbObjectDuplicateError, DbObjectNotFoundError
+from app.system.exceptions import (
+    DbConnectionError,
+    DbObjectCannotBeCreatedError,
+    DbObjectNotFoundError,
+)
 
 # Run orm mappers as part of RepositorySQLAlchemy.
 # Repository is the place where domain models and ORM models work together.
@@ -63,7 +67,7 @@ class RepositorySQLAlchemy(Repository):
             except ConnectionRefusedError as e:
                 raise DbConnectionError from e
             except IntegrityError as e:
-                raise DbObjectDuplicateError from e
+                raise DbObjectCannotBeCreatedError from e
             return result
 
         return inner

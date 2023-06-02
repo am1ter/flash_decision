@@ -40,7 +40,7 @@ class RepositoryUserFake(Repository):
         return self.storage_user[id]
 
     async def get_by_email(self, email: str) -> DomainUser | None:
-        user = [v for v in self.storage_user.values() if v.email.email == email]
+        user = [v for v in self.storage_user.values() if v.email.value == email]
         return user[0]
 
 
@@ -61,12 +61,12 @@ class TestServiceUser(IsolatedAsyncioTestCase):
 
         # Check user
         self.assertIsNotNone(user, "New user not created")
-        self.assertEqual(self.req_sign_up.email, user.email.email)
+        self.assertEqual(self.req_sign_up.email, user.email.value)
         self.assertEqual(self.req_sign_up.name, user.name)
 
         # Check password
         self.assertNotEqual(
-            self.req_sign_up.password, user.password.password, "Password is not hashed"
+            self.req_sign_up.password, user.password.value, "Password is not hashed"
         )
         self.assertTrue(
             user.password.verify_password(self.req_sign_up.password), "Password hashed incorrectly"

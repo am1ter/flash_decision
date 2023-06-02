@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.domain.user import DomainUser
+from app.domain.user import DomainUser, Email
 from app.infrastructure.repositories.base import RepositorySQLAlchemy
 
 
@@ -13,7 +13,7 @@ class RepositoryUserSQL(RepositorySQLAlchemy):
         return user
 
     async def get_by_email(self, email: str) -> DomainUser:
-        user = await self._select_one(DomainUser.email, email)
+        user = await self._select_one(DomainUser.email, Email(email))
         assert isinstance(user, DomainUser)
         return user
 

@@ -48,7 +48,7 @@ class IdentityMapSQLAlchemyQueries(IdentityMapSQLAlchemyABC):
     def get(self, col: InstrumentedAttribute, val: Any) -> Sequence[Entity]:
         """Find the entities in the local storage by query parameters"""
         # For selecting by ID, use the entity identity map instead
-        if col.name == "id":
+        if col.key == "id":
             entity = self._identity_map.entities.get(cls_type=col.parent.class_, id=val)
             return [entity]
         # Try to find in the identity map with queries

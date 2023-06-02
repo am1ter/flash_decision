@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Extra, Field
 
 from app.api.schemas.base import RespData
+from app.domain.user import Email
 from app.system.constants import UserStatus
 
 
@@ -17,12 +18,13 @@ class ReqSignUp(BaseModel):
 
 class RespSignUp(RespData):
     id: int
-    email: str
+    email: Email
     status: UserStatus
     token: str
 
     class Config:
         extra = Extra.ignore  # Disable `Extra.allow`` which is inherited from meta class
+        arbitrary_types_allowed = True  # Add support for `attrs` classes
 
 
 class ReqSignIn(BaseModel):
@@ -31,9 +33,10 @@ class ReqSignIn(BaseModel):
 
 
 class RespSignIn(RespData):
-    email: str
+    email: Email
     status: UserStatus
     token: str
 
     class Config:
         extra = Extra.ignore  # Disable `Extra.allow`` which is inherited from meta class
+        arbitrary_types_allowed = True  #  Add support for `attrs` classes

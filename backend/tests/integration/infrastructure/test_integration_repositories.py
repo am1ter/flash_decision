@@ -79,7 +79,7 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
             repository_user = await self._create_user_repository_with_user(db_session, user_domain)
 
             # Get by email
-            user_from_repo_by_email = await repository_user.get_by_email(user_domain.email)
+            user_from_repo_by_email = await repository_user.get_by_email(user_domain.email.value)
             assert user_from_repo_by_email, "User not found"
             assert user_domain == user_from_repo_by_email, "Domain user is not the same as from db"
 
@@ -99,7 +99,7 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
         async with self.sessionmaker() as db_session:
             user_domain = self._create_test_user()
             repository_user = await self._create_user_repository_with_user(db_session, user_domain)
-            user_from_repo = await repository_user.get_by_email(user_domain.email)
+            user_from_repo = await repository_user.get_by_email(user_domain.email.value)
             assert user_from_repo, "User not found"
 
             # Create auth for new user and add it to repo directly

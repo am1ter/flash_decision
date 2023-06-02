@@ -45,9 +45,9 @@ class DbObjectNotFoundError(BaseHTTPError):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class DbObjectDuplicateError(BaseHTTPError):
-    msg = "This object could not be saved in the database, because such an object already exists."
-    status_code = status.HTTP_404_NOT_FOUND
+class DbObjectCannotBeCreatedError(BaseHTTPError):
+    msg = "This object could not be saved in the database, because of the database constraints."
+    status_code = status.HTTP_400_BAD_REQUEST
 
 
 class ConfigHTTPInconsistentError(BaseValidationError):

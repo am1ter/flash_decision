@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from sqlalchemy import MetaData, func
+from sqlalchemy import MetaData, Table, func
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
@@ -19,7 +19,10 @@ mapper_registry = registry()
 @mapper_registry.mapped_as_dataclass
 @as_declarative()
 class Base:
+    """Declarative approach used only as alternative way to define database tables"""
+
     __name__: str
+    __table__: Table  # Automatically generated during initialization; used for mappings
     metadata: MetaData
 
     # General columns
