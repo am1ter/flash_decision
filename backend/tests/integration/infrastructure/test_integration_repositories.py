@@ -1,7 +1,7 @@
 from unittest import IsolatedAsyncioTestCase
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.user import DomainAuth, DomainUser
@@ -44,7 +44,7 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
 
         identity_map = IdentityMapSQLAlchemy()
         user_domain = self._create_test_user()
-        if not isinstance(DomainUser.email, InstrumentedAttribute):
+        if not isinstance(DomainUser.email, InstrumentedAttribute | QueryableAttribute):
             self.fail("Domain model is not mapped with ORM")
         if not isinstance(user_domain.auths, AppenderQuery):
             self.fail("Domain model relationships is not supported by ORM mapper")

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Request
 
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo, RespSignIn, RespSignUp
+from app.domain.base import custom_serializer
 from app.services.user import ServiceUserDep
 
 router = APIRouter(prefix="/api/v1/user")
@@ -26,7 +27,7 @@ async def sign_up(
     req_system_info = parse_request_system_info(raw_request)
     new_user = await service_user.sign_up(req=payload, req_system_info=req_system_info)
 
-    data = RespSignUp(**asdict(new_user, recurse=False), token="")
+    data = RespSignUp(**asdict(new_user, value_serializer=custom_serializer), token="")
     return Resp(data=data)
 
 
@@ -39,5 +40,5 @@ async def sign_in(
     req_system_info = parse_request_system_info(raw_request)
     new_user = await service_user.sign_in(req=payload, req_system_info=req_system_info)
 
-    data = RespSignIn(**asdict(new_user, recurse=False), token="")
+    data = RespSignIn(**asdict(new_user, value_serializer=custom_serializer), token="")
     return Resp(data=data)

@@ -5,11 +5,15 @@ from pydantic.generics import GenericModel
 
 
 class RespMeta(BaseModel):
+    """Container for sending Request's meta data to a client"""
+
     class Config:
         extra = Extra.allow  # Gives ability to inherit from this class and add additional attrs
 
 
 class RespData(BaseModel):
+    """Container for sending Request's data to a client"""
+
     class Config:
         extra = Extra.allow  # Gives ability to inherit from this class and add additional attrs
 

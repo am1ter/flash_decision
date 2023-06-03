@@ -34,7 +34,10 @@ class Email(ValueObject):
 class Password(ValueObject):
     """Value Object to ensure that password is always hashed"""
 
-    value: str = field(converter=lambda string: pwd_context.hash(string))
+    value: str
+
+    def hash_password(self) -> str:
+        return pwd_context.hash(self.value)
 
     def verify_password(self, password_to_verify: str) -> bool:
         return pwd_context.verify(password_to_verify, self.value)
@@ -57,7 +60,8 @@ class DomainUser(Entity):
     def create(
         cls, name: str, email: str, password: str, ip_address: str, http_user_agent: str
     ) -> DomainUser:
-        new_user = cls(name=name, email=email, password=password, status=UserStatus.active)
+        hashed_password = Password(password).hash_password()
+        new_user = cls(name=name, email=email, password=hashed_password, status=UserStatus.active)
         DomainAuth.create_sign_up(
             user=new_user,
             http_user_agent=http_user_agent,

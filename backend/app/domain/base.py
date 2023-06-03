@@ -1,7 +1,8 @@
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
-from attrs import define, field
+from attrs import Attribute, define, field
 
 
 def field_relationship(*, init: bool) -> Any:
@@ -11,6 +12,12 @@ def field_relationship(*, init: bool) -> Any:
 
 @define(kw_only=False, slots=False, frozen=True)
 class ValueObject:
+    """
+    A small simple object with only one attribute.
+    Used for supporting entities invariants.
+    https://martinfowler.com/bliki/ValueObject.html
+    """
+
     value: Any
 
     def __composite_values__(self) -> tuple[Any]:
@@ -25,7 +32,24 @@ class ValueObject:
 
 @define(kw_only=True, slots=False)
 class Entity:
-    """Meta class for all domain entities"""
+    """
+    Meta class for all domain entities.
+    https://martinfowler.com/bliki/EvansClassification.html
+    """
 
     id: int = field(init=False)
     datetime_create: datetime = field(init=False, repr=False)
+
+
+def custom_serializer(instance: type, field: Attribute, value: Any) -> Any:
+    """
+    It is custom serializer for `attrs` asdict() method.
+    Used to avoid convertation Value Objects to dicts, etc.
+    """
+    match value:
+        case ValueObject():
+            return value.value
+        case Enum():
+            return value.value
+        case _:
+            return value

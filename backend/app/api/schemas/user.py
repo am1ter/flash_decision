@@ -1,8 +1,6 @@
 from pydantic import BaseModel, Extra, Field
 
 from app.api.schemas.base import RespData
-from app.domain.user import Email
-from app.system.constants import UserStatus
 
 
 class ReqSystemInfo(BaseModel):
@@ -18,13 +16,14 @@ class ReqSignUp(BaseModel):
 
 class RespSignUp(RespData):
     id: int
-    email: Email
-    status: UserStatus
+    email: str
+    status: str
     token: str
 
     class Config:
-        extra = Extra.ignore  # Disable `Extra.allow`` which is inherited from meta class
-        arbitrary_types_allowed = True  # Add support for `attrs` classes
+        # Disable `Extra.allow`` which is inherited from meta class
+        # It is important cases when used domain model unpacking using `**asdict()`
+        extra = Extra.ignore
 
 
 class ReqSignIn(BaseModel):
@@ -33,10 +32,11 @@ class ReqSignIn(BaseModel):
 
 
 class RespSignIn(RespData):
-    email: Email
-    status: UserStatus
+    email: str
+    status: str
     token: str
 
     class Config:
-        extra = Extra.ignore  # Disable `Extra.allow`` which is inherited from meta class
-        arbitrary_types_allowed = True  #  Add support for `attrs` classes
+        # Disable `Extra.allow`` which is inherited from meta class
+        # It is important cases when used domain model unpacking using `**asdict()`
+        extra = Extra.ignore
