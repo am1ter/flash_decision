@@ -4,7 +4,7 @@ from attrs import define, field
 from passlib.context import CryptContext
 from pydantic import EmailStr, IPvAnyAddress, ValidationError, parse_obj_as
 
-from app.domain.base import Entity, ValueObject, field_relationship
+from app.domain.base import Agregate, Entity, ValueObject, field_relationship
 from app.system.constants import AuthStatus, UserStatus
 from app.system.exceptions import (
     EmailValidationError,
@@ -44,7 +44,7 @@ class Password(ValueObject):
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainUser(Entity):
+class DomainUser(Agregate):
     """
     This class is the DDD Agregate.
     Represents a user with its credits and authentication functionality.

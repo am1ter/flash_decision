@@ -41,6 +41,13 @@ class Entity:
     datetime_create: datetime = field(init=False, repr=False)
 
 
+class Agregate(Entity):
+    """
+    Used for entity object (root) that controls other entities (components).
+    https://martinfowler.com/bliki/DDD_Aggregate.html
+    """
+
+
 def custom_serializer(instance: type, field: Attribute, value: Any) -> Any:
     """
     It is custom serializer for `attrs` asdict() method.
