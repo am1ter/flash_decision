@@ -1,12 +1,15 @@
-from attrs import asdict
-from fastapi import APIRouter, Request
+from typing import Annotated
 
-from app.api.schemas.base import Resp, RespMeta
+from fastapi import APIRouter, Depends, Request
+from fastapi.security import OAuth2PasswordRequestForm
+
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo, RespSignIn, RespSignUp
-from app.domain.base import custom_serializer
 from app.services.user import ServiceUserDep
 
 router = APIRouter(prefix="/api/v1/user")
+
+# Use FastAPI default tools (dependencies) for OAuth2 authentication
+SignUpFormDep = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
 def parse_request_system_info(raw_request: Request) -> ReqSystemInfo:
@@ -21,24 +24,47 @@ def parse_request_system_info(raw_request: Request) -> ReqSystemInfo:
 @router.post("/sign-up")
 async def sign_up(
     payload: ReqSignUp, raw_request: Request, service_user: ServiceUserDep
-) -> Resp[RespMeta, RespSignUp]:
-    """Create new user and record it to db"""
+) -> RespSignUp:
+    """
+    Create new user and record it to the database.
+    JWT specification is not compatible with JSON:API specification.
+    The app sends response for this endpoint using JWT specification.
+    """
 
     req_system_info = parse_request_system_info(raw_request)
-    new_user = await service_user.sign_up(req=payload, req_system_info=req_system_info)
+    user = await service_user.sign_up(req=payload, req_system_info=req_system_info)
+    access_token = service_user.create_access_token(user)
 
-    data = RespSignUp(**asdict(new_user, value_serializer=custom_serializer), token="")
-    return Resp(data=data)
+    return RespSignUp(
+        id=user.id,
+        email=user.email.value,
+        status=user.status.value,
+        access_token=access_token.access_token,
+        token_type=access_token.token_type,
+    )
 
 
 @router.post("/sign-in")
 async def sign_in(
-    payload: ReqSignIn, raw_request: Request, service_user: ServiceUserDep
-) -> Resp[RespMeta, RespSignIn]:
-    """Create new user and record it to db"""
+    form_data: SignUpFormDep,
+    raw_request: Request,
+    service_user: ServiceUserDep,
+) -> RespSignIn:
+    """
+    Authenticate user using OAuth2 protocol.
+    JWT specification is not compatible with JSON:API specification.
+    The app sends response for this endpoint using JWT specification.
+    """
 
+    payload = ReqSignIn(username=form_data.username, password=form_data.password)
     req_system_info = parse_request_system_info(raw_request)
-    new_user = await service_user.sign_in(req=payload, req_system_info=req_system_info)
+    user = await service_user.sign_in(req=payload, req_system_info=req_system_info)
+    access_token = service_user.create_access_token(user)
 
-    data = RespSignIn(**asdict(new_user, value_serializer=custom_serializer), token="")
-    return Resp(data=data)
+    return RespSignIn(
+        id=user.id,
+        email=user.email.value,
+        status=user.status.value,
+        access_token=access_token.access_token,
+        token_type=access_token.token_type,
+    )

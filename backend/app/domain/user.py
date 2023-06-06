@@ -56,6 +56,9 @@ class DomainUser(Agregate):
     status: UserStatus
     auths: list[DomainAuth] = field_relationship(init=False)
 
+    def _verify_user_is_enabled(self) -> bool:
+        return self.status != UserStatus.disabled
+
     @classmethod
     def create(
         cls, name: str, email: str, password: str, ip_address: str, http_user_agent: str
@@ -70,25 +73,21 @@ class DomainUser(Agregate):
 
         return new_user
 
-    def _verify_user_is_enabled(self) -> bool:
-        return self.status != UserStatus.disabled
-
-    def sign_in(self, password: str, ip_address: str, http_user_agent: str) -> DomainAuth:
+    def verify_user(self, password_to_verify: str | None = None) -> None:
         # Check if user is not disabled
         if not self._verify_user_is_enabled():
             raise UserDisabledError
 
         # Check password
-        if not self.password.verify_password(password):
+        if password_to_verify and not self.password.verify_password(password_to_verify):
             raise WrongPasswordError
 
-        # Create auth
+    def create_auth(self, ip_address: str, http_user_agent: str) -> DomainAuth:
         auth = DomainAuth.create_sign_in(
             user=self,
             http_user_agent=http_user_agent,
             ip_address=ip_address,
         )
-
         return auth
 
 

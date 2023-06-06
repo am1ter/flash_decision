@@ -48,7 +48,7 @@ class TestBackendUser(unittest.TestCase):
         r = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=user_sign_up.dict())
         response = Response(r)
         response.assert_status_code(200)
-        data_model = RespSignUp(**response.data)
+        data_model = RespSignUp(**response.response.json())
         self.assertIsNotNone(data_model)
         self.assertEqual(data_model.email, user_sign_up.email)
 
@@ -64,10 +64,10 @@ class TestBackendUser(unittest.TestCase):
         response_sign_up.assert_status_code(200)
 
         # Test sign in
-        user_sign_in = ReqSignIn(**user_sign_up.dict())
-        r_sign_in = requests.post(f"{settings.BACKEND_URL}/user/sign-in", json=user_sign_in.dict())
+        user_sign_in = ReqSignIn(username=user_sign_up.email, password=user_sign_up.password)
+        r_sign_in = requests.post(f"{settings.BACKEND_URL}/user/sign-in", data=user_sign_in.dict())
         response_sign_in = Response(r_sign_in)
         response_sign_in.assert_status_code(200)
-        data_model = RespSignIn(**response_sign_in.data)
+        data_model = RespSignIn(**response_sign_in.response.json())
         self.assertIsNotNone(data_model)
-        self.assertEqual(data_model.email, user_sign_in.email)
+        self.assertEqual(data_model.email, user_sign_in.username)

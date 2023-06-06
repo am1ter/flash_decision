@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from starlette import status
 
 from app.api.endpoints.support import router as router_support
@@ -32,13 +33,20 @@ async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Format exceptions in a `JSON:API` specification style using info from custom exceptions"""
     if isinstance(exc, BaseHTTPError):
         return JSONResponse(
-            status_code=exc.status_code,
-            content={"errors": exc.msg},
+            status_code=exc.status_code, content={"errors": exc.msg}, headers=exc.headers
         )
     else:
+        exc_name = type(exc).__name__
+        try:
+            exc_desc = str(exc)
+        except AttributeError:
+            if isinstance(exc, ValidationError):
+                exc_desc = "Pydantic response model validation error"
+            else:
+                exc_desc = "Unknown error"
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"errors": f"{type(exc).__name__}: {exc!s}"},
+            content={"errors": f"{exc_name}: {exc_desc}"},
         )
 
 

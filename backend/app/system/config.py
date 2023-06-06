@@ -23,6 +23,10 @@ class SettingsGeneral(BaseSettingsCustom):
     # HTTP
     BACKEND_HOST: str = "localhost"
     BACKEND_PORT: int = 8001
+    # JWT
+    JWT_SECRET_KEY: str = "fff76ea4d26ce6fd5390f79d478cb8a4"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    JWT_ALGORITHM = "HS256"
 
     @cached_property
     def BACKEND_URL(self) -> str:  # noqa: N802

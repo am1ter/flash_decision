@@ -10,6 +10,7 @@ class BaseError(Exception):
 
 class BaseHTTPError(BaseError):
     status_code: int
+    headers: dict | None = None
 
 
 class BaseValidationError(BaseError):
@@ -48,6 +49,18 @@ class DbObjectNotFoundError(BaseHTTPError):
 class DbObjectCannotBeCreatedError(BaseHTTPError):
     msg = "This object could not be saved in the database, because of the database constraints."
     status_code = status.HTTP_400_BAD_REQUEST
+
+
+class JwtExpiredError(BaseHTTPError):
+    msg = "Your session is expired. Please authenticate again."
+    status_code = status.HTTP_401_UNAUTHORIZED
+    headers = {"WWW-Authenticate": "Bearer"}
+
+
+class InvalidJwtError(BaseHTTPError):
+    msg = "Your access token is invalid. Please authenticate again."
+    status_code = status.HTTP_403_FORBIDDEN
+    headers = {"WWW-Authenticate": "Bearer"}  # part of OAuth2 specification
 
 
 class ConfigHTTPInconsistentError(BaseValidationError):

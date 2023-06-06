@@ -53,7 +53,9 @@ class TestServiceUser(IsolatedAsyncioTestCase):
             name="test-signup",
             password="uc8a&Q!W",  # noqa: S106
         )
-        self.req_sign_in = ReqSignIn(**self.req_sign_up.dict())
+        self.req_sign_in = ReqSignIn(
+            username=self.req_sign_up.email, password=self.req_sign_up.password
+        )
         self.req_system_info = ReqSystemInfo(ip_address="127.0.0.1", user_agent="Test")
 
     async def test_sign_up_success(self) -> None:
