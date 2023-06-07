@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
+from app.bootstrap import bootstrap
 from app.domain.base import Entity
-from app.infrastructure.db import DbDep
-from app.infrastructure.orm.mapper import init_orm_mappers
 from app.infrastructure.repositories.identity_map import IdentityMapDep
 from app.system.exceptions import (
     DbConnectionError,
@@ -18,14 +18,11 @@ from app.system.exceptions import (
     DbObjectNotFoundError,
 )
 
-# Run orm mappers as part of RepositorySQLAlchemy.
-# Repository is the place where domain models and ORM models work together.
-init_orm_mappers()
-
 
 class Repository(ABC):
     """
     Abstract class for repositories - mediates between the domain and ORM.
+    Repository is the place where domain models and ORM models work together.
     https://martinfowler.com/eaaCatalog/repository.html
     """
 
@@ -52,8 +49,8 @@ class RepositorySQLAlchemy(Repository):
     It also supports SQLAlchemy's relationships.
     """
 
-    def __init__(self, db: DbDep, identity_map: IdentityMapDep) -> None:
-        self._db = db
+    def __init__(self, db: bootstrap.db_dep, identity_map: IdentityMapDep) -> None:  # type: ignore[name-defined]
+        self._db = cast(AsyncSession, db)
         self._identity_map = identity_map
 
     @staticmethod
