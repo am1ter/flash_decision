@@ -6,8 +6,10 @@ from unittest import IsolatedAsyncioTestCase
 from jose import jwt
 
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
+from app.bootstrap import Bootstrap
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.repositories.base import Repository
+from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.user import ServiceUser
 from app.services.user_authorization import ServiceAuthorization
 from app.system.config import settings
@@ -50,10 +52,22 @@ class RepositoryUserFake(Repository):
         return user[0]
 
 
+class UnitOfWorkUserFake(UnitOfWork):
+    def __init__(self) -> None:
+        self.repository = RepositoryUserFake()
+
+    async def commit(self) -> None:
+        pass
+
+    async def rollback(self) -> None:
+        pass
+
+
 class TestServiceUser(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.repository = RepositoryUserFake()
-        self.service = ServiceUser(repository=self.repository)  # type: ignore[arg-type]
+        Bootstrap(start_orm=True)
+        self.uow = UnitOfWorkUserFake()
+        self.service = ServiceUser(uow=self.uow)  # type: ignore[arg-type]
         self.req_sign_up = ReqSignUp(
             email="test-signup@alekseisemenov.ru",
             name="test-signup",
@@ -81,7 +95,7 @@ class TestServiceUser(IsolatedAsyncioTestCase):
         )
 
         # Check auth
-        self.assertEqual(len(self.repository.storage_auth), 1, "Auth not created")
+        self.assertEqual(len(self.uow.repository.storage_auth), 1, "Auth not created")
 
     async def test_sign_up_failure_wrong_email(self) -> None:
         req_sign_up_wrong_email = copy(self.req_sign_up)
@@ -97,7 +111,7 @@ class TestServiceUser(IsolatedAsyncioTestCase):
         self.assertEqual(user_sign_up, user_sign_in)
 
         # Check auth record created
-        sign_in_auths = self.repository.storage_auth[user_sign_up.id]
+        sign_in_auths = self.uow.repository.storage_auth[user_sign_up.id]
         self.assertEqual(len(sign_in_auths), 2, "Auths not created")
         self.assertEqual(sign_in_auths[0].user, user_sign_in, "Auths for sign in not created")
 
@@ -132,8 +146,8 @@ class TestServiceUser(IsolatedAsyncioTestCase):
 
 class TestServiceAuthorization(IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
-        repository = RepositoryUserFake()
-        self.service_user = ServiceUser(repository=repository)  # type: ignore[arg-type]
+        self.uow = UnitOfWorkUserFake()
+        self.service_user = ServiceUser(uow=self.uow)  # type: ignore[arg-type]
         req_sign_up = ReqSignUp(
             email="test-signup@alekseisemenov.ru",
             name="test-signup",
@@ -144,14 +158,14 @@ class TestServiceAuthorization(IsolatedAsyncioTestCase):
         self.token_encoded = self.service_user.create_access_token(self.user_sign_up)
 
     async def test_authorization_success(self) -> None:
-        self.service_auth = ServiceAuthorization(self.token_encoded.access_token, self.service_user)
+        self.service_auth = ServiceAuthorization(self.token_encoded.access_token, self.uow)  # type: ignore[arg-type]
         user_by_token = await self.service_auth.get_current_user()
         self.assertEqual(user_by_token, self.user_sign_up)
 
     async def test_authorization_failure_invalid(self) -> None:
         token_encoded_invalid = self.token_encoded.access_token + "wrong"
         with self.assertRaises(InvalidJwtError):
-            self.service_auth = ServiceAuthorization(token_encoded_invalid, self.service_user)
+            self.service_auth = ServiceAuthorization(token_encoded_invalid, self.uow)  # type: ignore[arg-type]
 
     async def test_authorization_failure_expired(self) -> None:
         token_encoded_valid = self.token_encoded.access_token
@@ -162,4 +176,4 @@ class TestServiceAuthorization(IsolatedAsyncioTestCase):
             token_decoded_invalid, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM
         )
         with self.assertRaises(JwtExpiredError):
-            self.service_auth = ServiceAuthorization(token_encoded_invalid, self.service_user)
+            self.service_auth = ServiceAuthorization(token_encoded_invalid, self.uow)  # type: ignore[arg-type]

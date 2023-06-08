@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Annotated, Any
+from typing import Any
 
-from fastapi import Depends
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
@@ -95,7 +94,3 @@ class IdentityMapSQLAlchemy:
         self.queries = IdentityMapSQLAlchemyQueries(self)
         self.relationships = IdentityMapSQLAlchemyRelationships(self)
         self.entities = IdentityMapSQLAlchemyEntities(self)
-
-
-# For dependency injection
-IdentityMapDep = Annotated[IdentityMapSQLAlchemy, Depends()]

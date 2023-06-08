@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
-from typing import Any, cast
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -9,9 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
-from app.bootstrap import bootstrap
 from app.domain.base import Entity
-from app.infrastructure.repositories.identity_map import IdentityMapDep
+from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
 from app.system.exceptions import (
     DbConnectionError,
     DbObjectCannotBeCreatedError,
@@ -36,11 +35,6 @@ class Repository(ABC):
         """Retrieve an entity from the repository by its ID"""
         raise NotImplementedError
 
-    @abstractmethod
-    async def save(self) -> None:
-        """Save changes in the repository"""
-        raise NotImplementedError
-
 
 class RepositorySQLAlchemy(Repository):
     """
@@ -49,8 +43,10 @@ class RepositorySQLAlchemy(Repository):
     It also supports SQLAlchemy's relationships.
     """
 
-    def __init__(self, db: bootstrap.db_dep, identity_map: IdentityMapDep) -> None:  # type: ignore[name-defined]
-        self._db = cast(AsyncSession, db)
+    def __init__(
+        self, db: AsyncSession, identity_map: IdentityMapSQLAlchemy = IdentityMapSQLAlchemy()
+    ) -> None:
+        self._db = db
         self._identity_map = identity_map
 
     @staticmethod
@@ -147,8 +143,3 @@ class RepositorySQLAlchemy(Repository):
     async def refresh(self, domain_obj: Entity) -> None:
         """Refresh the state of an entity with the database"""
         await self._db.refresh(domain_obj)
-
-    @catch_db_errors
-    async def save(self) -> None:  # type: ignore[override]
-        """Save changes to the database"""
-        await self._db.commit()

@@ -1,10 +1,15 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.support import RespDataHealthcheck
-from app.services.support import ServiceSupportDep
+from app.services.support import ServiceSupport
 
 router = APIRouter(prefix="/api/v1/support")
+
+# Internal dependencies
+ServiceSupportDep = Annotated[ServiceSupport, Depends()]
 
 
 @router.get("/healthcheck")

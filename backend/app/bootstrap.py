@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 
-from app.infrastructure.db import DbDep
+from app.infrastructure.db import AsyncSessionFactory
 from app.infrastructure.orm.mapper import init_orm_mappers
 
 
@@ -13,19 +13,19 @@ class Bootstrap:
     """
 
     _instance: Bootstrap | None = None
-    db_dep: type[AsyncSession]
+    db_session_factory: sessionmaker
 
     def __new__(
         cls,
         *,
         start_orm: bool = True,
-        db_dep: type[AsyncSession] = DbDep,
+        db_session_factory: sessionmaker = AsyncSessionFactory,
     ) -> Bootstrap:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             if start_orm:
                 init_orm_mappers()
-            cls._instance.db_dep = db_dep
+            cls._instance.db_session_factory = db_session_factory
         return cls._instance
 
 

@@ -1,7 +1,3 @@
-from typing import Annotated
-
-from fastapi import Depends
-
 from app.domain.user import DomainUser, Email
 from app.infrastructure.repositories.base import RepositorySQLAlchemy
 
@@ -16,7 +12,3 @@ class RepositoryUserSQL(RepositorySQLAlchemy):
         user = await self._select_one(DomainUser.email, Email(email))
         assert isinstance(user, DomainUser)
         return user
-
-
-# For dependency injection
-RepositoryUserDep = Annotated[RepositoryUserSQL, Depends()]

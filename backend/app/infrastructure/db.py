@@ -1,8 +1,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Annotated, Any
+from typing import Any
 
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -42,16 +41,3 @@ def get_sessionmaker(engine: AsyncEngine = engine) -> sessionmaker:
 
 
 AsyncSessionFactory = get_sessionmaker()
-
-
-async def get_db() -> AsyncGenerator[AsyncSession, Any]:
-    """
-    Give db session using single app-related db engine.
-    The name `get_session` cannot be used, because the term `session` is already used inside app.
-    """
-    async with AsyncSessionFactory() as session:
-        yield session
-
-
-# For dependency injection
-DbDep = Annotated[AsyncSession, Depends(get_db)]
