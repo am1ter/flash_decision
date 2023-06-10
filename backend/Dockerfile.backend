@@ -18,5 +18,4 @@ RUN poetry install --with test
 
 # Copy the app files
 COPY . .
-RUN rm -rf /usr/src/backend/tests/e2e
 RUN poetry install

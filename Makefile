@@ -10,11 +10,16 @@ docker-up-prod:  # Run docker compose to run backend in prod environment
 docker-up-dev:  # Run docker compose to run backend in dev environment
 		docker compose --env-file=.env.dev -f ./docker-compose.prod.yaml -f ./docker-compose.dev.yaml --profile backend up -d --build
 
+.PHONY: docker-build-tests
+.IGNORE:
+docker-build-tests:  # Build docker images for test environment
+		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml build;
+
 .PHONY: docker-run-tests
 .IGNORE:
 docker-run-tests:  # Run docker compose to tests create test environment and run tests
 		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml run --rm fd_tests;
-		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml down --rmi local
+		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml down
 
 .PHONY: docker-down
 docker-down:  # Shutdown and remove containers for backend in prod environment

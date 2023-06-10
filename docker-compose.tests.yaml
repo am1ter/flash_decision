@@ -34,6 +34,9 @@ services:
       - DB_HOST=fd_db_tests
     networks:
       - tests
+    volumes:
+      - ./backend/app:/usr/src/backend/app
+      - ./backend/tests:/usr/src/backend/tests
 
   # Apply db migrations
   fd_migrations_tests:
