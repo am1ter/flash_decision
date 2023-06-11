@@ -1,15 +1,24 @@
-from sqlalchemy import text
+from collections.abc import Callable
+from contextlib import _AsyncGeneratorContextManager
 
-from app.infrastructure.db import get_connection
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncConnection
+
+from app.bootstrap import bootstrap
 from app.system.logger import logger
+
+DbConnectionFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection]]
 
 
 class ServiceSupport:
     """Service for system self check"""
 
+    def __init__(self, db_conn_factory: DbConnectionFactory = bootstrap.db_conn_factory) -> None:
+        self.db_conn_factory = db_conn_factory
+
     async def check_db_connection(self) -> bool:
         try:
-            async with get_connection() as conn:
+            async with self.db_conn_factory() as conn:
                 await conn.execute(text("SELECT 1"))
         except Exception:  # noqa: BLE001
             check_result = False
