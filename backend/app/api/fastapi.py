@@ -5,11 +5,9 @@ from starlette import status
 
 from app.api.endpoints.support import router as router_support
 from app.api.endpoints.user import router as router_user
-from app.bootstrap import Bootstrap
 from app.system.exceptions import BaseHTTPError
 from app.system.logger import logger, settings
 
-Bootstrap(start_orm=True)
 fastapi_app = FastAPI(title="Flash decision")
 fastapi_app.include_router(router_support)
 fastapi_app.include_router(router_user)
