@@ -189,5 +189,5 @@ line-length = 100
 line_length = 100
 profile = "black"
 src_paths = ["app/"]
-known_first_party = ["e2e", "app"]
+known_first_party = ["e2e", "app", "tests"]
 known_third_party = ["fastapi"]

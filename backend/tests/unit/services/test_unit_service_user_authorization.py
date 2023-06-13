@@ -2,13 +2,13 @@ from copy import copy
 from unittest import IsolatedAsyncioTestCase
 
 from jose import jwt
-from tests.unit.services.test_unit_service_user import UnitOfWorkUserFake
 
 from app.api.schemas.user import ReqSignUp, ReqSystemInfo
 from app.services.user import ServiceUser
 from app.services.user_authorization import ServiceAuthorization
 from app.system.config import settings
 from app.system.exceptions import InvalidJwtError, JwtExpiredError
+from tests.unit.services.test_unit_service_user import UnitOfWorkUserFake
 
 
 class TestServiceAuthorization(IsolatedAsyncioTestCase):
