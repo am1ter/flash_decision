@@ -15,13 +15,13 @@ fastapi_app.include_router(router_user)
 
 @fastapi_app.on_event("startup")
 async def event_startup() -> None:
-    logger.info(
+    await logger.ainfo(
         f"Application ready for startup",
         env=settings.ENVIRONMENT.value,
         dev_mode=settings.DEV_MODE,
         debug_mode=settings.DEBUG_MODE,
     )
-    logger.info(
+    await logger.ainfo(
         f"Connection to db established",
         db_url=settings.DB_URL,
         db_schema=settings.DB_SCHEMA,
@@ -52,4 +52,4 @@ async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
 
 @fastapi_app.on_event("shutdown")
 async def event_shutdown() -> None:
-    logger.info("Application is shutting down")
+    await logger.ainfo("Application is shutting down")

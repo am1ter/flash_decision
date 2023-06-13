@@ -6,7 +6,7 @@ import os
 import re
 from distutils.util import strtobool
 from logging import LogRecord
-from unittest import TestCase, main, mock
+from unittest import IsolatedAsyncioTestCase, main, mock
 
 import attrs
 import structlog
@@ -31,7 +31,7 @@ def is_dev_mode() -> bool:
     return bool(strtobool(os.getenv("DEV_MODE", default="False")))
 
 
-class TestLoggerStandartCases(TestCase):
+class TestLoggerStandartCases(IsolatedAsyncioTestCase):
     """
     Test standart use cases for logging functions.
     Print to stdout log messages and exceptions in prod/dev modes (json- and text-formatted).
@@ -48,20 +48,21 @@ class TestLoggerStandartCases(TestCase):
         # Read only structlog logger`s output
         log_text_io = io.StringIO()
         handler = logging.StreamHandler(log_text_io)
-        custom_logger.addHandler(handler)
+        logging.root.addHandler(handler)
         return (custom_logger, log_text_io)
 
-    def _capture_stdout_log_msg(self, event: str | Exception, **kwargs) -> str:
+    async def _capture_stdout_log_msg(self, event: str | Exception, **kwargs) -> str:
         """Temporary replace stdout with IO object, send"""
 
         # New logger must be created, because different tests use differenent properties
         custom_logger, log_text_io = self._create_custom_logger()
 
         # Custom logger output to stdout and to the IO object simultaniously
+        # Use sync functions for exceptions and async for the rest
         if isinstance(event, Exception):
             custom_logger.exception(str(event), **kwargs)
         else:
-            custom_logger.info(event, **kwargs)
+            await custom_logger.ainfo(event, **kwargs)
 
         log_text_str = log_text_io.getvalue()
         return log_text_str
@@ -124,11 +125,11 @@ class TestLoggerStandartCases(TestCase):
         return mock_record
 
     @mock.patch.dict(os.environ, dev_mode)
-    def test_logs_app_dev(self) -> None:
+    async def test_logs_app_dev(self) -> None:
         """Test App pretty logs for dev env"""
 
         # Capture stdout messages
-        log_text_str = self._capture_stdout_log_msg("test_logs", custom="custom")
+        log_text_str = await self._capture_stdout_log_msg("test_logs", custom="custom")
 
         # Use regular expression to remove non-ANSI symbols
         log_text_str_clean = self._clean_log_msg(log_text_str)
@@ -139,11 +140,11 @@ class TestLoggerStandartCases(TestCase):
             self.assertIn(word, log_text_str_clean)
 
     @mock.patch.dict(os.environ, prod_mode)
-    def test_logs_app_prod(self) -> None:
+    async def test_logs_app_prod(self) -> None:
         """Test App structured logs for prod env"""
 
         # Capture stdout messages
-        log_text_str = self._capture_stdout_log_msg("test_logs", custom="custom")
+        log_text_str = await self._capture_stdout_log_msg("test_logs", custom="custom")
         log_test_dict = json.loads(log_text_str)
 
         # Verify
@@ -233,7 +234,7 @@ class TestLoggerStandartCases(TestCase):
         self.assertEqual(log_msg_fmt_dict, log_msg_fmt_dict | expected)
 
     @mock.patch.dict(os.environ, dev_mode)
-    def test_exceptions_basic_dev(self) -> None:
+    async def test_exceptions_basic_dev(self) -> None:
         """Test that app use `rich` to format exception"""
 
         # Trigger exception
@@ -241,7 +242,7 @@ class TestLoggerStandartCases(TestCase):
             1 / 0  # noqa: B018
         except ZeroDivisionError as e:
             # Capture stdout messages
-            log_text_str = self._capture_stdout_log_msg(e)
+            log_text_str = await self._capture_stdout_log_msg(e)
 
         # Verify
         expected_words = [
@@ -254,7 +255,7 @@ class TestLoggerStandartCases(TestCase):
             self.assertIn(word, log_text_str)
 
     @mock.patch.dict(os.environ, prod_mode)
-    def test_exceptions_basic_prod(self) -> None:
+    async def test_exceptions_basic_prod(self) -> None:
         """Test that app format exceptions as jsons"""
 
         # Trigger exception
@@ -262,7 +263,7 @@ class TestLoggerStandartCases(TestCase):
             1 / 0  # noqa: B018
         except ZeroDivisionError as e:
             # Capture stdout messages
-            log_text_str = self._capture_stdout_log_msg(e)
+            log_text_str = await self._capture_stdout_log_msg(e)
             log_text_dict = json.loads(log_text_str)
 
         # Verify
@@ -336,50 +337,50 @@ class FakeDomainClass:
     x: str
 
 
-class TestLoggerCustomCases(TestCase):
+class TestLoggerCustomCases(IsolatedAsyncioTestCase):
     """Test custom use cases for logging functions (custom log methods, etc.)"""
 
-    def test_info_finish_general_dev(self) -> None:
+    async def test_info_finish_general_dev(self) -> None:
         """Test attribute `event` inside custom method info_finish()"""
         logger = create_logger()
         with structlog.testing.capture_logs() as logs:
-            logger.info_finish()
+            await logger.ainfo_finish()
         excepted = {"event": "Operation completed", "log_level": "info"}
         self.assertEqual(logs[0], logs[0] | excepted)
 
-    def test_info_finish_cls_name(self) -> None:
+    async def test_info_finish_cls_name(self) -> None:
         """Test attribute `cls` inside custom method info_finish()"""
         logger = create_logger()
         with structlog.testing.capture_logs() as logs:
-            logger.info_finish(cls=self.__class__)
+            await logger.ainfo_finish(cls=self.__class__)
         excepted = {"cls": self.__class__.__name__}
         self.assertEqual(logs[0], logs[0] | excepted)
 
-    def test_info_finish_func_name_prod(self) -> None:
+    async def test_info_finish_func_name_prod(self) -> None:
         """Test attribute `show_func_name` inside custom method info_finish()"""
         logger = create_logger(dev_mode=is_dev_mode())
         with structlog.testing.capture_logs() as logs:
-            logger.info_finish(show_func_name=True)
+            await logger.ainfo_finish(show_func_name=True)
         excepted = {"function": self.test_info_finish_func_name_prod.__name__}
         self.assertEqual(logs[0], logs[0] | excepted)
 
     @mock.patch.dict(os.environ, dev_mode)
-    def test_info_finish_domain_obj_dev(self) -> None:
+    async def test_info_finish_domain_obj_dev(self) -> None:
         """Test attribute `domain_obj` inside custom method info_finish() in dev mode"""
         logger = create_logger(dev_mode=is_dev_mode())
         domain_obj = FakeDomainClass(x="test")  # type: ignore[call-arg]
         with structlog.testing.capture_logs() as logs:
-            logger.info_finish(domain_obj=domain_obj)
+            await logger.ainfo_finish(domain_obj=domain_obj)
         excepted = {"domain_obj": domain_obj}
         self.assertEqual(logs[0], logs[0] | excepted)
 
     @mock.patch.dict(os.environ, prod_mode)
-    def test_info_finish_domain_obj_prod(self) -> None:
+    async def test_info_finish_domain_obj_prod(self) -> None:
         """Test attribute `domain_obj` inside custom method info_finish() in prod mode"""
         logger = create_logger(dev_mode=is_dev_mode())
         domain_obj = FakeDomainClass(x="test")  # type: ignore[call-arg]
         with structlog.testing.capture_logs() as logs:
-            logger.info_finish(domain_obj=domain_obj)
+            await logger.ainfo_finish(domain_obj=domain_obj)
         excepted = {"domain_obj": attrs.asdict(domain_obj)}
         self.assertEqual(logs[0], logs[0] | excepted)
 

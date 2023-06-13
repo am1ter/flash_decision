@@ -135,7 +135,7 @@ class TestServiceUser(IsolatedAsyncioTestCase):
 
     async def test_create_access_token(self) -> None:
         user = await self.service.sign_up(self.req_sign_up, self.req_system_info)
-        token_encoded = self.service.create_access_token(user)
+        token_encoded = await self.service.create_access_token(user)
         token_decoded = jwt.decode(token=token_encoded.access_token, key=settings.JWT_SECRET_KEY)
         self.assertEqual(token_decoded["sub"], user.email.value)
         self.assertGreater(token_decoded["exp"], token_decoded["iat"])

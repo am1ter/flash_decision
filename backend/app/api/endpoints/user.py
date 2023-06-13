@@ -36,7 +36,7 @@ async def sign_up(
 
     req_system_info = parse_request_system_info(raw_request)
     user = await service_user.sign_up(req=payload, req_system_info=req_system_info)
-    access_token = service_user.create_access_token(user)
+    access_token = await service_user.create_access_token(user)
 
     return RespSignUp(
         id=user.id,
@@ -62,7 +62,7 @@ async def sign_in(
     payload = ReqSignIn(username=form_data.username, password=form_data.password)
     req_system_info = parse_request_system_info(raw_request)
     user = await service_user.sign_in(req=payload, req_system_info=req_system_info)
-    access_token = service_user.create_access_token(user)
+    access_token = await service_user.create_access_token(user)
 
     return RespSignIn(
         id=user.id,

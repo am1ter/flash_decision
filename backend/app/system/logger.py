@@ -14,7 +14,6 @@ import attrs
 import structlog
 from rich import print as rprint
 from rich.traceback import Traceback
-from structlog.stdlib import LoggerFactory
 from structlog.typing import EventDict
 from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import AccessFormatter, DefaultFormatter
@@ -68,7 +67,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
             # Use rich print which support suppressing external lib attributes
             rich_excepthook(ei[0], ei[1], ei[2])
         else:
-            self.logger.exception(str(ei[1]), exc_info=ei)
+            self.logger._logger.exception(str(ei[1]), exc_info=ei)
 
     def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for system logs"""
@@ -161,10 +160,14 @@ class CustomTimeStamper(structlog.processors.TimeStamper):
 
 
 class CustomStructlogLogger(structlog.stdlib.BoundLogger):
-    """Custom structlog logger with additional methods and other tweaks"""
+    """
+    Custom structlog logger with additional methods and other tweaks.
+    Use async calls for everything, but not for the exceptions.
+    Async exceptions is not supported by Uvicorn logging.
+    """
 
-    def info(self, event: str | None = None, *args: Any, **kwargs: Any) -> Any:
-        """Custom wrapper for logger method"""
+    async def ainfo(self, event: str | None = None, *args: Any, **kwargs: Any) -> Any:
+        """Custom wrapper for logger method (async)"""
 
         # Show class name
         if kwargs.get("cls") and isinstance(kwargs.get("cls"), type):
@@ -182,16 +185,16 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
             callstack_depth = 3
             kwargs["function"] = traceback.extract_stack(None, callstack_depth)[0].name
 
-        # Output to logger
-        return self._logger.info(event, *args, **kwargs)
+        # Output to logger using async structlog method
+        return await self._logger.ainfo(event, *args, **kwargs)  # type: ignore[attr-defined]
 
-    def info_finish(self, *args, **kwargs) -> None:
+    async def ainfo_finish(self, *args, **kwargs) -> None:
         """To log function/method results"""
         event = "Operation completed"
-        self.info(event, *args, **kwargs)
+        await self.ainfo(event, *args, **kwargs)
 
     def exception(self, event: str | None = None, *args: Any, **kw: Any) -> Any:
-        """Use parent logger of wrapped custom logger"""
+        """Use parent logger of wrapped custom logger (sync)"""
         return self._logger.exception(event, *args, **kw)
 
 
@@ -226,12 +229,13 @@ def create_logger(
     structlog.configure(
         processors=processors_shared + processors_mode,
         cache_logger_on_first_use=True,
-        logger_factory=LoggerFactory(),
+        logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
     )
     logger = structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
     logger.dev_mode = dev_mode
-    return structlog.wrap_logger(logger, wrapper_class=CustomStructlogLogger)
+    logger_custom = structlog.wrap_logger(logger, wrapper_class=CustomStructlogLogger)
+    return logger_custom
 
 
 def update_uvicorn_log_config() -> dict[str, Any]:

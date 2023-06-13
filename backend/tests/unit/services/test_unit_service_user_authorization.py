@@ -22,7 +22,7 @@ class TestServiceAuthorization(IsolatedAsyncioTestCase):
         )
         req_system_info = ReqSystemInfo(ip_address="127.0.0.1", user_agent="Test")
         self.user_sign_up = await self.service_user.sign_up(req_sign_up, req_system_info)
-        self.token_encoded = self.service_user.create_access_token(self.user_sign_up)
+        self.token_encoded = await self.service_user.create_access_token(self.user_sign_up)
 
     async def test_authorization_success(self) -> None:
         self.service_auth = ServiceAuthorization(self.token_encoded.access_token, self.uow)  # type: ignore[arg-type]

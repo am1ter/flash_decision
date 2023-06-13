@@ -50,7 +50,7 @@ class ServiceUser:
         async with self.uow:
             self.uow.repository.add(user)
             await self.uow.commit()
-        logger.info_finish(cls=self.__class__, show_func_name=True, user=user)
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user)
         return user
 
     async def sign_in(self, req: ReqSignIn, req_system_info: ReqSystemInfo) -> DomainUser:
@@ -65,10 +65,10 @@ class ServiceUser:
 
             # Finalize
             await self.uow.commit()
-        logger.info_finish(cls=self.__class__, show_func_name=True, user=user, auth=auth)
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user, auth=auth)
         return user
 
-    def create_access_token(self, user: DomainUser) -> JwtTokenEncoded:
+    async def create_access_token(self, user: DomainUser) -> JwtTokenEncoded:
         """Create JWT according its specification"""
         payload = {
             "sub": user.email.value,
@@ -76,5 +76,5 @@ class ServiceUser:
             "exp": datetime.utcnow() + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
         }
         encoded_jwt_str = jwt.encode(payload, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
-        logger.info_finish(cls=self.__class__, show_func_name=True, user=user)
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user)
         return JwtTokenEncoded(access_token=encoded_jwt_str)

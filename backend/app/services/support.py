@@ -25,5 +25,5 @@ class ServiceSupport:
         else:
             check_result = True
 
-        logger.info_finish(cls=self.__class__, show_func_name=True, result=check_result)
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, result=check_result)
         return check_result
