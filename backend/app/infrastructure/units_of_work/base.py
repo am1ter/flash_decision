@@ -57,7 +57,9 @@ class UnitOfWorkSQLAlchemy(UnitOfWork):
         await self.db.commit()
 
     async def rollback(self) -> None:
+        self.db.expunge_all()
         await self.db.rollback()
+        pass
 
     def __call__(self) -> UnitOfWorkSQLAlchemy:
         return self
