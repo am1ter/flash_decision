@@ -2,8 +2,7 @@ from datetime import datetime
 from typing import Annotated
 
 from sqlalchemy import MetaData, Table, func
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.orm import Mapped, mapped_column, registry
+from sqlalchemy.orm import Mapped, as_declarative, declared_attr, mapped_column, registry
 
 from app.system.config import settings_db
 
