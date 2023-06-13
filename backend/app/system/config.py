@@ -2,6 +2,7 @@ import os
 from copy import copy
 from distutils.util import strtobool
 from functools import cached_property
+from typing import Literal
 
 from pydantic import BaseSettings, HttpUrl, PostgresDsn, ValidationError, parse_obj_as
 
@@ -68,6 +69,7 @@ settings_general = SettingsGeneral()
 
 
 class SettingsLog(BaseSettingsCustom):
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     LOG_DB_ACCESS: bool = settings_general.DEBUG_MODE
     LOG_FMT_DEV_PREF: str = "%(asctime)s [%(levelprefix)s]"
     LOG_FMT_DEV_DEFAULT: str = LOG_FMT_DEV_PREF + " %(message)s"

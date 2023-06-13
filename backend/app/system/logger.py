@@ -206,7 +206,8 @@ def create_logger(
     """Create structlog logger"""
 
     # Set log level and remove extra data from output using format argument
-    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+    logging_level = logging._nameToLevel[settings.LOG_LEVEL]
+    logging.basicConfig(level=logging_level, format="%(message)s", stream=sys.stdout)
 
     # Set dev_mode
     CustomStructlogLogger.dev_mode = dev_mode
