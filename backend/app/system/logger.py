@@ -184,7 +184,7 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
         # Show the name of the function, where info() called
         if kwargs.get("show_func_name", False):
             del kwargs["show_func_name"]
-            callstack_depth = 1  # Extract only last call
+            callstack_depth = 3  # Function where logger was called is on the 3 level of the stack
             kwargs["function"] = traceback.extract_stack(None, callstack_depth)[0].name
 
         # Output to logger using async structlog method
