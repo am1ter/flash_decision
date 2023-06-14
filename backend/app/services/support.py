@@ -4,16 +4,16 @@ from contextlib import _AsyncGeneratorContextManager
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.bootstrap import bootstrap
+from app.bootstrap import Bootstrap
 from app.system.logger import logger
 
-DbConnectionFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection]]
+DbConnFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection]]
 
 
 class ServiceSupport:
     """Service for system self check"""
 
-    def __init__(self, db_conn_factory: DbConnectionFactory = bootstrap.db_conn_factory) -> None:
+    def __init__(self, db_conn_factory: DbConnFactory = Bootstrap().db_conn_factory) -> None:
         self.db_conn_factory = db_conn_factory
 
     async def check_db_connection(self) -> bool:

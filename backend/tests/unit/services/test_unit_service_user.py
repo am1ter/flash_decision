@@ -62,7 +62,7 @@ class UnitOfWorkUserFake(UnitOfWork):
 
 class TestServiceUser(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        Bootstrap(start_orm=True)
+        self.bootstrap = Bootstrap(start_orm=True)
         self.uow = UnitOfWorkUserFake()
         self.service = ServiceUser(uow=self.uow)  # type: ignore[arg-type]
         self.req_sign_up = ReqSignUp(

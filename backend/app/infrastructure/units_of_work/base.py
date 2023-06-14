@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from app.bootstrap import bootstrap
+from app.bootstrap import Bootstrap
 
 if TYPE_CHECKING:
     from app.infrastructure.repositories.base import RepositorySQLAlchemy
@@ -39,7 +39,7 @@ class UnitOfWorkSQLAlchemy(UnitOfWork):
     def __init__(
         self,
         repository_type: type[RepositorySQLAlchemy],
-        db_factory: sessionmaker = bootstrap.db_session_factory,
+        db_factory: sessionmaker = Bootstrap().db_session_factory,
     ) -> None:
         self._db_factory = db_factory
         self._repository_type = repository_type
