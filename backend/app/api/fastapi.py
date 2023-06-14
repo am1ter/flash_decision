@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette import status
@@ -15,19 +16,13 @@ fastapi_app.include_router(router_support)
 fastapi_app.include_router(router_user)
 
 
-@fastapi_app.on_event("startup")
-async def event_startup() -> None:
-    await logger.ainfo(
-        f"Application ready for startup",
-        env=settings.ENVIRONMENT.value,
-        dev_mode=settings.DEV_MODE,
-        debug_mode=settings.DEBUG_MODE,
-    )
-    await logger.ainfo(
-        f"Connection to db established",
-        db_url=settings.DB_URL,
-        db_schema=settings.DB_SCHEMA,
-    )
+fastapi_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @fastapi_app.exception_handler(Exception)
@@ -50,6 +45,21 @@ async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"errors": f"{exc_name}: {exc_desc}"},
         )
+
+
+@fastapi_app.on_event("startup")
+async def event_startup() -> None:
+    await logger.ainfo(
+        f"Application ready for startup",
+        env=settings.ENVIRONMENT.value,
+        dev_mode=settings.DEV_MODE,
+        debug_mode=settings.DEBUG_MODE,
+    )
+    await logger.ainfo(
+        f"Connection to db established",
+        db_url=settings.DB_URL,
+        db_schema=settings.DB_SCHEMA,
+    )
 
 
 @fastapi_app.on_event("shutdown")

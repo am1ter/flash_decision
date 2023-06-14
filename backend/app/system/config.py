@@ -24,10 +24,11 @@ class SettingsGeneral(BaseSettingsCustom):
     # HTTP
     BACKEND_HOST: str = "localhost"
     BACKEND_PORT: int = 8001
+    FRONTEND_URL: str = "http://0.0.0.0:8000/"
     # JWT
     JWT_SECRET_KEY: str = "fff76ea4d26ce6fd5390f79d478cb8a4"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    JWT_ALGORITHM = "HS256"
+    JWT_ALGORITHM: str = "HS256"
 
     @cached_property
     def BACKEND_URL(self) -> str:  # noqa: N802
@@ -76,7 +77,7 @@ class SettingsLog(BaseSettingsCustom):
     LOG_FMT_DEV_ACCESS: str = (
         LOG_FMT_DEV_PREF + " %(client_addr)s | %(request_line)s | %(status_code)s"
     )
-    SUPPRESS_TRACEBACK_FROM_LIBS = [
+    SUPPRESS_TRACEBACK_FROM_LIBS: list[str] = [
         "uvicorn",
         "fastapi",
         "starlette",
