@@ -13,23 +13,29 @@ AsyncDbConnFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection
 
 
 class Bootstrap:
-    """Configure the app during the ititialization"""
+    """
+    Configure the app during the ititialization.
+    Use singleton pattern to avoid multiple instances.
+    """
 
-    orm_mapped = False
+    _instance: Bootstrap | None = None
+    db_conn_factory: Callable
+    db_session_factory: sessionmaker
 
-    def __init__(
-        self,
+    def __new__(
+        cls,
         *,
         start_orm: bool = True,
         db_conn_factory: AsyncDbConnFactory = get_connection,
         db_session_factory: sessionmaker = AsyncSessionFactory,
-    ) -> None:
-        # Mapping Domain <-> ORM must be executed only once
-        if start_orm and not self.__class__.orm_mapped:
-            init_orm_mappers()
-            self.__class__.orm_mapped = True
-        self.db_conn_factory = db_conn_factory
-        self.db_session_factory = db_session_factory
+    ) -> Bootstrap:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            if start_orm:
+                init_orm_mappers()
+            cls._instance.db_conn_factory = db_conn_factory
+            cls._instance.db_session_factory = db_session_factory
+        return cls._instance
 
 
 bootstrap = Bootstrap()
