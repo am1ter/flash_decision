@@ -1,10 +1,12 @@
+from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Annotated, cast
+from typing import Annotated, Any, Self, cast
 
 from attr import define
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
+from structlog.contextvars import bind_contextvars, unbind_contextvars
 
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSQL
@@ -37,6 +39,14 @@ class ServiceAuthorization:
         self.uow = uow
         self.token_decoded = self._decode_token(token_encoded)
 
+    async def __aenter__(self) -> Self:
+        self.user = await self.get_current_user()
+        bind_contextvars(user=self.user)
+        return self
+
+    async def __aexit__(self, *args) -> None:
+        unbind_contextvars("user")
+
     def _decode_token(self, token_encoded: str) -> JwtTokenDecoded:
         """Decode JWT token, validate it, extract user's creds"""
         try:
@@ -54,3 +64,11 @@ class ServiceAuthorization:
             user = await self.uow.repository.get_by_email(self.token_decoded.sub)
         user.verify_user()
         return user
+
+
+async def verify_authorization(
+    token_encoded: TokenDep, uow: UowUserDep
+) -> AsyncGenerator[ServiceAuthorization, Any]:
+    """Automatically enter into `ServiceAuthorization` context manager when used FastApi Depends"""
+    async with ServiceAuthorization(token_encoded, uow) as service_auth:
+        yield service_auth

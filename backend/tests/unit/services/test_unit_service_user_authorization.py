@@ -4,8 +4,9 @@ from unittest import IsolatedAsyncioTestCase
 from jose import jwt
 
 from app.api.schemas.user import ReqSignUp, ReqSystemInfo
+from app.domain.user import DomainUser
 from app.services.user import ServiceUser
-from app.services.user_authorization import ServiceAuthorization
+from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import settings
 from app.system.exceptions import InvalidJwtError, JwtExpiredError
 from tests.unit.services.test_unit_service_user import UnitOfWorkUserFake
@@ -44,3 +45,9 @@ class TestServiceAuthorization(IsolatedAsyncioTestCase):
         )
         with self.assertRaises(JwtExpiredError):
             self.service_auth = ServiceAuthorization(token_encoded_invalid, self.uow)  # type: ignore[arg-type]
+
+    async def test_verify_authorization(self) -> None:
+        service_auth_gen = verify_authorization(self.token_encoded.access_token, self.uow)  # type: ignore[arg-type]
+        service_auth = await anext(service_auth_gen)  # type: ignore[call-overload]
+        self.assertTrue(isinstance(service_auth, ServiceAuthorization))
+        self.assertTrue(isinstance(service_auth.user, DomainUser))
