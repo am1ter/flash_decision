@@ -21,8 +21,8 @@ async def temporal_db_connection() -> AsyncGenerator[AsyncConnection, Any]:
 
 class TestServiceUser(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        bootstrap = Bootstrap(start_orm=True, db_conn_factory=temporal_db_connection)
-        self.service = ServiceSupport(bootstrap.db_conn_factory)
+        Bootstrap(start_orm=True, db_conn_factory=temporal_db_connection)
+        self.service = ServiceSupport()
 
     async def test_check_db_connection(self) -> None:
         result = await self.service.check_db_connection()

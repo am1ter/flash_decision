@@ -13,12 +13,9 @@ DbConnFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection]]
 class ServiceSupport:
     """Service for system self check"""
 
-    def __init__(self, db_conn_factory: DbConnFactory = Bootstrap().db_conn_factory) -> None:
-        self.db_conn_factory = db_conn_factory
-
     async def check_db_connection(self) -> bool:
         try:
-            async with self.db_conn_factory() as conn:
+            async with Bootstrap().db_conn_factory() as conn:
                 await conn.execute(text("SELECT 1"))
         except Exception:  # noqa: BLE001
             check_result = False
