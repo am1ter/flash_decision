@@ -65,7 +65,11 @@ services:
       - ${BACKEND_PORT}:8001
     healthcheck:
       disable: ${HEALTHCHECK_DISABLE}
-      test: [ "CMD-SHELL", "curl -f ${BACKEND_URL}${HEALTHCHECK_URL}" ]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f ${BACKEND_PROTOCOL}://fd_backend:${BACKEND_PORT}/${BACKEND_API_PREFIX}/${HEALTHCHECK_URL}"
+        ]
       interval: 5m
       timeout: 10s
       retries: 3

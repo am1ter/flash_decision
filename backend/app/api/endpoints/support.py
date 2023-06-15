@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.support import RespDataHealthcheck
 from app.services.support import ServiceSupport
+from app.system.config import settings
 
-router = APIRouter(prefix="/api/v1/support")
+router = APIRouter(prefix=f"/{settings.BACKEND_API_PREFIX}/support")
 
 # Internal dependencies
 ServiceSupportDep = Annotated[ServiceSupport, Depends()]

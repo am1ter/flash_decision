@@ -5,8 +5,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo, RespSignIn, RespSignUp
 from app.services.user import ServiceUser
+from app.system.config import settings
 
-router = APIRouter(prefix="/api/v1/user")
+router = APIRouter(prefix=f"/{settings.BACKEND_API_PREFIX}/user")
 
 # Use FastAPI default tools (dependencies) for OAuth2 authentication
 SignUpFormDep = Annotated[OAuth2PasswordRequestForm, Depends()]

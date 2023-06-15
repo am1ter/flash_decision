@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import BaseSettings, HttpUrl, PostgresDsn, ValidationError, parse_obj_as
 
 from app.system.constants import Environment
-from app.system.exceptions import ConfigHTTPInconsistentError, ConfigHTTPWrongURLError
+from app.system.exceptions import ConfigHTTPHardcodedBackendUrlError, ConfigHTTPWrongURLError
 
 
 class BaseSettingsCustom(BaseSettings):
@@ -22,8 +22,10 @@ class SettingsGeneral(BaseSettingsCustom):
     # Env
     ENVIRONMENT: Environment = Environment.production
     # HTTP
+    BACKEND_PROTOCOL: Literal["http", "https"] = "http"
     BACKEND_HOST: str = "localhost"
     BACKEND_PORT: int = 8001
+    BACKEND_API_PREFIX: str = "api/v1"
     FRONTEND_URL: str = "http://0.0.0.0:8000/"
     # JWT
     JWT_SECRET_KEY: str = "fff76ea4d26ce6fd5390f79d478cb8a4"
@@ -32,26 +34,24 @@ class SettingsGeneral(BaseSettingsCustom):
 
     @cached_property
     def BACKEND_URL(self) -> str:  # noqa: N802
-        backend_url_from_env = os.getenv("BACKEND_URL")
+        if os.getenv("BACKEND_URL"):
+            raise ConfigHTTPHardcodedBackendUrlError
 
-        # If backend url is not set up create it dynamically
-        if not backend_url_from_env:
-            return f"http://{self.BACKEND_HOST}:{self.BACKEND_PORT!s}/api/v1"
+        # Constuct url
+        url_base = f"{self.BACKEND_PROTOCOL}://{self.BACKEND_HOST}:{self.BACKEND_PORT!s}"
+        url_api = f"{url_base}/{self.BACKEND_API_PREFIX}"
+        url_api = url_api.lower()
 
         # Parse URL and validate it
         try:
             # Allow urls without `top level domain` like `localhost`
             http_url_no_tld = copy(HttpUrl)
             http_url_no_tld.tld_required = False
-            backend_url_from_env_obj = parse_obj_as(http_url_no_tld, backend_url_from_env)
+            parse_obj_as(http_url_no_tld, url_api)
         except ValidationError as e:
             raise ConfigHTTPWrongURLError from e
 
-        # Check if backend_url and backend_host are consistent with each other
-        if backend_url_from_env_obj.host.lower() != self.BACKEND_HOST:
-            raise ConfigHTTPInconsistentError
-
-        return backend_url_from_env
+        return url_api
 
     @cached_property
     def DEV_MODE(self) -> bool:  # noqa: N802

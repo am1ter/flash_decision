@@ -15,7 +15,7 @@ from app.system.config import settings
 from app.system.exceptions import InvalidJwtError, JwtExpiredError
 
 # Use FastAPI default tools (dependencies) for OAuth2 authorization protocol
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/sign-in")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/{settings.BACKEND_API_PREFIX}/user/sign-in")
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
 # Internal dependencies

@@ -63,12 +63,12 @@ class InvalidJwtError(BaseHTTPError):
     headers = {"WWW-Authenticate": "Bearer"}  # part of OAuth2 specification
 
 
-class ConfigHTTPInconsistentError(BaseValidationError):
-    msg = "Environment variables `BACKEND_HOST` and `BACKEND_URL` are inconsistent."
+class ConfigHTTPHardcodedBackendUrlError(BaseValidationError):
+    msg = "Set `BACKEND_URL` in environment variables is not allowed. Please remove it."
 
 
 class ConfigHTTPWrongURLError(BaseValidationError):
-    msg = "Environment variable `BACKEND_URL` has wrong format."
+    msg = "Some of HTTP environment variables have wrong format."
 
 
 class EmailValidationError(BaseHTTPValidationError):
