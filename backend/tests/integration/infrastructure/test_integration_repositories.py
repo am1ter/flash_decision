@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
+from app.bootstrap import Bootstrap
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.db import get_new_engine, get_sessionmaker
 from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
@@ -15,6 +16,7 @@ from app.system.exceptions import DbObjectNotFoundError
 class TestRepositorySQL(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         """IsolatedAsyncioTestCases require for indvidual engines for each test"""
+        Bootstrap()
         self.engine = get_new_engine()
         self.sessionmaker = get_sessionmaker(self.engine)
 

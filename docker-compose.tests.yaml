@@ -62,7 +62,7 @@ services:
     extends:
       service: fd_migrations_tests
     container_name: fd_tests
-    command: poetry run python -m unittest discover -v -s ./tests -p test_*.py -t .
+    command: poetry run pytest
     depends_on:
       - fd_backend_tests
 
