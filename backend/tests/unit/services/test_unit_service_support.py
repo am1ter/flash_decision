@@ -1,29 +1,19 @@
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
-from typing import Any
-from unittest import IsolatedAsyncioTestCase
-
-from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+import pytest
 
 from app.bootstrap import Bootstrap
 from app.services.support import ServiceSupport
+from tests.unit.services.conftest import fake_db_connection
+
+pytestmark = pytest.mark.asyncio
 
 
-@asynccontextmanager
-async def temporal_db_connection() -> AsyncGenerator[AsyncConnection, Any]:
-    engine = create_async_engine("sqlite+aiosqlite://")
-    conn = await engine.connect()
-    try:
-        yield conn
-    finally:
-        await conn.close()
+@pytest.fixture()
+def service_support() -> ServiceSupport:
+    Bootstrap(start_orm=True, db_conn_factory=fake_db_connection)
+    return ServiceSupport()
 
 
-class TestServiceUser(IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
-        Bootstrap(start_orm=True, db_conn_factory=temporal_db_connection)
-        self.service = ServiceSupport()
-
-    async def test_check_db_connection(self) -> None:
-        result = await self.service.check_db_connection()
-        self.assertTrue(result)
+class TestServiceSupport:
+    async def test_check_db_connection(self, service_support: ServiceSupport) -> None:
+        result = await service_support.check_db_connection()
+        assert result
