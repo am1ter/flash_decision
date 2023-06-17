@@ -1,13 +1,10 @@
-from collections.abc import Callable
-from contextlib import _AsyncGeneratorContextManager
-
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.bootstrap import Bootstrap
-from app.system.logger import logger
+from app.system.logger import create_logger
 
-DbConnFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection]]
+# Create logger
+logger = create_logger("backend.service.support")
 
 
 class ServiceSupport:

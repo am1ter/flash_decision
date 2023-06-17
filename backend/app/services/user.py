@@ -11,7 +11,10 @@ from app.infrastructure.repositories.user import RepositoryUserSQL
 from app.infrastructure.units_of_work.base import UnitOfWorkSQLAlchemy
 from app.system.config import settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError
-from app.system.logger import logger
+from app.system.logger import create_logger
+
+# Create logger
+logger = create_logger("backend.service.support")
 
 # Internal dependencies
 uow_user = UnitOfWorkSQLAlchemy(RepositoryUserSQL)

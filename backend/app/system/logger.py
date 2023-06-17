@@ -57,7 +57,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         self.dev_mode = dev_mode
 
         # Custom logger could be used only for formatting exception
-        self.logger = custom_logger if custom_logger else logger
+        self.logger = custom_logger if custom_logger else create_logger()
 
     def formatException(  # type: ignore[override]  # noqa: N802
         self, ei: tuple[type[BaseException], BaseException, TracebackType | None]
@@ -188,7 +188,7 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
             kwargs["function"] = traceback.extract_stack(None, callstack_depth)[0].name
 
         # Output to logger using async structlog method
-        return await super().ainfo(event, *args, **kwargs)
+        await super().ainfo(event, *args, **kwargs)
 
     async def ainfo_finish(self, *args, **kwargs) -> None:
         """To log function/method results"""
@@ -197,7 +197,7 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
 
     def exception(self, event: str | None = None, *args: Any, **kw: Any) -> Any:
         """Use parent logger of wrapped custom logger (sync)"""
-        return super().exception(event, *args, **kw)
+        super().exception(event, *args, **kw)
 
 
 def create_logger(
@@ -263,6 +263,5 @@ def update_uvicorn_log_config() -> dict[str, Any]:
     return uvicorn_log_config
 
 
-logger = create_logger("backend", dev_mode=False)
 uvicorn_log_config = update_uvicorn_log_config()
 sys.excepthook = rich_excepthook
