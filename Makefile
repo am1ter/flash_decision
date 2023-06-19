@@ -12,7 +12,7 @@ docker-up-dev:  # Run docker compose to run backend in dev environment
 
 .PHONY: docker-build-tests
 .IGNORE:
-docker-build-tests:  # Build docker images for test environment
+docker-build-tests:  # Build docker images to run tests
 		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml build;
 
 .PHONY: docker-run-tests
@@ -25,12 +25,6 @@ docker-run-tests:  # Run docker compose to tests create test environment and run
 docker-down:  # Shutdown and remove containers for backend in prod environment
 		docker compose --env-file=.env.prod -f ./docker-compose.prod.yaml --profile backend --profile db down;
 		docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml down --rmi local
-
-.PHONY: run-tests-unit
-run-tests-unit:  # Run backend server in prod environment and run unit tests
-		export ENVIRONMENT=production;
-		poetry -C ./backend run \
-			python -m unittest discover -v -s ./backend/tests -p test_unit_*.py -t ./backend
 
 .PHONY: shutdown
 shutdown:  # Shutdown local python backend server
