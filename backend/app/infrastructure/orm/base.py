@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 
 from sqlalchemy import MetaData, Table, func
-from sqlalchemy.orm import Mapped, as_declarative, declared_attr, mapped_column, registry
+from sqlalchemy.orm import as_declarative, declared_attr, mapped_column, registry
 
 from app.system.config import settings_db
 
@@ -23,10 +23,6 @@ class Base:
     __name__: str
     __table__: Table  # Automatically generated during initialization; used for mappings
     metadata: MetaData
-
-    # General columns
-    id: Mapped[int_pk]
-    datetime_create: Mapped[datetime_current]
 
     @declared_attr.directive
     def __tablename__(self) -> str:

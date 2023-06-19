@@ -84,8 +84,8 @@ class RepositorySQLAlchemy(Repository):
     async def _load_from_db_relationship(self, relationship: AppenderQuery) -> Sequence[Entity]:
         """Load entities from the database using a SQLAlchemy's relationship"""
 
-        query = await self._db.execute(relationship)
-        entities = [obj[0] for obj in query.unique().all()]  # obj is tuple with only one element
+        query = await self._db.scalars(relationship.statement)
+        entities = query.unique().all()
         if not entities:  # If entities are not found in the database, raise an exception
             raise DbObjectNotFoundError
         self._identity_map.relationships.add(relationship, entities)

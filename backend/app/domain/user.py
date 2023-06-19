@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from attrs import define, field
-from passlib.context import CryptContext
 from pydantic import EmailStr, IPvAnyAddress, ValidationError, parse_obj_as
 
 from app.domain.base import Agregate, Entity, ValueObject, field_relationship
@@ -13,7 +14,7 @@ from app.system.exceptions import (
     WrongPasswordError,
 )
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+password_hasher = PasswordHasher()
 
 
 @define(kw_only=False, slots=False, frozen=True)
@@ -37,10 +38,10 @@ class Password(ValueObject):
     value: str
 
     def hash_password(self) -> str:
-        return pwd_context.hash(self.value)
+        return password_hasher.hash(self.value)
 
     def verify_password(self, password_to_verify: str) -> bool:
-        return pwd_context.verify(password_to_verify, self.value)
+        return password_hasher.verify(self.value, password_to_verify)
 
 
 @define(kw_only=True, slots=False, hash=True)
@@ -79,8 +80,11 @@ class DomainUser(Agregate):
             raise UserDisabledError
 
         # Check password
-        if password_to_verify and not self.password.verify_password(password_to_verify):
-            raise WrongPasswordError
+        if password_to_verify:
+            try:
+                self.password.verify_password(password_to_verify)
+            except VerifyMismatchError as e:
+                raise WrongPasswordError from e
 
     def create_auth(self, ip_address: str, http_user_agent: str) -> DomainAuth:
         auth = DomainAuth.create_sign_in(
