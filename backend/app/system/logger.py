@@ -240,7 +240,6 @@ def create_logger(
         cache_logger_on_first_use=True,
     )
     logger = structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
-    logger.dev_mode = dev_mode
     return logger
 
 
