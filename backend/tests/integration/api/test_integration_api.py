@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import unittest
-
 import requests
 from requests import JSONDecodeError
 
@@ -35,7 +33,7 @@ class Response:
         return self
 
 
-class TestBackendDocs(unittest.TestCase):
+class TestBackendDocs:
     def test_fastapi_docs_available(self) -> None:
         base_url = (
             f"{settings.BACKEND_PROTOCOL}://{settings.BACKEND_HOST}:{settings.BACKEND_PORT!s}"
@@ -45,18 +43,18 @@ class TestBackendDocs(unittest.TestCase):
         response.assert_status_code(200)
 
 
-class TestBackendSupport(unittest.TestCase):
+class TestBackendSupport:
     def test_run_healthcheck(self) -> None:
         r = requests.get(f"{settings.BACKEND_URL}/support/healthcheck")
         response = Response(r)
         response.assert_status_code(200)
         data_model = RespDataHealthcheck(**response.data)
-        self.assertIsNotNone(data_model)
-        self.assertEqual(data_model.is_app_up, True)
-        self.assertEqual(data_model.is_db_up, True)
+        assert data_model is not None
+        assert data_model.is_app_up
+        assert data_model.is_db_up
 
 
-class TestBackendUser(unittest.TestCase):
+class TestBackendUser:
     def test_sign_up(self) -> None:
         user_sign_up = ReqSignUp(
             email="test-signup-integration@alekseisemenov.ru",
@@ -67,8 +65,8 @@ class TestBackendUser(unittest.TestCase):
         response = Response(r)
         response.assert_status_code(200)
         data_model = RespSignUp(**response.response.json())
-        self.assertIsNotNone(data_model)
-        self.assertEqual(data_model.email, user_sign_up.email)
+        assert data_model is not None
+        assert data_model.email == user_sign_up.email
 
     def test_sign_in(self) -> None:
         # Create user
@@ -87,5 +85,5 @@ class TestBackendUser(unittest.TestCase):
         response_sign_in = Response(r_sign_in)
         response_sign_in.assert_status_code(200)
         data_model = RespSignIn(**response_sign_in.response.json())
-        self.assertIsNotNone(data_model)
-        self.assertEqual(data_model.email, user_sign_in.username)
+        assert data_model is not None
+        assert data_model.email == user_sign_in.username

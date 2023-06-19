@@ -1,39 +1,37 @@
-import os
-from unittest import IsolatedAsyncioTestCase
-
+import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection
-
-# Logger tests must be run only in `production` mode
-os.environ["ENVIRONMENT"] = "production"
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 # Import 1st party modules after setting env vars
 from app.infrastructure.db import get_connection, get_new_engine
 from app.infrastructure.orm import Base
 from app.system.config import Environment, settings
 
+pytestmark = pytest.mark.asyncio
 
-class TestDbConnection(IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
-        """IsolatedAsyncioTestCases require for indvidual engines for each test"""
-        self.engine = get_new_engine()
 
-    async def test_connection(self) -> None:
+@pytest.fixture()
+def engine() -> AsyncEngine:
+    return get_new_engine()
+
+
+class TestDb:
+    async def test_connection(self, engine: AsyncEngine) -> None:
         """Make sure the database is up and a connection to it can be established"""
         try:
-            async with get_connection(self.engine) as conn:
+            async with get_connection(engine) as conn:
                 await conn.execute(text("SELECT 1"))
         except ConnectionRefusedError:
-            self.fail("Connection to DB cannot be established")
+            pytest.fail("Connection to DB cannot be established")
 
-    async def test_migrations(self) -> None:
+    async def test_migrations(self, engine: AsyncEngine) -> None:
         """Check that all database migrations are applied to `production` db schema"""
 
         # Check if environment configurated to run in production mode
-        self.assertEqual(settings.ENVIRONMENT, Environment.production, "Wrong env configuration")
-        self.assertEqual(settings.DB_SCHEMA, Environment.production.value, "Wrong db schema")
+        assert settings.ENVIRONMENT == Environment.production, "Wrong env configuration"
+        assert settings.DB_SCHEMA == Environment.production.value, "Wrong db schema"
 
         def include_name(name: str, type_: str, parent_names: dict) -> bool:
             """Filter only current db schema tables"""
@@ -59,10 +57,7 @@ class TestDbConnection(IsolatedAsyncioTestCase):
             )
             return compare_metadata(mc, Base.metadata)
 
-        async with self.engine.connect() as conn:
+        async with engine.connect() as conn:
             diff = await conn.run_sync(custom_compare_metadata)
 
-        self.assertFalse(diff, f"DB and migrations are not synced")
-
-    async def asyncTearDown(self) -> None:
-        await self.engine.dispose()
+        assert not diff, f"DB and migrations are not synced"

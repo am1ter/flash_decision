@@ -1,6 +1,9 @@
-from unittest import IsolatedAsyncioTestCase
+from collections.abc import Callable, Coroutine
+from typing import Any
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
@@ -12,44 +15,56 @@ from app.infrastructure.repositories.user import RepositoryUserSQL
 from app.system.constants import AuthStatus, UserStatus
 from app.system.exceptions import DbObjectNotFoundError
 
+RepositoryUserSQLWithUser = Callable[
+    [AsyncSession, DomainUser], Coroutine[Any, Any, RepositoryUserSQL]
+]
 
-class TestRepositorySQL(IsolatedAsyncioTestCase):
-    def setUp(self) -> None:
-        """IsolatedAsyncioTestCases require for indvidual engines for each test"""
-        Bootstrap()
-        self.engine = get_new_engine()
-        self.sessionmaker = get_sessionmaker(self.engine)
 
-    @staticmethod
-    def _create_test_user() -> DomainUser:
-        test_user = DomainUser(
-            email="test-signup@alekseisemenov.ru",
-            name="test-signup",
-            password="uc8a&Q!W",  # noqa: S106
-            status=UserStatus.active,
-        )
-        return test_user
+@pytest.fixture()
+def bootstrap() -> Bootstrap:
+    return Bootstrap()
 
-    @staticmethod
-    async def _create_user_repository_with_user(
-        db_session: AsyncSession, user: DomainUser
+
+@pytest.fixture()
+def db_sessionmaker() -> sessionmaker:
+    engine = get_new_engine()
+    return get_sessionmaker(engine)
+
+
+@pytest.fixture()
+def user_domain() -> DomainUser:
+    return DomainUser(
+        email="test-signup@alekseisemenov.ru",
+        name="test-signup",
+        password="uc8a&Q!W",  # noqa: S106
+        status=UserStatus.active,
+    )
+
+
+@pytest.fixture()
+def user_repository_with_user() -> RepositoryUserSQLWithUser:
+    async def create_repository(
+        db_session: AsyncSession, user_domain: DomainUser
     ) -> RepositoryUserSQL:
         """Create SQL repository and add user inside"""
         identity_map = IdentityMapSQLAlchemy()
         repository_user = RepositoryUserSQL(db_session, identity_map)
-        repository_user.add(user)
+        repository_user.add(user_domain)
         await repository_user.flush()
         return repository_user
 
-    def test_identity_map(self) -> None:
+    return create_repository
+
+
+class TestRepositorySQL:
+    def test_identity_map(self, bootstrap: Bootstrap, user_domain: DomainUser) -> None:
         """Chech if identity map works as expected"""
 
         identity_map = IdentityMapSQLAlchemy()
-        user_domain = self._create_test_user()
         if not isinstance(DomainUser.email, InstrumentedAttribute | QueryableAttribute):
-            self.fail("Domain model is not mapped with ORM")
+            pytest.fail("Domain model is not mapped with ORM")
         if not isinstance(user_domain.auths, AppenderQuery):
-            self.fail("Domain model relationships is not supported by ORM mapper")
+            pytest.fail("Domain model relationships is not supported by ORM mapper")
 
         # Test entities identity map
         identity_map.entities.add(user_domain)
@@ -57,8 +72,8 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
         assert user_domain == user_from_im_entities, "Entities identity map works incorrectly"
 
         # Test sql queries identity map
-        identity_map.queries.add(DomainUser.email, user_domain.email, [user_domain])
-        user_from_im_queries = identity_map.queries.get(DomainUser.email, user_domain.email)
+        identity_map.queries.add(DomainUser.email, user_domain.email, [user_domain])  # type: ignore[arg-type]
+        user_from_im_queries = identity_map.queries.get(DomainUser.email, user_domain.email)  # type: ignore[arg-type]
         assert [user_domain] == user_from_im_queries, "Queries identity map works incorrectly"
 
         # Test sql relationships identity map
@@ -68,17 +83,23 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
             status=AuthStatus.sign_in,
             user=user_domain,
         )
-        identity_map.relationships.add(user_domain.auths, [auth_domain])
-        auths_from_im_relationships = identity_map.relationships.get(user_domain.auths)
+        identity_map.relationships.add(user_domain.auths, [auth_domain])  # type: ignore[arg-type]
+        auths_from_im_relationships = identity_map.relationships.get(user_domain.auths)  # type: ignore[arg-type]
         assert len(auths_from_im_relationships) == 1, "Relationships identity map works incorrectly"
 
-    async def test_repository_user(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_repository_user(
+        self,
+        bootstrap: Bootstrap,
+        db_sessionmaker: sessionmaker,
+        user_domain: DomainUser,
+        user_repository_with_user: RepositoryUserSQLWithUser,
+    ) -> None:
         """Check if it is possible to create single db object using domain model"""
 
-        async with self.sessionmaker() as db_session:
+        async with db_sessionmaker() as db_session:
             # Add user
-            user_domain = self._create_test_user()
-            repository_user = await self._create_user_repository_with_user(db_session, user_domain)
+            repository_user = await user_repository_with_user(db_session, user_domain)
 
             # Get by email
             user_from_repo_by_email = await repository_user.get_by_email(user_domain.email.value)
@@ -87,7 +108,7 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
 
             # Raise error if try to get user by wrong email
             wrong_email = "wrong@email.com"
-            with self.assertRaises(DbObjectNotFoundError):
+            with pytest.raises(DbObjectNotFoundError):
                 user_from_repo_by_email = await repository_user.get_by_email(wrong_email)
 
             # Get by id
@@ -95,12 +116,18 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
             assert user_from_repo_by_id, "User not found"
             assert user_domain == user_from_repo_by_id, "Domain user is not the same as from db"
 
-    async def test_repository_user_auths(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_repository_user_auths(
+        self,
+        bootstrap: Bootstrap,
+        db_sessionmaker: sessionmaker,
+        user_domain: DomainUser,
+        user_repository_with_user: RepositoryUserSQLWithUser,
+    ) -> None:
         """Check if it is possible to create multiple db objects using domain models"""
 
-        async with self.sessionmaker() as db_session:
-            user_domain = self._create_test_user()
-            repository_user = await self._create_user_repository_with_user(db_session, user_domain)
+        async with db_sessionmaker() as db_session:
+            repository_user = await user_repository_with_user(db_session, user_domain)
             user_from_repo = await repository_user.get_by_email(user_domain.email.value)
             assert user_from_repo, "User not found"
 
@@ -131,6 +158,3 @@ class TestRepositorySQL(IsolatedAsyncioTestCase):
             assert isinstance(auths_repo[0], DomainAuth), "Auth has wrong type"
             assert auths_repo[0].id, "Auth id not set"
             assert auths_repo[0].status.value == auth_domain_sign_up.status.value, "Wrong status"
-
-    async def asyncTearDown(self) -> None:
-        await self.engine.dispose()
