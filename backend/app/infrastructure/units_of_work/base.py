@@ -3,10 +3,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, cast
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from app.bootstrap import Bootstrap
+from app.system.exceptions import DbObjectCannotBeCreatedError
 
 if TYPE_CHECKING:
     from app.infrastructure.repositories.base import RepositorySQLAlchemy
@@ -54,7 +56,10 @@ class UnitOfWorkSQLAlchemy(UnitOfWork):
         await self.db.close()
 
     async def commit(self) -> None:
-        await self.db.commit()
+        try:
+            await self.db.commit()
+        except IntegrityError as e:
+            raise DbObjectCannotBeCreatedError from e
 
     async def rollback(self) -> None:
         self.db.expunge_all()

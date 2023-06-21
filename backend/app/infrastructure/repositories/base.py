@@ -4,18 +4,13 @@ from functools import wraps
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity
 from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
-from app.system.exceptions import (
-    DbConnectionError,
-    DbObjectCannotBeCreatedError,
-    DbObjectNotFoundError,
-)
+from app.system.exceptions import DbConnectionError, DbObjectNotFoundError
 
 
 class Repository(ABC):
@@ -59,8 +54,6 @@ class RepositorySQLAlchemy(Repository):
                 result = await func(*args, **kwargs)
             except ConnectionRefusedError as e:
                 raise DbConnectionError from e
-            except IntegrityError as e:
-                raise DbObjectCannotBeCreatedError from e
             return result
 
         return inner
