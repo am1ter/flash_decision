@@ -20,7 +20,6 @@ def upgrade() -> None:
     enum_auth_status = postgresql.ENUM(
         "sign_up",
         "sign_in",
-        "wrong_email",
         "wrong_password",
         name="auth_status",
         schema="development",
@@ -52,7 +51,6 @@ def downgrade() -> None:
     enum_auth_status = postgresql.ENUM(
         "sign_up",
         "sign_in",
-        "wrong_email",
         "wrong_password",
         name="auth_status",
         schema="development",

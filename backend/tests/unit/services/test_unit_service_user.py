@@ -6,7 +6,7 @@ from jose import jwt
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.services.user import ServiceUser
 from app.system.config import settings
-from app.system.constants import UserStatus
+from app.system.constants import AuthStatus, UserStatus
 from app.system.exceptions import (
     EmailValidationError,
     IpAddressValidationError,
@@ -93,6 +93,8 @@ class TestServiceUser:
         req_sign_in.password = "wrongPass"  # noqa: S105
         with pytest.raises(WrongPasswordError):
             await service_user.sign_in(req_sign_in, req_system_info)
+        auth_wrong_pass = service_user.uow.repository.storage_auth[user_sign_up.id][-1]  # type: ignore[attr-defined]
+        assert auth_wrong_pass.status == AuthStatus.wrong_password
 
     async def test_auth_failure_wrong_ip(
         self,

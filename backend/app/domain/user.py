@@ -57,42 +57,51 @@ class DomainUser(Agregate):
     status: UserStatus
     auths: list[DomainAuth] = field_relationship(init=False)
 
-    def _verify_user_is_enabled(self) -> bool:
-        return self.status != UserStatus.disabled
-
-    @classmethod
-    def create(
-        cls, name: str, email: str, password: str, ip_address: str, http_user_agent: str
-    ) -> DomainUser:
-        hashed_password = Password(password).hash_password()
-        new_user = cls(name=name, email=email, password=hashed_password, status=UserStatus.active)
-        DomainAuth.create_sign_up(
-            user=new_user,
-            http_user_agent=http_user_agent,
-            ip_address=ip_address,
-        )
-
-        return new_user
-
-    def verify_user(self, password_to_verify: str | None = None) -> None:
+    def verify_user(self) -> None:
         # Check if user is not disabled
-        if not self._verify_user_is_enabled():
+        if self.status == UserStatus.disabled:
             raise UserDisabledError
 
-        # Check password
-        if password_to_verify:
-            try:
-                self.password.verify_password(password_to_verify)
-            except VerifyMismatchError as e:
-                raise WrongPasswordError from e
+    @classmethod
+    def sign_up(cls, name: str, email: str, password: str) -> DomainUser:
+        hashed_password = Password(password).hash_password()
+        new_user = cls(name=name, email=email, password=hashed_password, status=UserStatus.active)
+        return new_user
 
-    def create_auth(self, ip_address: str, http_user_agent: str) -> DomainAuth:
-        auth = DomainAuth.create_sign_in(
+    def sign_in(self, password_to_verify: str) -> None:
+        self.verify_user()
+        # Check password
+        try:
+            self.password.verify_password(password_to_verify)
+        except VerifyMismatchError as e:
+            raise WrongPasswordError from e
+
+    def create_auth_sign_up(self, ip_address: str, http_user_agent: str) -> DomainAuth:
+        new_auth = DomainAuth(
             user=self,
-            http_user_agent=http_user_agent,
             ip_address=ip_address,
+            http_user_agent=http_user_agent,
+            status=AuthStatus.sign_up,
         )
-        return auth
+        return new_auth
+
+    def create_auth_sign_in(self, ip_address: str, http_user_agent: str) -> DomainAuth:
+        new_auth = DomainAuth(
+            user=self,
+            ip_address=ip_address,
+            http_user_agent=http_user_agent,
+            status=AuthStatus.sign_in,
+        )
+        return new_auth
+
+    def create_auth_wrong_pass(self, ip_address: str, http_user_agent: str) -> DomainAuth:
+        new_auth = DomainAuth(
+            user=self,
+            ip_address=ip_address,
+            http_user_agent=http_user_agent,
+            status=AuthStatus.wrong_password,
+        )
+        return new_auth
 
 
 @define(kw_only=False, slots=False, frozen=True)
@@ -120,23 +129,3 @@ class DomainAuth(Entity):
     http_user_agent: str
     status: AuthStatus
     user: DomainUser = field_relationship(init=True)
-
-    @classmethod
-    def create_sign_up(cls, user: DomainUser, ip_address: str, http_user_agent: str) -> DomainAuth:
-        new_auth = cls(
-            user=user,
-            ip_address=ip_address,
-            http_user_agent=http_user_agent,
-            status=AuthStatus.sign_up,
-        )
-        return new_auth
-
-    @classmethod
-    def create_sign_in(cls, user: DomainUser, ip_address: str, http_user_agent: str) -> DomainAuth:
-        new_auth = cls(
-            user=user,
-            ip_address=ip_address,
-            http_user_agent=http_user_agent,
-            status=AuthStatus.sign_in,
-        )
-        return new_auth
