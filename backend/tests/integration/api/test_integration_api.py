@@ -55,35 +55,23 @@ class TestBackendSupport:
 
 
 class TestBackendUser:
-    def test_sign_up(self) -> None:
-        user_sign_up = ReqSignUp(
-            email="test-signup-integration@alekseisemenov.ru",
-            name="test-signup-integration",
-            password="uc8a&Q!W",  # noqa: S106
-        )
-        r = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=user_sign_up.dict())
-        response = Response(r)
-        response.assert_status_code(200)
-        data_model = RespSignUp(**response.response.json())
+    def test_sign_up(self, req_sign_up: ReqSignUp) -> None:
+        r = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
+        response_sign_up = Response(r)
+        response_sign_up.assert_status_code(200)
+        data_model = RespSignUp(**response_sign_up.response.json())
         assert data_model is not None
-        assert data_model.email == user_sign_up.email
+        assert data_model.email == req_sign_up.email
 
-    def test_sign_in(self) -> None:
-        # Create user
-        user_sign_up = ReqSignUp(
-            email="test-signin-integration@alekseisemenov.ru",
-            name="test-signin-integration",
-            password="uc8a&Q!W",  # noqa: S106
-        )
-        r_sign_up = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=user_sign_up.dict())
+    def test_sign_in(self, req_sign_up: ReqSignUp, req_sign_in: ReqSignIn) -> None:
+        r_sign_up = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
         response_sign_up = Response(r_sign_up)
         response_sign_up.assert_status_code(200)
 
         # Test sign in
-        user_sign_in = ReqSignIn(username=user_sign_up.email, password=user_sign_up.password)
-        r_sign_in = requests.post(f"{settings.BACKEND_URL}/user/sign-in", data=user_sign_in.dict())
+        r_sign_in = requests.post(f"{settings.BACKEND_URL}/user/sign-in", data=req_sign_in.dict())
         response_sign_in = Response(r_sign_in)
         response_sign_in.assert_status_code(200)
         data_model = RespSignIn(**response_sign_in.response.json())
         assert data_model is not None
-        assert data_model.email == user_sign_in.username
+        assert data_model.email == req_sign_in.username

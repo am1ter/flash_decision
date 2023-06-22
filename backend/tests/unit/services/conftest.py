@@ -8,7 +8,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 
-from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
+from app.api.schemas.user import ReqSignUp, ReqSystemInfo
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
@@ -33,7 +33,7 @@ class RepositoryUserFake(Repository):
         self.storage_auth: dict[int, list[DomainAuth]] = {}
 
     def add(self, obj: DomainUser) -> None:  # type: ignore[override]
-        obj.id = randint(1, 1000)
+        obj.id = randint(1, 1000) if not obj.id else obj.id
         obj.datetime_create = datetime.utcnow()
         self.storage_user[obj.id] = obj
         self.storage_auth[obj.id] = list(obj.auths)
@@ -74,20 +74,6 @@ def uow_user() -> UnitOfWorkUserFake:
 @pytest.fixture()
 def service_user(uow_user: UnitOfWorkUserFake) -> ServiceUser:
     return ServiceUser(uow_user)  # type: ignore[arg-type]
-
-
-@pytest.fixture()
-def req_sign_up() -> DomainUser:
-    return ReqSignUp(
-        email="test-signup@alekseisemenov.ru",
-        name="test-signup",
-        password="uc8a&Q!W",  # noqa: S106
-    )
-
-
-@pytest.fixture()
-def req_sign_in(req_sign_up: DomainUser) -> DomainUser:
-    return ReqSignIn(username=req_sign_up.email, password=req_sign_up.password)
 
 
 @pytest.fixture()

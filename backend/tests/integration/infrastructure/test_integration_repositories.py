@@ -12,7 +12,7 @@ from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.db import get_new_engine, get_sessionmaker
 from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
 from app.infrastructure.repositories.user import RepositoryUserSQL
-from app.system.constants import AuthStatus, UserStatus
+from app.system.constants import AuthStatus
 from app.system.exceptions import DbObjectNotFoundError
 
 RepositoryUserSQLWithUser = Callable[
@@ -29,16 +29,6 @@ def bootstrap() -> Bootstrap:
 def db_sessionmaker() -> sessionmaker:
     engine = get_new_engine()
     return get_sessionmaker(engine)
-
-
-@pytest.fixture()
-def user_domain() -> DomainUser:
-    return DomainUser(
-        email="test-signup@alekseisemenov.ru",
-        name="test-signup",
-        password="uc8a&Q!W",  # noqa: S106
-        status=UserStatus.active,
-    )
 
 
 @pytest.fixture()
