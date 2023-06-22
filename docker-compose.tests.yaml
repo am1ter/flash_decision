@@ -1,6 +1,6 @@
 # IMPORTANT!
 # Use `--env-file` agument during build with `docker compose` to set arguments for Dockerfiles
-# Example: docker compose --env-file=.env.tests -f ./docker-compose.tests.yaml up -d --build
+# Example: docker compose --env-file=.env.tests --env-file=.env.secrets -f ./docker-compose.tests.yaml up -d --build
 
 services:
   # Run database
@@ -12,6 +12,7 @@ services:
     restart: "no"
     env_file:
       - .env.tests
+      - .env.secrets
     environment:
       - POSTGRES_PASSWORD=${DB_PASS}
       - PGPORT=${DB_PORT}
@@ -29,6 +30,7 @@ services:
     restart: "no"
     env_file:
       - .env.tests
+      - .env.secrets
     environment:
       - BACKEND_HOST=fd_backend_tests
       - DB_HOST=fd_db_tests

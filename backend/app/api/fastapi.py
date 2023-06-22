@@ -61,7 +61,7 @@ async def event_startup() -> None:
     )
     await logger.ainfo(
         f"Connection to db established",
-        db_url=settings.DB_URL,
+        db_url=settings.DB_URL_WO_PASS,
         db_schema=settings.DB_SCHEMA,
     )
 

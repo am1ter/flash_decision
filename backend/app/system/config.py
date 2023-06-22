@@ -28,7 +28,7 @@ class SettingsGeneral(BaseSettingsCustom):
     BACKEND_API_PREFIX: str = "api/v1"
     FRONTEND_URL: str = "http://0.0.0.0:8000/"
     # JWT
-    JWT_SECRET_KEY: str = "fff76ea4d26ce6fd5390f79d478cb8a4"
+    JWT_SECRET_KEY: str = "my_jwt_secret_key"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     JWT_ALGORITHM: str = "HS256"
 
@@ -97,7 +97,7 @@ class SettingsDb(BaseSettingsCustom):
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_USER: str = "postgres"
-    DB_PASS: str = "flash!Pass"
+    DB_PASS: str = "my_db_pass"
     DB_NAME: str = "flash_decision"
     DB_SCHEMA: str = settings_general.ENVIRONMENT.value
 
@@ -109,6 +109,17 @@ class SettingsDb(BaseSettingsCustom):
             port=str(self.DB_PORT),
             user=self.DB_USER,
             password=self.DB_PASS,
+            path=f"/{self.DB_NAME}",
+        )
+
+    @cached_property
+    def DB_URL_WO_PASS(self) -> str:  # noqa: N802
+        return PostgresDsn.build(
+            scheme=self.DB_ENGINE_SCHEMA,
+            host=self.DB_HOST,
+            port=str(self.DB_PORT),
+            user=self.DB_USER,
+            password="*****",  # noqa: S106
             path=f"/{self.DB_NAME}",
         )
 

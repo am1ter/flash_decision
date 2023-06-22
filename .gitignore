@@ -11,6 +11,9 @@ workspace.code-workspace/
 # Backend
 .venv/
 
+# Env files
+.env.secrets
+
 # Frontend: Main
 /frontend/.DS_Store/
 /frontend/node_modules/

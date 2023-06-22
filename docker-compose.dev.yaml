@@ -1,6 +1,6 @@
 # IMPORTANT!
 # Use `--env-file` agument during build with `docker compose` to set arguments for Dockerfiles
-# Example: docker compose --env-file=.dev.tests -f ./docker-compose.dev.yaml up -d --build
+# Example: docker compose --env-file=.env.dev --env-file=.env.secrets -f ./docker-compose.dev.yaml up -d --build
 
 services:
   # Apply db migrations
@@ -8,9 +8,11 @@ services:
     container_name: fd_migrations_dev
     env_file:
       - .env.dev
+      - .env.secrets
 
   # Run webserver with backend (API)
   fd_backend:
     container_name: fd_backend_dev
     env_file:
       - .env.dev
+      - .env.secrets
