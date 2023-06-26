@@ -127,7 +127,15 @@ class SettingsDb(BaseSettingsCustom):
 settings_db = SettingsDb()
 
 
-class Settings(SettingsGeneral, SettingsLog, SettingsDb):
+class SettingsProvider(BaseSettingsCustom):
+    ALPHAVANTAGE_API_KEY = "my_alpha_avantage_api_key"
+    CRYPTO_PRICE_CURRENCY = "USD"  # Source: https://www.alphavantage.co/physical_currency_list/
+
+
+settings_provider = SettingsProvider()
+
+
+class Settings(SettingsGeneral, SettingsLog, SettingsDb, SettingsProvider):
     pass
 
 

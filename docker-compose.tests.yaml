@@ -71,4 +71,4 @@ services:
 # Tests use isolated docker network
 networks:
   tests:
-    internal: true
+    driver: bridge

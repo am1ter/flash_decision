@@ -63,6 +63,16 @@ class InvalidJwtError(BaseHTTPError):
     headers = {"WWW-Authenticate": "Bearer"}  # part of OAuth2 specification
 
 
+class ProviderAccessError(BaseHTTPError):
+    msg = "The external data provider responded with a wrong status code. Please try again later."
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+
+class UnsupportedModeError(BaseHTTPError):
+    msg = "Specified mode is not yet supported yet"
+    status_code = status.HTTP_501_NOT_IMPLEMENTED
+
+
 class ConfigHTTPHardcodedBackendUrlError(BaseValidationError):
     msg = "Set `BACKEND_URL` in environment variables is not allowed. Please remove it."
 
@@ -77,3 +87,7 @@ class EmailValidationError(BaseHTTPValidationError):
 
 class IpAddressValidationError(BaseHTTPValidationError):
     msg = "The http request has invalid IP address format."
+
+
+class ProviderInvalidDataError(BaseHTTPValidationError):
+    msg = "The data received from the external data provider is invalid."
