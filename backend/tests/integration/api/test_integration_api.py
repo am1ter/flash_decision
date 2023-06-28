@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 import requests
 from requests import JSONDecodeError
 
@@ -55,23 +56,21 @@ class TestBackendSupport:
 
 
 class TestBackendUser:
+    @pytest.mark.dependency()
     def test_sign_up(self, req_sign_up: ReqSignUp) -> None:
         r = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
-        response_sign_up = Response(r)
-        response_sign_up.assert_status_code(200)
-        data_model = RespSignUp(**response_sign_up.response.json())
+        response = Response(r)
+        response.assert_status_code(200)
+        data_model = RespSignUp(**response.response.json())
         assert data_model is not None
         assert data_model.email == req_sign_up.email
 
-    def test_sign_in(self, req_sign_up: ReqSignUp, req_sign_in: ReqSignIn) -> None:
-        r_sign_up = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
-        response_sign_up = Response(r_sign_up)
-        response_sign_up.assert_status_code(200)
-
+    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
+    def test_sign_in(self, req_sign_in: ReqSignIn) -> None:
         # Test sign in
-        r_sign_in = requests.post(f"{settings.BACKEND_URL}/user/sign-in", data=req_sign_in.dict())
-        response_sign_in = Response(r_sign_in)
-        response_sign_in.assert_status_code(200)
-        data_model = RespSignIn(**response_sign_in.response.json())
+        r = requests.post(f"{settings.BACKEND_URL}/user/sign-in", data=req_sign_in.dict())
+        response = Response(r)
+        response.assert_status_code(200)
+        data_model = RespSignIn(**response.response.json())
         assert data_model is not None
         assert data_model.email == req_sign_in.username

@@ -17,7 +17,7 @@ def user_domain() -> DomainUser:
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def req_sign_up() -> ReqSignUp:
     return ReqSignUp(
         email=f"test-user-{uuid.uuid4()}@alekseisemenov.ru",
@@ -26,6 +26,6 @@ def req_sign_up() -> ReqSignUp:
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def req_sign_in(req_sign_up: ReqSignUp) -> ReqSignIn:
     return ReqSignIn(username=req_sign_up.email, password=req_sign_up.password)

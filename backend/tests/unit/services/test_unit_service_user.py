@@ -1,4 +1,4 @@
-from copy import copy
+from copy import deepcopy
 
 import pytest
 from jose import jwt
@@ -44,7 +44,7 @@ class TestServiceUser:
         req_sign_up: ReqSignUp,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        req_sign_up_wrong_email = copy(req_sign_up)
+        req_sign_up_wrong_email = deepcopy(req_sign_up)
         req_sign_up_wrong_email.email = "wrong@wrong"
         with pytest.raises(EmailValidationError):
             await service_user.sign_up(req_sign_up_wrong_email, req_system_info)
@@ -102,7 +102,7 @@ class TestServiceUser:
         req_sign_up: ReqSignUp,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        req_system_info_wrong_ip = copy(req_system_info)
+        req_system_info_wrong_ip = deepcopy(req_system_info)
         req_system_info_wrong_ip.ip_address = "192.168.0."
         with pytest.raises(IpAddressValidationError):
             await service_user.sign_up(req_sign_up, req_system_info_wrong_ip)
