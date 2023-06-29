@@ -33,9 +33,9 @@ class Ticker:
 class Provider(Protocol):
     """Protocol for setting up custom data providers"""
 
-    all_tickers: list[Ticker]
+    all_tickers: dict[str, Ticker]
 
-    def get_list(self) -> list[Ticker]:
+    def get_tickers(self) -> dict[str, Ticker]:
         ...
 
     async def get_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
@@ -48,7 +48,7 @@ class ProviderAlphaVantage:
     Documentation: https://www.alphavantage.co/documentation/
     """
 
-    all_tickers: list[Ticker] = []
+    all_tickers: dict[str, Ticker] = {}
     url_root = "https://www.alphavantage.co"
     api_key = settings.ALPHAVANTAGE_API_KEY
     url_get_list: str
@@ -63,7 +63,7 @@ class ProviderAlphaVantage:
         next(csv_table)  # skip table header
         return list(csv_table)
 
-    def _process_csv(self, csv_table: csv_table) -> list[Ticker]:
+    def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
         raise NotImplementedError
 
     async def _download_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
@@ -89,14 +89,14 @@ class ProviderAlphaVantage:
 
         return df_quotes
 
-    def get_list(self, force: bool | None = None) -> list[Ticker]:
+    def get_tickers(self, force: bool | None = None) -> dict[str, Ticker]:
         if not self.all_tickers or force:
             # Do not crash the app if the list of tickers is not available
             try:
                 csv_table = self._download_csv()
                 self.all_tickers = self._process_csv(csv_table)
             except (ProviderAccessError, ValueError):
-                self.all_tickers = []
+                self.all_tickers = {}
             if not self.all_tickers:
                 logger.exception(exc_info=ProviderAccessError)
         return self.all_tickers
@@ -131,8 +131,8 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
             key=settings.ALPHAVANTAGE_API_KEY, output_format="pandas", indexing_type="integer"
         )
 
-    def _process_csv(self, csv_table: csv_table) -> list[Ticker]:
-        all_tickers = []
+    def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
+        all_tickers = {}
         for symbol, name, exchange, ticker_type, *_ in csv_table:
             # Do not crash the app if the there is broken tickers in the csv
             try:
@@ -150,7 +150,7 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
                     record=(symbol, name, exchange, ticker_type),
                 )
             else:
-                all_tickers.append(ticker)
+                all_tickers[ticker.symbol] = ticker
         return all_tickers
 
     async def _download_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
@@ -181,8 +181,8 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
             key=settings.ALPHAVANTAGE_API_KEY, output_format="pandas", indexing_type="integer"
         )
 
-    def _process_csv(self, csv_table: csv_table) -> list[Ticker]:
-        all_tickers = []
+    def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
+        all_tickers = {}
         for currency_code, currency_name in csv_table:
             try:
                 ticker = Ticker(
@@ -199,7 +199,7 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
                     record=(currency_code, currency_name),
                 )
             else:
-                all_tickers.append(ticker)
+                all_tickers[ticker.symbol] = ticker
         return all_tickers
 
     async def _download_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:

@@ -21,9 +21,9 @@ class TestProviderAlphaVantage:
     )
     def test_get_list_success(self, provider_cls: type[Provider]) -> None:
         provider = provider_cls()
-        stocks = provider.get_list()
+        stocks = provider.get_tickers()
         assert len(stocks) > 0
-        assert isinstance(stocks[0], Ticker)
+        assert isinstance(list(stocks.values())[0], Ticker)
 
     @pytest.mark.parametrize(
         "provider_cls",
@@ -32,7 +32,7 @@ class TestProviderAlphaVantage:
     def test_get_list_failure_blank(self, provider_cls: type[Provider]) -> None:
         provider = provider_cls()
         with structlog.testing.capture_logs() as logs:
-            provider.get_list()
+            provider.get_tickers()
         assert len(logs) == 1
         assert logs[0]["exc_info"].msg == ProviderAccessError.msg
 
@@ -43,7 +43,7 @@ class TestProviderAlphaVantage:
     def test_get_list_failure_broken(self, provider_cls: type[Provider]) -> None:
         provider = provider_cls()
         with structlog.testing.capture_logs() as logs:
-            provider.get_list()
+            provider.get_tickers()
         assert len(logs) == 1
         assert logs[0]["event"] == ProviderInvalidDataError.msg
 
