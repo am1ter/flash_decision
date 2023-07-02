@@ -17,9 +17,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    enum_user_status = postgresql.ENUM(
-        "active", "disabled", name="user_status", schema="production"
-    )
+    enum_user_status = postgresql.ENUM("active", "disabled", name="UserStatus", schema="production")
     op.create_table(
         "user",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -39,9 +37,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    enum_user_status = postgresql.ENUM(
-        "active", "disabled", name="user_status", schema="production"
-    )
+    enum_user_status = postgresql.ENUM("active", "disabled", name="UserStatus", schema="production")
     op.drop_index(op.f("ix_production_user_email"), table_name="user", schema="production")
     op.drop_table("user", schema="production")
     enum_user_status.drop(op.get_bind())

@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Annotated
+from enum import Enum as EnumStd
+from typing import Annotated, Any
 
-from sqlalchemy import MetaData, Table, func
+from sqlalchemy import Enum, MetaData, Table, func
 from sqlalchemy.orm import as_declarative, declared_attr, mapped_column, registry
 
 from app.system.config import settings_db
@@ -10,6 +11,14 @@ from app.system.config import settings_db
 int_pk = Annotated[int, mapped_column(primary_key=True)]
 str_unq = Annotated[str, mapped_column(unique=True, index=True)]
 datetime_current = Annotated[datetime, mapped_column(server_default=func.now())]
+
+
+def mapped_column_enum(enum_class: type[EnumStd], default: EnumStd | None = None) -> Any:
+    return mapped_column(
+        Enum(enum_class, name=enum_class.__name__, schema=settings_db.DB_SCHEMA),
+        nullable=False,
+        default=default.value if default else None,
+    )
 
 
 mapper_registry = registry()

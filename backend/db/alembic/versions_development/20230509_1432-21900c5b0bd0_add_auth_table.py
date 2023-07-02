@@ -21,7 +21,7 @@ def upgrade() -> None:
         "sign_up",
         "sign_in",
         "wrong_password",
-        name="auth_status",
+        name="AuthStatus",
         schema="development",
     )
     op.create_table(
@@ -52,7 +52,7 @@ def downgrade() -> None:
         "sign_up",
         "sign_in",
         "wrong_password",
-        name="auth_status",
+        name="AuthStatus",
         schema="development",
     )
     op.drop_index(op.f("ix_development_auth_user_id"), table_name="auth", schema="development")
