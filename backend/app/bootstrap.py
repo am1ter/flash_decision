@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import _AsyncGeneratorContextManager
+from contextlib import _AsyncGeneratorContextManager, suppress
 
+from sqlalchemy.exc import ArgumentError
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.orm import sessionmaker
 
@@ -24,7 +25,6 @@ class Bootstrap(metaclass=SingletonMeta):
     Singleton is used, because only one instance of bootstrap is allowed.
     """
 
-    _instance: Bootstrap | None = None
     db_conn_factory: AsyncDbConnFactory
     db_session_factory: sessionmaker
     provider_stocks: Provider
@@ -39,10 +39,16 @@ class Bootstrap(metaclass=SingletonMeta):
         provider_stocks: Provider = ProviderAlphaVantageStocks(),
         provider_crypto: Provider = ProviderAlphaVantageCrypto(),
     ) -> None:
-        # Mapping Domain <-> ORM must be executed only once
+        # Mapping Domain models with ORM
         if start_orm:
-            init_orm_mappers()
+            with suppress(ArgumentError):
+                init_orm_mappers()
+        # Set db-related factories
         self.db_conn_factory = db_conn_factory
         self.db_session_factory = db_session_factory
+        # Set providers
         self.provider_stocks = provider_stocks
         self.provider_crypto = provider_crypto
+        # Download ticker list for all data provider
+        self.provider_stocks.get_tickers()
+        self.provider_crypto.get_tickers()
