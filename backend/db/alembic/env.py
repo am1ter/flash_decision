@@ -16,7 +16,7 @@ logging.config.fileConfig(context.config.config_file_name)  # type: ignore[arg-t
 logger = logging.getLogger("alembic")
 logger.info(
     "Db migration started",
-    extra={"db_url": settings_db.DB_URL, "db_schema": settings_db.DB_SCHEMA},
+    extra={"db_url": settings_db.DB_URL_WO_PASS, "db_schema": settings_db.DB_SCHEMA},
 )
 
 # Read models
@@ -70,11 +70,11 @@ try:
     asyncio.run(run_migrations_online())
     logger.info(
         "Db migration finished",
-        extra={"db_url": settings_db.DB_URL, "db_schema": settings_db.DB_SCHEMA},
+        extra={"db_url": settings_db.DB_URL_WO_PASS, "db_schema": settings_db.DB_SCHEMA},
     )
 except Exception as e:
     logger.exception(
         "Db migration failed",
         exc_info=e,
-        extra={"db_url": settings_db.DB_URL, "db_schema": settings_db.DB_SCHEMA},
+        extra={"db_url": settings_db.DB_URL_WO_PASS, "db_schema": settings_db.DB_SCHEMA},
     )

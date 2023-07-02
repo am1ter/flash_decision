@@ -1,3 +1,6 @@
+include .env.secrets
+.EXPORT_ALL_VARIABLES:
+
 .PHONY: docker-up-db
 docker-up-db:  # Run docker compose to run db
 		docker compose --env-file=.env.prod --env-file=.env.secrets -f ./docker-compose.prod.yaml --profile db up -d --build
@@ -39,14 +42,14 @@ pre-commit:  # Run pre-commit checks
 
 .PHONY: migrate-create
 migrate-create:  # Create db migations using db scheme from env. Use args: `env=` to `msg=`
-		cd backend;
-		export ENVIRONMENT=$(env);
+		cd backend && \
+		export ENVIRONMENT=$(env) && \
 		poetry run alembic --name $(env) revision --autogenerate -m "$(msg)"
 
 .PHONY: migrate-apply
 migrate-apply:  # Apply alembic migrations using db scheme from env. Use args: `env=`
-		cd backend;
-		export ENVIRONMENT=$(env);
+		cd backend && \
+		export ENVIRONMENT=$(env) && \
 		poetry run alembic --name $(env) upgrade head
 
 # Default environments variables
