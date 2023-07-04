@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from attrs import define, field
@@ -13,6 +15,9 @@ from app.system.exceptions import (
     UserDisabledError,
     WrongPasswordError,
 )
+
+if TYPE_CHECKING:
+    from app.domain.session import DomainSession
 
 password_hasher = PasswordHasher()
 
@@ -56,6 +61,7 @@ class DomainUser(Agregate):
     password: Password = field(repr=False, converter=Password)
     status: UserStatus
     auths: list[DomainAuth] = field_relationship(init=False)
+    sessions: list[DomainSession] = field_relationship(init=False)
 
     def verify_user(self) -> None:
         # Check if user is not disabled

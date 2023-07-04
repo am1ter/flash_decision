@@ -45,6 +45,7 @@ aiosqlite = "0.19.0"
 pytest = "7.3.2"
 pytest-asyncio = "0.21.0"
 pytest-dependency = "0.5.1"
+authlib = "1.2.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -52,7 +53,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 ignore_missing_imports = true
-follow_imports = "silent"
 exclude = []
 mypy_path="backend"
 

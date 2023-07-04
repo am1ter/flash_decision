@@ -68,6 +68,16 @@ class ProviderAccessError(BaseHTTPError):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
+class SessionConfigurationError(BaseHTTPError):
+    msg = "The current session has invalid configuration options."
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+class ProviderInvalidDataError(BaseHTTPError):
+    msg = "The data received from the external data provider is invalid."
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
 class UnsupportedModeError(BaseHTTPError):
     msg = "Specified mode is not yet supported yet"
     status_code = status.HTTP_501_NOT_IMPLEMENTED
@@ -87,7 +97,3 @@ class EmailValidationError(BaseHTTPValidationError):
 
 class IpAddressValidationError(BaseHTTPValidationError):
     msg = "The http request has invalid IP address format."
-
-
-class ProviderInvalidDataError(BaseHTTPValidationError):
-    msg = "The data received from the external data provider is invalid."

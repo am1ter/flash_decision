@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette import status
 
+from app.api.endpoints.session import router as router_session
 from app.api.endpoints.support import router as router_support
 from app.api.endpoints.user import router as router_user
 from app.bootstrap import Bootstrap
@@ -20,6 +21,7 @@ Bootstrap(start_orm=True)
 fastapi_app = FastAPI(title="Flash decision")
 fastapi_app.include_router(router_support)
 fastapi_app.include_router(router_user)
+fastapi_app.include_router(router_session)
 fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.FRONTEND_URL],

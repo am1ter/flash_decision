@@ -1,8 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Self
 
-from attrs import Attribute, define, field
+from attrs import Attribute, asdict, define, field
 
 
 def field_relationship(*, init: bool) -> Any:
@@ -28,6 +28,22 @@ class ValueObject:
         P.S. It is not the database dependency
         """
         return (self.value,)
+
+
+@define(kw_only=False, slots=False, frozen=True)
+class ValueObjectJson:
+    """
+    A small simple object with some attributes.
+    Used for converting attrs objects from/to jsons.
+    https://martinfowler.com/bliki/ValueObject.html
+    """
+
+    def __composite_values__(self) -> tuple[dict[str, str]]:
+        return (asdict(self, value_serializer=custom_serializer),)
+
+    @classmethod
+    def from_json(cls, value: dict[str, str]) -> Self:
+        return cls(**value)
 
 
 @define(kw_only=True, slots=False)

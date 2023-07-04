@@ -7,8 +7,9 @@ from alpha_vantage.async_support.cryptocurrencies import CryptoCurrencies
 from alpha_vantage.async_support.timeseries import TimeSeries
 from attrs import define, field, validators
 
+from app.domain.base import ValueObjectJson
 from app.system.config import settings
-from app.system.constants import TickerType, Timeframe
+from app.system.constants import SessionTimeframe, TickerType
 from app.system.exceptions import (
     ProviderAccessError,
     ProviderInvalidDataError,
@@ -23,8 +24,8 @@ csv_table: TypeAlias = list[list[str]]
 
 
 @define
-class Ticker:
-    ticker_type: TickerType
+class Ticker(ValueObjectJson):
+    ticker_type: TickerType = field(converter=TickerType)
     exchange: str
     symbol: str = field(validator=validators.min_len(1))
     name: str
@@ -38,7 +39,7 @@ class Provider(Protocol):
     def get_tickers(self) -> dict[str, Ticker]:
         ...
 
-    async def get_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
+    async def get_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         ...
 
 
@@ -66,7 +67,7 @@ class ProviderAlphaVantage:
     def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
         raise NotImplementedError
 
-    async def _download_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
+    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         raise NotImplementedError
 
     @classmethod
@@ -101,7 +102,7 @@ class ProviderAlphaVantage:
                 logger.exception(exc_info=ProviderAccessError)
         return self.all_tickers
 
-    async def get_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
+    async def get_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         data = await self._download_data(ticker, timeframe)
         data = self._transform_df_quotes(data)
         return data
@@ -153,14 +154,16 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
                 all_tickers[ticker.symbol] = ticker
         return all_tickers
 
-    async def _download_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
+    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         """Send request, use data with quotes, ignore metadata (_), rename columns"""
         match timeframe:
-            case Timeframe.daily:
-                data, _ = await self.exporter.get_daily_adjusted(ticker.symbol)
+            case SessionTimeframe.daily:
+                data, _ = await self.exporter.get_daily_adjusted(ticker.symbol, outputsize="full")
                 data = data.rename(self.data_cols_daily, axis="columns")
             case _:
-                data, _ = await self.exporter.get_intraday(ticker.symbol, interval=timeframe.value)
+                data, _ = await self.exporter.get_intraday(
+                    ticker.symbol, interval=timeframe.value, outputsize="full"
+                )
                 data = data.rename(self.data_cols_intraday, axis="columns")
         return data
 
@@ -202,10 +205,10 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
                 all_tickers[ticker.symbol] = ticker
         return all_tickers
 
-    async def _download_data(self, ticker: Ticker, timeframe: Timeframe) -> pd.DataFrame:
+    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         """Send request, use data with quotes, ignore metadata (_), rename columns"""
         match timeframe:
-            case Timeframe.daily:
+            case SessionTimeframe.daily:
                 data, _ = await self.exporter.get_digital_currency_daily(
                     ticker.symbol, market=settings.CRYPTO_PRICE_CURRENCY
                 )

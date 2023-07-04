@@ -1,21 +1,23 @@
 from sqlalchemy import Table
 from sqlalchemy.orm import composite, relationship
 
+from app.domain.session import DomainSession
+from app.domain.session_provider import Ticker
 from app.domain.user import DomainAuth, DomainUser, Email, IpAddress, Password
 from app.infrastructure.orm.base import Base, mapper_registry
+from app.infrastructure.orm.session import OrmSession
 from app.infrastructure.orm.user import OrmAuth, OrmUser
 
 
-def init_orm_mappers() -> None:
-    """Single point to setup all domain <-> ORM model mappings"""
-
-    # Verify if all ORM models are used Declarative defenition approach
+def verify_orm() -> None:
+    """Verify if all ORM models are used Declarative defenition approach"""
     all_orm_models = Base.__subclasses__()
     for model in all_orm_models:
         assert_msg = f"The table defenition for {model} not found"
         assert hasattr(model, "__table__") and isinstance(model.__table__, Table), assert_msg
 
-    # Map domain models with ORM models
+
+def map_user() -> None:
     mapper_registry.map_imperatively(
         DomainUser,
         OrmUser.__table__,
@@ -23,6 +25,9 @@ def init_orm_mappers() -> None:
             "email": composite(Email, OrmUser.__table__.c._email),
             "password": composite(Password, OrmUser.__table__.c._password),
             "auths": relationship(DomainAuth, back_populates="user", lazy="dynamic", uselist=True),
+            "sessions": relationship(
+                DomainSession, back_populates="user", lazy="dynamic", uselist=True
+            ),
         },
     )
     mapper_registry.map_imperatively(
@@ -33,3 +38,33 @@ def init_orm_mappers() -> None:
             "user": relationship(DomainUser, back_populates="auths", lazy="joined", uselist=False),
         },
     )
+
+
+def map_session() -> None:
+    mapper_session = mapper_registry.map_imperatively(
+        DomainSession,  # type: ignore[type-abstract]
+        OrmSession.__table__,
+        polymorphic_on="mode",
+        properties={
+            "ticker": composite(Ticker.from_json, OrmSession.__table__.c._ticker),
+            "user": relationship(
+                DomainUser, back_populates="sessions", lazy="joined", uselist=False
+            ),
+        },
+    )
+    for subclass in DomainSession.__subclasses__():
+        mapper_registry.map_imperatively(
+            subclass,  # type: ignore[type-abstract]
+            OrmSession.__table__,
+            inherits=mapper_session,
+            polymorphic_identity=subclass.__name__.replace(DomainSession.__name__, "").lower(),
+        )
+
+
+def init_orm_mappers() -> None:
+    """Single point to setup all domain <-> ORM model mappings"""
+    verify_orm()
+
+    # Map domain models with ORM models
+    map_user()
+    map_session()

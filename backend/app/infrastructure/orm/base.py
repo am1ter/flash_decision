@@ -1,9 +1,11 @@
+import contextlib
 from datetime import datetime
 from enum import Enum as EnumStd
 from typing import Annotated, Any
 
 from sqlalchemy import Enum, MetaData, Table, func
-from sqlalchemy.orm import as_declarative, declared_attr, mapped_column, registry
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapper, as_declarative, declared_attr, mapped_column, registry
 
 from app.system.config import settings_db
 
@@ -11,6 +13,7 @@ from app.system.config import settings_db
 int_pk = Annotated[int, mapped_column(primary_key=True)]
 str_unq = Annotated[str, mapped_column(unique=True, index=True)]
 datetime_current = Annotated[datetime, mapped_column(server_default=func.now())]
+jsonb = Annotated[dict[str, Any], mapped_column(JSONB)]
 
 
 def mapped_column_enum(enum_class: type[EnumStd], default: EnumStd | None = None) -> Any:
@@ -31,11 +34,20 @@ class Base:
 
     __name__: str
     __table__: Table  # Automatically generated during initialization; used for mappings
+    __mapper__: Mapper
     metadata: MetaData
 
     @declared_attr.directive
     def __tablename__(self) -> str:
-        """Generate __tablename__ automatically using class name. Remove `ORM` prefix from it."""
+        """
+        Generate __tablename__ automatically using class name.
+        Remove `ORM` prefix from it.
+        For inherited ORM classes (polymorphic) use parents tablename.
+        """
+        with contextlib.suppress(AttributeError):
+            self.__mapper_args__: dict[str, str]  # Only exists for ORMs with polymorphic identity
+            if "polymorphic_identity" in self.__mapper_args__:
+                return self.__mapper__.mapped_table.name
         orm_class_name_prefix = "orm"
         cls_name = self.__name__.lower()
         if cls_name[: len(orm_class_name_prefix)] == orm_class_name_prefix:
