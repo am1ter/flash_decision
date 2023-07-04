@@ -29,7 +29,7 @@ class SettingsGeneral(BaseSettingsCustom):
     FRONTEND_URL: str = "http://0.0.0.0:8000/"
     # JWT
     JWT_SECRET_KEY: str = "my_jwt_secret_key"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     JWT_ALGORITHM: str = "HS256"
 
     @cached_property
