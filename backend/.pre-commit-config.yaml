@@ -1,4 +1,3 @@
----
 default_language_version:
   python: python3.11
 
@@ -15,15 +14,15 @@ repos:
       - id: black
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.267"
+    rev: "v0.0.277"
     hooks:
       - id: ruff
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.3.0"
+    rev: "v1.4.1"
     hooks:
       - id: mypy
-        args: [--no-strict-optional, --ignore-missing-imports]
+        args: [--ignore-missing-imports]
         additional_dependencies: ["types-requests", "alembic", "attrs"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
