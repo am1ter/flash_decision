@@ -32,7 +32,8 @@ class RepositoryUserFake(Repository):
         self.storage_auth: dict[int, list[DomainAuth]] = {}
 
     def add(self, obj: DomainUser) -> None:  # type: ignore[override]
-        obj.id = randint(1, 1000) if not obj.id else obj.id
+        if not hasattr(obj, "id"):
+            obj.id = randint(1, 1000)
         obj.datetime_create = datetime.utcnow()
         self.storage_user[obj.id] = obj
         self.storage_auth[obj.id] = list(obj.auths)

@@ -2,11 +2,25 @@ from __future__ import annotations
 
 import pytest
 import requests
-from requests import JSONDecodeError
+from authlib.integrations.requests_client import OAuth2Auth, OAuth2Session
 
+from app.api.schemas.session import ReqSession, RespSessionOptions
 from app.api.schemas.support import RespDataHealthcheck
 from app.api.schemas.user import ReqSignIn, ReqSignUp, RespSignIn, RespSignUp
 from app.system.config import settings
+from app.system.constants import SessionBarsnumber, SessionMode
+
+
+@pytest.fixture()
+def oauth2(req_sign_in: ReqSignIn) -> OAuth2Auth:
+    client = OAuth2Session()
+    token_endpoint = f"{settings.BACKEND_URL}/user/sign-in"
+    token = client.fetch_token(
+        token_endpoint, username=req_sign_in.username, password=req_sign_in.password
+    )
+    auth = OAuth2Auth(token)
+    assert "errors" not in token, "Authentification token generation error"
+    return auth
 
 
 class Response:
@@ -22,7 +36,7 @@ class Response:
     def _read_json(self) -> None:
         try:
             self.json = self.response.json()
-        except JSONDecodeError:
+        except requests.JSONDecodeError:
             pass
         else:
             self.meta = self.json.get("meta")
@@ -74,3 +88,28 @@ class TestBackendUser:
         data_model = RespSignIn(**response.response.json())
         assert data_model is not None
         assert data_model.email == req_sign_in.username
+
+
+class TestBackendSession:
+    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
+    def test_session_options(self, oauth2: OAuth2Auth) -> None:
+        r = requests.get(f"{settings.BACKEND_URL}/session/options", auth=oauth2)
+        response = Response(r)
+        response.assert_status_code(200)
+        data_model = RespSessionOptions(**response.data)
+        assert data_model is not None
+        assert len(data_model.all_ticker) > 0
+        assert data_model.all_barsnumber == [e.value for e in SessionBarsnumber]
+
+    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
+    @pytest.mark.parametrize("mode", list(SessionMode))
+    def test_start_new_session_custom(
+        self, oauth2: OAuth2Auth, mode: SessionMode, req_session_params_custom: ReqSession
+    ) -> None:
+        r = requests.post(
+            f"{settings.BACKEND_URL}/session/{mode.value}",
+            data=req_session_params_custom.json() if mode == SessionMode.custom else None,
+            auth=oauth2,
+        )
+        response = Response(r)
+        response.assert_status_code(200)

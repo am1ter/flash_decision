@@ -2,7 +2,7 @@ import pytest
 
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSQL
-from app.infrastructure.units_of_work.base import UnitOfWorkSQLAlchemy
+from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
 from app.system.exceptions import DbObjectCannotBeCreatedError
 
 pytestmark = pytest.mark.asyncio

@@ -2,10 +2,10 @@ import pytest
 import structlog
 
 from app.domain.session_provider import Provider, Ticker
-from app.system.constants import Timeframe
+from app.system.constants import SessionTimeframe
 from app.system.exceptions import ProviderAccessError, ProviderInvalidDataError
 from tests.conftest import (
-    ProviderAlVCryptoMockFailureBlank,
+    ProviderAVCryptoMockFailureBlank,
     ProviderAVCryptoMockFailureBroken,
     ProviderAVCryptoMockSuccess,
     ProviderAVStocksMockFailureBlank,
@@ -27,14 +27,14 @@ class TestProviderAlphaVantage:
 
     @pytest.mark.parametrize(
         "provider_cls",
-        [ProviderAVStocksMockFailureBlank, ProviderAlVCryptoMockFailureBlank],
+        [ProviderAVStocksMockFailureBlank, ProviderAVCryptoMockFailureBlank],
     )
     def test_get_list_failure_blank(self, provider_cls: type[Provider]) -> None:
         provider = provider_cls()
         with structlog.testing.capture_logs() as logs:
             provider.get_tickers()
         assert len(logs) == 1
-        assert logs[0]["exc_info"].msg == ProviderAccessError.msg
+        assert logs[0]["event"] == ProviderAccessError.msg
 
     @pytest.mark.parametrize(
         "provider_cls",
@@ -52,22 +52,24 @@ class TestProviderAlphaVantage:
         "provider_cls",
         [ProviderAVStocksMockSuccess, ProviderAVCryptoMockSuccess],
     )
-    async def test_get_data_success(self, provider_cls: type[Provider], ticker: Ticker) -> None:
+    async def test_get_data_success(
+        self, provider_cls: type[Provider], mock_ticker: Ticker
+    ) -> None:
         provider = provider_cls()
-        df_quotes = await provider.get_data(ticker=ticker, timeframe=Timeframe.daily)
+        df_quotes = await provider.get_data(ticker=mock_ticker, timeframe=SessionTimeframe.daily)
         assert len(df_quotes) > 0
 
     @pytest.mark.asyncio()
     @pytest.mark.parametrize(
         "provider_cls",
-        [ProviderAVStocksMockFailureBlank, ProviderAlVCryptoMockFailureBlank],
+        [ProviderAVStocksMockFailureBlank, ProviderAVCryptoMockFailureBlank],
     )
     async def test_get_data_fauilure_blank(
-        self, provider_cls: type[Provider], ticker: Ticker
+        self, provider_cls: type[Provider], mock_ticker: Ticker
     ) -> None:
         provider = provider_cls()
         with pytest.raises(ProviderInvalidDataError):
-            await provider.get_data(ticker=ticker, timeframe=Timeframe.daily)
+            await provider.get_data(ticker=mock_ticker, timeframe=SessionTimeframe.daily)
 
     @pytest.mark.asyncio()
     @pytest.mark.parametrize(
@@ -75,8 +77,8 @@ class TestProviderAlphaVantage:
         [ProviderAVStocksMockFailureBroken, ProviderAVCryptoMockFailureBroken],
     )
     async def test_get_data_fauilure_broken(
-        self, provider_cls: type[Provider], ticker: Ticker
+        self, provider_cls: type[Provider], mock_ticker: Ticker
     ) -> None:
         provider = provider_cls()
         with pytest.raises(ProviderInvalidDataError):
-            await provider.get_data(ticker=ticker, timeframe=Timeframe.daily)
+            await provider.get_data(ticker=mock_ticker, timeframe=SessionTimeframe.daily)
