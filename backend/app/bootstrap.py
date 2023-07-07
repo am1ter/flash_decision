@@ -43,12 +43,15 @@ class Bootstrap(metaclass=SingletonMeta):
         if start_orm:
             with suppress(ArgumentError):
                 init_orm_mappers()
+
         # Set db-related factories
         self.db_conn_factory = db_conn_factory
         self.db_session_factory = db_session_factory
-        # Set providers
-        self.provider_stocks = provider_stocks
-        self.provider_crypto = provider_crypto
-        # Download ticker list for all data provider
-        self.provider_stocks.get_tickers()
-        self.provider_crypto.get_tickers()
+
+        # Set providers and download ticker list for all data provider
+        if provider_stocks:
+            self.provider_stocks = provider_stocks
+            self.provider_stocks.get_tickers()
+        if provider_crypto:
+            self.provider_crypto = provider_crypto
+            self.provider_crypto.get_tickers()

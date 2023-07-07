@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from starlette import status
 
 
@@ -10,7 +12,13 @@ class BaseError(Exception):
 
 class BaseHTTPError(BaseError):
     status_code: int
-    headers: dict | None = None
+    headers: ClassVar[dict[str, str] | None] = None
+
+
+class AuthHTTPError(BaseHTTPError):
+    """Include headers as part of OAuth2 specification"""
+
+    headers: ClassVar[dict[str, str] | None] = {"WWW-Authenticate": "Bearer"}
 
 
 class BaseValidationError(BaseError):
@@ -51,21 +59,14 @@ class DbObjectCannotBeCreatedError(BaseHTTPError):
     status_code = status.HTTP_400_BAD_REQUEST
 
 
-class JwtExpiredError(BaseHTTPError):
+class JwtExpiredError(AuthHTTPError):
     msg = "Your session is expired. Please authenticate again."
     status_code = status.HTTP_401_UNAUTHORIZED
-    headers = {"WWW-Authenticate": "Bearer"}
 
 
-class InvalidJwtError(BaseHTTPError):
+class InvalidJwtError(AuthHTTPError):
     msg = "Your access token is invalid. Please authenticate again."
     status_code = status.HTTP_403_FORBIDDEN
-    headers = {"WWW-Authenticate": "Bearer"}  # part of OAuth2 specification
-
-
-class ProviderAccessError(BaseHTTPError):
-    msg = "The external data provider responded with a wrong status code. Please try again later."
-    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 class SessionConfigurationError(BaseHTTPError):
@@ -73,9 +74,19 @@ class SessionConfigurationError(BaseHTTPError):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
+class ProviderAccessError(BaseHTTPError):
+    msg = "The external data provider responded with a wrong status code. Please try again later."
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+
 class ProviderInvalidDataError(BaseHTTPError):
     msg = "The data received from the external data provider is invalid."
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+class ProviderRateLimitExceededError(BaseHTTPError):
+    msg = "The rate limit for processing requests has been exceeded. Please try again later."
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 class UnsupportedModeError(BaseHTTPError):

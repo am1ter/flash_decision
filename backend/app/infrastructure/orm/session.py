@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,7 +22,7 @@ class OrmSession(Base):
     The ORM object `Session` is used to store it's parameters.
     """
 
-    __mapper_args__ = {"polymorphic_on": "mode"}
+    __mapper_args__: ClassVar[dict[str, str]] = {"polymorphic_on": "mode"}
 
     id: Mapped[int_pk]
     datetime_create: Mapped[datetime_current]

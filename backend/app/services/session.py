@@ -15,7 +15,7 @@ from app.domain.session import (
 from app.domain.session_provider import Provider
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.session import RepositorySessionSQL
-from app.infrastructure.units_of_work.base import UnitOfWorkSQLAlchemy
+from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
 from app.system.constants import SessionMode, TickerType
 from app.system.logger import create_logger
 
@@ -51,7 +51,9 @@ class ServiceSession:
                 provider = self.provider_stocks
         return provider
 
-    def _create_session(self, mode: SessionMode, session_params: ReqSession) -> DomainSession:
+    def _create_session(
+        self, mode: SessionMode, session_params: ReqSession | None
+    ) -> DomainSession:
         session: DomainSession
         match mode:
             case SessionMode.classic:
@@ -61,6 +63,7 @@ class ServiceSession:
             case SessionMode.crypto:
                 session = DomainSessionCrypto.create(provider=self.provider_crypto)
             case SessionMode.custom:
+                assert session_params
                 session = DomainSessionCustom.create(
                     provider=self._find_provider(session_params.ticker_type),
                     ticker_symbol=session_params.ticker_symbol,
@@ -76,7 +79,7 @@ class ServiceSession:
         return session
 
     async def start_session(
-        self, mode: SessionMode, session_params: ReqSession, user: DomainUser
+        self, mode: SessionMode, session_params: ReqSession | None, user: DomainUser
     ) -> DomainSession:
         # Create session
         session = self._create_session(mode, session_params)

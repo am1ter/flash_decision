@@ -12,7 +12,7 @@ class SingletonMeta(type, Generic[SingletonInstance]):
     https://python-patterns.guide/gang-of-four/singleton/
     """
 
-    _instances: dict[SingletonMeta[SingletonInstance], SingletonInstance] = {}
+    _instances: dict[SingletonMeta[SingletonInstance], SingletonInstance] = {}  # noqa: RUF012
     _lock: Lock = Lock()
 
     def __call__(cls: SingletonMeta[SingletonInstance], *args, **kwargs) -> SingletonInstance:

@@ -77,7 +77,7 @@ class SettingsLog(BaseSettingsCustom):
     LOG_FMT_DEV_ACCESS: str = (
         LOG_FMT_DEV_PREF + " %(client_addr)s | %(request_line)s | %(status_code)s"
     )
-    SUPPRESS_TRACEBACK_FROM_LIBS: list[str] = [
+    SUPPRESS_TRACEBACK_FROM_LIBS: tuple[str, ...] = (
         "uvicorn",
         "fastapi",
         "starlette",
@@ -86,7 +86,7 @@ class SettingsLog(BaseSettingsCustom):
         "attrs",
         "attr",
         "asyncio",
-    ]
+    )
 
 
 settings_log = SettingsLog()
@@ -130,7 +130,7 @@ settings_db = SettingsDb()
 class SettingsProvider(BaseSettingsCustom):
     ALPHAVANTAGE_API_KEY = "my_alpha_avantage_api_key"
     CRYPTO_PRICE_CURRENCY = "USD"  # Source: https://www.alphavantage.co/physical_currency_list/
-    RANDOM_TICKERS_STOCKS = "AMZN,PFE,FB,GOOGL,AAPL,AMD,XOM,GS,DAL,NKE,NFLX,INTC,TSLA,MSFT,PEP,DIS"
+    RANDOM_TICKERS_STOCKS = "AMZN,META,GOOGL,AAPL,AMD,XOM,GS,DAL,NKE,NFLX,INTC,TSLA,MSFT,PEP,DIS"
     RANDOM_TICKERS_CRYPTO = "BTC,BNB,SOL,XRP,ADA,DOGE,LTC"
 
 

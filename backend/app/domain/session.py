@@ -229,9 +229,9 @@ class SessionOptions(metaclass=SingletonMeta):
     """Container with all possible parameters (options) of the Session"""
 
     all_ticker: list[Ticker]
-    all_timeframe: list[SessionTimeframe] = list(SessionTimeframe)
-    all_barsnumber: list[SessionBarsnumber] = list(SessionBarsnumber)
-    all_timelimit: list[SessionTimelimit] = list(SessionTimelimit)
-    all_iterations: list[SessionIterations] = list(SessionIterations)
-    all_slippage: list[SessionSlippage] = list(SessionSlippage)
-    all_fixingbar: list[SessionFixingbar] = list(SessionFixingbar)
+    all_timeframe: tuple[SessionTimeframe, ...] = tuple(SessionTimeframe)
+    all_barsnumber: tuple[SessionBarsnumber, ...] = tuple(SessionBarsnumber)
+    all_timelimit: tuple[SessionTimelimit, ...] = tuple(SessionTimelimit)
+    all_iterations: tuple[SessionIterations, ...] = tuple(SessionIterations)
+    all_slippage: tuple[SessionSlippage, ...] = tuple(SessionSlippage)
+    all_fixingbar: tuple[SessionFixingbar, ...] = tuple(SessionFixingbar)

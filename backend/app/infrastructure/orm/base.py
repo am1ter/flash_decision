@@ -44,9 +44,9 @@ class Base:
         Remove `ORM` prefix from it.
         For inherited ORM classes (polymorphic) use parents tablename.
         """
-        with contextlib.suppress(AttributeError):
-            self.__mapper_args__: dict[str, str]  # Only exists for ORMs with polymorphic identity
-            if "polymorphic_identity" in self.__mapper_args__:
+        with contextlib.suppress(AssertionError):
+            assert hasattr(self.__class__, "__mapper_args__")
+            if "polymorphic_identity" in self.__class__.__mapper_args__:
                 return self.__mapper__.mapped_table.name
         orm_class_name_prefix = "orm"
         cls_name = self.__name__.lower()

@@ -8,7 +8,7 @@ from jose import jwt
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSQL
-from app.infrastructure.units_of_work.base import UnitOfWorkSQLAlchemy
+from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
 from app.system.config import settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, WrongPasswordError
 from app.system.logger import create_logger

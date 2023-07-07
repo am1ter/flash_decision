@@ -26,4 +26,4 @@ class RespSessionOptions(RespData):
 
 
 class RespSession(RespData):
-    result: bool
+    id: int

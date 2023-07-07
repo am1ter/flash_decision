@@ -32,12 +32,12 @@ async def collect_session_options(
 @router.post("/{mode}")
 async def start_new_session(
     mode: SessionMode,
-    session_params: ReqSession,
     service: ServiceSessionDep,
     auth: ServiceAuthorizationDep,
+    session_params: ReqSession | None = None,
 ) -> Resp[RespMeta, RespSession]:
     """Start new session: receive session's mode and options, download quotes, create iterations"""
-    await service.start_session(mode, session_params, await auth.get_current_user())
+    session = await service.start_session(mode, session_params, await auth.get_current_user())
     meta = RespMeta()
-    data = RespSession(result=True)
+    data = RespSession(id=session.id)
     return Resp(meta=meta, data=data)
