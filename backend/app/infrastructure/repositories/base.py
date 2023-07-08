@@ -39,10 +39,10 @@ class RepositorySQLAlchemy(Repository):
     """
 
     def __init__(
-        self, db: AsyncSession, identity_map: IdentityMapSQLAlchemy = IdentityMapSQLAlchemy()
+        self, db: AsyncSession, identity_map: type[IdentityMapSQLAlchemy] = IdentityMapSQLAlchemy
     ) -> None:
         self._db = db
-        self._identity_map = identity_map
+        self._identity_map = identity_map()
 
     @staticmethod
     def catch_db_errors(func: Callable[..., Awaitable]) -> Callable[..., Awaitable]:
