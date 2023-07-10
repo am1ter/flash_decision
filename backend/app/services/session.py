@@ -22,7 +22,7 @@ from app.system.logger import create_logger
 logger = create_logger("backend.service.session")
 
 # Internal dependencies
-uow_session = UnitOfWorkSQLAlchemy(RepositorySessionSQL)
+uow_session = UnitOfWorkSQLAlchemy(repository_type=RepositorySessionSQL, create_task_group=True)
 UowSessionDep = Annotated[UnitOfWorkSQLAlchemy, Depends(uow_session)]
 
 
@@ -85,10 +85,13 @@ class ServiceSession:
         session = self._create_session(mode, session_params)
         # Link to user
         session.bound_to_user(user)
-        # Save session to the database
-        async with self.uow:
-            self.uow.repository.add(session)
-            await self.uow.commit()
         # Start session
-        await session.start()
+        try:
+            async with self.uow:
+                self.uow.task_group.create_task(session.start())
+                self.uow.repository.add(session)
+                self.uow.task_group.create_task(self.uow.commit())
+        except ExceptionGroup as eg:
+            raise eg.exceptions[0] from eg
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
         return session

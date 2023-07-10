@@ -38,6 +38,7 @@ class ServiceAuthorization:
     def __init__(self, token_encoded: TokenDep, uow: UowUserDep) -> None:
         self.uow = uow
         self.token_decoded = self._decode_token(token_encoded)
+        self.user: DomainUser | None = None
 
     async def __aenter__(self) -> Self:
         self.user = await self.get_current_user()
@@ -61,9 +62,9 @@ class ServiceAuthorization:
         """Get user with email extracted from token and verify it"""
         async with self.uow:
             self.uow.repository = cast(RepositoryUserSQL, self.uow.repository)
-            user = await self.uow.repository.get_by_email(self.token_decoded.sub)
-        user.verify_user()
-        return user
+            self.user = await self.uow.repository.get_by_email(self.token_decoded.sub)
+        self.user.verify_user()
+        return self.user
 
 
 async def verify_authorization(

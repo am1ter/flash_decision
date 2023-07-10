@@ -1,5 +1,7 @@
+from asyncio import TaskGroup
 from datetime import datetime
 from random import randint
+from typing import Self
 
 import pytest
 
@@ -42,6 +44,15 @@ class RepositorySessionFake(Repository):
 class UnitOfWorkSessionFake(UnitOfWork):
     def __init__(self) -> None:
         self.repository = RepositorySessionFake()
+        self.task_group = TaskGroup()
+
+    async def __aenter__(self) -> Self:
+        await self.task_group.__aenter__()
+        return await super().__aenter__()
+
+    async def __aexit__(self, *args) -> None:
+        await self.task_group.__aexit__(*args)
+        await super().__aexit__(*args)
 
     async def commit(self) -> None:
         pass

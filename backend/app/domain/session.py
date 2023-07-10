@@ -104,8 +104,8 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     fixingbar: SessionFixingbar
     status: SessionStatus
     user: DomainUser = field_relationship(init=False)
-    time_series: SessionTimeSeries = field(init=False)
-    random_tickers: str = field(init=False)
+    time_series: SessionTimeSeries = field(init=False, repr=False)
+    random_tickers: str = field(init=False, repr=False, default="")
 
     @classmethod
     @abstractmethod

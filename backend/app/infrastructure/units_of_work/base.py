@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
+from typing import Self
 
 
 class UnitOfWork(ABC):
@@ -9,7 +8,7 @@ class UnitOfWork(ABC):
     https://martinfowler.com/eaaCatalog/unitOfWork.html
     """
 
-    async def __aenter__(self) -> UnitOfWork:
+    async def __aenter__(self) -> Self:
         return self
 
     async def __aexit__(self, *args) -> None:

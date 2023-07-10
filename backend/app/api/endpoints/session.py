@@ -37,7 +37,8 @@ async def start_new_session(
     session_params: ReqSession | None = None,
 ) -> Resp[RespMeta, RespSession]:
     """Start new session: receive session's mode and options, download quotes, create iterations"""
-    session = await service.start_session(mode, session_params, await auth.get_current_user())
+    assert auth.user
+    session = await service.start_session(mode, session_params, auth.user)
     meta = RespMeta()
     data = RespSession(id=session.id)
     return Resp(meta=meta, data=data)

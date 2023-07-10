@@ -37,8 +37,7 @@ def user_repository_with_user() -> RepositoryUserSQLWithUser:
         db_session: AsyncSession, user_domain: DomainUser
     ) -> RepositoryUserSQL:
         """Create SQL repository and add user inside"""
-        identity_map = IdentityMapSQLAlchemy()
-        repository_user = RepositoryUserSQL(db_session, identity_map)
+        repository_user = RepositoryUserSQL(db_session, IdentityMapSQLAlchemy)
         repository_user.add(user_domain)
         await repository_user.flush()
         return repository_user
