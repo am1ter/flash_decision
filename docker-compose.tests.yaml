@@ -21,6 +21,18 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
 
+  # Run container with database
+  fd_redis_tests:
+    image: "redis/redis-stack:latest"
+    container_name: fd_redis_tests
+    restart: "no"
+    env_file:
+      - .env.secrets
+    environment:
+      - REDIS_ARGS=--requirepass ${CACHE_REDIS_PASS}
+    networks:
+      - tests
+
   # Basic defention for containers with python
   fd_tmpl_tests:
     build:
@@ -34,6 +46,7 @@ services:
     environment:
       - BACKEND_HOST=fd_backend_tests
       - DB_HOST=fd_db_tests
+      - CACHE_REDIS_HOST=fd_redis_tests
     networks:
       - tests
     volumes:
@@ -56,6 +69,8 @@ services:
     container_name: fd_backend_tests
     command: poetry run app
     depends_on:
+      fd_redis_tests:
+        condition: service_started
       fd_migrations_tests:
         condition: service_completed_successfully
 

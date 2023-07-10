@@ -4,7 +4,7 @@ from distutils.util import strtobool
 from functools import cached_property
 from typing import Literal
 
-from pydantic import BaseSettings, HttpUrl, PostgresDsn, ValidationError, parse_obj_as
+from pydantic import BaseSettings, HttpUrl, PostgresDsn, RedisDsn, ValidationError, parse_obj_as
 
 from app.system.constants import Environment
 from app.system.exceptions import ConfigHTTPHardcodedBackendUrlError, ConfigHTTPWrongURLError
@@ -127,6 +127,30 @@ class SettingsDb(BaseSettingsCustom):
 settings_db = SettingsDb()
 
 
+class SettingsCache(BaseSettingsCustom):
+    CACHE_ENABLED: bool = True
+    CACHE_TTL: int = 60 * 60 * 24  # seconds
+    CACHE_REDIS_SCHEMA: str = "redis"
+    CACHE_REDIS_HOST: str = "localhost"
+    CACHE_REDIS_PORT: int = 6379
+    CACHE_REDIS_DB: int = 0
+    CACHE_REDIS_PASS: str = "my_redis_pass"
+    CACHE_REDIS_DECODE_RESPONSES = True
+
+    @cached_property
+    def CACHE_REDIS_URL(self) -> str:  # noqa: N802
+        return RedisDsn.build(
+            scheme=self.CACHE_REDIS_SCHEMA,
+            host=self.CACHE_REDIS_HOST,
+            port=str(self.CACHE_REDIS_PORT),
+            password=self.CACHE_REDIS_PASS,
+            path=f"/{self.CACHE_REDIS_DB!s}",
+        )
+
+
+settings_cache = SettingsCache()
+
+
 class SettingsProvider(BaseSettingsCustom):
     ALPHAVANTAGE_API_KEY = "my_alpha_avantage_api_key"
     CRYPTO_PRICE_CURRENCY = "USD"  # Source: https://www.alphavantage.co/physical_currency_list/
@@ -137,7 +161,7 @@ class SettingsProvider(BaseSettingsCustom):
 settings_provider = SettingsProvider()
 
 
-class Settings(SettingsGeneral, SettingsLog, SettingsDb, SettingsProvider):
+class Settings(SettingsGeneral, SettingsLog, SettingsDb, SettingsProvider, SettingsCache):
     pass
 
 

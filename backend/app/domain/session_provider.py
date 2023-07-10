@@ -1,8 +1,9 @@
 import csv
+import logging
 from typing import ClassVar, Protocol, TypeAlias
 
+import httpx
 import pandas as pd
-import requests
 from alpha_vantage.async_support.cryptocurrencies import CryptoCurrencies
 from alpha_vantage.async_support.timeseries import TimeSeries
 from attrs import define, field, validators
@@ -11,6 +12,7 @@ from app.domain.base import ValueObjectJson
 from app.system.config import settings
 from app.system.constants import SessionTimeframe, TickerType
 from app.system.exceptions import (
+    MemoryObjectNotFoundError,
     ProviderAccessError,
     ProviderInvalidDataError,
     ProviderRateLimitExceededError,
@@ -20,6 +22,7 @@ from app.system.logger import create_logger
 
 # Create logger
 logger = create_logger("backend.domain.session_provider")
+logging.getLogger("httpx").setLevel("CRITICAL")
 
 csv_table: TypeAlias = list[list[str]]
 
@@ -35,9 +38,20 @@ class Ticker(ValueObjectJson):
 class Provider(Protocol):
     """Protocol for setting up custom data providers"""
 
-    all_tickers: ClassVar[dict[str, Ticker]]
+    _tickers: ClassVar[dict[str, Ticker]]
 
-    def get_tickers(self) -> dict[str, Ticker]:
+    @classmethod
+    def _get_ticker_by_symbol(cls, symbol: str) -> Ticker:
+        ...
+
+    @classmethod
+    def get_tickers(cls) -> dict[str, Ticker]:
+        ...
+
+    async def download_raw_tickers(self) -> csv_table:
+        ...
+
+    def process_tickers(self, raw_tickers: csv_table) -> dict[str, Ticker]:
         ...
 
     async def get_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
@@ -50,14 +64,28 @@ class ProviderAlphaVantage:
     Documentation: https://www.alphavantage.co/documentation/
     """
 
-    all_tickers: ClassVar[dict[str, Ticker]] = {}
+    _tickers: ClassVar[dict[str, Ticker]] = {}
     url_root = "https://www.alphavantage.co"
     api_key = settings.ALPHAVANTAGE_API_KEY
     url_get_list: str
     data_cols_final = ("datetime", "open", "high", "low", "close", "volume")
 
-    def _download_csv(self) -> csv_table:
-        r = requests.get(self.url_get_list)
+    @classmethod
+    def _get_ticker_by_symbol(cls, symbol: str) -> Ticker:
+        try:
+            return cls._tickers[symbol]
+        except KeyError as e:
+            raise MemoryObjectNotFoundError from e
+
+    @classmethod
+    def get_tickers(cls) -> dict[str, Ticker]:
+        if not cls._tickers:
+            raise MemoryObjectNotFoundError
+        return cls._tickers
+
+    async def download_raw_tickers(self) -> csv_table:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(self.url_get_list)
         if r.status_code != 200:
             raise ProviderAccessError
         tickers_bytes = r.content.decode("utf-8")
@@ -91,21 +119,20 @@ class ProviderAlphaVantage:
 
         return df_quotes
 
-    def get_tickers(self, force: bool | None = None) -> dict[str, Ticker]:
-        if not self.all_tickers or force:
+    def process_tickers(self, raw_tickers: csv_table) -> dict[str, Ticker]:
+        if not self._tickers:
             # Do not crash the app if the list of tickers is not available
             try:
-                csv_table = self._download_csv()
-                self.__class__.all_tickers = self._process_csv(csv_table)
+                self.__class__._tickers = self._process_csv(raw_tickers)
             except (ProviderAccessError, ValueError):
-                self.__class__.all_tickers = {}
-            if not self.all_tickers:
+                self.__class__._tickers = {}
+            if not self._tickers:
                 logger.error(
                     event=ProviderAccessError.msg,
                     cls=self.__class__.__name__,
-                    function="get_tickers",
+                    function="process_tickers",
                 )
-        return self.all_tickers
+        return self._tickers
 
     async def get_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         data = await self._download_data(ticker, timeframe)
@@ -121,7 +148,7 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
         )
 
     def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
-        all_tickers = {}
+        tickers = {}
         for symbol, name, exchange, ticker_type, *_ in csv_table:
             # Do not crash the app if the there is broken tickers in the csv
             try:
@@ -139,8 +166,8 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
                     record=(symbol, name, exchange, ticker_type),
                 )
             else:
-                all_tickers[ticker.symbol] = ticker
-        return all_tickers
+                tickers[ticker.symbol] = ticker
+        return tickers
 
     async def _download_data_intraday(
         self, ticker: Ticker, timeframe: SessionTimeframe
@@ -196,7 +223,7 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
         )
 
     def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
-        all_tickers = {}
+        _tickers = {}
         for currency_code, currency_name in csv_table:
             try:
                 ticker = Ticker(
@@ -213,8 +240,8 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
                     record=(currency_code, currency_name),
                 )
             else:
-                all_tickers[ticker.symbol] = ticker
-        return all_tickers
+                _tickers[ticker.symbol] = ticker
+        return _tickers
 
     async def _download_data_daily(self, ticker: Ticker) -> pd.DataFrame:
         try:

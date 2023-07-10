@@ -15,35 +15,41 @@ from tests.conftest import (
 
 
 class TestProviderAlphaVantage:
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize(
         "provider_cls",
         [ProviderAVStocksMockSuccess, ProviderAVCryptoMockSuccess],
     )
-    def test_get_list_success(self, provider_cls: type[Provider]) -> None:
+    async def test_get_list_success(self, provider_cls: type[Provider]) -> None:
         provider = provider_cls()
-        stocks = provider.get_tickers()
+        raw_tickers = await provider.download_raw_tickers()
+        stocks = provider.process_tickers(raw_tickers)
         assert len(stocks) > 0
         assert isinstance(list(stocks.values())[0], Ticker)
 
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize(
         "provider_cls",
         [ProviderAVStocksMockFailureBlank, ProviderAVCryptoMockFailureBlank],
     )
-    def test_get_list_failure_blank(self, provider_cls: type[Provider]) -> None:
+    async def test_get_list_failure_blank(self, provider_cls: type[Provider]) -> None:
         provider = provider_cls()
+        raw_tickers = await provider.download_raw_tickers()
         with structlog.testing.capture_logs() as logs:
-            provider.get_tickers()
+            provider.process_tickers(raw_tickers)
         assert len(logs) == 1
         assert logs[0]["event"] == ProviderAccessError.msg
 
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize(
         "provider_cls",
         [ProviderAVStocksMockFailureBroken, ProviderAVCryptoMockFailureBroken],
     )
-    def test_get_list_failure_broken(self, provider_cls: type[Provider]) -> None:
+    async def test_get_list_failure_broken(self, provider_cls: type[Provider]) -> None:
         provider = provider_cls()
+        raw_tickers = await provider.download_raw_tickers()
         with structlog.testing.capture_logs() as logs:
-            provider.get_tickers()
+            provider.process_tickers(raw_tickers)
         assert len(logs) == 1
         assert logs[0]["event"] == ProviderInvalidDataError.msg
 

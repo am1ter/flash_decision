@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
 from typing import Any
@@ -13,7 +13,7 @@ from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
 from app.system.exceptions import DbConnectionError, DbObjectNotFoundError
 
 
-class Repository(ABC):
+class Repository(metaclass=ABCMeta):
     """
     Abstract class for repositories - mediates between the domain and ORM.
     Repository is the place where domain models and ORM models work together.

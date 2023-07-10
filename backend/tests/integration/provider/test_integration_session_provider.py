@@ -21,10 +21,12 @@ def ticker_crypto() -> Ticker:
 
 
 class TestProviderAlphaVantageStocks:
-    def test_get_list(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_get_list(self) -> None:
         assert settings.ALPHAVANTAGE_API_KEY
         provider = ProviderAlphaVantageStocks()
-        tickers = provider.get_tickers()
+        raw_tickers = await provider.download_raw_tickers()
+        tickers = provider.process_tickers(raw_tickers)
         assert tickers
 
     @pytest.mark.asyncio()
@@ -45,10 +47,12 @@ class TestProviderAlphaVantageStocks:
 
 
 class TestProviderAlphaVantageCrypto:
-    def test_get_list(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_get_list(self) -> None:
         assert settings.ALPHAVANTAGE_API_KEY
         provider = ProviderAlphaVantageCrypto()
-        tickers = provider.get_tickers()
+        raw_tickers = await provider.download_raw_tickers()
+        tickers = provider.process_tickers(raw_tickers)
         assert tickers
 
     @pytest.mark.asyncio()

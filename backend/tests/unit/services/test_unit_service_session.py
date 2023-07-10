@@ -66,6 +66,7 @@ def service_session() -> ServiceSession:
     type(Bootstrap)._instances = {}
     Bootstrap(
         start_orm=False,
+        cache=None,  # type: ignore[arg-type]
         provider_stocks=ProviderAVStocksMockSuccess(),
         provider_crypto=ProviderAVCryptoMockSuccess(),
     )

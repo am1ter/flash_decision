@@ -58,7 +58,7 @@ def mock_ticker() -> Ticker:
 
 
 class ProviderAVStocksMockSuccess(ProviderAlphaVantageStocks):
-    def _download_csv(self) -> csv_table:
+    async def download_raw_tickers(self) -> csv_table:
         path = Path(__file__).parent / "mock_data" / "provider_av_stocks_mock_success_tickers.csv"
         with path.open() as file:
             csv_table = csv.reader(file.read().splitlines(), delimiter=",")
@@ -72,7 +72,7 @@ class ProviderAVStocksMockSuccess(ProviderAlphaVantageStocks):
 
 
 class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
-    def _download_csv(self) -> csv_table:
+    async def download_raw_tickers(self) -> csv_table:
         path = Path(__file__).parent / "mock_data" / "provider_av_crypto_mock_success_tickers.csv"
         with path.open() as file:
             csv_table = csv.reader(file.read().splitlines(), delimiter=",")
@@ -86,9 +86,9 @@ class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
 
 
 class ProviderAVStocksMockFailureBroken(ProviderAlphaVantageStocks):
-    all_tickers: ClassVar[dict[str, Ticker]] = {}
+    _tickers: ClassVar[dict[str, Ticker]] = {}
 
-    def _download_csv(self) -> csv_table:
+    async def download_raw_tickers(self) -> csv_table:
         return [
             ["", "", "NASDAQ", "Stock", "13.03.1986", "null", "Active"],
             ["AAPL", "Apple Inc", "NASDAQ", "Stock", "12.12.1980", "null", "Active"],
@@ -107,9 +107,9 @@ class ProviderAVStocksMockFailureBroken(ProviderAlphaVantageStocks):
 
 
 class ProviderAVCryptoMockFailureBroken(ProviderAlphaVantageCrypto):
-    all_tickers: ClassVar[dict[str, Ticker]] = {}
+    _tickers: ClassVar[dict[str, Ticker]] = {}
 
-    def _download_csv(self) -> csv_table:
+    async def download_raw_tickers(self) -> csv_table:
         return [["", "Bitcoin"], ["ETH", "Ethereum"]]
 
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
@@ -125,9 +125,9 @@ class ProviderAVCryptoMockFailureBroken(ProviderAlphaVantageCrypto):
 
 
 class ProviderAVStocksMockFailureBlank(ProviderAlphaVantageStocks):
-    all_tickers: ClassVar[dict[str, Ticker]] = {}
+    _tickers: ClassVar[dict[str, Ticker]] = {}
 
-    def _download_csv(self) -> csv_table:
+    async def download_raw_tickers(self) -> csv_table:
         return []
 
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
@@ -136,9 +136,9 @@ class ProviderAVStocksMockFailureBlank(ProviderAlphaVantageStocks):
 
 
 class ProviderAVCryptoMockFailureBlank(ProviderAlphaVantageCrypto):
-    all_tickers: ClassVar[dict[str, Ticker]] = {}
+    _tickers: ClassVar[dict[str, Ticker]] = {}
 
-    def _download_csv(self) -> csv_table:
+    async def download_raw_tickers(self) -> csv_table:
         return []
 
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:

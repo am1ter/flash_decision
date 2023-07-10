@@ -90,8 +90,23 @@ class ProviderRateLimitExceededError(BaseHTTPError):
 
 
 class UnsupportedModeError(BaseHTTPError):
-    msg = "Specified mode is not yet supported yet"
+    msg = "Specified mode is not yet supported yet."
     status_code = status.HTTP_501_NOT_IMPLEMENTED
+
+
+class MemoryObjectNotFoundError(BaseHTTPError):
+    msg = "This object could not be found in the memory."
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class CacheObjectNotFoundError(BaseHTTPError):
+    msg = "This object could not be found in the cache."
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class CacheConnectionError(BaseHTTPError):
+    msg = "The connection to the cache could not be established."
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 class ConfigHTTPHardcodedBackendUrlError(BaseValidationError):
