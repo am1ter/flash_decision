@@ -4,6 +4,7 @@ from functools import wraps
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
@@ -52,7 +53,7 @@ class RepositorySQLAlchemy(Repository):
         async def inner(*args, **kwargs) -> Any:
             try:
                 result = await func(*args, **kwargs)
-            except ConnectionRefusedError as e:
+            except (ConnectionRefusedError, InterfaceError) as e:
                 raise DbConnectionError from e
             return result
 

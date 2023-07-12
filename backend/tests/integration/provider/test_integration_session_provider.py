@@ -27,7 +27,7 @@ class TestProviderAlphaVantageStocks:
         provider = ProviderAlphaVantageStocks()
         raw_tickers = await provider.download_raw_tickers()
         tickers = provider.process_tickers(raw_tickers)
-        assert tickers
+        assert tickers, "Tickers are not loaded from provider"
 
     @pytest.mark.asyncio()
     async def test_get_data_intraday(self, ticker_stocks: Ticker) -> None:
@@ -53,7 +53,7 @@ class TestProviderAlphaVantageCrypto:
         provider = ProviderAlphaVantageCrypto()
         raw_tickers = await provider.download_raw_tickers()
         tickers = provider.process_tickers(raw_tickers)
-        assert tickers
+        assert tickers, "Tickers are not loaded from provider"
 
     @pytest.mark.asyncio()
     async def test_get_data_intraday(self, ticker_crypto: Ticker) -> None:

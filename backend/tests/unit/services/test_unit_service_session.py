@@ -1,4 +1,3 @@
-from asyncio import TaskGroup
 from datetime import datetime
 from random import randint
 from typing import Self
@@ -44,14 +43,11 @@ class RepositorySessionFake(Repository):
 class UnitOfWorkSessionFake(UnitOfWork):
     def __init__(self) -> None:
         self.repository = RepositorySessionFake()
-        self.task_group = TaskGroup()
 
     async def __aenter__(self) -> Self:
-        await self.task_group.__aenter__()
         return await super().__aenter__()
 
     async def __aexit__(self, *args) -> None:
-        await self.task_group.__aexit__(*args)
         await super().__aexit__(*args)
 
     async def commit(self) -> None:
@@ -91,5 +87,5 @@ class TestServiceSession:
     ) -> None:
         params = req_session_params_custom if mode == SessionMode.custom else None
         session = await service_session.start_session(mode, params, user_domain)
-        assert not session.time_series.df.empty
+        assert not session.time_series.df_quotes.empty
         assert session

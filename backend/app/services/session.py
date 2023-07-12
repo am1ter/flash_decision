@@ -1,6 +1,8 @@
 import contextlib
+from asyncio import TaskGroup
 from typing import Annotated, assert_never
 
+import pandas as pd
 from attr import define
 from fastapi import Depends
 
@@ -13,6 +15,7 @@ from app.domain.session import (
     DomainSessionCrypto,
     DomainSessionCustom,
     SessionOptions,
+    SessionTimeSeries,
 )
 from app.domain.session_provider import Provider, Ticker, csv_table
 from app.domain.user import DomainUser
@@ -31,7 +34,7 @@ from app.system.logger import create_logger
 logger = create_logger("backend.service.session")
 
 # Internal dependencies
-uow_session = UnitOfWorkSQLAlchemy(repository_type=RepositorySessionSQL, create_task_group=True)
+uow_session = UnitOfWorkSQLAlchemy(repository_type=RepositorySessionSQL)
 UowSessionDep = Annotated[UnitOfWorkSQLAlchemy, Depends(uow_session)]
 
 
@@ -61,8 +64,7 @@ class ServiceSession:
         self.provider_crypto = Bootstrap().provider_crypto
 
     async def collect_session_options(self) -> SessionOptions:
-        all_tickers = await CommandLoadTickers(self).execute()
-        options = SessionOptions(all_ticker=all_tickers)
+        options = await CommandLoadTickers(self).execute()
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True)
         return options
 
@@ -71,7 +73,12 @@ class ServiceSession:
     ) -> DomainSession:
         await CommandValidateTickers(self).execute()
         session = CommandCreateSession(self, mode, session_params, user).execute()
-        await CommandStartSession(self, session).execute()
+        try:
+            async with TaskGroup() as task_group:
+                task_group.create_task(CommandLoadQuotes(self, session).execute())
+                task_group.create_task(CommandSaveSessionToDb(self, session).execute())
+        except ExceptionGroup as eg:
+            raise eg.exceptions[0] from eg
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
         return session
 
@@ -80,9 +87,11 @@ class ServiceSession:
 class CommandLoadTickers:
     service: ServiceSession
 
-    async def execute(self) -> list[Ticker]:
+    async def execute(self) -> SessionOptions:
         tickers_col_proc = await self._load_processed_tickers()
-        return list(tickers_col_proc.stocks.values()) + list(tickers_col_proc.crypto.values())
+        all_ticker = list(tickers_col_proc.stocks.values()) + list(tickers_col_proc.crypto.values())
+        options = SessionOptions(all_ticker=all_ticker)
+        return options
 
     @staticmethod
     def _cache_key_by_provider(provider: Provider) -> str:
@@ -194,16 +203,47 @@ class CommandCreateSession:
 
 
 @define
-class CommandStartSession:
+class CommandLoadQuotes:
     service: ServiceSession
     session: DomainSession
 
     async def execute(self) -> DomainSession:
         try:
-            async with self.service.uow:
-                self.service.uow.task_group.create_task(self.session.start())
-                self.service.uow.repository.add(self.session)
-                self.service.uow.task_group.create_task(self.service.uow.commit())
-        except ExceptionGroup as eg:
-            raise eg.exceptions[0] from eg
+            df_quotes = await self._get_from_cache()
+        except (CacheObjectNotFoundError, CacheConnectionError):
+            df_quotes = await self._get_from_provider()
+        time_series = SessionTimeSeries.create(session=self.session, df_quotes=df_quotes)
+        self.session.set_time_series(time_series)
         return self.session
+
+    @property
+    def _cache_key(self) -> str:
+        prefix = SessionTimeSeries.__name__
+        return f"{prefix}:{self.session.ticker.symbol}:{self.session.timeframe.value}:quotes"
+
+    async def _get_from_cache(self) -> pd.DataFrame:
+        if not self.service.cache:
+            raise CacheObjectNotFoundError
+        raw_data = await self.service.cache.get(self._cache_key)
+        df_quotes = pd.read_json(raw_data)
+        return df_quotes
+
+    async def _get_from_provider(self) -> pd.DataFrame:
+        df_quotes = await self.session.provider.get_data(
+            self.session.ticker, self.session.timeframe
+        )
+        if self.service.cache:
+            with contextlib.suppress(CacheConnectionError):
+                await self.service.cache.set(self._cache_key, df_quotes.to_json())
+        return df_quotes
+
+
+@define
+class CommandSaveSessionToDb:
+    service: ServiceSession
+    session: DomainSession
+
+    async def execute(self) -> None:
+        async with self.service.uow:
+            self.service.uow.repository.add(self.session)
+            await self.service.uow.commit()

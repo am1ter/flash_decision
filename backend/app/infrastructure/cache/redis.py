@@ -65,6 +65,7 @@ class CacheRedis(Cache):
         async with self.redis.pipeline() as pipe:
             await pipe.json().set(key, self.__class__.json_path, value)
             await pipe.expire(key, settings.CACHE_TTL)
+            await pipe.execute()
         await logger.ainfo("Cache updated", keys=[key])
 
     @catch_cache_errors

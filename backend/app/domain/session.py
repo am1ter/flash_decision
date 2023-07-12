@@ -38,7 +38,7 @@ class SessionTimeSeries:
     """Quotes contains the data (df and metadata) used for creating charts of sessions"""
 
     session: DomainSession
-    df: pd.DataFrame
+    df_quotes: pd.DataFrame
     trading_type: SessionTradingType
     first_bar_datetime: Timestamp = field()
     last_bar_datetime: Timestamp = field()
@@ -72,15 +72,14 @@ class SessionTimeSeries:
         assert_never(diff)
 
     @classmethod
-    async def create(cls, session: DomainSession) -> SessionTimeSeries:
-        df_quotes = await session.provider.get_data(session.ticker, session.timeframe)
+    def create(cls, session: DomainSession, df_quotes: pd.DataFrame) -> SessionTimeSeries:
         first_bar_datetime = df_quotes["datetime"].iloc[0]
         last_bar_datetime = df_quotes["datetime"].iloc[-1]
         trading_type = cls._determine_trading_type(first_bar_datetime, last_bar_datetime)
         total_session_bars = len(df_quotes)
         session_time_series = cls(
             session=session,
-            df=df_quotes,
+            df_quotes=df_quotes,
             trading_type=trading_type,
             first_bar_datetime=first_bar_datetime,
             last_bar_datetime=last_bar_datetime,
@@ -131,9 +130,8 @@ class DomainSession(Agregate, metaclass=ABCMeta):
         self.user = user
         return self
 
-    async def start(self) -> None:
-        self.time_series = await SessionTimeSeries.create(session=self)
-        # TODO: Create iterations
+    def set_time_series(self, time_series: SessionTimeSeries) -> None:
+        self.time_series = time_series
 
 
 @define(kw_only=True, slots=False, hash=True)
@@ -147,11 +145,11 @@ class DomainSessionClassic(DomainSession):
             provider=provider,
             ticker=cls._select_random_ticker(provider),
             timeframe=SessionTimeframe.minutes60,
-            barsnumber=SessionBarsnumber.bars100,
+            barsnumber=SessionBarsnumber.bars50,
             timelimit=SessionTimelimit.seconds60,
-            iterations=SessionIterations.iterations10,
+            iterations=SessionIterations.iterations5,
             slippage=SessionSlippage.average,
-            fixingbar=SessionFixingbar.bar50,
+            fixingbar=SessionFixingbar.bar20,
             status=SessionStatus.created,
         )
         return session
@@ -168,7 +166,7 @@ class DomainSessionBlitz(DomainSession):
             provider=provider,
             ticker=cls._select_random_ticker(provider),
             timeframe=SessionTimeframe.minutes5,
-            barsnumber=SessionBarsnumber.bars50,
+            barsnumber=SessionBarsnumber.bars30,
             timelimit=SessionTimelimit.seconds5,
             iterations=SessionIterations.iterations10,
             slippage=SessionSlippage.low,
