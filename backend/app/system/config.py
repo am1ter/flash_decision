@@ -152,7 +152,8 @@ settings_cache = SettingsCache()
 
 
 class SettingsProvider(BaseSettingsCustom):
-    ALPHAVANTAGE_API_KEY = "my_alpha_avantage_api_key"
+    ALPHAVANTAGE_API_KEY_STOCKS = "my_alpha_avantage_api_key"
+    ALPHAVANTAGE_API_KEY_CRYPTO = "my_alpha_avantage_api_key"
     CRYPTO_PRICE_CURRENCY = "USD"  # Source: https://www.alphavantage.co/physical_currency_list/
     RANDOM_TICKERS_STOCKS = "AMZN,META,GOOGL,AAPL,AMD,XOM,GS,DAL,NKE,NFLX,INTC,TSLA,MSFT,PEP,DIS"
     RANDOM_TICKERS_CRYPTO = "BTC,BNB,SOL,XRP,ADA,DOGE,LTC"

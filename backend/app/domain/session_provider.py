@@ -66,7 +66,7 @@ class ProviderAlphaVantage:
 
     _tickers: ClassVar[dict[str, Ticker]] = {}
     url_root = "https://www.alphavantage.co"
-    api_key = settings.ALPHAVANTAGE_API_KEY
+    api_key: str
     url_get_list: str
     data_cols_final = ("datetime", "open", "high", "low", "close", "volume")
 
@@ -141,10 +141,12 @@ class ProviderAlphaVantage:
 
 
 class ProviderAlphaVantageStocks(ProviderAlphaVantage):
+    api_key = settings.ALPHAVANTAGE_API_KEY_STOCKS
+
     def __init__(self) -> None:
         self.url_get_list = f"{self.url_root}/query?function=LISTING_STATUS&apikey={self.api_key}"
         self.exporter = TimeSeries(
-            key=settings.ALPHAVANTAGE_API_KEY, output_format="pandas", indexing_type="integer"
+            key=self.__class__.api_key, output_format="pandas", indexing_type="integer"
         )
 
     def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
@@ -216,10 +218,12 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
 
 
 class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
+    api_key = settings.ALPHAVANTAGE_API_KEY_CRYPTO
+
     def __init__(self) -> None:
         self.url_get_list = f"{self.url_root}/digital_currency_list/"
         self.exporter = CryptoCurrencies(
-            key=settings.ALPHAVANTAGE_API_KEY, output_format="pandas", indexing_type="integer"
+            key=self.__class__.api_key, output_format="pandas", indexing_type="integer"
         )
 
     def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
