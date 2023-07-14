@@ -4,6 +4,7 @@ import structlog
 from app.domain.session_provider import Provider, Ticker
 from app.system.constants import SessionTimeframe
 from app.system.exceptions import ProviderAccessError, ProviderInvalidDataError
+from app.system.logger import configure_logger
 from tests.conftest import (
     ProviderAVCryptoMockFailureBlank,
     ProviderAVCryptoMockFailureBroken,
@@ -12,6 +13,8 @@ from tests.conftest import (
     ProviderAVStocksMockFailureBroken,
     ProviderAVStocksMockSuccess,
 )
+
+configure_logger()
 
 
 class TestProviderAlphaVantage:
@@ -38,7 +41,7 @@ class TestProviderAlphaVantage:
         with structlog.testing.capture_logs() as logs:
             provider.process_tickers(raw_tickers)
         assert len(logs) == 1
-        assert logs[0]["event"] == ProviderAccessError.msg
+        assert logs[0]["error"] == ProviderAccessError.msg
 
     @pytest.mark.asyncio()
     @pytest.mark.parametrize(
@@ -51,7 +54,7 @@ class TestProviderAlphaVantage:
         with structlog.testing.capture_logs() as logs:
             provider.process_tickers(raw_tickers)
         assert len(logs) == 1
-        assert logs[0]["event"] == ProviderInvalidDataError.msg
+        assert logs[0]["error"] == ProviderInvalidDataError.msg
 
     @pytest.mark.asyncio()
     @pytest.mark.parametrize(

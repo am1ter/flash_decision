@@ -4,6 +4,7 @@ from collections.abc import Callable
 from contextlib import _AsyncGeneratorContextManager, suppress
 from typing import TYPE_CHECKING
 
+import structlog
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.orm import sessionmaker
@@ -17,7 +18,7 @@ from app.infrastructure.cache.redis import CacheRedis
 from app.infrastructure.db import AsyncSessionFactory, get_connection
 from app.infrastructure.orm.mapper import init_orm_mappers
 from app.system.config import settings
-from app.system.logger import create_logger
+from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 
 
 # Create logger
-logger = create_logger("backend.bootstrap")
+logger = structlog.get_logger()
 
 
 AsyncDbConnFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection]]
@@ -53,6 +54,9 @@ class Bootstrap(metaclass=SingletonMeta):
         provider_stocks: Provider = ProviderAlphaVantageStocks(),
         provider_crypto: Provider = ProviderAlphaVantageCrypto(),
     ) -> None:
+        # Configure logger
+        configure_logger()
+
         # Set db-related factories and map domain models with ORM
         if start_orm:
             with suppress(ArgumentError):

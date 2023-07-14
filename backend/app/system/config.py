@@ -114,14 +114,7 @@ class SettingsDb(BaseSettingsCustom):
 
     @cached_property
     def DB_URL_WO_PASS(self) -> str:  # noqa: N802
-        return PostgresDsn.build(
-            scheme=self.DB_ENGINE_SCHEMA,
-            host=self.DB_HOST,
-            port=str(self.DB_PORT),
-            user=self.DB_USER,
-            password="*****",  # noqa: S106
-            path=f"/{self.DB_NAME}",
-        )
+        return self.DB_URL.replace(self.DB_PASS, "***")
 
 
 settings_db = SettingsDb()

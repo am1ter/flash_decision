@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -10,11 +11,11 @@ from starlette import status
 from app.api.endpoints.session import router as router_session
 from app.api.endpoints.support import router as router_support
 from app.api.endpoints.user import router as router_user
+from app.system.config import settings
 from app.system.exceptions import BaseHTTPError
-from app.system.logger import create_logger, settings
 
 # Create logger
-logger = create_logger("backend.fastapi")
+logger = structlog.get_logger()
 
 
 @asynccontextmanager

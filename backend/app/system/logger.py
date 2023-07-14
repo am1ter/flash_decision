@@ -2,16 +2,19 @@ import logging
 import re
 import sys
 import traceback
+from contextlib import suppress
 from copy import deepcopy
 from datetime import datetime
+from io import StringIO
 from logging import LogRecord
 from pathlib import Path
 from site import getsitepackages
 from types import TracebackType
-from typing import Any, Literal
+from typing import Any, Literal, TextIO, cast
 
 import attrs
 import structlog
+from pythonjsonlogger.jsonlogger import JsonFormatter
 from rich import print as rprint
 from rich.traceback import Traceback
 from structlog.typing import EventDict
@@ -29,8 +32,31 @@ def rich_excepthook(
     # To use strings as suppress arguments instead of libs itself, must be used paths to modules
     path_to_libs = getsitepackages()[0]
     suppress = [str(Path(path_to_libs) / Path(s)) for s in settings.SUPPRESS_TRACEBACK_FROM_LIBS]
-    rich_tb = Traceback.from_exception(type_, value, traceback, show_locals=True, suppress=suppress)
+    try:
+        rich_tb = Traceback.from_exception(
+            type_, value, traceback, show_locals=True, suppress=suppress
+        )
+    except Exception:  # noqa: BLE001
+        rich_tb = Traceback.from_exception(type_, value, traceback)
     rprint(rich_tb)
+
+
+class CustomJsonFormatter(JsonFormatter):
+    """Custom formatter for production mode for third-party (non-sturctlog) messages"""
+
+    def add_fields(
+        self, log_record: dict[str, Any], record: LogRecord, message_dict: dict[str, Any]
+    ) -> None:
+        super().add_fields(log_record, record, message_dict)
+        levelname = log_record.get("levelname")
+        assert isinstance(levelname, str)
+        if not log_record.get("timestamp"):
+            log_record["timestamp"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        if not log_record.get("levelnumber"):
+            log_record["levelnumber"] = logging._nameToLevel[levelname]
+            with suppress(KeyError):
+                del log_record["level_number"]
+        log_record["levelname"] = levelname.lower()
 
 
 class UvicornCustomDefaultFormatter(DefaultFormatter):
@@ -57,7 +83,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         self.dev_mode = dev_mode
 
         # Custom logger could be used only for formatting exception
-        self.logger = custom_logger if custom_logger else create_logger()
+        self.logger = custom_logger if custom_logger else structlog.get_logger()
 
     def formatException(  # type: ignore[override]  # noqa: N802
         self, ei: tuple[type[BaseException], BaseException, TracebackType | None]
@@ -86,8 +112,8 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
             record_new_as_dict = {
                 "logger": record.name,
                 "event": record.message,
-                "level": record.levelname.lower(),
-                "level_number": record.levelno,
+                "levelname": record.levelname.lower(),
+                "levelnumber": record.levelno,
                 "timestamp": record.asctime,
             }
             return str(record_new_as_dict)
@@ -133,8 +159,8 @@ class UvicornCustomFormatterAccess(AccessFormatter):
             record_new_as_dict = {
                 "logger": record.name,
                 "event": record.message,
-                "level": record.levelname.lower(),
-                "level_number": record.levelno,
+                "levelname": record.levelname.lower(),
+                "levelnumber": record.levelno,
                 "timestamp": record.asctime,
                 "client_addr": access_args[0],
                 "method": access_args[1],
@@ -148,7 +174,9 @@ class UvicornCustomFormatterAccess(AccessFormatter):
 class CustomTimeStamper(structlog.processors.TimeStamper):
     """Reformat logs from structlog to contain miliseconds (3 digit fraction)"""
 
-    def __init__(self, fmt: str | None, *, key: str = "timestamp", utc: bool = False) -> None:
+    def __init__(
+        self, *, fmt: str | None = "%Y-%m-%d %H:%M:%S.%f", key: str = "timestamp", utc: bool = False
+    ) -> None:
         super().__init__(fmt=fmt, key=key, utc=utc)
 
     def __call__(
@@ -166,20 +194,20 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
     Async exceptions is not supported by Uvicorn logging.
     """
 
-    dev_mode: bool | None = False
+    log_text_io: StringIO
 
-    async def ainfo(self, event: str, *args: Any, **kwargs: Any) -> Any:
-        """Custom wrapper for logger method (async)"""
-
+    def _process_kwargs(self, kwargs: Any) -> dict[str, Any]:
         # Show class name
         if kwargs.get("cls") and isinstance(kwargs.get("cls"), type):
             kwargs["cls"] = kwargs["cls"].__name__
 
-        # Convert attrs object to dicts for production mode logs
-        if not self.dev_mode and not settings.DEV_MODE:  # type: ignore[attr-defined]
+        # Convert attrs object to dicts for production mode logs (exclude kwargs with disabled repr)
+        if not settings.DEV_MODE:
             for kw_key, kw_value in kwargs.items():
-                if attrs.has(type(kw_value)):
-                    kwargs[kw_key] = attrs.asdict(kw_value, recurse=False)
+                if not attrs.has(type(kw_value)):
+                    continue
+                val = attrs.asdict(kw_value, recurse=False, filter=lambda a, _: cast(bool, a.repr))
+                kwargs[kw_key] = val
 
         # Show the name of the function, where info() called
         if kwargs.get("show_func_name", False):
@@ -187,60 +215,40 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
             callstack_depth = 3  # Function where logger was called is on the 3 level of the stack
             kwargs["function"] = traceback.extract_stack(None, callstack_depth)[0].name
 
-        # Output to logger using async structlog method
-        await super().ainfo(event, *args, **kwargs)
+        return kwargs
+
+    async def ainfo(self, event: str, *args: Any, **kwargs: Any) -> Any:
+        """Custom wrapper for logger method (async)"""
+        kwargs_processed = self._process_kwargs(kwargs)
+        await super().ainfo(event, *args, **kwargs_processed)
+
+    def info_finish(self, *args, **kwargs) -> None:
+        """To log function/method results"""
+        event = "Operation completed"
+        kwargs_processed = self._process_kwargs(kwargs)
+        super().info(event, *args, **kwargs_processed)
 
     async def ainfo_finish(self, *args, **kwargs) -> None:
         """To log function/method results"""
         event = "Operation completed"
-        await self.ainfo(event, *args, **kwargs)
+        kwargs_processed = self._process_kwargs(kwargs)
+        await super().ainfo(event, *args, **kwargs_processed)
+
+    def error_finish(self, *args, **kwargs) -> None:
+        """To log function/method results"""
+        event = "Operation completed with errors"
+        kwargs_processed = self._process_kwargs(kwargs)
+        super().error(event, *args, **kwargs_processed)
+
+    async def aerror_finish(self, *args, **kwargs) -> None:
+        """To log function/method results"""
+        event = "Operation completed with errors"
+        kwargs_processed = self._process_kwargs(kwargs)
+        await super().aerror(event, *args, **kwargs_processed)
 
     def exception(self, event: str | None = None, *args: Any, **kw: Any) -> Any:
         """Use parent logger of wrapped custom logger (sync)"""
         super().exception(event, *args, **kw)
-
-
-def create_logger(
-    logger_name: str | None = None, dev_mode: bool | None = None
-) -> CustomStructlogLogger:
-    """Create structlog logger"""
-
-    # Set log level and remove extra data from output using format argument
-    logging_level = logging._nameToLevel[settings.LOG_LEVEL]
-    logging.basicConfig(level=logging_level, format="%(message)s", stream=sys.stdout)
-
-    # Set dev_mode
-    CustomStructlogLogger.dev_mode = dev_mode
-
-    # Configure structlog
-    processors_shared: list = [
-        structlog.contextvars.merge_contextvars,
-        structlog.processors.add_log_level,
-        structlog.processors.StackInfoRenderer(),
-        structlog.dev.set_exc_info,
-        CustomTimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f", utc=False),
-    ]
-    processors_mode: list[Any]
-    if dev_mode or settings.DEV_MODE:
-        processors_mode = [
-            structlog.dev.ConsoleRenderer(),
-        ]
-    else:
-        # Setup processors
-        processors_mode = [
-            structlog.stdlib.add_logger_name,
-            structlog.stdlib.add_log_level_number,
-            structlog.processors.dict_tracebacks,
-            structlog.processors.JSONRenderer(),
-        ]
-    structlog.configure(
-        processors=processors_shared + processors_mode,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        wrapper_class=CustomStructlogLogger,
-        cache_logger_on_first_use=True,
-    )
-    logger = structlog.get_logger(logger_name) if logger_name else structlog.get_logger()
-    return logger
 
 
 def update_uvicorn_log_config() -> dict[str, Any]:
@@ -262,5 +270,52 @@ def update_uvicorn_log_config() -> dict[str, Any]:
     return uvicorn_log_config
 
 
-uvicorn_log_config = update_uvicorn_log_config()
-sys.excepthook = rich_excepthook
+def configure_logger(dev_mode: bool | None = None, stream: StringIO | TextIO = sys.stdout) -> None:
+    """Set global log level and configure structlog for dev and prod mode"""
+
+    processors_shared: list = [
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.StackInfoRenderer(),
+        structlog.dev.set_exc_info,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.add_logger_name,
+        CustomTimeStamper(),
+    ]
+    processors_dev_structlog_only: list = [structlog.stdlib.ProcessorFormatter.wrap_for_formatter]
+    processors_dev_third_party: list = [
+        structlog.stdlib.ProcessorFormatter.remove_processors_meta,  # Remove meta info
+        structlog.dev.ConsoleRenderer(),
+    ]
+    processors_prod: list = [
+        structlog.processors.add_log_level,
+        CustomTimeStamper(),
+        structlog.stdlib.add_log_level_number,
+        structlog.processors.dict_tracebacks,
+        structlog.stdlib.render_to_log_kwargs,
+    ]
+
+    logging_level = logging._nameToLevel[settings.LOG_LEVEL]
+    logging.basicConfig(level=logging_level, format="%(message)s")
+    root_logger = logging.getLogger()
+    root_logger.handlers = []  # Remove default root logger handler
+    root_logger.setLevel(logging_level)
+    handler = logging.StreamHandler(stream=stream)
+    formatter_mode: logging.Formatter
+    if settings.DEV_MODE or dev_mode:
+        processors_mode = processors_dev_structlog_only
+        formatter_mode = structlog.stdlib.ProcessorFormatter(
+            foreign_pre_chain=processors_shared,  # For third-party messages (non-structlog)
+            processors=processors_dev_third_party,  # For all messages after the pre_chain is done
+        )
+    else:
+        processors_mode = processors_prod
+        formatter_mode = CustomJsonFormatter(fmt="%(timestamp)s %(levelname)s %(name)s %(message)s")
+    handler.setFormatter(formatter_mode)
+    root_logger.addHandler(handler)
+    structlog.configure(
+        processors=processors_shared + processors_mode,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=CustomStructlogLogger,
+        cache_logger_on_first_use=True,
+    )
+    sys.excepthook = rich_excepthook

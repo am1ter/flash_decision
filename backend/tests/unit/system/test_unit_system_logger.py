@@ -1,7 +1,6 @@
 import contextlib
 import io
 import json
-import logging
 import re
 from collections.abc import Callable
 from logging import LogRecord
@@ -14,18 +13,26 @@ from app.system.logger import (
     CustomStructlogLogger,
     UvicornCustomDefaultFormatter,
     UvicornCustomFormatterAccess,
-    create_logger,
+    configure_logger,
 )
 
 
 @pytest.fixture()
-def logger_prod() -> CustomStructlogLogger:
-    return create_logger(dev_mode=False)
+def logger_dev() -> CustomStructlogLogger:
+    log_text_io = io.StringIO()
+    configure_logger(dev_mode=True, stream=log_text_io)
+    logger = structlog.get_logger()
+    logger.log_text_io = log_text_io
+    return logger
 
 
 @pytest.fixture()
-def logger_dev() -> CustomStructlogLogger:
-    return create_logger(dev_mode=True)
+def logger_prod() -> CustomStructlogLogger:
+    log_text_io = io.StringIO()
+    configure_logger(dev_mode=False, stream=log_text_io)
+    logger = structlog.get_logger()
+    logger.log_text_io = log_text_io
+    return logger
 
 
 @pytest.fixture()
@@ -109,30 +116,23 @@ class TestLoggerStandartCases:
         log_text_str_clean = ansi_escape.sub("", log_msg)
         return log_text_str_clean
 
-    def test_logs_app_dev(
-        self, caplog: pytest.LogCaptureFixture, logger_dev: CustomStructlogLogger
-    ) -> None:
+    def test_logs_app_dev(self, logger_dev: CustomStructlogLogger) -> None:
         """Test App pretty logs for dev env"""
-
-        caplog.set_level(logging.INFO)
         logger_dev.info("test_logs", custom="custom")
 
         # Verify
-        expected_words = ["[info", "test_logs", "custom=custom"]
+        expected_words = ["[1minfo", "test_logs", "[36mcustom"]
         for word in expected_words:
-            assert word in caplog.text
+            assert word in logger_dev.log_text_io.getvalue()
 
-    def test_logs_app_prod(
-        self, caplog: pytest.LogCaptureFixture, logger_prod: CustomStructlogLogger
-    ) -> None:
+    def test_logs_app_prod(self, logger_prod: CustomStructlogLogger) -> None:
         """Test App structured logs for prod env"""
 
-        caplog.set_level(logging.INFO)
         logger_prod.info("test_logs", custom="custom")
-        log_test_dict = json.loads(caplog.messages[0])
+        log_test_dict = json.loads(logger_prod.log_text_io.getvalue())
 
         # Verify
-        expected = {"level": "info", "event": "test_logs", "custom": "custom"}
+        expected = {"level": "info", "message": "test_logs", "custom": "custom"}
         assert log_test_dict == log_test_dict | expected
 
     def test_logs_uvicorn_default_dev(
@@ -172,8 +172,8 @@ class TestLoggerStandartCases:
         log_msg_fmt_dict = json.loads(log_msg_fmt.replace("'", '"'))
         expected = {
             "event": log_msg,
-            "level": "info",
-            "level_number": 20,
+            "levelname": "info",
+            "levelnumber": 20,
             "timestamp": "2000-01-01 00:00:00,000",
         }
         assert log_msg_fmt_dict == log_msg_fmt_dict | expected
@@ -200,8 +200,8 @@ class TestLoggerStandartCases:
         log_msg_fmt_dict = json.loads(log_msg_fmt.replace("'", '"').replace("\\", "\\\\"))
         expected = {
             "logger": "uvicorn.default",
-            "level": "info",
-            "level_number": 20,
+            "levelname": "info",
+            "levelnumber": 20,
             "timestamp": "2000-01-01 00:00:00,000",
             "client_addr": "127.0.0.1:43136",
             "method": "GET",
@@ -211,9 +211,7 @@ class TestLoggerStandartCases:
         }
         assert log_msg_fmt_dict == log_msg_fmt_dict | expected
 
-    def test_exceptions_basic_dev(
-        self, caplog: pytest.LogCaptureFixture, logger_dev: CustomStructlogLogger
-    ) -> None:
+    def test_exceptions_basic_dev(self, logger_dev: CustomStructlogLogger) -> None:
         """Test that app use `rich` to format exception"""
 
         # Trigger exception
@@ -229,11 +227,9 @@ class TestLoggerStandartCases:
             "\x1b[",
         ]
         for word in expected_words:
-            assert word in caplog.messages[0]
+            assert word in logger_dev.log_text_io.getvalue()
 
-    def test_exceptions_basic_prod(
-        self, caplog: pytest.LogCaptureFixture, logger_prod: CustomStructlogLogger
-    ) -> None:
+    def test_exceptions_basic_prod(self, logger_prod: CustomStructlogLogger) -> None:
         """Test that app format exceptions as jsons"""
 
         # Trigger exception
@@ -244,11 +240,12 @@ class TestLoggerStandartCases:
 
         # Verify
         expected = {
-            "event": "division by zero",
-            "level": "error",
-            "level_number": 40,
+            "levelname": "error",
+            "levelnumber": 40,
         }
-        log_msg_dict = json.loads(caplog.messages[0])
+        log_msg_dict = json.loads(logger_prod.log_text_io.getvalue())
+        assert "exception" in log_msg_dict
+        assert log_msg_dict["exception"][0]["exc_type"] == ZeroDivisionError.__name__
         assert log_msg_dict == log_msg_dict | expected
 
     def test_exceptions_uvicorn_dev(self, mock_log_record_uvicorn_exception: LogRecord) -> None:
@@ -276,8 +273,8 @@ class TestLoggerStandartCases:
         # Verify
         expected = {
             "event": "division by zero",
-            "level": "error",
-            "level_number": 40,
+            "levelname": "error",
+            "levelnumber": 40,
         }
         assert log_text_dict == log_text_dict | expected
 
@@ -317,18 +314,8 @@ class TestLoggerCustomCases:
         assert logs[0] == logs[0] | excepted
 
     @pytest.mark.asyncio()
-    async def test_info_finish_domain_obj_dev(self, logger_dev: CustomStructlogLogger) -> None:
+    async def test_info_finish_domain_obj(self, logger_prod: CustomStructlogLogger) -> None:
         """Test attribute `domain_obj` inside custom method info_finish() in dev mode"""
-        domain_obj = FakeDomainClass(x="test")  # type: ignore[call-arg]
-        with structlog.testing.capture_logs() as logs:
-            await logger_dev.ainfo_finish(domain_obj=domain_obj)
-        excepted = {"domain_obj": domain_obj}
-        assert logs[0] == logs[0] | excepted
-
-    @pytest.mark.asyncio()
-    async def test_info_finish_domain_obj_prod(self, logger_prod: CustomStructlogLogger) -> None:
-        """Test attribute `domain_obj` inside custom method info_finish() in prod mode"""
-        logger_prod = create_logger(dev_mode=False)
         domain_obj = FakeDomainClass(x="test")  # type: ignore[call-arg]
         with structlog.testing.capture_logs() as logs:
             await logger_prod.ainfo_finish(domain_obj=domain_obj)

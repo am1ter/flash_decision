@@ -1,9 +1,9 @@
 import csv
-import logging
 from typing import ClassVar, Protocol, TypeAlias
 
 import httpx
 import pandas as pd
+import structlog
 from alpha_vantage.async_support.cryptocurrencies import CryptoCurrencies
 from alpha_vantage.async_support.timeseries import TimeSeries
 from attrs import define, field, validators
@@ -18,11 +18,9 @@ from app.system.exceptions import (
     ProviderRateLimitExceededError,
     UnsupportedModeError,
 )
-from app.system.logger import create_logger
 
 # Create logger
-logger = create_logger("backend.domain.session_provider")
-logging.getLogger("httpx").setLevel("CRITICAL")
+logger = structlog.get_logger()
 
 csv_table: TypeAlias = list[list[str]]
 
@@ -73,6 +71,9 @@ class ProviderAlphaVantage:
     url_get_list: str
     url_healthcheck = f"{url_root}/query?function=MARKET_STATUS&apikey={api_key}"
     data_cols_final = ("datetime", "open", "high", "low", "close", "volume")
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>"
 
     @classmethod
     def _get_ticker_by_symbol(cls, symbol: str) -> Ticker:
@@ -131,10 +132,8 @@ class ProviderAlphaVantage:
             except (ProviderAccessError, ValueError):
                 self.__class__._tickers = {}
             if not self._tickers:
-                logger.error(
-                    event=ProviderAccessError.msg,
-                    cls=self.__class__.__name__,
-                    function="process_tickers",
+                logger.error_finish(
+                    cls=self.__class__, show_func_name=True, error=ProviderAccessError.msg
                 )
         return self._tickers
 
@@ -171,10 +170,10 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
                     name=name,
                 )
             except ValueError:
-                logger.error(  # noqa: TRY400
-                    event=ProviderInvalidDataError.msg,
-                    cls=self.__class__.__name__,
-                    function="_process_csv",
+                logger.error_finish(
+                    cls=self.__class__,
+                    show_func_name=True,
+                    error=ProviderInvalidDataError.msg,
                     record=(symbol, name, exchange, ticker_type),
                 )
             else:
@@ -247,10 +246,10 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
                     name=currency_name,
                 )
             except ValueError:
-                logger.error(  # noqa: TRY400
-                    event=ProviderInvalidDataError.msg,
-                    cls=self.__class__.__name__,
-                    function="_process_csv",
+                logger.error_finish(
+                    cls=self.__class__,
+                    show_func_name=True,
+                    error=ProviderInvalidDataError.msg,
                     record=(currency_code, currency_name),
                 )
             else:

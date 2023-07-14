@@ -3,6 +3,7 @@ from asyncio import TaskGroup
 from typing import Annotated, assert_never
 
 import pandas as pd
+import structlog
 from attr import define
 from fastapi import Depends
 
@@ -28,10 +29,9 @@ from app.system.exceptions import (
     CacheObjectNotFoundError,
     MemoryObjectNotFoundError,
 )
-from app.system.logger import create_logger
 
 # Create logger
-logger = create_logger("backend.service.session")
+logger = structlog.get_logger()
 
 # Internal dependencies
 uow_session = UnitOfWorkSQLAlchemy(repository_type=RepositorySessionSQL)

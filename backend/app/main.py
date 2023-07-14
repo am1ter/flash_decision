@@ -1,7 +1,7 @@
 import uvicorn
 
 from app.system.config import settings
-from app.system.logger import uvicorn_log_config
+from app.system.logger import update_uvicorn_log_config
 
 
 def run() -> None:
@@ -10,7 +10,7 @@ def run() -> None:
             "app.api.fastapi:fastapi_app",
             host=settings.BACKEND_HOST,
             port=settings.BACKEND_PORT,
-            log_config=uvicorn_log_config,
+            log_config=update_uvicorn_log_config(),
             reload=True,
             reload_dirs=["backend/app", "app"],  # local / docker path
         )
@@ -19,7 +19,7 @@ def run() -> None:
             "app.api.fastapi:fastapi_app",
             host=settings.BACKEND_HOST,
             port=settings.BACKEND_PORT,
-            log_config=uvicorn_log_config,
+            log_config=update_uvicorn_log_config(),
         )
 
 

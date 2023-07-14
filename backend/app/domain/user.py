@@ -58,7 +58,7 @@ class DomainUser(Agregate):
 
     name: str
     email: Email = field(converter=Email)
-    password: Password = field(repr=False, converter=Password)
+    password: Password = field(converter=Password, repr=lambda _: "***")
     status: UserStatus
     auths: list[DomainAuth] = field_relationship(init=False)
     sessions: list[DomainSession] = field_relationship(init=False)

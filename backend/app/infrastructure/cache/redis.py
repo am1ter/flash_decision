@@ -2,16 +2,16 @@ from collections.abc import Awaitable, Callable, Iterable, Mapping
 from functools import wraps
 from typing import Any, TypeVar, cast
 
+import structlog
 from redis.asyncio import Redis
 from redis.exceptions import ConnectionError
 
 from app.infrastructure.cache.base import JSON, Cache
 from app.system.config import settings
 from app.system.exceptions import CacheConnectionError, CacheObjectNotFoundError
-from app.system.logger import create_logger
 
 # Create logger
-logger = create_logger("backend.cache.redis")
+logger = structlog.get_logger()
 
 DecoratedFunction = TypeVar("DecoratedFunction", bound=Callable[..., Awaitable])
 
@@ -40,7 +40,7 @@ class CacheRedis(Cache):
             try:
                 result = await func(*args, **kwargs)
             except ConnectionError as e:
-                await logger.aerror(str(e), cls=CacheRedis.__name__, func=func.__name__)
+                await logger.aerror_finish(cls=CacheRedis, show_func_name=True, error=str(e))
                 raise CacheConnectionError from e
             return result
 

@@ -1,14 +1,14 @@
 from asyncio import TaskGroup
 
+import structlog
 from attrs import asdict
 from sqlalchemy import text
 
 from app.bootstrap import Bootstrap
 from app.domain.support import HealthCheck
-from app.system.logger import create_logger
 
 # Create logger
-logger = create_logger("backend.service.support")
+logger = structlog.get_logger()
 
 
 class ServiceSupport:
@@ -41,10 +41,5 @@ class ServiceSupport:
         if all(asdict(result).values()):
             await logger.ainfo_finish(cls=self.__class__, show_func_name=True, result=result)
         else:
-            await logger.aerror(
-                "Operation completed with errors",
-                cls=self.__class__.__name__,
-                func="healthcheck",
-                result=result,
-            )
+            await logger.aerror_finish(cls=self.__class__, show_func_name=True, result=result)
         return result

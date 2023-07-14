@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Annotated, cast
 
+import structlog
 from attrs import define
 from fastapi import Depends
 from jose import jwt
@@ -11,10 +12,9 @@ from app.infrastructure.repositories.user import RepositoryUserSQL
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
 from app.system.config import settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, WrongPasswordError
-from app.system.logger import create_logger
 
 # Create logger
-logger = create_logger("backend.service.support")
+logger = structlog.get_logger()
 
 # Internal dependencies
 uow_user = UnitOfWorkSQLAlchemy(RepositoryUserSQL)
