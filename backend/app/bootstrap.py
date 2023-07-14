@@ -16,10 +16,17 @@ from app.domain.session_provider import (
 from app.infrastructure.cache.redis import CacheRedis
 from app.infrastructure.db import AsyncSessionFactory, get_connection
 from app.infrastructure.orm.mapper import init_orm_mappers
+from app.system.config import settings
+from app.system.logger import create_logger
 from app.system.metaclasses import SingletonMeta
 
 if TYPE_CHECKING:
     from app.infrastructure.cache.base import Cache
+
+
+# Create logger
+logger = create_logger("backend.bootstrap")
+
 
 AsyncDbConnFactory = Callable[..., _AsyncGeneratorContextManager[AsyncConnection]]
 
@@ -46,18 +53,28 @@ class Bootstrap(metaclass=SingletonMeta):
         provider_stocks: Provider = ProviderAlphaVantageStocks(),
         provider_crypto: Provider = ProviderAlphaVantageCrypto(),
     ) -> None:
-        # Mapping Domain models with ORM
+        # Set db-related factories and map domain models with ORM
         if start_orm:
             with suppress(ArgumentError):
                 init_orm_mappers()
-
-        # Set db-related factories
         self.db_conn_factory = db_conn_factory
         self.db_session_factory = db_session_factory
+        logger.info(
+            "Connection to db established",
+            start_orm=start_orm,
+            db_url=settings.DB_URL_WO_PASS,
+            db_schema=settings.DB_SCHEMA,
+        )
 
         # Set cache
         self.cache = cache
+        logger.info("Connection to cache established", cache=cache.__class__.__name__)
 
         # Set providers
         self.provider_stocks = provider_stocks
         self.provider_crypto = provider_crypto
+        logger.info(
+            "Connection to providers established",
+            provider_stocks=provider_stocks.__class__.__name__,
+            provider_crypto=provider_crypto.__class__.__name__,
+        )
