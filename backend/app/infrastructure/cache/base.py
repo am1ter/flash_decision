@@ -21,3 +21,7 @@ class Cache(metaclass=ABCMeta):
     @abstractmethod
     async def mset(self, mapping: Mapping[str, JSON]) -> None:
         """Store multiple JSONs (dicts) in the cache based on the provided key-value mapping"""
+
+    @abstractmethod
+    async def healthcheck(self) -> bool:
+        """Check if cache is available"""

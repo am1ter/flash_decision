@@ -89,7 +89,7 @@ services:
           "CMD-SHELL",
           "curl -f ${BACKEND_PROTOCOL}://fd_backend:${BACKEND_PORT}/${BACKEND_API_PREFIX}/${HEALTHCHECK_URL}"
         ]
-      interval: 5m
+      interval: ${HEALTHCHECK_INTERVAL}
       timeout: 10s
       retries: 3
       start_period: 10s

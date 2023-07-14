@@ -57,6 +57,9 @@ class Provider(Protocol):
     async def get_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         ...
 
+    async def healthcheck(self) -> bool:
+        ...
+
 
 class ProviderAlphaVantage:
     """
@@ -65,9 +68,10 @@ class ProviderAlphaVantage:
     """
 
     _tickers: ClassVar[dict[str, Ticker]] = {}
+    api_key: str = "demo"
     url_root = "https://www.alphavantage.co"
-    api_key: str
     url_get_list: str
+    url_healthcheck = f"{url_root}/query?function=MARKET_STATUS&apikey={api_key}"
     data_cols_final = ("datetime", "open", "high", "low", "close", "volume")
 
     @classmethod
@@ -138,6 +142,12 @@ class ProviderAlphaVantage:
         data = await self._download_data(ticker, timeframe)
         data = self._transform_df_quotes(data)
         return data
+
+    async def healthcheck(self) -> bool:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(self.__class__.url_healthcheck)
+        result = bool(r.status_code == 200)
+        return result
 
 
 class ProviderAlphaVantageStocks(ProviderAlphaVantage):

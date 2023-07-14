@@ -12,5 +12,5 @@ def service_support() -> ServiceSupport:
 
 class TestServiceSupport:
     async def test_check_db_connection(self, service_support: ServiceSupport) -> None:
-        result = await service_support.check_db_connection()
+        result = await service_support._check_db_connection()
         assert result

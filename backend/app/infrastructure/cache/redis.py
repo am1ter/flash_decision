@@ -76,3 +76,9 @@ class CacheRedis(Cache):
                 pipe.expire(k, settings.CACHE_TTL)
             await pipe.execute()
         await logger.ainfo("Cache updated", keys=list(mapping.keys()))
+
+    async def healthcheck(self) -> bool:
+        try:
+            return await self.redis.ping()
+        except ConnectionError:
+            return False
