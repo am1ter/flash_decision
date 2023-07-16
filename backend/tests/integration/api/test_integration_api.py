@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import suppress
+
 import pytest
 import requests
 from authlib.integrations.requests_client import OAuth2Auth, OAuth2Session
@@ -9,6 +11,7 @@ from app.api.schemas.support import RespDataHealthcheck
 from app.api.schemas.user import ReqSignIn, ReqSignUp, RespSignIn, RespSignUp
 from app.system.config import settings
 from app.system.constants import SessionBarsnumber, SessionMode
+from app.system.exceptions import ProviderRateLimitExceededError
 
 
 @pytest.fixture()
@@ -91,10 +94,18 @@ class TestBackendUser:
 
 
 class TestBackendSession:
+    def _catch_provider_requests_limit_error(self, response: Response) -> None:
+        if response.response.status_code != ProviderRateLimitExceededError.status_code:
+            return
+        with suppress(AttributeError):
+            if response.errors == ProviderRateLimitExceededError.msg:
+                raise ProviderRateLimitExceededError
+
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_session_options(self, oauth2: OAuth2Auth) -> None:
         r = requests.get(f"{settings.BACKEND_URL}/session/options", auth=oauth2)
         response = Response(r)
+        self._catch_provider_requests_limit_error(response)
         response.assert_status_code(200)
         data_model = RespSessionOptions(**response.data)
         assert data_model is not None
@@ -112,4 +123,5 @@ class TestBackendSession:
             auth=oauth2,
         )
         response = Response(r)
+        self._catch_provider_requests_limit_error(response)
         response.assert_status_code(200)

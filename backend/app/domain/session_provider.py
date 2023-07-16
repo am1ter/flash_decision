@@ -262,10 +262,12 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
                 ticker.symbol, market=settings.CRYPTO_PRICE_CURRENCY
             )
         except ValueError as e:
-            raise ProviderRateLimitExceededError from e
+            if "5 calls per minute" in e.args[0]:
+                raise ProviderRateLimitExceededError from e
+            raise
         data_cols_rename_map = {
             "index": "datetime",
-            "1a. open (USD)": "open",
+            "1b. open (USD)": "open",
             "2b. high (USD)": "high",
             "3b. low (USD)": "low",
             "4b. close (USD)": "close",
