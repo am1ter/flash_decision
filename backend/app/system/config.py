@@ -86,6 +86,7 @@ class SettingsLog(BaseSettingsCustom):
         "attrs",
         "attr",
         "asyncio",
+        "pandas",
     )
 
 

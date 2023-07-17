@@ -9,6 +9,7 @@ from fastapi import Depends
 
 from app.api.schemas.session import ReqSession
 from app.bootstrap import Bootstrap
+from app.domain.iteration import DomainIteration
 from app.domain.session import (
     DomainSession,
     DomainSessionBlitz,
@@ -72,6 +73,7 @@ class ServiceSession:
         self, mode: SessionMode, session_params: ReqSession | None, user: DomainUser
     ) -> DomainSession:
         await CommandValidateTickers(self).execute()
+        # Create session
         session = CommandCreateSession(self, mode, session_params, user).execute()
         try:
             async with TaskGroup() as task_group:
@@ -79,6 +81,8 @@ class ServiceSession:
                 task_group.create_task(CommandSaveSessionToDb(self, session).execute())
         except ExceptionGroup as eg:
             raise eg.exceptions[0] from eg
+        # Create iterations
+        await CommandCreateIterations(self, session).execute()
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
         return session
 
@@ -247,3 +251,12 @@ class CommandSaveSessionToDb:
         async with self.service.uow:
             self.service.uow.repository.add(self.session)
             await self.service.uow.commit()
+
+
+@define
+class CommandCreateIterations:
+    service: ServiceSession
+    session: DomainSession
+
+    async def execute(self) -> list[DomainIteration]:
+        return DomainIteration.create_all(session=self.session)
