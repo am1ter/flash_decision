@@ -42,7 +42,13 @@ class SessionTimeSeries:
     trading_type: SessionTradingType
     first_bar_datetime: Timestamp = field()
     last_bar_datetime: Timestamp = field()
-    total_session_bars: int = field()
+    total_df_quotes_bars: int = field()
+    total_bars_required: int = field()
+
+    @total_bars_required.default
+    def _default_total_bars_required(self) -> int:
+        one_iter_total_bars = self.session.barsnumber.value + self.session.fixingbar.value
+        return one_iter_total_bars * self.session.iterations.value
 
     @first_bar_datetime.validator
     def _validate_first_bar_datetime(self, attribute: str, value: Timestamp) -> None:
@@ -54,11 +60,9 @@ class SessionTimeSeries:
         if value > self.first_bar_datetime:
             raise SessionConfigurationError
 
-    @total_session_bars.validator
-    def _validate_total_session_bars(self, attribute: str, value: int) -> None:
-        min_bars_to_show = self.session.barsnumber.value * self.session.iterations.value
-        min_bars_to_estimate = min_bars_to_show + self.session.fixingbar.value
-        if value < min_bars_to_estimate:
+    @total_df_quotes_bars.validator
+    def _validate_total_df_quotes_bars(self, attribute: str, value: int) -> None:
+        if value < self.total_bars_required:
             raise ProviderInvalidDataError
 
     @staticmethod
@@ -76,14 +80,14 @@ class SessionTimeSeries:
         first_bar_datetime = df_quotes["datetime"].iloc[0]
         last_bar_datetime = df_quotes["datetime"].iloc[-1]
         trading_type = cls._determine_trading_type(first_bar_datetime, last_bar_datetime)
-        total_session_bars = len(df_quotes)
+        total_df_quotes_bars = len(df_quotes)
         session_time_series = cls(
             session=session,
             df_quotes=df_quotes,
             trading_type=trading_type,
             first_bar_datetime=first_bar_datetime,
             last_bar_datetime=last_bar_datetime,
-            total_session_bars=total_session_bars,
+            total_df_quotes_bars=total_df_quotes_bars,
         )
         return session_time_series
 
