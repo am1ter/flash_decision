@@ -32,7 +32,7 @@ enum_session_barsnumber = sa.Enum(
     "bars15",
     "bars30",
     "bars50",
-    "bars100",
+    "bars70",
     name="SessionBarsnumber",
     schema="development",
 )
@@ -48,8 +48,8 @@ enum_session_timelimit = sa.Enum(
 enum_session_iterations = sa.Enum(
     "iterations5",
     "iterations10",
+    "iterations15",
     "iterations20",
-    "iterations30",
     name="SessionIterations",
     schema="development",
 )
@@ -62,7 +62,7 @@ enum_session_slippage = sa.Enum(
     schema="development",
 )
 enum_session_fixingbar = sa.Enum(
-    "bar10", "bar20", "bar30", "bar50", name="SessionFixingbar", schema="development"
+    "bar10", "bar20", "bar30", "bar40", name="SessionFixingbar", schema="development"
 )
 enum_session_status = sa.Enum(
     "created", "active", "closed", name="SessionStatus", schema="development"

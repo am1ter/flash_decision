@@ -144,8 +144,8 @@ class DomainSessionClassic(DomainSession):
             mode=SessionMode.classic,
             provider=provider,
             ticker=cls._select_random_ticker(provider),
-            timeframe=SessionTimeframe.minutes60,
-            barsnumber=SessionBarsnumber.bars50,
+            timeframe=SessionTimeframe.daily,
+            barsnumber=SessionBarsnumber.bars70,
             timelimit=SessionTimelimit.seconds60,
             iterations=SessionIterations.iterations5,
             slippage=SessionSlippage.average,
@@ -191,7 +191,7 @@ class DomainSessionCrypto(DomainSession):
             timelimit=SessionTimelimit.seconds30,
             iterations=SessionIterations.iterations10,
             slippage=SessionSlippage.low,
-            fixingbar=SessionFixingbar.bar50,
+            fixingbar=SessionFixingbar.bar10,
             status=SessionStatus.created,
         )
         return session

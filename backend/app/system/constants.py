@@ -50,7 +50,7 @@ class SessionBarsnumber(Enum):
     bars15 = 15
     bars30 = 30
     bars50 = 50
-    bars100 = 100
+    bars70 = 70
 
 
 class SessionTimelimit(Enum):
@@ -64,8 +64,8 @@ class SessionTimelimit(Enum):
 class SessionIterations(Enum):
     iterations5 = 5
     iterations10 = 10
+    iterations15 = 15
     iterations20 = 20
-    iterations30 = 30
 
 
 class SessionSlippage(Enum):
@@ -81,7 +81,7 @@ class SessionFixingbar(Enum):
     bar10 = 10
     bar20 = 20
     bar30 = 30
-    bar50 = 50
+    bar40 = 40
 
 
 class SessionTradingType(Enum):
