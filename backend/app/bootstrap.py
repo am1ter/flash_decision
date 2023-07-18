@@ -17,7 +17,7 @@ from app.domain.session_provider import (
 from app.infrastructure.cache.redis import CacheRedis
 from app.infrastructure.db import AsyncSessionFactory, get_connection
 from app.infrastructure.orm.mapper import init_orm_mappers
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta
 
@@ -66,8 +66,8 @@ class Bootstrap(metaclass=SingletonMeta):
         logger.info(
             "Connection to db established",
             start_orm=start_orm,
-            db_url=settings.DB_URL_WO_PASS,
-            db_schema=settings.DB_SCHEMA,
+            db_url=Settings().db.DB_URL_WO_PASS,
+            db_schema=Settings().db.DB_SCHEMA,
         )
 
         # Set cache

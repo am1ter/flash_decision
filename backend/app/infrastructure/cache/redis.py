@@ -7,7 +7,7 @@ from redis.asyncio import Redis
 from redis.exceptions import ConnectionError
 
 from app.infrastructure.cache.base import JSON, Cache
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.exceptions import CacheConnectionError, CacheObjectNotFoundError
 
 # Create logger
@@ -28,7 +28,8 @@ class CacheRedis(Cache):
 
     def __init__(self) -> None:
         self.redis: Redis = Redis.from_url(
-            settings.CACHE_REDIS_URL, decode_responses=settings.CACHE_REDIS_DECODE_RESPONSES
+            Settings().cache.CACHE_REDIS_URL,
+            decode_responses=Settings().cache.CACHE_REDIS_DECODE_RESPONSES,
         )
 
     @staticmethod
@@ -64,7 +65,7 @@ class CacheRedis(Cache):
     async def set(self, key: str, value: JSON) -> None:
         async with self.redis.pipeline() as pipe:
             await pipe.json().set(key, self.__class__.json_path, value)
-            await pipe.expire(key, settings.CACHE_TTL)
+            await pipe.expire(key, Settings().cache.CACHE_TTL)
             await pipe.execute()
         await logger.ainfo("Cache updated", keys=[key])
 
@@ -73,7 +74,7 @@ class CacheRedis(Cache):
         async with self.redis.pipeline() as pipe:
             for k, v in mapping.items():
                 pipe.json().set(k, self.__class__.json_path, v)
-                pipe.expire(k, settings.CACHE_TTL)
+                pipe.expire(k, Settings().cache.CACHE_TTL)
             await pipe.execute()
         await logger.ainfo("Cache updated", keys=list(mapping.keys()))
 

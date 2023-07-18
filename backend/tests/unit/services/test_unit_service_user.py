@@ -12,7 +12,7 @@ from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.user import JwtTokenEncoded, ServiceUser
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.constants import AuthStatus, UserStatus
 from app.system.exceptions import (
     EmailValidationError,
@@ -200,7 +200,9 @@ class TestServiceUser:
     ) -> None:
         user = await service_user.sign_up(req_sign_up, req_system_info)
         token_encoded = await service_user.create_access_token(user)
-        token_decoded = jwt.decode(token=token_encoded.access_token, key=settings.JWT_SECRET_KEY)
+        token_decoded = jwt.decode(
+            token=token_encoded.access_token, key=Settings().general.JWT_SECRET_KEY
+        )
         assert token_decoded["sub"] == user.email.value
         assert token_decoded["exp"] >= token_decoded["iat"]
 
@@ -223,11 +225,15 @@ class TestServiceAuthorization:
         self, token_encoded: JwtTokenEncoded, uow_user: UnitOfWorkUserFake
     ) -> None:
         token_encoded_valid = token_encoded.access_token
-        token_decoded_valid = jwt.decode(token=token_encoded_valid, key=settings.JWT_SECRET_KEY)
+        token_decoded_valid = jwt.decode(
+            token=token_encoded_valid, key=Settings().general.JWT_SECRET_KEY
+        )
         token_decoded_invalid = copy(token_decoded_valid)
         token_decoded_invalid["exp"] = token_decoded_invalid["iat"] - 100
         token_encoded_invalid = jwt.encode(
-            token_decoded_invalid, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM
+            token_decoded_invalid,
+            Settings().general.JWT_SECRET_KEY,
+            Settings().general.JWT_ALGORITHM,
         )
         with pytest.raises(JwtExpiredError):
             ServiceAuthorization(token_encoded_invalid, uow_user)  # type: ignore[arg-type]

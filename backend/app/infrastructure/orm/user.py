@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.orm.base import Base, datetime_current, int_pk, mapped_column_enum, str_unq
-from app.system.config import settings_db
+from app.system.config import Settings
 from app.system.constants import AuthStatus, UserStatus
 
 
@@ -30,7 +30,7 @@ class OrmAuth(Base):
     id: Mapped[int_pk]
     datetime_create: Mapped[datetime_current]
     user_id: Mapped[int] = mapped_column(
-        ForeignKey(f"{settings_db.DB_SCHEMA}.user.id", ondelete="CASCADE"), index=True
+        ForeignKey(f"{Settings().db.DB_SCHEMA}.user.id", ondelete="CASCADE"), index=True
     )
     ip_address: Mapped[str] = mapped_column(key="_ip_address")  # This col replaced with ValueObject
     http_user_agent: Mapped[str]

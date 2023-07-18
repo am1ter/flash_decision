@@ -9,7 +9,7 @@ from authlib.integrations.requests_client import OAuth2Auth, OAuth2Session
 from app.api.schemas.session import ReqSession, RespSessionOptions
 from app.api.schemas.support import RespDataHealthcheck
 from app.api.schemas.user import ReqSignIn, ReqSignUp, RespSignIn, RespSignUp
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.constants import SessionBarsnumber, SessionMode
 from app.system.exceptions import ProviderRateLimitExceededError
 
@@ -17,7 +17,7 @@ from app.system.exceptions import ProviderRateLimitExceededError
 @pytest.fixture()
 def oauth2(req_sign_in: ReqSignIn) -> OAuth2Auth:
     client = OAuth2Session()
-    token_endpoint = f"{settings.BACKEND_URL}/user/sign-in"
+    token_endpoint = f"{Settings().general.BACKEND_URL}/user/sign-in"
     token = client.fetch_token(
         token_endpoint, username=req_sign_in.username, password=req_sign_in.password
     )
@@ -53,6 +53,7 @@ class Response:
 
 class TestBackendDocs:
     def test_fastapi_docs_available(self) -> None:
+        settings = Settings().general
         base_url = (
             f"{settings.BACKEND_PROTOCOL}://{settings.BACKEND_HOST}:{settings.BACKEND_PORT!s}"
         )
@@ -63,7 +64,7 @@ class TestBackendDocs:
 
 class TestBackendSupport:
     def test_run_healthcheck(self) -> None:
-        r = requests.get(f"{settings.BACKEND_URL}/support/healthcheck")
+        r = requests.get(f"{Settings().general.BACKEND_URL}/support/healthcheck")
         response = Response(r)
         response.assert_status_code(200)
         data_model = RespDataHealthcheck(**response.data)
@@ -75,7 +76,7 @@ class TestBackendSupport:
 class TestBackendUser:
     @pytest.mark.dependency()
     def test_sign_up(self, req_sign_up: ReqSignUp) -> None:
-        r = requests.post(f"{settings.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
+        r = requests.post(f"{Settings().general.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
         response = Response(r)
         response.assert_status_code(200)
         data_model = RespSignUp(**response.response.json())
@@ -85,7 +86,7 @@ class TestBackendUser:
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_sign_in(self, req_sign_in: ReqSignIn) -> None:
         # Test sign in
-        r = requests.post(f"{settings.BACKEND_URL}/user/sign-in", data=req_sign_in.dict())
+        r = requests.post(f"{Settings().general.BACKEND_URL}/user/sign-in", data=req_sign_in.dict())
         response = Response(r)
         response.assert_status_code(200)
         data_model = RespSignIn(**response.response.json())
@@ -103,7 +104,7 @@ class TestBackendSession:
 
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_session_options(self, oauth2: OAuth2Auth) -> None:
-        r = requests.get(f"{settings.BACKEND_URL}/session/options", auth=oauth2)
+        r = requests.get(f"{Settings().general.BACKEND_URL}/session/options", auth=oauth2)
         response = Response(r)
         self._catch_provider_requests_limit_error(response)
         response.assert_status_code(200)
@@ -118,7 +119,7 @@ class TestBackendSession:
         self, oauth2: OAuth2Auth, mode: SessionMode, req_session_params_custom: ReqSession
     ) -> None:
         r = requests.post(
-            f"{settings.BACKEND_URL}/session/{mode.value}",
+            f"{Settings().general.BACKEND_URL}/session/{mode.value}",
             data=req_session_params_custom.json() if mode == SessionMode.custom else None,
             auth=oauth2,
         )

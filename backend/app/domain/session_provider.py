@@ -9,7 +9,7 @@ from alpha_vantage.async_support.timeseries import TimeSeries
 from attrs import define, field, validators
 
 from app.domain.base import ValueObjectJson
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.constants import SessionTimeframe, TickerType
 from app.system.exceptions import (
     MemoryObjectNotFoundError,
@@ -150,7 +150,7 @@ class ProviderAlphaVantage:
 
 
 class ProviderAlphaVantageStocks(ProviderAlphaVantage):
-    api_key = settings.ALPHAVANTAGE_API_KEY_STOCKS
+    api_key = Settings().provider.ALPHAVANTAGE_API_KEY_STOCKS
 
     def __init__(self) -> None:
         self.url_get_list = f"{self.url_root}/query?function=LISTING_STATUS&apikey={self.api_key}"
@@ -227,7 +227,7 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
 
 
 class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
-    api_key = settings.ALPHAVANTAGE_API_KEY_CRYPTO
+    api_key = Settings().provider.ALPHAVANTAGE_API_KEY_CRYPTO
 
     def __init__(self) -> None:
         self.url_get_list = f"{self.url_root}/digital_currency_list/"
@@ -241,7 +241,7 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
             try:
                 ticker = Ticker(
                     ticker_type=TickerType("Crypto"),
-                    exchange=settings.CRYPTO_PRICE_CURRENCY,
+                    exchange=Settings().provider.CRYPTO_PRICE_CURRENCY,
                     symbol=currency_code,
                     name=currency_name,
                 )
@@ -259,7 +259,7 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
     async def _download_data_daily(self, ticker: Ticker) -> pd.DataFrame:
         try:
             data, _ = await self.exporter.get_digital_currency_daily(
-                ticker.symbol, market=settings.CRYPTO_PRICE_CURRENCY
+                ticker.symbol, market=Settings().provider.CRYPTO_PRICE_CURRENCY
             )
         except ValueError as e:
             if "5 calls per minute" in e.args[0]:

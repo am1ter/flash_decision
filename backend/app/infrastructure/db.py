@@ -5,11 +5,11 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.system.config import settings
+from app.system.config import Settings
 
 
 def get_new_engine() -> AsyncEngine:
-    engine = create_async_engine(settings.DB_URL, echo=settings.LOG_DB_ACCESS)
+    engine = create_async_engine(Settings().db.DB_URL, echo=Settings().log.LOG_DB_ACCESS)
     return engine
 
 

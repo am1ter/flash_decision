@@ -8,6 +8,7 @@ from pydantic import BaseSettings, HttpUrl, PostgresDsn, RedisDsn, ValidationErr
 
 from app.system.constants import Environment
 from app.system.exceptions import ConfigHTTPHardcodedBackendUrlError, ConfigHTTPWrongURLError
+from app.system.metaclasses import SingletonMeta
 
 
 class BaseSettingsCustom(BaseSettings):
@@ -66,12 +67,9 @@ class SettingsGeneral(BaseSettingsCustom):
         return False
 
 
-settings_general = SettingsGeneral()
-
-
 class SettingsLog(BaseSettingsCustom):
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    LOG_DB_ACCESS: bool = settings_general.DEBUG_MODE
+    LOG_DB_ACCESS: bool = SettingsGeneral().DEBUG_MODE
     LOG_FMT_DEV_PREF: str = "%(asctime)s [%(levelprefix)s]"
     LOG_FMT_DEV_DEFAULT: str = LOG_FMT_DEV_PREF + " %(message)s"
     LOG_FMT_DEV_ACCESS: str = (
@@ -90,17 +88,14 @@ class SettingsLog(BaseSettingsCustom):
     )
 
 
-settings_log = SettingsLog()
-
-
-class SettingsDb(BaseSettingsCustom):
+class SettingsDbSql(BaseSettingsCustom):
     DB_ENGINE_SCHEMA: str = "postgresql+asyncpg"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_USER: str = "postgres"
     DB_PASS: str = "my_db_pass"
     DB_NAME: str = "flash_decision"
-    DB_SCHEMA: str = settings_general.ENVIRONMENT.value
+    DB_SCHEMA: str = SettingsGeneral().ENVIRONMENT.value
 
     @cached_property
     def DB_URL(self) -> str:  # noqa: N802
@@ -116,9 +111,6 @@ class SettingsDb(BaseSettingsCustom):
     @cached_property
     def DB_URL_WO_PASS(self) -> str:  # noqa: N802
         return self.DB_URL.replace(self.DB_PASS, "***")
-
-
-settings_db = SettingsDb()
 
 
 class SettingsCache(BaseSettingsCustom):
@@ -142,9 +134,6 @@ class SettingsCache(BaseSettingsCustom):
         )
 
 
-settings_cache = SettingsCache()
-
-
 class SettingsProvider(BaseSettingsCustom):
     ALPHAVANTAGE_API_KEY_STOCKS = "my_alpha_avantage_api_key"
     ALPHAVANTAGE_API_KEY_CRYPTO = "my_alpha_avantage_api_key"
@@ -153,11 +142,15 @@ class SettingsProvider(BaseSettingsCustom):
     RANDOM_TICKERS_CRYPTO = "BTC,BNB,ETH,DOGE,LTC,TRX,MATIC,BCH"
 
 
-settings_provider = SettingsProvider()
+class Settings(metaclass=SingletonMeta):
+    """
+    Use Facade pattern to structure all app's settings.
+    It is also a singleton, so only one instance of the Settings can exist.
+    """
 
-
-class Settings(SettingsGeneral, SettingsLog, SettingsDb, SettingsProvider, SettingsCache):
-    pass
-
-
-settings = Settings()
+    def __init__(self) -> None:
+        self.general = SettingsGeneral()
+        self.log = SettingsLog()
+        self.db = SettingsDbSql()
+        self.provider = SettingsProvider()
+        self.cache = SettingsCache()

@@ -23,7 +23,7 @@ from app.domain.session_provider import Provider, Ticker, csv_table
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.session import RepositorySessionSQL
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.constants import SessionMode, TickerType
 from app.system.exceptions import (
     CacheConnectionError,
@@ -60,7 +60,7 @@ class ServiceSession:
 
     def __init__(self, uow: UowSessionDep) -> None:
         self.uow = uow
-        self.cache = Bootstrap().cache if settings.CACHE_ENABLED else None
+        self.cache = Bootstrap().cache if Settings().cache.CACHE_ENABLED else None
         self.provider_stocks = Bootstrap().provider_stocks
         self.provider_crypto = Bootstrap().provider_crypto
 

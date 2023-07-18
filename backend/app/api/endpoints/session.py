@@ -8,10 +8,10 @@ from app.api.schemas.session import ReqSession, RespSession, RespSessionOptions
 from app.domain.base import custom_serializer
 from app.services.session import ServiceSession
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.constants import SessionMode
 
-router = APIRouter(prefix=f"/{settings.BACKEND_API_PREFIX}/session")
+router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/session")
 
 # Internal dependencies
 ServiceSessionDep = Annotated[ServiceSession, Depends()]

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 # Import 1st party modules after setting env vars
 from app.infrastructure.db import get_connection, get_new_engine
 from app.infrastructure.orm import Base
-from app.system.config import Environment, settings
+from app.system.config import Environment, Settings
 
 pytestmark = pytest.mark.asyncio
 
@@ -30,13 +30,13 @@ class TestDb:
         """Check that all database migrations are applied to `production` db schema"""
 
         # Check if environment configurated to run in production mode
-        assert settings.ENVIRONMENT == Environment.production, "Wrong env configuration"
-        assert settings.DB_SCHEMA == Environment.production.value, "Wrong db schema"
+        assert Settings().general.ENVIRONMENT == Environment.production, "Wrong env configuration"
+        assert Settings().db.DB_SCHEMA == Environment.production.value, "Wrong db schema"
 
         def include_name(name: str, type_: str, parent_names: dict) -> bool:
             """Filter only current db schema tables"""
             if type_ == "schema":
-                return name in [settings.DB_SCHEMA]
+                return name in [Settings().db.DB_SCHEMA]
             else:
                 return True
 
@@ -52,7 +52,7 @@ class TestDb:
                     "compare_type": True,
                     "include_schemas": True,
                     "include_name": include_name,
-                    "version_table_schema": settings.DB_SCHEMA,
+                    "version_table_schema": Settings().db.DB_SCHEMA,
                 },
             )
             return compare_metadata(mc, Base.metadata)

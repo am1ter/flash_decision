@@ -1,6 +1,6 @@
 import pytest
 
-from app.system.config import settings_general
+from app.system.config import Settings
 from app.system.exceptions import ConfigHTTPHardcodedBackendUrlError, ConfigHTTPWrongURLError
 
 
@@ -11,7 +11,7 @@ def _mock_env_hardcode_backend_url(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture()
 def _mock_settings_wrong_backend_host(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(settings_general, "BACKEND_HOST", ".localhost")
+    monkeypatch.setattr(Settings().general, "BACKEND_HOST", ".localhost")
 
 
 class TestSettingsGeneral:
@@ -20,9 +20,9 @@ class TestSettingsGeneral:
     @pytest.mark.usefixtures("_mock_settings_wrong_backend_host")
     def test_backend_url_validation_wrong(self) -> None:
         with pytest.raises(ConfigHTTPWrongURLError):
-            assert isinstance(settings_general.BACKEND_URL, str)
+            assert isinstance(Settings().general.BACKEND_URL, str)
 
     @pytest.mark.usefixtures("_mock_env_hardcode_backend_url")
     def test_backend_url_hardcoded_env_var(self) -> None:
         with pytest.raises(ConfigHTTPHardcodedBackendUrlError):
-            assert isinstance(settings_general.BACKEND_URL, str)
+            assert isinstance(Settings().general.BACKEND_URL, str)

@@ -21,7 +21,7 @@ from structlog.typing import EventDict
 from uvicorn.config import LOGGING_CONFIG
 from uvicorn.logging import AccessFormatter, DefaultFormatter
 
-from app.system.config import settings
+from app.system.config import Settings
 
 
 def rich_excepthook(
@@ -30,8 +30,8 @@ def rich_excepthook(
     """Format exception using rich lib"""
 
     # To use strings as suppress arguments instead of libs itself, must be used paths to modules
-    path_to_libs = getsitepackages()[0]
-    suppress = [str(Path(path_to_libs) / Path(s)) for s in settings.SUPPRESS_TRACEBACK_FROM_LIBS]
+    libs_path = getsitepackages()[0]
+    suppress = [str(Path(libs_path) / Path(s)) for s in Settings().log.SUPPRESS_TRACEBACK_FROM_LIBS]
     try:
         rich_tb = Traceback.from_exception(
             type_, value, traceback, show_locals=True, suppress=suppress
@@ -89,7 +89,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
         self, ei: tuple[type[BaseException], BaseException, TracebackType | None]
     ) -> None:
         """Override exception formatting for uvicorn"""
-        if self.dev_mode or settings.DEV_MODE:
+        if self.dev_mode or Settings().general.DEV_MODE:
             # Use rich print which support suppressing external lib attributes
             rich_excepthook(ei[0], ei[1], ei[2])
         else:
@@ -98,7 +98,7 @@ class UvicornCustomDefaultFormatter(DefaultFormatter):
     def formatMessage(self, record: LogRecord) -> str:  # noqa: N802
         """Override default formatting method for system logs"""
         record_source = super().formatMessage(record)
-        if self.dev_mode or settings.DEV_MODE:
+        if self.dev_mode or Settings().general.DEV_MODE:
             # Reformat level
             try:
                 level_raw = self.regex_level.findall(record_source)[0]
@@ -134,9 +134,9 @@ class UvicornCustomFormatterAccess(AccessFormatter):
         Final access message is a combination of formatted prefix and formatted raw access message
         Prefix formatted with UvicornCustomDefaultFormatter
         """
-        fmt_access = fmt.replace(settings.LOG_FMT_DEV_PREF, "") if fmt else None
+        fmt_access = fmt.replace(Settings().log.LOG_FMT_DEV_PREF, "") if fmt else None
         self.default_formatter = UvicornCustomDefaultFormatter(
-            fmt=settings.LOG_FMT_DEV_PREF, dev_mode=dev_mode
+            fmt=Settings().log.LOG_FMT_DEV_PREF, dev_mode=dev_mode
         )
         self.access_formatter = AccessFormatter(fmt_access)
         super().__init__(fmt, datefmt, style, use_colors)
@@ -148,7 +148,7 @@ class UvicornCustomFormatterAccess(AccessFormatter):
         """Override default formatting method for access logs"""
         record_default = self.default_formatter.formatMessage(record)
         record_access = self.access_formatter.formatMessage(record)
-        if self.dev_mode or settings.DEV_MODE:
+        if self.dev_mode or Settings().general.DEV_MODE:
             return record_default + record_access
         else:
             if record.args and len(record.args) == 5:
@@ -202,7 +202,7 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
             kwargs["cls"] = kwargs["cls"].__name__
 
         # Convert attrs object to dicts for production mode logs (exclude kwargs with disabled repr)
-        if not settings.DEV_MODE:
+        if not Settings().general.DEV_MODE:
             for kw_key, kw_value in kwargs.items():
                 if not attrs.has(type(kw_value)):
                     continue
@@ -257,12 +257,12 @@ def update_uvicorn_log_config() -> dict[str, Any]:
     uvicorn_log_config = deepcopy(LOGGING_CONFIG)
     uvicorn_log_config["formatters"]["custom_default"] = {
         "()": UvicornCustomDefaultFormatter,
-        "format": settings.LOG_FMT_DEV_DEFAULT,
+        "format": Settings().log.LOG_FMT_DEV_DEFAULT,
         "dev_mode": False,
     }
     uvicorn_log_config["formatters"]["custom_access"] = {
         "()": UvicornCustomFormatterAccess,
-        "format": settings.LOG_FMT_DEV_ACCESS,
+        "format": Settings().log.LOG_FMT_DEV_ACCESS,
         "dev_mode": False,
     }
     uvicorn_log_config["handlers"]["default"]["formatter"] = "custom_default"
@@ -294,14 +294,14 @@ def configure_logger(dev_mode: bool | None = None, stream: StringIO | TextIO = s
         structlog.stdlib.render_to_log_kwargs,
     ]
 
-    logging_level = logging._nameToLevel[settings.LOG_LEVEL]
+    logging_level = logging._nameToLevel[Settings().log.LOG_LEVEL]
     logging.basicConfig(level=logging_level, format="%(message)s")
     root_logger = logging.getLogger()
     root_logger.handlers = []  # Remove default root logger handler
     root_logger.setLevel(logging_level)
     handler = logging.StreamHandler(stream=stream)
     formatter_mode: logging.Formatter
-    if settings.DEV_MODE or dev_mode:
+    if Settings().general.DEV_MODE or dev_mode:
         processors_mode = processors_dev_structlog_only
         formatter_mode = structlog.stdlib.ProcessorFormatter(
             foreign_pre_chain=processors_shared,  # For third-party messages (non-structlog)

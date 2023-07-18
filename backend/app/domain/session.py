@@ -10,7 +10,7 @@ from pandas import Timestamp
 
 from app.domain.base import Agregate, field_relationship
 from app.domain.session_provider import Provider, Ticker
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.constants import (
     SessionBarsnumber,
     SessionFixingbar,
@@ -140,7 +140,7 @@ class DomainSession(Agregate, metaclass=ABCMeta):
 
 @define(kw_only=True, slots=False, hash=True)
 class DomainSessionClassic(DomainSession):
-    random_tickers = settings.RANDOM_TICKERS_STOCKS
+    random_tickers = Settings().provider.RANDOM_TICKERS_STOCKS
 
     @classmethod
     def create(cls, provider: Provider) -> Self:
@@ -161,7 +161,7 @@ class DomainSessionClassic(DomainSession):
 
 @define(kw_only=True, slots=False, hash=True)
 class DomainSessionBlitz(DomainSession):
-    random_tickers = settings.RANDOM_TICKERS_STOCKS
+    random_tickers = Settings().provider.RANDOM_TICKERS_STOCKS
 
     @classmethod
     def create(cls, provider: Provider) -> Self:
@@ -182,7 +182,7 @@ class DomainSessionBlitz(DomainSession):
 
 @define(kw_only=True, slots=False, hash=True)
 class DomainSessionCrypto(DomainSession):
-    random_tickers = settings.RANDOM_TICKERS_CRYPTO
+    random_tickers = Settings().provider.RANDOM_TICKERS_CRYPTO
 
     @classmethod
     def create(cls, provider: Provider) -> Self:

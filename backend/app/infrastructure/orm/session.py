@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.orm.base import Base, datetime_current, int_pk, jsonb, mapped_column_enum
-from app.system.config import settings_db
+from app.system.config import Settings
 from app.system.constants import (
     SessionBarsnumber,
     SessionFixingbar,
@@ -27,7 +27,7 @@ class OrmSession(Base):
     id: Mapped[int_pk]
     datetime_create: Mapped[datetime_current]
     user_id: Mapped[int] = mapped_column(
-        ForeignKey(f"{settings_db.DB_SCHEMA}.user.id", ondelete="CASCADE"), index=True
+        ForeignKey(f"{Settings().db.DB_SCHEMA}.user.id", ondelete="CASCADE"), index=True
     )
     ticker: Mapped[jsonb] = mapped_column(key="_ticker")  # ValueObject
     mode: Mapped[SessionMode] = mapped_column_enum(SessionMode)

@@ -11,7 +11,7 @@ from starlette import status
 from app.api.endpoints.session import router as router_session
 from app.api.endpoints.support import router as router_support
 from app.api.endpoints.user import router as router_user
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.exceptions import BaseHTTPError
 
 # Create logger
@@ -22,9 +22,9 @@ logger = structlog.get_logger()
 async def lifespan(fastapi_app: FastAPI) -> AsyncIterator:
     logger.info(
         "Startup finished",
-        env=settings.ENVIRONMENT.value,
-        dev_mode=settings.DEV_MODE,
-        debug_mode=settings.DEBUG_MODE,
+        env=Settings().general.ENVIRONMENT.value,
+        dev_mode=Settings().general.DEV_MODE,
+        debug_mode=Settings().general.DEBUG_MODE,
     )
     yield
     await logger.ainfo("Application is shutting down")
@@ -37,7 +37,7 @@ fastapi_app.include_router(router_user)
 fastapi_app.include_router(router_session)
 fastapi_app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
+    allow_origins=[Settings().general.FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

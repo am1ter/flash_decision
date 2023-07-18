@@ -11,11 +11,13 @@ from structlog.contextvars import bind_contextvars, unbind_contextvars
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSQL
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.exceptions import InvalidJwtError, JwtExpiredError
 
 # Use FastAPI default tools (dependencies) for OAuth2 authorization protocol
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/{settings.BACKEND_API_PREFIX}/user/sign-in")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"/{Settings().general.BACKEND_API_PREFIX}/user/sign-in"
+)
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
 # Internal dependencies
@@ -51,7 +53,9 @@ class ServiceAuthorization:
     def _decode_token(self, token_encoded: str) -> JwtTokenDecoded:
         """Decode JWT token, validate it, extract user's creds"""
         try:
-            token_dec = jwt.decode(token_encoded, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+            token_dec = jwt.decode(
+                token_encoded, Settings().general.JWT_SECRET_KEY, Settings().general.JWT_ALGORITHM
+            )
         except ExpiredSignatureError as e:
             raise JwtExpiredError from e
         except JWTError as e:

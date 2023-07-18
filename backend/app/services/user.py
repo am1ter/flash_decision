@@ -10,7 +10,7 @@ from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSQL
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
-from app.system.config import settings
+from app.system.config import Settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, WrongPasswordError
 
 # Create logger
@@ -87,8 +87,11 @@ class ServiceUser:
         payload = {
             "sub": user.email.value,
             "iat": datetime.utcnow(),
-            "exp": datetime.utcnow() + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
+            "exp": datetime.utcnow()
+            + timedelta(minutes=Settings().general.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
         }
-        encoded_jwt_str = jwt.encode(payload, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+        encoded_jwt_str = jwt.encode(
+            payload, Settings().general.JWT_SECRET_KEY, Settings().general.JWT_ALGORITHM
+        )
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user)
         return JwtTokenEncoded(access_token=encoded_jwt_str)
