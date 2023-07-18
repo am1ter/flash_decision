@@ -13,11 +13,13 @@ class SingletonMeta(type, Generic[SingletonInstance]):
     """
 
     _instances: dict[SingletonMeta[SingletonInstance], SingletonInstance] = {}  # noqa: RUF012
-    _lock: Lock = Lock()
+    _locks: dict[SingletonMeta[SingletonInstance], Lock] = {}  # noqa: RUF012
 
     def __call__(cls: SingletonMeta[SingletonInstance], *args, **kwargs) -> SingletonInstance:
-        with cls._lock:
-            if cls not in cls._instances:
+        if cls not in cls._instances:
+            cls._locks[cls] = Lock()
+            with cls._locks[cls]:
                 instance = super().__call__(*args, **kwargs)
-                cls._instances[cls] = instance
+                if cls not in cls._instances:
+                    cls._instances[cls] = instance
         return cls._instances[cls]
