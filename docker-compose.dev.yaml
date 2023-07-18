@@ -3,7 +3,7 @@
 # Example: docker compose --env-file=.env.dev --env-file=.env.secrets -f ./docker-compose.dev.yaml up -d --build
 
 services:
-  # Apply db migrations
+  # Apply sql migrations
   fd_migrations:
     container_name: fd_migrations_dev
     env_file:

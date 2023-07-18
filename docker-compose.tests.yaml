@@ -4,18 +4,18 @@
 
 services:
   # Run database
-  fd_db_tests:
+  fd_sql_tests:
     build:
       context: ./backend/
-      dockerfile: Dockerfile.db
-    container_name: fd_db_tests
+      dockerfile: Dockerfile.sql
+    container_name: fd_sql_tests
     restart: "no"
     env_file:
       - .env.tests
       - .env.secrets
     environment:
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - PGPORT=${DB_PORT}
+      - POSTGRES_PASSWORD=${SQL_PASS}
+      - PGPORT=${SQL_PORT}
     networks:
       - tests
     tmpfs:
@@ -45,7 +45,7 @@ services:
       - .env.secrets
     environment:
       - BACKEND_HOST=fd_backend_tests
-      - DB_HOST=fd_db_tests
+      - SQL_HOST=fd_sql_tests
       - CACHE_REDIS_HOST=fd_redis_tests
     networks:
       - tests
@@ -53,14 +53,14 @@ services:
       - ./backend/app:/usr/src/backend/app
       - ./backend/tests:/usr/src/backend/tests
 
-  # Apply db migrations
+  # Apply sql migrations
   fd_migrations_tests:
     extends:
       service: fd_tmpl_tests
     container_name: fd_migrations_tests
     command: poetry run alembic --name ${ENVIRONMENT} upgrade head
     depends_on:
-      - fd_db_tests
+      - fd_sql_tests
 
   # Run webserver with backend (API)
   fd_backend_tests:

@@ -9,9 +9,9 @@ from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.bootstrap import Bootstrap
 from app.domain.user import DomainAuth, DomainUser
-from app.infrastructure.db import get_new_engine, get_sessionmaker
 from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
 from app.infrastructure.repositories.user import RepositoryUserSQL
+from app.infrastructure.sql import get_new_engine, get_sessionmaker
 from app.system.constants import AuthStatus
 from app.system.exceptions import DbObjectNotFoundError
 

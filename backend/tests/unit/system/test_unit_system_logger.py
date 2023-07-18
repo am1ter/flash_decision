@@ -302,7 +302,7 @@ class TestLoggerCustomCases:
         """Test attribute `cls` inside custom method info_finish()"""
         with structlog.testing.capture_logs() as logs:
             await logger_prod.ainfo_finish(cls=self.__class__)
-        excepted = {"cls": self.__class__.__name__}
+        excepted = {"_cls": self.__class__.__name__}
         assert logs[0] == logs[0] | excepted
 
     @pytest.mark.asyncio()
@@ -310,7 +310,7 @@ class TestLoggerCustomCases:
         """Test attribute `show_func_name` inside custom method info_finish()"""
         with structlog.testing.capture_logs() as logs:
             await logger_prod.ainfo_finish(show_func_name=True)
-        excepted = {"function": self.test_info_finish_func_name.__name__}
+        excepted = {"_function": self.test_info_finish_func_name.__name__}
         assert logs[0] == logs[0] | excepted
 
     @pytest.mark.asyncio()

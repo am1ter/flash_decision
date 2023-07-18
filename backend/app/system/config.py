@@ -69,7 +69,7 @@ class SettingsGeneral(BaseSettingsCustom):
 
 class SettingsLog(BaseSettingsCustom):
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    LOG_DB_ACCESS: bool = SettingsGeneral().DEBUG_MODE
+    LOG_SQL_ACCESS: bool = SettingsGeneral().DEBUG_MODE
     LOG_FMT_DEV_PREF: str = "%(asctime)s [%(levelprefix)s]"
     LOG_FMT_DEV_DEFAULT: str = LOG_FMT_DEV_PREF + " %(message)s"
     LOG_FMT_DEV_ACCESS: str = (
@@ -89,28 +89,28 @@ class SettingsLog(BaseSettingsCustom):
 
 
 class SettingsDbSql(BaseSettingsCustom):
-    DB_ENGINE_SCHEMA: str = "postgresql+asyncpg"
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    DB_USER: str = "postgres"
-    DB_PASS: str = "my_db_pass"
-    DB_NAME: str = "flash_decision"
-    DB_SCHEMA: str = SettingsGeneral().ENVIRONMENT.value
+    SQL_ENGINE_SCHEMA: str = "postgresql+asyncpg"
+    SQL_HOST: str = "localhost"
+    SQL_PORT: int = 5432
+    SQL_USER: str = "postgres"
+    SQL_PASS: str = "my_sql_pass"
+    SQL_NAME: str = "flash_decision"
+    SQL_SCHEMA: str = SettingsGeneral().ENVIRONMENT.value
 
     @cached_property
-    def DB_URL(self) -> str:  # noqa: N802
+    def SQL_URL(self) -> str:  # noqa: N802
         return PostgresDsn.build(
-            scheme=self.DB_ENGINE_SCHEMA,
-            host=self.DB_HOST,
-            port=str(self.DB_PORT),
-            user=self.DB_USER,
-            password=self.DB_PASS,
-            path=f"/{self.DB_NAME}",
+            scheme=self.SQL_ENGINE_SCHEMA,
+            host=self.SQL_HOST,
+            port=str(self.SQL_PORT),
+            user=self.SQL_USER,
+            password=self.SQL_PASS,
+            path=f"/{self.SQL_NAME}",
         )
 
     @cached_property
-    def DB_URL_WO_PASS(self) -> str:  # noqa: N802
-        return self.DB_URL.replace(self.DB_PASS, "***")
+    def SQL_URL_WO_PASS(self) -> str:  # noqa: N802
+        return self.SQL_URL.replace(self.SQL_PASS, "***")
 
 
 class SettingsCache(BaseSettingsCustom):
@@ -143,14 +143,9 @@ class SettingsProvider(BaseSettingsCustom):
 
 
 class Settings(metaclass=SingletonMeta):
-    """
-    Use Facade pattern to structure all app's settings.
-    It is also a singleton, so only one instance of the Settings can exist.
-    """
-
     def __init__(self) -> None:
         self.general = SettingsGeneral()
         self.log = SettingsLog()
-        self.db = SettingsDbSql()
+        self.sql = SettingsDbSql()
         self.provider = SettingsProvider()
         self.cache = SettingsCache()

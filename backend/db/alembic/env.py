@@ -7,8 +7,8 @@ from typing import Literal
 from alembic import context
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.infrastructure.db import get_connection, get_new_engine
 from app.infrastructure.orm.base import Base
+from app.infrastructure.sql import get_connection, get_new_engine
 from app.system.config import Settings
 
 # Read logger config with json-formatter from alembic.ini and create logger
@@ -16,7 +16,7 @@ logging.config.fileConfig(context.config.config_file_name)  # type: ignore[arg-t
 logger = logging.getLogger("alembic")
 logger.info(
     "Db migration started",
-    extra={"db_url": Settings().db.DB_URL_WO_PASS, "db_schema": Settings().db.DB_SCHEMA},
+    extra={"sql_url": Settings().sql.SQL_URL_WO_PASS, "sql_schema": Settings().sql.SQL_SCHEMA},
 )
 
 # Read models
@@ -33,9 +33,9 @@ def do_run_migrations(connection: AsyncConnection) -> None:
             Literal["schema_name", "table_name", "schema_qualified_table_name"], str | None
         ],
     ) -> bool:
-        """Filter tables only in current db schema"""
+        """Filter tables only in current sql schema"""
         if type_ == "schema":
-            return name in [Settings().db.DB_SCHEMA]
+            return name in [Settings().sql.SQL_SCHEMA]
         else:
             return True
 
@@ -46,7 +46,7 @@ def do_run_migrations(connection: AsyncConnection) -> None:
         compare_type=True,
         include_schemas=True,
         include_name=include_name,
-        version_table_schema=Settings().db.DB_SCHEMA,
+        version_table_schema=Settings().sql.SQL_SCHEMA,
     )
 
     with context.begin_transaction():
@@ -70,11 +70,17 @@ try:
     asyncio.run(run_migrations_online())
     logger.info(
         "Db migration finished",
-        extra={"db_url": Settings().db.DB_URL_WO_PASS, "db_schema": Settings().db.DB_SCHEMA},
+        extra={
+            "sql_url": Settings().sql.SQL_URL_WO_PASS,
+            "sql_schema": Settings().sql.SQL_SCHEMA,
+        },
     )
 except Exception as e:
     logger.exception(
         "Db migration failed",
         exc_info=e,
-        extra={"db_url": Settings().db.DB_URL_WO_PASS, "db_schema": Settings().db.DB_SCHEMA},
+        extra={
+            "sql_url": Settings().sql.SQL_URL_WO_PASS,
+            "sql_schema": Settings().sql.SQL_SCHEMA,
+        },
     )

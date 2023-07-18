@@ -9,7 +9,7 @@ from tests.conftest import ProviderAVCryptoMockSuccess, ProviderAVStocksMockSucc
 
 
 @asynccontextmanager
-async def fake_db_connection() -> AsyncGenerator[AsyncConnection, Any]:
+async def fake_sql_connection() -> AsyncGenerator[AsyncConnection, Any]:
     engine = create_async_engine("sqlite+aiosqlite://")
     conn = await engine.connect()
     try:
@@ -20,7 +20,7 @@ async def fake_db_connection() -> AsyncGenerator[AsyncConnection, Any]:
 
 Bootstrap(
     start_orm=True,
-    db_conn_factory=fake_db_connection,
+    sql_conn_factory=fake_sql_connection,
     provider_stocks=ProviderAVStocksMockSuccess(),
     provider_crypto=ProviderAVCryptoMockSuccess(),
 )

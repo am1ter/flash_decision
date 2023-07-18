@@ -15,8 +15,8 @@ from app.domain.session_provider import (
     ProviderAlphaVantageStocks,
 )
 from app.infrastructure.cache.redis import CacheRedis
-from app.infrastructure.db import AsyncSessionFactory, get_connection
 from app.infrastructure.orm.mapper import init_orm_mappers
+from app.infrastructure.sql import AsyncSessionFactory, get_connection
 from app.system.config import Settings
 from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta
@@ -38,8 +38,8 @@ class Bootstrap(metaclass=SingletonMeta):
     Singleton is used, because only one instance of bootstrap is allowed.
     """
 
-    db_conn_factory: AsyncDbConnFactory
-    db_session_factory: sessionmaker
+    sql_conn_factory: AsyncDbConnFactory
+    sql_session_factory: sessionmaker
     cache: Cache
     provider_stocks: Provider
     provider_crypto: Provider
@@ -48,8 +48,8 @@ class Bootstrap(metaclass=SingletonMeta):
         self,
         *,
         start_orm: bool = True,
-        db_conn_factory: AsyncDbConnFactory = get_connection,
-        db_session_factory: sessionmaker = AsyncSessionFactory,
+        sql_conn_factory: AsyncDbConnFactory = get_connection,
+        sql_session_factory: sessionmaker = AsyncSessionFactory,
         cache: Cache = CacheRedis(),
         provider_stocks: Provider = ProviderAlphaVantageStocks(),
         provider_crypto: Provider = ProviderAlphaVantageCrypto(),
@@ -57,17 +57,17 @@ class Bootstrap(metaclass=SingletonMeta):
         # Configure logger
         configure_logger()
 
-        # Set db-related factories and map domain models with ORM
+        # Set sql-related factories and map domain models with ORM
         if start_orm:
             with suppress(ArgumentError):
                 init_orm_mappers()
-        self.db_conn_factory = db_conn_factory
-        self.db_session_factory = db_session_factory
+        self.sql_conn_factory = sql_conn_factory
+        self.sql_session_factory = sql_session_factory
         logger.info(
-            "Connection to db established",
+            "Connection to sql established",
             start_orm=start_orm,
-            db_url=Settings().db.DB_URL_WO_PASS,
-            db_schema=Settings().db.DB_SCHEMA,
+            sql_url=Settings().sql.SQL_URL_WO_PASS,
+            sql_schema=Settings().sql.SQL_SCHEMA,
         )
 
         # Set cache

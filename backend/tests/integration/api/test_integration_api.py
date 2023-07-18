@@ -70,7 +70,7 @@ class TestBackendSupport:
         data_model = RespDataHealthcheck(**response.data)
         assert data_model is not None
         assert data_model.is_app_up
-        assert data_model.is_db_up
+        assert data_model.is_sql_up
 
 
 class TestBackendUser:

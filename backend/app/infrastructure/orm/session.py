@@ -27,7 +27,7 @@ class OrmSession(Base):
     id: Mapped[int_pk]
     datetime_create: Mapped[datetime_current]
     user_id: Mapped[int] = mapped_column(
-        ForeignKey(f"{Settings().db.DB_SCHEMA}.user.id", ondelete="CASCADE"), index=True
+        ForeignKey(f"{Settings().sql.SQL_SCHEMA}.user.id", ondelete="CASCADE"), index=True
     )
     ticker: Mapped[jsonb] = mapped_column(key="_ticker")  # ValueObject
     mode: Mapped[SessionMode] = mapped_column_enum(SessionMode)

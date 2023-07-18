@@ -199,7 +199,7 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
     def _process_kwargs(self, kwargs: Any) -> dict[str, Any]:
         # Show class name
         if kwargs.get("cls") and isinstance(kwargs.get("cls"), type):
-            kwargs["cls"] = kwargs["cls"].__name__
+            kwargs["_cls"] = kwargs["cls"].__name__
 
         # Convert attrs object to dicts for production mode logs (exclude kwargs with disabled repr)
         if not Settings().general.DEV_MODE:
@@ -213,7 +213,7 @@ class CustomStructlogLogger(structlog.stdlib.BoundLogger):
         if kwargs.get("show_func_name", False):
             del kwargs["show_func_name"]
             callstack_depth = 3  # Function where logger was called is on the 3 level of the stack
-            kwargs["function"] = traceback.extract_stack(None, callstack_depth)[0].name
+            kwargs["_function"] = traceback.extract_stack(None, callstack_depth)[0].name
 
         return kwargs
 

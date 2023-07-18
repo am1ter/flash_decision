@@ -3,25 +3,26 @@
 # Example: docker compose --env-file=.env.prod --env-file=.env.secrets -f ./docker-compose.prod.yaml up -d --build
 
 services:
-  # Run container with database
-  fd_db_main:
+  # Run container with sql database
+  fd_sql_main:
     build:
       context: ./backend/
-      dockerfile: Dockerfile.db
-    container_name: fd_db_main
+      dockerfile: Dockerfile.sql
+    container_name: fd_sql_main
     restart: always
     env_file:
       - .env.prod
       - .env.secrets
     environment:
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - PGPORT=${DB_PORT}
+      - POSTGRES_PASSWORD=${SQL_PASS}
+      - PGPORT=${SQL_PORT}
     ports:
-      - ${DB_PORT}:5432
+      - ${SQL_PORT}:5432
     volumes:
-      - fd_db_main:/var/lib/postgresql/data
+      - fd_sql_main:/var/lib/postgresql/data
     profiles:
       - db
+      - backend
 
   # Run container with database
   fd_redis_main:
@@ -52,12 +53,12 @@ services:
       - .env.secrets
     environment:
       - BACKEND_HOST=fd_backend
-      - DB_HOST=fd_db_main
+      - SQL_HOST=fd_sql_main
       - CACHE_REDIS_HOST=fd_redis_main
     profiles:
       - tmpl
 
-  # Apply db migrations
+  # Apply sql migrations
   fd_migrations:
     extends:
       service: fd_tmpl
@@ -65,7 +66,7 @@ services:
     command: poetry run alembic --name ${ENVIRONMENT} upgrade head
     restart: "no"
     depends_on:
-      - fd_db_main
+      - fd_sql_main
     profiles:
       - db
       - backend
@@ -98,5 +99,5 @@ services:
 
 volumes:
   # Database data is stored in volume
-  fd_db_main:
-    name: fd_db_main
+  fd_sql_main:
+    name: fd_sql_main

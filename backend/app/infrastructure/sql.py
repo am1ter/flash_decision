@@ -9,7 +9,7 @@ from app.system.config import Settings
 
 
 def get_new_engine() -> AsyncEngine:
-    engine = create_async_engine(Settings().db.DB_URL, echo=Settings().log.LOG_DB_ACCESS)
+    engine = create_async_engine(Settings().sql.SQL_URL, echo=Settings().log.LOG_SQL_ACCESS)
     return engine
 
 

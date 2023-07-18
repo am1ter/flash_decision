@@ -14,7 +14,7 @@ WORKDIR /usr/src/backend
 COPY poetry.lock pyproject.toml ./
 
 # Install required Python libraries
-RUN poetry install --with test
+RUN poetry install --with tests
 
 # Copy the app files
 COPY . .
