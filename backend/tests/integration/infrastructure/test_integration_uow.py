@@ -1,5 +1,6 @@
 import pytest
 
+from app.bootstrap import Bootstrap
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSQL
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
@@ -8,31 +9,38 @@ from app.system.exceptions import DbObjectCannotBeCreatedError
 pytestmark = pytest.mark.asyncio
 
 
+@pytest.fixture()
+def uow() -> UnitOfWorkSQLAlchemy:
+    type(Bootstrap)._instances = {}
+    Bootstrap()
+    uow = UnitOfWorkSQLAlchemy(RepositoryUserSQL, Bootstrap().sql_session_factory)
+    return uow
+
+
 class TestUnitOfWorkSQLAlchemy:
-    async def test_uow_user(self) -> None:
-        uow = UnitOfWorkSQLAlchemy(RepositoryUserSQL)
+    async def test_uow_user(self, uow: UnitOfWorkSQLAlchemy) -> None:
         async with uow:
             assert uow._db.is_active
             assert uow.repository
 
-    async def test_uow_commit(self, user_domain: DomainUser) -> None:
-        uow = UnitOfWorkSQLAlchemy(RepositoryUserSQL)
+    async def test_uow_commit(self, uow: UnitOfWorkSQLAlchemy, user_domain: DomainUser) -> None:
         # Raise error if user with specific email already exists
         async with uow:
             uow._db.add(user_domain)
             await uow.commit()
-            uow._db.bind.engine.dispose()
+            uow._db.bind.engine.dispose(close=False)
 
-    async def test_uow_rollback(self, user_domain: DomainUser) -> None:
-        uow = UnitOfWorkSQLAlchemy(RepositoryUserSQL)
+    async def test_uow_rollback(self, uow: UnitOfWorkSQLAlchemy, user_domain: DomainUser) -> None:
         # Raise error if user with specific email already exists
         async with uow:
             uow._db.add(user_domain)
             await uow.rollback()
         assert len(uow._db.new) == 0
 
-    async def test_raise_error_sql_record_duplicate(self, user_domain: DomainUser) -> None:
-        uow = UnitOfWorkSQLAlchemy(RepositoryUserSQL)
+    async def test_raise_error_sql_record_duplicate(
+        self, uow: UnitOfWorkSQLAlchemy, user_domain: DomainUser
+    ) -> None:
+        type(Bootstrap)._instances = {}
         user_domain_duplicate = DomainUser(
             name=user_domain.name,
             email=user_domain.email.value,
@@ -45,4 +53,4 @@ class TestUnitOfWorkSQLAlchemy:
             # Raise error if user with specific email already exists
             with pytest.raises(DbObjectCannotBeCreatedError):
                 await uow.commit()
-            uow._db.bind.engine.dispose()
+            uow._db.bind.engine.dispose(close=False)

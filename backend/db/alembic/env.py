@@ -8,7 +8,7 @@ from alembic import context
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.infrastructure.orm.base import Base
-from app.infrastructure.sql import get_connection, get_new_engine
+from app.infrastructure.sql import DbSqlPg
 from app.system.config import Settings
 
 # Read logger config with json-formatter from alembic.ini and create logger
@@ -60,8 +60,8 @@ async def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    engine = get_new_engine()
-    async with get_connection(engine) as conn:
+    db_sql = DbSqlPg()
+    async with db_sql.get_connection() as conn:
         await conn.run_sync(do_run_migrations)
 
 

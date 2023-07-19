@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 import structlog
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.ext.asyncio import AsyncConnection
-from sqlalchemy.orm import sessionmaker
 
 from app.domain.session_provider import (
     Provider,
@@ -16,7 +15,7 @@ from app.domain.session_provider import (
 )
 from app.infrastructure.cache.redis import CacheRedis
 from app.infrastructure.orm.mapper import init_orm_mappers
-from app.infrastructure.sql import AsyncSessionFactory, get_connection
+from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.config import Settings
 from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta
@@ -38,8 +37,7 @@ class Bootstrap(metaclass=SingletonMeta):
     Singleton is used, because only one instance of bootstrap is allowed.
     """
 
-    sql_conn_factory: AsyncDbConnFactory
-    sql_session_factory: sessionmaker
+    db_sql: DbSql
     cache: Cache
     provider_stocks: Provider
     provider_crypto: Provider
@@ -48,8 +46,7 @@ class Bootstrap(metaclass=SingletonMeta):
         self,
         *,
         start_orm: bool = True,
-        sql_conn_factory: AsyncDbConnFactory = get_connection,
-        sql_session_factory: sessionmaker = AsyncSessionFactory,
+        db_sql: DbSql = DbSqlPg(),
         cache: Cache = CacheRedis(),
         provider_stocks: Provider = ProviderAlphaVantageStocks(),
         provider_crypto: Provider = ProviderAlphaVantageCrypto(),
@@ -61,8 +58,8 @@ class Bootstrap(metaclass=SingletonMeta):
         if start_orm:
             with suppress(ArgumentError):
                 init_orm_mappers()
-        self.sql_conn_factory = sql_conn_factory
-        self.sql_session_factory = sql_session_factory
+        self.sql_conn_factory = db_sql.get_connection
+        self.sql_session_factory = db_sql.get_sessionmaker()
         logger.info(
             "Connection to sql established",
             start_orm=start_orm,

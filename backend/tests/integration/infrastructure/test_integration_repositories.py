@@ -11,7 +11,7 @@ from app.bootstrap import Bootstrap
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
 from app.infrastructure.repositories.user import RepositoryUserSQL
-from app.infrastructure.sql import get_new_engine, get_sessionmaker
+from app.infrastructure.sql import DbSqlPg
 from app.system.constants import AuthStatus
 from app.system.exceptions import DbObjectNotFoundError
 
@@ -27,8 +27,8 @@ def bootstrap() -> Bootstrap:
 
 @pytest.fixture()
 def db_sessionmaker() -> sessionmaker:
-    engine = get_new_engine()
-    return get_sessionmaker(engine)
+    db_sql = DbSqlPg()
+    return db_sql.get_sessionmaker()
 
 
 @pytest.fixture()

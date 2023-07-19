@@ -2,32 +2,32 @@ import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.infrastructure.orm import Base
 
 # Import 1st party modules after setting env vars
-from app.infrastructure.sql import get_connection, get_new_engine
+from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.config import Environment, Settings
 
 pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture()
-def engine() -> AsyncEngine:
-    return get_new_engine()
+def db_sql() -> DbSql:
+    return DbSqlPg()
 
 
 class TestSql:
-    async def test_connection(self, engine: AsyncEngine) -> None:
+    async def test_connection(self, db_sql: DbSql) -> None:
         """Make sure the database is up and a connection to it can be established"""
         try:
-            async with get_connection(engine) as conn:
+            async with db_sql.get_connection() as conn:
                 await conn.execute(text("SELECT 1"))
         except ConnectionRefusedError:
             pytest.fail("Connection to SQL cannot be established")
 
-    async def test_migrations(self, engine: AsyncEngine) -> None:
+    async def test_migrations(self, db_sql: DbSql) -> None:
         """Check that all database migrations are applied to `production` sql schema"""
 
         # Check if environment configurated to run in production mode
@@ -58,7 +58,7 @@ class TestSql:
             )
             return compare_metadata(mc, Base.metadata)
 
-        async with engine.connect() as conn:
+        async with db_sql.engine.connect() as conn:
             diff = await conn.run_sync(custom_compare_metadata)
 
         assert not diff, f"SQL and local migrations are not synced"
