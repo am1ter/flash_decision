@@ -1,8 +1,8 @@
 import pytest
 
-from app.bootstrap import Bootstrap
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSQL
+from app.infrastructure.sql import DbSqlPg
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
 from app.system.exceptions import DbObjectCannotBeCreatedError
 
@@ -11,9 +11,7 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture()
 def uow() -> UnitOfWorkSQLAlchemy:
-    type(Bootstrap)._instances = {}
-    Bootstrap()
-    uow = UnitOfWorkSQLAlchemy(RepositoryUserSQL, Bootstrap().sql_session_factory)
+    uow = UnitOfWorkSQLAlchemy(RepositoryUserSQL, DbSqlPg())
     return uow
 
 
@@ -40,7 +38,6 @@ class TestUnitOfWorkSQLAlchemy:
     async def test_raise_error_sql_record_duplicate(
         self, uow: UnitOfWorkSQLAlchemy, user_domain: DomainUser
     ) -> None:
-        type(Bootstrap)._instances = {}
         user_domain_duplicate = DomainUser(
             name=user_domain.name,
             email=user_domain.email.value,

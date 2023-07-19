@@ -16,7 +16,7 @@ class ServiceSupport:
 
     async def _check_sql_connection(self) -> bool:
         try:
-            async with Bootstrap().sql_conn_factory() as conn:
+            async with Bootstrap().db_sql.get_connection() as conn:
                 await conn.execute(text("SELECT 1"))
         except Exception:  # noqa: BLE001
             check_result = False

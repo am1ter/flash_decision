@@ -58,8 +58,7 @@ class Bootstrap(metaclass=SingletonMeta):
         if start_orm:
             with suppress(ArgumentError):
                 init_orm_mappers()
-        self.sql_conn_factory = db_sql.get_connection
-        self.sql_session_factory = db_sql.get_sessionmaker()
+        self.db_sql = db_sql
         logger.info(
             "Connection to sql established",
             start_orm=start_orm,

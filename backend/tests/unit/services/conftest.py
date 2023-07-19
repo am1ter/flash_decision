@@ -6,7 +6,7 @@ from tests.conftest import ProviderAVCryptoMockSuccess, ProviderAVStocksMockSucc
 
 
 class DbSqlFake(DbSql):
-    def get_new_engine(self) -> AsyncEngine:
+    def get_engine(self) -> AsyncEngine:
         return create_async_engine("sqlite+aiosqlite://")
 
 

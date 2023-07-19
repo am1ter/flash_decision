@@ -3,15 +3,13 @@ from typing import Any
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
-from app.bootstrap import Bootstrap
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
 from app.infrastructure.repositories.user import RepositoryUserSQL
-from app.infrastructure.sql import DbSqlPg
+from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.constants import AuthStatus
 from app.system.exceptions import DbObjectNotFoundError
 
@@ -21,14 +19,8 @@ RepositoryUserSQLWithUser = Callable[
 
 
 @pytest.fixture()
-def bootstrap() -> Bootstrap:
-    return Bootstrap()
-
-
-@pytest.fixture()
-def db_sessionmaker() -> sessionmaker:
-    db_sql = DbSqlPg()
-    return db_sql.get_sessionmaker()
+def db_sql() -> DbSql:
+    return DbSqlPg()
 
 
 @pytest.fixture()
@@ -46,7 +38,7 @@ def user_repository_with_user() -> RepositoryUserSQLWithUser:
 
 
 class TestRepositorySQL:
-    def test_identity_map(self, bootstrap: Bootstrap, user_domain: DomainUser) -> None:
+    def test_identity_map(self, user_domain: DomainUser, db_sql: DbSql) -> None:
         """Chech if identity map works as expected"""
 
         identity_map = IdentityMapSQLAlchemy()
@@ -79,14 +71,13 @@ class TestRepositorySQL:
     @pytest.mark.asyncio()
     async def test_repository_user(
         self,
-        bootstrap: Bootstrap,
-        db_sessionmaker: sessionmaker,
         user_domain: DomainUser,
         user_repository_with_user: RepositoryUserSQLWithUser,
+        db_sql: DbSql,
     ) -> None:
         """Check if it is possible to create single db object using domain model"""
 
-        async with db_sessionmaker() as db_session:
+        async with db_sql.get_session() as db_session:
             # Add user
             repository_user = await user_repository_with_user(db_session, user_domain)
 
@@ -108,14 +99,13 @@ class TestRepositorySQL:
     @pytest.mark.asyncio()
     async def test_repository_user_auths(
         self,
-        bootstrap: Bootstrap,
-        db_sessionmaker: sessionmaker,
         user_domain: DomainUser,
         user_repository_with_user: RepositoryUserSQLWithUser,
+        db_sql: DbSql,
     ) -> None:
         """Check if it is possible to create multiple db objects using domain models"""
 
-        async with db_sessionmaker() as db_session:
+        async with db_sql.get_session() as db_session:
             repository_user = await user_repository_with_user(db_session, user_domain)
             user_from_repo = await repository_user.get_by_email(user_domain.email.value)
             assert user_from_repo, "User not found"
