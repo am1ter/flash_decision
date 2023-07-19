@@ -80,6 +80,8 @@ class ProviderAlphaVantage:
         try:
             return cls._tickers[symbol]
         except KeyError as e:
+            if not cls._tickers:
+                raise ProviderAccessError from e
             raise MemoryObjectNotFoundError from e
 
     @classmethod
@@ -96,7 +98,10 @@ class ProviderAlphaVantage:
         tickers_bytes = r.content.decode("utf-8")
         csv_table = csv.reader(tickers_bytes.splitlines(), delimiter=",")
         next(csv_table)  # skip table header
-        return list(csv_table)
+        raw_tickers = list(csv_table)
+        if not raw_tickers:
+            raise ProviderAccessError
+        return raw_tickers
 
     def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
         raise NotImplementedError
@@ -262,7 +267,7 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
                 ticker.symbol, market=Settings().provider.CRYPTO_PRICE_CURRENCY
             )
         except ValueError as e:
-            if "5 calls per minute" in e.args[0]:
+            if "5 calls per minute" in e.args[0] or "limit for your free API key" in e.args[0]:
                 raise ProviderRateLimitExceededError from e
             raise
         data_cols_rename_map = {
