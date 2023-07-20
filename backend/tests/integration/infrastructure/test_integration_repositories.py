@@ -6,11 +6,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
+from app.domain.session import DomainSession, DomainSessionCustom
+from app.domain.session_provider import Ticker
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
+from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.sql import DbSql, DbSqlPg
-from app.system.constants import AuthStatus
+from app.system.constants import (
+    AuthStatus,
+    SessionBarsnumber,
+    SessionFixingbar,
+    SessionIterations,
+    SessionMode,
+    SessionSlippage,
+    SessionStatus,
+    SessionTimeframe,
+    SessionTimelimit,
+)
 from app.system.exceptions import DbObjectNotFoundError
 
 RepositoryUserSqlWithUser = Callable[
@@ -21,6 +34,24 @@ RepositoryUserSqlWithUser = Callable[
 @pytest.fixture()
 def db_sql() -> DbSql:
     return DbSqlPg()
+
+
+@pytest.fixture()
+def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
+    session = DomainSessionCustom(
+        mode=SessionMode.custom,
+        provider=None,  # type: ignore[arg-type]
+        ticker=mock_ticker,
+        timeframe=SessionTimeframe.daily,
+        barsnumber=SessionBarsnumber.bars70,
+        timelimit=SessionTimelimit.seconds60,
+        iterations=SessionIterations.iterations5,
+        slippage=SessionSlippage.average,
+        fixingbar=SessionFixingbar.bar20,
+        status=SessionStatus.created,
+    )
+    session.user = user_domain
+    return session
 
 
 @pytest.fixture()
@@ -137,3 +168,14 @@ class TestRepositorySql:
             assert isinstance(auths_repo[0], DomainAuth), "Auth has wrong type"
             assert auths_repo[0].id, "Auth id not set"
             assert auths_repo[0].status.value == auth_domain_sign_up.status.value, "Wrong status"
+
+    @pytest.mark.asyncio()
+    async def test_repository_session(self, session: DomainSession, db_sql: DbSql) -> None:
+        """Check if it is possible to create single db object using domain model"""
+        async with db_sql.get_session() as db_session:
+            repository_session = RepositorySessionSql(db_session)
+            repository_session.add(session)
+            await repository_session.flush()
+            assert session.id
+            session_from_db = await repository_session.get_by_id(session.id)
+            assert session_from_db.ticker == session.ticker
