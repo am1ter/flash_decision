@@ -10,7 +10,7 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity
-from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
+from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
 from app.system.exceptions import DbConnectionError, DbObjectNotFoundError
 
 
@@ -32,7 +32,7 @@ class Repository(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class RepositorySQLAlchemy(Repository):
+class RepositorySqlAlchemy(Repository):
     """
     Implementation of the `Repository` which uses SQLAlchemy to connect to self._db.
     This repository includes identity maps as a storage (cache) for all data loaded from self._db.
@@ -40,7 +40,7 @@ class RepositorySQLAlchemy(Repository):
     """
 
     def __init__(
-        self, db: AsyncSession, identity_map: type[IdentityMapSQLAlchemy] = IdentityMapSQLAlchemy
+        self, db: AsyncSession, identity_map: type[IdentityMapSqlAlchemy] = IdentityMapSqlAlchemy
     ) -> None:
         self._db = db
         self._identity_map = identity_map()

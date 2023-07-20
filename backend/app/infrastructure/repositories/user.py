@@ -1,8 +1,8 @@
 from app.domain.user import DomainUser, Email
-from app.infrastructure.repositories.base import RepositorySQLAlchemy
+from app.infrastructure.repositories.base import RepositorySqlAlchemy
 
 
-class RepositoryUserSQL(RepositorySQLAlchemy):
+class RepositoryUserSql(RepositorySqlAlchemy):
     async def get_by_id(self, id: int) -> DomainUser:
         user = await self._select_one(DomainUser.id, id)
         assert isinstance(user, DomainUser)

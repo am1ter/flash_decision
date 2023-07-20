@@ -21,8 +21,8 @@ from app.domain.session import (
 )
 from app.domain.session_provider import Provider, Ticker, csv_table
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.session import RepositorySessionSQL
-from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
+from app.infrastructure.repositories.session import RepositorySessionSql
+from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
 from app.system.config import Settings
 from app.system.constants import SessionMode, TickerType
 from app.system.exceptions import (
@@ -35,8 +35,8 @@ from app.system.exceptions import (
 logger = structlog.get_logger()
 
 # Internal dependencies
-uow_session = UnitOfWorkSQLAlchemy(repository_type=RepositorySessionSQL)
-UowSessionDep = Annotated[UnitOfWorkSQLAlchemy, Depends(uow_session)]
+uow_session = UnitOfWorkSqlAlchemy(repository_type=RepositorySessionSql)
+UowSessionDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_session)]
 
 
 @define

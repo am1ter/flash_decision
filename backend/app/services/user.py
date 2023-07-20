@@ -8,8 +8,8 @@ from jose import jwt
 
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.user import RepositoryUserSQL
-from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
+from app.infrastructure.repositories.user import RepositoryUserSql
+from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
 from app.system.config import Settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, WrongPasswordError
 
@@ -17,8 +17,8 @@ from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, Wron
 logger = structlog.get_logger()
 
 # Internal dependencies
-uow_user = UnitOfWorkSQLAlchemy(RepositoryUserSQL)
-UowUserDep = Annotated[UnitOfWorkSQLAlchemy, Depends(uow_user)]
+uow_user = UnitOfWorkSqlAlchemy(RepositoryUserSql)
+UowUserDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_user)]
 
 
 @define
@@ -37,7 +37,7 @@ class ServiceUser:
 
     async def get_user_by_email(self, email: str) -> DomainUser:
         try:
-            self.uow.repository = cast(RepositoryUserSQL, self.uow.repository)
+            self.uow.repository = cast(RepositoryUserSql, self.uow.repository)
             return await self.uow.repository.get_by_email(email)
         except DbObjectNotFoundError as e:
             raise UserNotFoundError from e

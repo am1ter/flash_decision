@@ -9,8 +9,8 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from structlog.contextvars import bind_contextvars, unbind_contextvars
 
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.user import RepositoryUserSQL
-from app.infrastructure.units_of_work.base_sql import UnitOfWorkSQLAlchemy
+from app.infrastructure.repositories.user import RepositoryUserSql
+from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
 from app.system.config import Settings
 from app.system.exceptions import InvalidJwtError, JwtExpiredError
 
@@ -21,8 +21,8 @@ oauth2_scheme = OAuth2PasswordBearer(
 TokenDep = Annotated[str, Depends(oauth2_scheme)]
 
 # Internal dependencies
-uow_user = UnitOfWorkSQLAlchemy(RepositoryUserSQL)
-UowUserDep = Annotated[UnitOfWorkSQLAlchemy, Depends(uow_user)]
+uow_user = UnitOfWorkSqlAlchemy(RepositoryUserSql)
+UowUserDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_user)]
 
 
 @define
@@ -65,7 +65,7 @@ class ServiceAuthorization:
     async def get_current_user(self) -> DomainUser:
         """Get user with email extracted from token and verify it"""
         async with self.uow:
-            self.uow.repository = cast(RepositoryUserSQL, self.uow.repository)
+            self.uow.repository = cast(RepositoryUserSql, self.uow.repository)
             self.user = await self.uow.repository.get_by_email(self.token_decoded.sub)
         self.user.verify_user()
         return self.user

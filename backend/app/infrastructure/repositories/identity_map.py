@@ -9,7 +9,7 @@ from sqlalchemy.orm.dynamic import AppenderQuery
 from app.domain.base import Entity
 
 
-class IdentityMapSQLAlchemyABC(ABC):
+class IdentityMapSqlAlchemyABC(ABC):
     """
     Abstract base class for SQLAlchemy Identity Map.
     Ensures that each object gets loaded only once by keeping every loaded object in a map.
@@ -18,7 +18,7 @@ class IdentityMapSQLAlchemyABC(ABC):
     https://martinfowler.com/eaaCatalog/identityMap.html
     """
 
-    def __init__(self, identity_map: "IdentityMapSQLAlchemy") -> None:
+    def __init__(self, identity_map: "IdentityMapSqlAlchemy") -> None:
         self._identity_map = identity_map
         self._map: dict = defaultdict(dict)
 
@@ -33,7 +33,7 @@ class IdentityMapSQLAlchemyABC(ABC):
         raise NotImplementedError
 
 
-class IdentityMapSQLAlchemyQueries(IdentityMapSQLAlchemyABC):
+class IdentityMapSqlAlchemyQueries(IdentityMapSqlAlchemyABC):
     """Cache SQL queries and their results"""
 
     _map: dict[InstrumentedAttribute, dict[Any, Sequence[Entity]]]
@@ -55,7 +55,7 @@ class IdentityMapSQLAlchemyQueries(IdentityMapSQLAlchemyABC):
         return entities
 
 
-class IdentityMapSQLAlchemyRelationships(IdentityMapSQLAlchemyABC):
+class IdentityMapSqlAlchemyRelationships(IdentityMapSqlAlchemyABC):
     """Cache entities loaded via ORM relationships."""
 
     _map: dict[Entity, dict[str, Sequence[Entity]]]
@@ -72,7 +72,7 @@ class IdentityMapSQLAlchemyRelationships(IdentityMapSQLAlchemyABC):
         return entities
 
 
-class IdentityMapSQLAlchemyEntities(IdentityMapSQLAlchemyABC):
+class IdentityMapSqlAlchemyEntities(IdentityMapSqlAlchemyABC):
     """Store every domain object loaded from the database using its type and ID."""
 
     _map: dict[type, dict[int, Entity]]
@@ -87,10 +87,10 @@ class IdentityMapSQLAlchemyEntities(IdentityMapSQLAlchemyABC):
         return entity
 
 
-class IdentityMapSQLAlchemy:
+class IdentityMapSqlAlchemy:
     """Collection of 3 identity maps for SQLAlchemy."""
 
     def __init__(self) -> None:
-        self.queries = IdentityMapSQLAlchemyQueries(self)
-        self.relationships = IdentityMapSQLAlchemyRelationships(self)
-        self.entities = IdentityMapSQLAlchemyEntities(self)
+        self.queries = IdentityMapSqlAlchemyQueries(self)
+        self.relationships = IdentityMapSqlAlchemyRelationships(self)
+        self.entities = IdentityMapSqlAlchemyEntities(self)

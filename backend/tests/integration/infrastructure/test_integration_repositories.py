@@ -7,14 +7,14 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.user import DomainAuth, DomainUser
-from app.infrastructure.repositories.identity_map import IdentityMapSQLAlchemy
-from app.infrastructure.repositories.user import RepositoryUserSQL
+from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
+from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.constants import AuthStatus
 from app.system.exceptions import DbObjectNotFoundError
 
-RepositoryUserSQLWithUser = Callable[
-    [AsyncSession, DomainUser], Coroutine[Any, Any, RepositoryUserSQL]
+RepositoryUserSqlWithUser = Callable[
+    [AsyncSession, DomainUser], Coroutine[Any, Any, RepositoryUserSql]
 ]
 
 
@@ -24,12 +24,12 @@ def db_sql() -> DbSql:
 
 
 @pytest.fixture()
-def user_repository_with_user() -> RepositoryUserSQLWithUser:
+def user_repository_with_user() -> RepositoryUserSqlWithUser:
     async def create_repository(
         db_session: AsyncSession, user_domain: DomainUser
-    ) -> RepositoryUserSQL:
+    ) -> RepositoryUserSql:
         """Create SQL repository and add user inside"""
-        repository_user = RepositoryUserSQL(db_session, IdentityMapSQLAlchemy)
+        repository_user = RepositoryUserSql(db_session, IdentityMapSqlAlchemy)
         repository_user.add(user_domain)
         await repository_user.flush()
         return repository_user
@@ -37,11 +37,11 @@ def user_repository_with_user() -> RepositoryUserSQLWithUser:
     return create_repository
 
 
-class TestRepositorySQL:
+class TestRepositorySql:
     def test_identity_map(self, user_domain: DomainUser, db_sql: DbSql) -> None:
         """Chech if identity map works as expected"""
 
-        identity_map = IdentityMapSQLAlchemy()
+        identity_map = IdentityMapSqlAlchemy()
         if not isinstance(DomainUser.email, InstrumentedAttribute | QueryableAttribute):
             pytest.fail("Domain model is not mapped with ORM")
         if not isinstance(user_domain.auths, AppenderQuery):
@@ -72,7 +72,7 @@ class TestRepositorySQL:
     async def test_repository_user(
         self,
         user_domain: DomainUser,
-        user_repository_with_user: RepositoryUserSQLWithUser,
+        user_repository_with_user: RepositoryUserSqlWithUser,
         db_sql: DbSql,
     ) -> None:
         """Check if it is possible to create single db object using domain model"""
@@ -100,7 +100,7 @@ class TestRepositorySQL:
     async def test_repository_user_auths(
         self,
         user_domain: DomainUser,
-        user_repository_with_user: RepositoryUserSQLWithUser,
+        user_repository_with_user: RepositoryUserSqlWithUser,
         db_sql: DbSql,
     ) -> None:
         """Check if it is possible to create multiple db objects using domain models"""
