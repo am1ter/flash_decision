@@ -70,7 +70,7 @@ class ProviderAlphaVantage:
     url_root = "https://www.alphavantage.co"
     url_get_list: str
     url_healthcheck = f"{url_root}/query?function=MARKET_STATUS&apikey={api_key}"
-    data_cols_final = ("datetime", "open", "high", "low", "close", "volume")
+    data_cols_final = ("datetime", "open", "high", "low", "close")
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>"
@@ -200,14 +200,13 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
             "2. high": "high",
             "3. low": "low",
             "4. close": "close",
-            "5. volume": "volume",
         }
         data = data.rename(data_cols_rename_map, axis="columns")
         return data
 
     async def _download_data_daily(self, ticker: Ticker) -> pd.DataFrame:
         try:
-            data, _ = await self.exporter.get_daily_adjusted(ticker.symbol, outputsize="full")
+            data, _ = await self.exporter.get_daily(ticker.symbol, outputsize="full")
         except ValueError as e:
             raise ProviderRateLimitExceededError from e
         data_cols_rename_map = {
@@ -216,7 +215,6 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
             "2. high": "high",
             "3. low": "low",
             "4. close": "close",
-            "6. volume": "volume",
         }
         data = data.rename(data_cols_rename_map, axis="columns")
         return data
@@ -276,7 +274,6 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
             "2b. high (USD)": "high",
             "3b. low (USD)": "low",
             "4b. close (USD)": "close",
-            "5. volume": "volume",
         }
         data = data.rename(data_cols_rename_map, axis="columns")
         return data

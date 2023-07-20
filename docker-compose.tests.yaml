@@ -79,7 +79,7 @@ services:
     extends:
       service: fd_migrations_tests
     container_name: fd_tests
-    command: poetry run pytest --reruns 1 --reruns-delay 60 --only-rerun ProviderRateLimitExceededError
+    command: poetry run pytest --reruns 1 --reruns-delay 60 --only-rerun ProviderRateLimitExceededError --only-rerun ProviderAccessError
     depends_on:
       - fd_backend_tests
 
