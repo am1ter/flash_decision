@@ -80,7 +80,7 @@ class TestRepositorySql:
 
         # Test entities identity map
         identity_map.entities.add(user_domain)
-        user_from_im_entities = identity_map.entities.get(DomainUser, user_domain.id)
+        user_from_im_entities = identity_map.entities.get(DomainUser, user_domain._id)
         assert user_domain == user_from_im_entities, "Entities identity map works incorrectly"
 
         # Test sql queries identity map
@@ -123,7 +123,7 @@ class TestRepositorySql:
                 user_from_repo_by_email = await repository_user.get_by_email(wrong_email)
 
             # Get by id
-            user_from_repo_by_id = await repository_user.get_by_id(user_from_repo_by_email.id)
+            user_from_repo_by_id = await repository_user.get_by_id(user_from_repo_by_email._id)
             assert user_from_repo_by_id, "User not found"
             assert user_domain == user_from_repo_by_id, "Domain user is not the same as from db"
 
@@ -166,7 +166,7 @@ class TestRepositorySql:
             assert auths_repo, "Auth not created"
             assert len(auths_repo) == 2, "Auths do not inserted correctly"
             assert isinstance(auths_repo[0], DomainAuth), "Auth has wrong type"
-            assert auths_repo[0].id, "Auth id not set"
+            assert auths_repo[0]._id, "Auth id not set"
             assert auths_repo[0].status.value == auth_domain_sign_up.status.value, "Wrong status"
 
     @pytest.mark.asyncio()
@@ -176,6 +176,6 @@ class TestRepositorySql:
             repository_session = RepositorySessionSql(db_session)
             repository_session.add(session)
             await repository_session.flush()
-            assert session.id
-            session_from_db = await repository_session.get_by_id(session.id)
+            assert session._id
+            session_from_db = await repository_session.get_by_id(session._id)
             assert session_from_db.ticker == session.ticker

@@ -20,7 +20,7 @@ def upgrade() -> None:
     enum_user_status = postgresql.ENUM("active", "disabled", name="UserStatus", schema="production")
     op.create_table(
         "user",
-        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("_id", sa.UUID(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("email", sa.String(), nullable=False),
         sa.Column("password", sa.String(), nullable=False),
@@ -28,7 +28,7 @@ def upgrade() -> None:
             "datetime_create", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
         sa.Column("status", enum_user_status, nullable=False),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("_id"),
         schema="production",
     )
     op.create_index(

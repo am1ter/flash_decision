@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any, Self
 
 from attrs import Attribute, asdict, define, field
+from uuid6 import UUID, uuid6
 
 
 def field_relationship(*, init: bool) -> Any:
@@ -53,8 +54,8 @@ class Entity:
     https://martinfowler.com/bliki/EvansClassification.html
     """
 
-    id: int = field(init=False)
-    datetime_create: datetime = field(init=False, repr=False)
+    _id: UUID = field(factory=uuid6, repr=False)
+    datetime_create: datetime = field(factory=datetime.utcnow, repr=False)
 
 
 class Agregate(Entity):

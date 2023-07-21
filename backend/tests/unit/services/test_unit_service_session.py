@@ -1,8 +1,8 @@
 from datetime import datetime
-from random import randint
 from typing import Self
 
 import pytest
+from uuid6 import uuid6
 
 from app.api.schemas.session import ReqSession
 from app.bootstrap import Bootstrap
@@ -19,13 +19,13 @@ pytestmark = pytest.mark.asyncio
 
 class RepositorySessionFake(Repository):
     def __init__(self) -> None:
-        self.storage_session: dict[int, DomainSession] = {}
+        self.storage_session: dict[str, DomainSession] = {}
 
     def add(self, obj: DomainSession) -> None:  # type: ignore[override]
-        if not hasattr(obj, "id"):
-            obj.id = randint(1, 1000)
+        if not hasattr(obj, "_id"):
+            obj._id = uuid6()
         obj.datetime_create = datetime.utcnow()
-        self.storage_session[obj.id] = obj
+        self.storage_session[obj._id] = obj
 
     async def save(self) -> None:
         pass
@@ -36,8 +36,8 @@ class RepositorySessionFake(Repository):
     async def refresh(self, object: DomainSession) -> None:
         pass
 
-    async def get_by_id(self, id: int) -> DomainSession:
-        return self.storage_session[id]
+    async def get_by_id(self, _id: str) -> DomainSession:
+        return self.storage_session[_id]
 
 
 class UnitOfWorkSessionFake(UnitOfWork):

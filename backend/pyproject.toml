@@ -31,6 +31,7 @@ pyarrow = "12.0.1"
 redis = {extras = ["hiredis"], version = "4.6.0"}
 types-redis = "4.6.0.2"
 httpx = "0.24.1"
+uuid6 = "^2023.5.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.4.1"

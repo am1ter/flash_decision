@@ -26,11 +26,6 @@ class Repository(metaclass=ABCMeta):
         """Add an entity to the repository"""
         raise NotImplementedError
 
-    @abstractmethod
-    async def get_by_id(self, id: int) -> Entity | None:
-        """Retrieve an entity from the repository by its ID"""
-        raise NotImplementedError
-
 
 class RepositorySqlAlchemy(Repository):
     """

@@ -72,11 +72,11 @@ enum_session_status = sa.Enum(
 def upgrade() -> None:
     op.create_table(
         "session",
-        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("_id", sa.UUID(), nullable=False),
         sa.Column(
             "datetime_create", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
-        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("ticker", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column(
             "mode",
@@ -118,8 +118,8 @@ def upgrade() -> None:
             enum_session_status,
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["user_id"], ["production.user.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["user_id"], ["production.user._id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("_id"),
         schema="production",
     )
     op.create_index(

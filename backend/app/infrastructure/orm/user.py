@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.infrastructure.orm.base import Base, datetime_current, int_pk, mapped_column_enum, str_unq
+from app.infrastructure.orm.base import Base, datetime_current, mapped_column_enum, str_unq, uuid_pk
 from app.system.config import Settings
 from app.system.constants import AuthStatus, UserStatus
 
@@ -13,7 +13,7 @@ class OrmUser(Base):
     All users have the same privileges.
     """
 
-    id: Mapped[int_pk]
+    _id: Mapped[uuid_pk]
     datetime_create: Mapped[datetime_current]
     name: Mapped[str]
     email: Mapped[str_unq] = mapped_column(key="_email")  # This col replaced with ValueObject
@@ -27,10 +27,10 @@ class OrmAuth(Base):
     It describes authentication attempts, including unsuccessful ones, as well as new sign-ups.
     """
 
-    id: Mapped[int_pk]
+    _id: Mapped[uuid_pk]
     datetime_create: Mapped[datetime_current]
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey(f"{Settings().sql.SQL_SCHEMA}.user.id", ondelete="CASCADE"), index=True
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey(f"{Settings().sql.SQL_SCHEMA}.user._id", ondelete="CASCADE"), index=True
     )
     ip_address: Mapped[str] = mapped_column(key="_ip_address")  # This col replaced with ValueObject
     http_user_agent: Mapped[str]

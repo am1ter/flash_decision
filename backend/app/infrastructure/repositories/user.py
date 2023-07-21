@@ -3,8 +3,8 @@ from app.infrastructure.repositories.base import RepositorySqlAlchemy
 
 
 class RepositoryUserSql(RepositorySqlAlchemy):
-    async def get_by_id(self, id: int) -> DomainUser:
-        user = await self._select_one(DomainUser.id, id)
+    async def get_by_id(self, _id: str) -> DomainUser:
+        user = await self._select_one(DomainUser._id, _id)
         assert isinstance(user, DomainUser)
         return user
 

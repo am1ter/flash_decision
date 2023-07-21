@@ -26,7 +26,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "auth",
-        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("ip_address", sa.String(), nullable=False),
         sa.Column("http_user_agent", sa.String(), nullable=False),
         sa.Column(
@@ -34,12 +34,12 @@ def upgrade() -> None:
             enum_auth_status,
             nullable=False,
         ),
-        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("_id", sa.UUID(), nullable=False),
         sa.Column(
             "datetime_create", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
-        sa.ForeignKeyConstraint(["user_id"], ["production.user.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
+        sa.ForeignKeyConstraint(["user_id"], ["production.user._id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("_id"),
         schema="production",
     )
     op.create_index(

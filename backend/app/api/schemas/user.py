@@ -15,7 +15,7 @@ class ReqSignUp(BaseModel):
 
 
 class RespSignUp(RespData):
-    id: int
+    _id: str
     email: str
     status: str
     access_token: str
@@ -31,7 +31,7 @@ class ReqSignIn(BaseModel):
 
 
 class RespSignIn(RespData):
-    id: int
+    _id: str
     email: str
     status: str
     access_token: str

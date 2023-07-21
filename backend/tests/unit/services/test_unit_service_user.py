@@ -1,10 +1,10 @@
 from copy import copy, deepcopy
 from datetime import datetime
-from random import randint
 
 import pytest
 import pytest_asyncio
 from jose import jwt
+from uuid6 import uuid6
 
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.user import DomainAuth, DomainUser
@@ -28,15 +28,15 @@ pytestmark = pytest.mark.asyncio
 
 class RepositoryUserFake(Repository):
     def __init__(self) -> None:
-        self.storage_user: dict[int, DomainUser] = {}
-        self.storage_auth: dict[int, list[DomainAuth]] = {}
+        self.storage_user: dict[str, DomainUser] = {}
+        self.storage_auth: dict[str, list[DomainAuth]] = {}
 
     def add(self, obj: DomainUser) -> None:  # type: ignore[override]
-        if not hasattr(obj, "id"):
-            obj.id = randint(1, 1000)
+        if not hasattr(obj, "_id"):
+            obj._id = uuid6()
         obj.datetime_create = datetime.utcnow()
-        self.storage_user[obj.id] = obj
-        self.storage_auth[obj.id] = list(obj.auths)
+        self.storage_user[obj._id] = obj
+        self.storage_auth[obj._id] = list(obj.auths)
 
     async def save(self) -> None:
         pass
@@ -47,8 +47,8 @@ class RepositoryUserFake(Repository):
     async def refresh(self, object: DomainUser) -> None:
         pass
 
-    async def get_by_id(self, id: int) -> DomainUser:
-        return self.storage_user[id]
+    async def get_by_id(self, _id: str) -> DomainUser:
+        return self.storage_user[_id]
 
     async def get_by_email(self, email: str) -> DomainUser | None:
         user = [v for v in self.storage_user.values() if v.email.value == email]
@@ -148,7 +148,7 @@ class TestServiceUser:
         assert user_sign_up == user_sign_in
 
         # Check auth record created
-        sign_in_auths = service_user.uow.repository.storage_auth[user_sign_up.id]  # type: ignore[attr-defined]
+        sign_in_auths = service_user.uow.repository.storage_auth[user_sign_up._id]  # type: ignore[attr-defined]
         assert len(sign_in_auths) == 2, "Auths not created"
         assert sign_in_auths[0].user == user_sign_in, "Auths for sign in not created"
 
@@ -178,7 +178,7 @@ class TestServiceUser:
         req_sign_in.password = "wrongPass"  # noqa: S105
         with pytest.raises(WrongPasswordError):
             await service_user.sign_in(req_sign_in, req_system_info)
-        auth_wrong_pass = service_user.uow.repository.storage_auth[user_sign_up.id][-1]  # type: ignore[attr-defined]
+        auth_wrong_pass = service_user.uow.repository.storage_auth[user_sign_up._id][-1]  # type: ignore[attr-defined]
         assert auth_wrong_pass.status == AuthStatus.wrong_password
 
     async def test_auth_failure_wrong_ip(

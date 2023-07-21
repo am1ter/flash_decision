@@ -47,8 +47,8 @@ class IdentityMapSqlAlchemyQueries(IdentityMapSqlAlchemyABC):
     def get(self, col: InstrumentedAttribute, val: Any) -> Sequence[Entity]:
         """Find the entities in the local storage by query parameters"""
         # For selecting by ID, use the entity identity map instead
-        if col.key == "id":
-            entity = self._identity_map.entities.get(cls_type=col.parent.class_, id=val)
+        if col.key == "_id":
+            entity = self._identity_map.entities.get(cls_type=col.parent.class_, _id=val)
             return [entity]
         # Try to find in the identity map with queries
         entities = self._map[col][val]
@@ -75,15 +75,15 @@ class IdentityMapSqlAlchemyRelationships(IdentityMapSqlAlchemyABC):
 class IdentityMapSqlAlchemyEntities(IdentityMapSqlAlchemyABC):
     """Store every domain object loaded from the database using its type and ID."""
 
-    _map: dict[type, dict[int, Entity]]
+    _map: dict[type, dict[str, Entity]]
 
     def add(self, entity: Entity) -> None:
         """Add an entity to its identity map."""
-        self._map[type(entity)][entity.id] = entity
+        self._map[type(entity)][entity._id] = entity
 
-    def get(self, cls_type: type, id: int) -> Entity:
+    def get(self, cls_type: type, _id: str) -> Entity:
         """Find the entity in the local storage by type and ID."""
-        entity = self._map[cls_type][id]
+        entity = self._map[cls_type][_id]
         return entity
 
 

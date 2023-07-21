@@ -1,10 +1,10 @@
 import csv
-import uuid
 from pathlib import Path
 from typing import ClassVar
 
 import pandas as pd
 import pytest
+from uuid6 import uuid6
 
 from app.api.schemas.session import ReqSession
 from app.api.schemas.user import ReqSignIn, ReqSignUp
@@ -31,9 +31,9 @@ from app.system.constants import (
 @pytest.fixture()
 def user_domain() -> DomainUser:
     return DomainUser(
-        email=f"test-user-{uuid.uuid4()}@alekseisemenov.ru",
+        email=f"test-user-{uuid6()!s}@alekseisemenov.ru",
         name="test-user",
-        password=str(uuid.uuid4()),
+        password=str(uuid6()),
         status=UserStatus.active,
     )
 
@@ -41,9 +41,9 @@ def user_domain() -> DomainUser:
 @pytest.fixture(scope="module")
 def req_sign_up() -> ReqSignUp:
     return ReqSignUp(
-        email=f"test-user-{uuid.uuid4()}@alekseisemenov.ru",
+        email=f"test-user-{uuid6()}@alekseisemenov.ru",
         name="test-user",
-        password=str(uuid.uuid4()),
+        password=str(uuid6()),
     )
 
 

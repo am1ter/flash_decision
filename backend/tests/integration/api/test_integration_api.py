@@ -85,7 +85,6 @@ class TestBackendUser:
 
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_sign_in(self, req_sign_in: ReqSignIn) -> None:
-        # Test sign in
         r = requests.post(f"{Settings().general.BACKEND_URL}/user/sign-in", data=req_sign_in.dict())
         response = Response(r)
         response.assert_status_code(200)

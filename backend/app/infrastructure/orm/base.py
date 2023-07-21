@@ -4,13 +4,13 @@ from enum import Enum as EnumStd
 from typing import Annotated, Any
 
 from sqlalchemy import Enum, MetaData, Table, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapper, as_declarative, declared_attr, mapped_column, registry
 
 from app.system.config import Settings
 
 # Custom `python types` to `database columns` mappings
-int_pk = Annotated[int, mapped_column(primary_key=True)]
+uuid_pk = Annotated[str, mapped_column(UUID, primary_key=True)]
 str_unq = Annotated[str, mapped_column(unique=True, index=True)]
 datetime_current = Annotated[datetime, mapped_column(server_default=func.now())]
 jsonb = Annotated[dict[str, Any], mapped_column(JSONB)]

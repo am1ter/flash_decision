@@ -40,5 +40,5 @@ async def start_new_session(
     assert auth.user
     session = await service.start_session(mode, session_params, auth.user)
     meta = RespMeta()
-    data = RespSession(id=session.id)
+    data = RespSession(_id=session._id)
     return Resp(meta=meta, data=data)
