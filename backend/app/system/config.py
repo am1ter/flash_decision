@@ -4,7 +4,15 @@ from distutils.util import strtobool
 from functools import cached_property
 from typing import Literal
 
-from pydantic import BaseSettings, HttpUrl, PostgresDsn, RedisDsn, ValidationError, parse_obj_as
+from pydantic import (
+    BaseSettings,
+    HttpUrl,
+    MongoDsn,
+    PostgresDsn,
+    RedisDsn,
+    ValidationError,
+    parse_obj_as,
+)
 
 from app.system.constants import Environment
 from app.system.exceptions import ConfigHTTPHardcodedBackendUrlError, ConfigHTTPWrongURLError
@@ -85,6 +93,7 @@ class SettingsLog(BaseSettingsCustom):
         "attr",
         "asyncio",
         "pandas",
+        "pymongo",
     )
 
 
@@ -94,8 +103,8 @@ class SettingsDbSql(BaseSettingsCustom):
     SQL_PORT: int = 5432
     SQL_USER: str = "postgres"
     SQL_PASS: str = "my_sql_pass"
-    SQL_NAME: str = "flash_decision"
-    SQL_SCHEMA: str = SettingsGeneral().ENVIRONMENT.value
+    SQL_DB_NAME: str = "flash_decision"
+    SQL_DB_SCHEMA: str = SettingsGeneral().ENVIRONMENT.value
 
     @cached_property
     def SQL_URL(self) -> str:  # noqa: N802
@@ -105,12 +114,35 @@ class SettingsDbSql(BaseSettingsCustom):
             port=str(self.SQL_PORT),
             user=self.SQL_USER,
             password=self.SQL_PASS,
-            path=f"/{self.SQL_NAME}",
+            path=f"/{self.SQL_DB_NAME}",
         )
 
     @cached_property
     def SQL_URL_WO_PASS(self) -> str:  # noqa: N802
         return self.SQL_URL.replace(self.SQL_PASS, "***")
+
+
+class SettingsDbNoSql(BaseSettingsCustom):
+    NOSQL_ENGINE_SCHEMA: str = "mongodb"
+    NOSQL_HOST: str = "localhost"
+    NOSQL_PORT: int = 27017
+    NOSQL_USER: str = "root"
+    NOSQL_PASS: str = "my_mongo_pass"
+    NOSQL_DB_NAME: str = SettingsGeneral().ENVIRONMENT.value
+
+    @cached_property
+    def NOSQL_URL(self) -> str:  # noqa: N802
+        return MongoDsn.build(
+            scheme=self.NOSQL_ENGINE_SCHEMA,
+            host=self.NOSQL_HOST,
+            port=str(self.NOSQL_PORT),
+            user=self.NOSQL_USER,
+            password=self.NOSQL_PASS,
+        )
+
+    @cached_property
+    def NOSQL_URL_WO_PASS(self) -> str:  # noqa: N802
+        return self.NOSQL_URL.replace(self.NOSQL_PASS, "***")
 
 
 class SettingsCache(BaseSettingsCustom):
@@ -147,5 +179,6 @@ class Settings(metaclass=SingletonMeta):
         self.general = SettingsGeneral()
         self.log = SettingsLog()
         self.sql = SettingsDbSql()
+        self.nosql = SettingsDbNoSql()
         self.provider = SettingsProvider()
         self.cache = SettingsCache()

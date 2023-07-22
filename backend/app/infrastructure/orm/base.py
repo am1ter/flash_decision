@@ -18,7 +18,7 @@ jsonb = Annotated[dict[str, Any], mapped_column(JSONB)]
 
 def mapped_column_enum(enum_class: type[EnumStd], default: EnumStd | None = None) -> Any:
     return mapped_column(
-        Enum(enum_class, name=enum_class.__name__, schema=Settings().sql.SQL_SCHEMA),
+        Enum(enum_class, name=enum_class.__name__, schema=Settings().sql.SQL_DB_SCHEMA),
         nullable=False,
         default=default.value if default else None,
     )
@@ -58,4 +58,4 @@ class Base:
     @declared_attr.directive
     def __table_args__(self) -> dict:
         """Generate __table_args__ with infomation about database schema"""
-        return {"schema": Settings().sql.SQL_SCHEMA}
+        return {"schema": Settings().sql.SQL_DB_SCHEMA}

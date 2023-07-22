@@ -16,7 +16,7 @@ logging.config.fileConfig(context.config.config_file_name)  # type: ignore[arg-t
 logger = logging.getLogger("alembic")
 logger.info(
     "Db migration started",
-    extra={"sql_url": Settings().sql.SQL_URL_WO_PASS, "sql_schema": Settings().sql.SQL_SCHEMA},
+    extra={"sql_url": Settings().sql.SQL_URL_WO_PASS, "sql_schema": Settings().sql.SQL_DB_SCHEMA},
 )
 
 # Read models
@@ -35,7 +35,7 @@ def do_run_migrations(connection: AsyncConnection) -> None:
     ) -> bool:
         """Filter tables only in current sql schema"""
         if type_ == "schema":
-            return name in [Settings().sql.SQL_SCHEMA]
+            return name in [Settings().sql.SQL_DB_SCHEMA]
         else:
             return True
 
@@ -46,7 +46,7 @@ def do_run_migrations(connection: AsyncConnection) -> None:
         compare_type=True,
         include_schemas=True,
         include_name=include_name,
-        version_table_schema=Settings().sql.SQL_SCHEMA,
+        version_table_schema=Settings().sql.SQL_DB_SCHEMA,
     )
 
     with context.begin_transaction():
@@ -72,7 +72,7 @@ try:
         "Db migration finished",
         extra={
             "sql_url": Settings().sql.SQL_URL_WO_PASS,
-            "sql_schema": Settings().sql.SQL_SCHEMA,
+            "sql_schema": Settings().sql.SQL_DB_SCHEMA,
         },
     )
 except Exception as e:
@@ -81,6 +81,6 @@ except Exception as e:
         exc_info=e,
         extra={
             "sql_url": Settings().sql.SQL_URL_WO_PASS,
-            "sql_schema": Settings().sql.SQL_SCHEMA,
+            "sql_schema": Settings().sql.SQL_DB_SCHEMA,
         },
     )

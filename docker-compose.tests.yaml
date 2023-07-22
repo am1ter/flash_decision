@@ -21,6 +21,22 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
 
+  # Run container with nosql database
+  fd_nosql_tests:
+    image: "mongo:latest"
+    container_name: fd_nosql_tests
+    restart: "no"
+    env_file:
+      - .env.tests
+      - .env.secrets
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${NOSQL_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${NOSQL_PASS}
+    networks:
+      - tests
+    tmpfs:
+      - /data/db
+
   # Run container with database
   fd_redis_tests:
     image: "redis/redis-stack:latest"
@@ -46,6 +62,7 @@ services:
     environment:
       - BACKEND_HOST=fd_backend_tests
       - SQL_HOST=fd_sql_tests
+      - NOSQL_HOST=fd_nosql_tests
       - CACHE_REDIS_HOST=fd_redis_tests
     networks:
       - tests
@@ -69,10 +86,12 @@ services:
     container_name: fd_backend_tests
     command: poetry run app
     depends_on:
-      fd_redis_tests:
-        condition: service_started
       fd_migrations_tests:
         condition: service_completed_successfully
+      fd_nosql_tests:
+        condition: service_started
+      fd_redis_tests:
+        condition: service_started
 
   # Run tests when test environment is ready
   fd_tests:

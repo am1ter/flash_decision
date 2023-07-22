@@ -24,7 +24,26 @@ services:
       - db
       - backend
 
-  # Run container with database
+  # Run container with nosql database
+  fd_nosql_main:
+    image: "mongo:latest"
+    container_name: fd_nosql_main
+    restart: always
+    env_file:
+      - .env.prod
+      - .env.secrets
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${NOSQL_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${NOSQL_PASS}
+    ports:
+      - ${NOSQL_PORT}:27017
+    volumes:
+      - fd_nosql_main:/data/db
+    profiles:
+      - db
+      - backend
+
+  # Run container with redis
   fd_redis_main:
     image: "redis/redis-stack:latest"
     container_name: fd_redis_main
@@ -37,6 +56,8 @@ services:
       - REDIS_ARGS=--requirepass ${CACHE_REDIS_PASS}
     ports:
       - ${CACHE_REDIS_PORT}:6379
+    volumes:
+      - fd_redis_main:/data
     profiles:
       - db
       - backend
@@ -101,3 +122,7 @@ volumes:
   # Database data is stored in volume
   fd_sql_main:
     name: fd_sql_main
+  fd_nosql_main:
+    name: fd_nosql_main
+  fd_redis_main:
+    name: fd_redis_main

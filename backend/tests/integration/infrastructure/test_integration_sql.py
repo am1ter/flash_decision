@@ -5,8 +5,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.infrastructure.orm import Base
-
-# Import 1st party modules after setting env vars
 from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.config import Environment, Settings
 
@@ -25,19 +23,19 @@ class TestSql:
             async with db_sql.get_connection() as conn:
                 await conn.execute(text("SELECT 1"))
         except ConnectionRefusedError:
-            pytest.fail("Connection to SQL cannot be established")
+            pytest.fail("Connection to the SQL server cannot be established")
 
     async def test_migrations(self, db_sql: DbSql) -> None:
         """Check that all database migrations are applied to `production` sql schema"""
 
         # Check if environment configurated to run in production mode
         assert Settings().general.ENVIRONMENT == Environment.production, "Wrong env configuration"
-        assert Settings().sql.SQL_SCHEMA == Environment.production.value, "Wrong SQL schema"
+        assert Settings().sql.SQL_DB_SCHEMA == Environment.production.value, "Wrong SQL schema"
 
         def include_name(name: str, type_: str, parent_names: dict) -> bool:
             """Filter only current sql schema tables"""
             if type_ == "schema":
-                return name in [Settings().sql.SQL_SCHEMA]
+                return name in [Settings().sql.SQL_DB_SCHEMA]
             else:
                 return True
 
@@ -53,7 +51,7 @@ class TestSql:
                     "compare_type": True,
                     "include_schemas": True,
                     "include_name": include_name,
-                    "version_table_schema": Settings().sql.SQL_SCHEMA,
+                    "version_table_schema": Settings().sql.SQL_DB_SCHEMA,
                 },
             )
             return compare_metadata(mc, Base.metadata)

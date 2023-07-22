@@ -30,7 +30,7 @@ class OrmAuth(Base):
     _id: Mapped[uuid_pk]
     datetime_create: Mapped[datetime_current]
     user_id: Mapped[str] = mapped_column(
-        ForeignKey(f"{Settings().sql.SQL_SCHEMA}.user._id", ondelete="CASCADE"), index=True
+        ForeignKey(f"{Settings().sql.SQL_DB_SCHEMA}.user._id", ondelete="CASCADE"), index=True
     )
     ip_address: Mapped[str] = mapped_column(key="_ip_address")  # This col replaced with ValueObject
     http_user_agent: Mapped[str]
