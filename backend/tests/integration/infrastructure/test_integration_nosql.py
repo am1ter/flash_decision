@@ -3,8 +3,6 @@ from pymongo.errors import ConnectionFailure
 
 from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture()
 def db_nosql() -> DbNoSql:

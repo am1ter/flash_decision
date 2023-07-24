@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Self
 
+import pandas as pd
 from attrs import Attribute, asdict, define, field
 from uuid6 import UUID, uuid6
 
@@ -54,7 +55,7 @@ class Entity:
     https://martinfowler.com/bliki/EvansClassification.html
     """
 
-    _id: UUID = field(factory=uuid6, repr=False)
+    _id: UUID = field(factory=uuid6, repr=False, alias="id")
     datetime_create: datetime = field(factory=datetime.utcnow, repr=False)
 
 
@@ -70,10 +71,16 @@ def custom_serializer(instance: type, field: Attribute, value: Any) -> Any:
     It is custom serializer for `attrs` asdict() method.
     Used to avoid convertation Value Objects to dicts, etc.
     """
+    if field and field.metadata.get("asdict_ignore"):
+        return None
     match value:
         case ValueObject():
             return value.value
         case Enum():
             return value.value
+        case pd.DataFrame():
+            return value.to_json()
+        case datetime():
+            return value.isoformat()
         case _:
             return value

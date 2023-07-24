@@ -21,17 +21,17 @@ class UnitOfWorkSqlAlchemy(UnitOfWork):
         repository_type: type[RepositorySqlAlchemy],
         db_factory: DbSql = Bootstrap().db_sql,
     ) -> None:
-        self._db_factory = db_factory
         self._repository_type = repository_type
+        self._db_factory = db_factory
 
     async def __aenter__(self) -> Self:
         session = self._db_factory.get_session()
         self._db = await session.__aenter__()
         self.repository = self._repository_type(self._db)
-        return await super().__aenter__()
+        return self
 
     async def __aexit__(self, *args) -> None:
-        await super().__aexit__(*args)
+        await self.rollback()
         await self._db.close()
 
     async def commit(self) -> None:

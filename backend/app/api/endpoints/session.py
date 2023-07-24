@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.session import ReqSession, RespSession, RespSessionOptions
 from app.domain.base import custom_serializer
+from app.services.iteration import ServiceIteration
 from app.services.session import ServiceSession
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import Settings
@@ -15,6 +16,7 @@ router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/session")
 
 # Internal dependencies
 ServiceSessionDep = Annotated[ServiceSession, Depends()]
+ServiceIterationDep = Annotated[ServiceIteration, Depends()]
 ServiceAuthorizationDep = Annotated[ServiceAuthorization, Depends(verify_authorization)]
 
 
@@ -32,13 +34,15 @@ async def collect_session_options(
 @router.post("/{mode}")
 async def start_new_session(
     mode: SessionMode,
-    service: ServiceSessionDep,
+    service_session: ServiceSessionDep,
+    service_iteration: ServiceIterationDep,
     auth: ServiceAuthorizationDep,
     session_params: ReqSession | None = None,
 ) -> Resp[RespMeta, RespSession]:
     """Start new session: receive session's mode and options, download quotes, create iterations"""
     assert auth.user
-    session = await service.start_session(mode, session_params, auth.user)
+    session = await service_session.create_session(mode, session_params, auth.user)
+    await service_iteration.create_iterations(session)
     meta = RespMeta()
     data = RespSession(_id=session._id)
     return Resp(meta=meta, data=data)

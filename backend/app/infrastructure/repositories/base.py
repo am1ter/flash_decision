@@ -3,13 +3,17 @@ from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
 from typing import Any
 
+import bson
+from attrs import asdict
 from sqlalchemy import select
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
+from uuid6 import UUID
 
-from app.domain.base import Entity
+from app.domain.base import Entity, custom_serializer
+from app.infrastructure.nosql import DbNoSql
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
 from app.system.exceptions import DbConnectionError, DbObjectNotFoundError
 
@@ -132,3 +136,40 @@ class RepositorySqlAlchemy(Repository):
     async def refresh(self, domain_obj: Entity) -> None:
         """Refresh the state of an entity with the database"""
         await self._db.refresh(domain_obj)
+
+
+class RepositoryNoSqlMongo(Repository):
+    def __init__(self, db: DbNoSql) -> None:
+        self._db = db.engine
+
+    def _convert_uuid_to_binary(self, field: dict) -> dict:
+        for key, val in field.items():
+            if isinstance(val, UUID):
+                field[key] = bson.Binary.from_uuid(val)
+        return field
+
+    def _convert_binary_to_uuid(self, doc: dict) -> dict:
+        for key, val in doc.items():
+            if isinstance(val, bson.Binary):
+                doc[key] = UUID(bytes=bson.BSON(val))
+        return doc
+
+    def add(self, entity: Entity) -> None:
+        entity_as_dict = asdict(entity, recurse=True, value_serializer=custom_serializer)
+        entity_as_dict = self._convert_uuid_to_binary(entity_as_dict)
+        collection_name = entity.__class__.__name__
+        self._db[collection_name].insert_one(entity_as_dict)
+
+    def _select_one(self, entity_class: type, field: dict) -> dict:
+        collection_name = entity_class.__name__
+        field_updated = self._convert_uuid_to_binary(field)
+        return self._db[collection_name].find_one(field_updated)
+
+    def _select_all(self, entity_class: type, field: dict) -> list[dict]:
+        collection_name = entity_class.__name__
+        all_documents = []
+        field_updated = self._convert_uuid_to_binary(field)
+        documents_from_db = self._db[collection_name].find(field_updated)
+        for doc in documents_from_db:
+            all_documents.append(doc)
+        return all_documents

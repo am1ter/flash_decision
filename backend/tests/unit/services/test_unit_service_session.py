@@ -1,8 +1,7 @@
-from datetime import datetime
 from typing import Self
 
 import pytest
-from uuid6 import uuid6
+from uuid6 import UUID
 
 from app.api.schemas.session import ReqSession
 from app.bootstrap import Bootstrap
@@ -19,13 +18,10 @@ pytestmark = pytest.mark.asyncio
 
 class RepositorySessionFake(Repository):
     def __init__(self) -> None:
-        self.storage_session: dict[str, DomainSession] = {}
+        self.storage: dict[UUID, DomainSession] = {}
 
     def add(self, obj: DomainSession) -> None:  # type: ignore[override]
-        if not hasattr(obj, "_id"):
-            obj._id = uuid6()
-        obj.datetime_create = datetime.utcnow()
-        self.storage_session[obj._id] = obj
+        self.storage[obj._id] = obj
 
     async def save(self) -> None:
         pass
@@ -37,7 +33,7 @@ class RepositorySessionFake(Repository):
         pass
 
     async def get_by_id(self, _id: str) -> DomainSession:
-        return self.storage_session[_id]
+        return self.storage[_id]
 
 
 class UnitOfWorkSessionFake(UnitOfWork):
@@ -45,10 +41,10 @@ class UnitOfWorkSessionFake(UnitOfWork):
         self.repository = RepositorySessionFake()
 
     async def __aenter__(self) -> Self:
-        return await super().__aenter__()
+        return self
 
     async def __aexit__(self, *args) -> None:
-        await super().__aexit__(*args)
+        pass
 
     async def commit(self) -> None:
         pass
@@ -78,7 +74,7 @@ class TestServiceSession:
         assert options
 
     @pytest.mark.parametrize("mode", list(SessionMode))
-    async def test_start_session(
+    async def test_create_session(
         self,
         mode: SessionMode,
         service_session: ServiceSession,
@@ -86,6 +82,6 @@ class TestServiceSession:
         user_domain: DomainUser,
     ) -> None:
         params = req_session_params_custom if mode == SessionMode.custom else None
-        session = await service_session.start_session(mode, params, user_domain)
+        session = await service_session.create_session(mode, params, user_domain)
         assert not session.time_series.df_quotes.empty
         assert session

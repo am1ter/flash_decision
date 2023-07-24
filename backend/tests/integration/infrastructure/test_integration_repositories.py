@@ -1,15 +1,21 @@
 from collections.abc import Callable, Coroutine
+from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
+from uuid6 import uuid6
 
+from app.domain.iteration import DomainIteration
 from app.domain.session import DomainSession, DomainSessionCustom
 from app.domain.session_provider import Ticker
 from app.domain.user import DomainAuth, DomainUser
+from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
+from app.infrastructure.repositories.iteration import RepositoryNoSqlIteration
 from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.sql import DbSql, DbSqlPg
@@ -37,6 +43,11 @@ def db_sql() -> DbSql:
 
 
 @pytest.fixture()
+def db_nosql() -> DbNoSql:
+    return DbNoSqlMongo()
+
+
+@pytest.fixture()
 def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
     session = DomainSessionCustom(
         mode=SessionMode.custom,
@@ -51,6 +62,7 @@ def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
         status=SessionStatus.created,
     )
     session.user = user_domain
+    session.time_series = None  # type: ignore[assignment]
     return session
 
 
@@ -179,3 +191,28 @@ class TestRepositorySql:
             assert session._id
             session_from_db = await repository_session.get_by_id(session._id)
             assert session_from_db.ticker == session.ticker
+
+
+class TestRepositoryNoSql:
+    def test_repository_iteration_quotes(self, db_nosql: DbNoSql, session: DomainSession) -> None:
+        repository = RepositoryNoSqlIteration(db_nosql)  # type: ignore[arg-type]
+
+        # Create and record iterations
+        current_file_path = Path(__file__).parent.parent.parent
+        data_path = current_file_path / "mock_data" / "mock_iteration_01.json"
+        mock_data_raw = pd.read_json(data_path)
+        mock_session_id = uuid6()
+        for iter_num in range(2):
+            iteration = DomainIteration(
+                session_id=mock_session_id,
+                iteration_num=iter_num,
+                df_quotes=pd.DataFrame.from_dict(mock_data_raw),
+                session=session,
+            )
+            repository.add(iteration)
+
+        # Get iterations from repository
+        iteration_col_from_repo = repository.get_all_by_session_id(mock_session_id)
+        assert len(iteration_col_from_repo) == 2
+        assert iteration_col_from_repo[0].session_id == mock_session_id
+        assert not iteration_col_from_repo[0].df_quotes.empty

@@ -1,5 +1,6 @@
 from copy import copy, deepcopy
 from datetime import datetime
+from typing import Self
 
 import pytest
 import pytest_asyncio
@@ -58,6 +59,12 @@ class RepositoryUserFake(Repository):
 class UnitOfWorkUserFake(UnitOfWork):
     def __init__(self) -> None:
         self.repository = RepositoryUserFake()
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(self, *args) -> None:
+        pass
 
     async def commit(self) -> None:
         pass

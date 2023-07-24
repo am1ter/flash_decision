@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Self
 
 import pandas as pd
 from attrs import define, field
+from uuid6 import UUID
 
-from app.domain.base import Entity, field_relationship
+from app.domain.base import Entity
 from app.system.exceptions import ProviderInvalidDataError, SessionConfigurationError
 
 if TYPE_CHECKING:
@@ -16,50 +17,25 @@ if TYPE_CHECKING:
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainIteration(Entity):
-    """
-    Every session is divided into several parts - iterations.
-    For every iteration the user makes a decision - to buy, to sell or do nothing.
-    """
+class DomainIterationCollection:
+    """Container for the session's iterations"""
 
-    iteration_num: int = field()
-    df_quotes: pd.DataFrame = field(repr=False)
-    session: DomainSession = field_relationship(init=True)
-    bar_price_start: Decimal = field()
-    bar_price_finish: Decimal = field()
-    bar_price_fix: Decimal = field()
+    session: DomainSession | None
+    iterations: list[DomainIteration] = field(factory=list)
 
-    @iteration_num.validator
-    def _validate_iteration_num(self, attribute: str, value: int) -> None:
-        if value > self.session.iterations.value:
-            raise SessionConfigurationError
+    def __getitem__(self, key: int) -> DomainIteration:
+        return self.iterations[key]
 
-    @bar_price_start.default
-    def default_bar_price_start(self) -> Decimal:
-        bar_num_start = 0
-        bar_price_start = self.df_quotes.iloc[bar_num_start]["open"]
-        if bar_price_start < 0:
-            raise ProviderInvalidDataError
-        return bar_price_start
+    def __len__(self) -> int:
+        return len(self.iterations)
 
-    @bar_price_finish.default
-    def default_bar_price_finish(self) -> Decimal:
-        bar_num_finish = self.session.barsnumber.value - 1
-        bar_price_finish = self.df_quotes.iloc[bar_num_finish]["close"]
-        if bar_price_finish < 0:
-            raise ProviderInvalidDataError
-        return bar_price_finish
-
-    @bar_price_fix.default
-    def default_bar_price_fix(self) -> Decimal:
-        bar_num_fix = self.session.barsnumber.value + self.session.fixingbar.value - 1
-        bar_price_fix = self.df_quotes.iloc[bar_num_fix]["close"]
-        if bar_price_fix < 0:
-            raise ProviderInvalidDataError
-        return bar_price_fix
+    def append(self, iteration: DomainIteration) -> None:
+        self.iterations.append(iteration)
 
     @staticmethod
-    def _get_slices(total_df_quotes_bars: int, required_slices: int, slice_len: int) -> list[slice]:
+    def _calculate_random_slices(
+        total_df_quotes_bars: int, required_slices: int, slice_len: int
+    ) -> list[slice]:
         """
         This algorithm creates random slices with specified parameters.
         1. This algorithm ensures that all slices are within the bounds of the original list and
@@ -88,18 +64,72 @@ class DomainIteration(Entity):
                 ]
         return slices
 
-    @classmethod
-    def create_all(cls, session: DomainSession) -> list[Self]:
-        """Create all iterations for a session"""
-        slices = cls._get_slices(
-            total_df_quotes_bars=session.time_series.total_df_quotes_bars,
-            required_slices=session.iterations.value,
-            slice_len=session.barsnumber.value + session.fixingbar.value,
+    def create_iterations(self) -> Self:
+        """Extract random slices from the full df and create all iterations for the session"""
+        assert self.session
+        slices = self._calculate_random_slices(
+            total_df_quotes_bars=self.session.time_series.total_df_quotes_bars,
+            required_slices=self.session.iterations.value,
+            slice_len=self.session.barsnumber.value + self.session.fixingbar.value,
         )
-        session_iterations = []
-        for iter_num in range(session.iterations.value):
+        self.iterations = []
+        for iter_num in range(self.session.iterations.value):
             iter_slice = slices[iter_num]
-            df_quotes_iter = session.time_series.df_quotes[iter_slice]
-            iteration = cls(iteration_num=iter_num, df_quotes=df_quotes_iter, session=session)
-            session_iterations.append(iteration)
-        return session_iterations
+            iteration = DomainIteration(
+                session_id=self.session._id,
+                iteration_num=iter_num,
+                df_quotes=self.session.time_series.df_quotes[iter_slice],
+                session=self.session,
+            )
+            self.append(iteration)
+        assert len(self.iterations) == self.session.iterations.value
+        return self
+
+
+@define(kw_only=True, slots=False, hash=True)
+class DomainIteration(Entity):
+    """
+    Every session is divided into several parts - iterations.
+    For every iteration the user makes a decision - to buy, to sell or do nothing.
+    """
+
+    session_id: UUID
+    iteration_num: int = field()
+    df_quotes: pd.DataFrame = field(repr=False)
+    session: DomainSession | None = field(metadata={"asdict_ignore": True})
+    bar_price_start: Decimal = field()
+    bar_price_finish: Decimal = field()
+    bar_price_fix: Decimal = field()
+
+    @iteration_num.validator
+    def _validate_iteration_num(self, attribute: str, value: int) -> None:
+        if not self.session:
+            return
+        if value > self.session.iterations.value:
+            raise SessionConfigurationError
+
+    @bar_price_start.default
+    def default_bar_price_start(self) -> Decimal:
+        bar_num_start = 0
+        bar_price_start = self.df_quotes.iloc[bar_num_start]["open"]
+        if bar_price_start < 0:
+            raise ProviderInvalidDataError
+        return bar_price_start
+
+    @bar_price_finish.default
+    def default_bar_price_finish(self) -> Decimal:
+        assert self.session
+        bar_num_finish = self.session.barsnumber.value - 1
+        bar_price_finish = self.df_quotes.iloc[bar_num_finish]["close"]
+        if bar_price_finish < 0:
+            raise ProviderInvalidDataError
+        return bar_price_finish
+
+    @bar_price_fix.default
+    def default_bar_price_fix(self) -> Decimal:
+        assert self.session
+        bar_num_fix = self.session.barsnumber.value + self.session.fixingbar.value - 1
+        bar_price_fix = self.df_quotes.iloc[bar_num_fix]["close"]
+        if bar_price_fix < 0:
+            raise ProviderInvalidDataError
+        return bar_price_fix
