@@ -8,6 +8,7 @@ from uuid6 import uuid6
 
 from app.api.schemas.session import ReqSession
 from app.api.schemas.user import ReqSignIn, ReqSignUp
+from app.domain.session import DomainSession, DomainSessionCustom, SessionTimeSeries
 from app.domain.session_provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,
@@ -21,6 +22,7 @@ from app.system.constants import (
     SessionIterations,
     SessionMode,
     SessionSlippage,
+    SessionStatus,
     SessionTimeframe,
     SessionTimelimit,
     TickerType,
@@ -36,6 +38,36 @@ def user_domain() -> DomainUser:
         password=str(uuid6()),
         status=UserStatus.active,
     )
+
+
+def df_quotes_stocks() -> pd.DataFrame:
+    path = Path(__file__).parent / "mock_data" / "provider_av_stocks_mock_success_data.json"
+    return pd.read_json(path)
+
+
+def df_quotes_crypto() -> pd.DataFrame:
+    path = Path(__file__).parent / "mock_data" / "provider_av_crypto_mock_success_data.json"
+    return pd.read_json(path)
+
+
+@pytest.fixture()
+def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
+    session = DomainSessionCustom(
+        mode=SessionMode.custom,
+        provider=None,  # type: ignore[arg-type]
+        ticker=mock_ticker,
+        timeframe=SessionTimeframe.daily,
+        barsnumber=SessionBarsnumber.bars70,
+        timelimit=SessionTimelimit.seconds60,
+        iterations=SessionIterations.iterations5,
+        slippage=SessionSlippage.average,
+        fixingbar=SessionFixingbar.bar20,
+        status=SessionStatus.created,
+    )
+    session.user = user_domain
+    df_quotes = df_quotes_stocks()
+    session.time_series = SessionTimeSeries.create(session=session, df_quotes=df_quotes)
+    return session
 
 
 @pytest.fixture(scope="module")
@@ -66,9 +98,7 @@ class ProviderAVStocksMockSuccess(ProviderAlphaVantageStocks):
         return list(csv_table)
 
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        path = Path(__file__).parent / "mock_data" / "provider_av_stocks_mock_success_data.json"
-        mock_data_raw = pd.read_json(path)
-        return pd.DataFrame.from_dict(mock_data_raw)
+        return df_quotes_stocks()
 
 
 class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
@@ -80,9 +110,7 @@ class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
         return list(csv_table)
 
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        path = Path(__file__).parent / "mock_data" / "provider_av_crypto_mock_success_data.json"
-        mock_data_raw = pd.read_json(path)
-        return pd.DataFrame.from_dict(mock_data_raw)
+        return df_quotes_crypto()
 
 
 class ProviderAVStocksMockFailureBroken(ProviderAlphaVantageStocks):

@@ -10,8 +10,7 @@ from sqlalchemy.orm.dynamic import AppenderQuery
 from uuid6 import uuid6
 
 from app.domain.iteration import DomainIteration
-from app.domain.session import DomainSession, DomainSessionCustom
-from app.domain.session_provider import Ticker
+from app.domain.session import DomainSession
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
@@ -19,17 +18,7 @@ from app.infrastructure.repositories.iteration import RepositoryNoSqlIteration
 from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.sql import DbSql, DbSqlPg
-from app.system.constants import (
-    AuthStatus,
-    SessionBarsnumber,
-    SessionFixingbar,
-    SessionIterations,
-    SessionMode,
-    SessionSlippage,
-    SessionStatus,
-    SessionTimeframe,
-    SessionTimelimit,
-)
+from app.system.constants import AuthStatus
 from app.system.exceptions import DbObjectNotFoundError
 
 RepositoryUserSqlWithUser = Callable[
@@ -45,25 +34,6 @@ def db_sql() -> DbSql:
 @pytest.fixture()
 def db_nosql() -> DbNoSql:
     return DbNoSqlMongo()
-
-
-@pytest.fixture()
-def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
-    session = DomainSessionCustom(
-        mode=SessionMode.custom,
-        provider=None,  # type: ignore[arg-type]
-        ticker=mock_ticker,
-        timeframe=SessionTimeframe.daily,
-        barsnumber=SessionBarsnumber.bars70,
-        timelimit=SessionTimelimit.seconds60,
-        iterations=SessionIterations.iterations5,
-        slippage=SessionSlippage.average,
-        fixingbar=SessionFixingbar.bar20,
-        status=SessionStatus.created,
-    )
-    session.user = user_domain
-    session.time_series = None  # type: ignore[assignment]
-    return session
 
 
 @pytest.fixture()

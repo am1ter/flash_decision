@@ -22,10 +22,11 @@ class ServiceIteration:
     def __init__(self, uow: UowIterationDep) -> None:
         self.uow = uow
 
-    async def create_iterations(self, session: DomainSession) -> None:
+    async def create_iterations(self, session: DomainSession) -> DomainIterationCollection:
         iteration_collection = DomainIterationCollection(session=session)
         iteration_collection.create_iterations()
         # Record iterations to NoSQL database
         async with self.uow:
             for iteration in iteration_collection.iterations:
                 self.uow.repository.add(iteration)
+        return iteration_collection
