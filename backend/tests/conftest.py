@@ -41,12 +41,12 @@ def user_domain() -> DomainUser:
 
 
 def df_quotes_stocks() -> pd.DataFrame:
-    path = Path(__file__).parent / "mock_data" / "provider_av_stocks_mock_success_data.json"
+    path = Path(__file__).parent / "_mock_data" / "provider_av_stocks_mock_success_data.json"
     return pd.read_json(path)
 
 
 def df_quotes_crypto() -> pd.DataFrame:
-    path = Path(__file__).parent / "mock_data" / "provider_av_crypto_mock_success_data.json"
+    path = Path(__file__).parent / "_mock_data" / "provider_av_crypto_mock_success_data.json"
     return pd.read_json(path)
 
 
@@ -91,7 +91,7 @@ def mock_ticker() -> Ticker:
 
 class ProviderAVStocksMockSuccess(ProviderAlphaVantageStocks):
     async def download_raw_tickers(self) -> csv_table:
-        path = Path(__file__).parent / "mock_data" / "provider_av_stocks_mock_success_tickers.csv"
+        path = Path(__file__).parent / "_mock_data" / "provider_av_stocks_mock_success_tickers.csv"
         with path.open() as file:
             csv_table = csv.reader(file.read().splitlines(), delimiter=",")
         next(csv_table)  # skip table header
@@ -103,7 +103,7 @@ class ProviderAVStocksMockSuccess(ProviderAlphaVantageStocks):
 
 class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
     async def download_raw_tickers(self) -> csv_table:
-        path = Path(__file__).parent / "mock_data" / "provider_av_crypto_mock_success_tickers.csv"
+        path = Path(__file__).parent / "_mock_data" / "provider_av_crypto_mock_success_tickers.csv"
         with path.open() as file:
             csv_table = csv.reader(file.read().splitlines(), delimiter=",")
         next(csv_table)  # skip table header
