@@ -44,5 +44,5 @@ async def start_new_session(
     session = await service_session.create_session(mode, session_params, auth.user)
     await service_iteration.create_iterations(session)
     meta = RespMeta()
-    data = RespSession(_id=session._id)
+    data = RespSession(_id=str(session._id))
     return Resp(meta=meta, data=data)
