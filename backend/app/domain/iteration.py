@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
 import random
 from typing import TYPE_CHECKING, Self
 
 import pandas as pd
 from attrs import define, field
+from plotly import graph_objs
+from plotly.utils import PlotlyJSONEncoder
 from uuid6 import UUID
 
 from app.domain.base import Entity
@@ -133,3 +136,17 @@ class DomainIteration(Entity):
         if bar_price_fix < 0:
             raise ProviderInvalidDataError
         return bar_price_fix
+
+    def render_chart(self) -> str:
+        candles = graph_objs.Candlestick(
+            x=self.df_quotes.index,
+            open=self.df_quotes["open"],
+            close=self.df_quotes["close"],
+            low=self.df_quotes["low"],
+            high=self.df_quotes["high"],
+            increasing_line_color="#3c996e",
+            decreasing_line_color="#e15361",
+        )
+        chart_data = graph_objs.Figure(data=[candles])
+        chart_json = json.dumps(chart_data, cls=PlotlyJSONEncoder)
+        return chart_json

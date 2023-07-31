@@ -10,6 +10,7 @@ class DbSqlFake(DbSql):
         return create_async_engine("sqlite+aiosqlite://")
 
 
+type(Bootstrap)._instances = {}
 Bootstrap(
     start_orm=True,
     db_sql=DbSqlFake(),

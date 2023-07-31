@@ -33,6 +33,7 @@ types-redis = "4.6.0.2"
 httpx = "0.24.1"
 uuid6 = "2023.5.2"
 pymongo = "4.4.1"
+plotly = "5.15.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.4.1"

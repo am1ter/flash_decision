@@ -181,8 +181,13 @@ class TestRepositoryNoSql:
             )
             repository.add(iteration)
 
-        # Get iterations from repository
-        iteration_col_from_repo = repository.get_all_by_session_id(mock_session_id)
+        # Get an iteration collection from repository
+        iteration_col_from_repo = repository.get_iteration_collection(mock_session_id)
         assert len(iteration_col_from_repo) == 2
         assert iteration_col_from_repo[0].session_id == mock_session_id
         assert not iteration_col_from_repo[0].df_quotes.empty
+
+        # Get a single iteration from repository
+        iteration_from_repo = repository.get_iteration(mock_session_id, 1)
+        assert iteration_from_repo.session_id == mock_session_id
+        assert not iteration_from_repo.df_quotes.empty

@@ -1,7 +1,8 @@
-from typing import Annotated
+from typing import Annotated, cast
 
 import structlog
 from fastapi import Depends
+from uuid6 import UUID
 
 from app.domain.iteration import DomainIterationCollection
 from app.domain.session import DomainSession
@@ -25,8 +26,18 @@ class ServiceIteration:
     async def create_iterations(self, session: DomainSession) -> DomainIterationCollection:
         iteration_collection = DomainIterationCollection(session=session)
         iteration_collection.create_iterations()
-        # Record iterations to NoSQL database
         async with self.uow:
             for iteration in iteration_collection.iterations:
                 self.uow.repository.add(iteration)
+        await logger.ainfo_finish(
+            cls=self.__class__, show_func_name=True, iteration_collection=iteration_collection
+        )
         return iteration_collection
+
+    async def render_chart(self, session_id: UUID, iteration_num: int) -> str:
+        async with self.uow:
+            self.uow.repository = cast(RepositoryNoSqlIteration, self.uow.repository)
+            iteration = self.uow.repository.get_iteration(session_id, iteration_num)
+        chart = iteration.render_chart()
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, iteration=iteration)
+        return chart
