@@ -1,5 +1,6 @@
 import pytest
 
+from app.domain.support import Healthcheck
 from app.services.support import ServiceSupport
 
 pytestmark = pytest.mark.asyncio
@@ -11,6 +12,6 @@ def service_support() -> ServiceSupport:
 
 
 class TestServiceSupport:
-    async def test_check_sql_connection(self, service_support: ServiceSupport) -> None:
-        result = await service_support._check_sql_connection()
-        assert result
+    async def test_healthcheck(self, service_support: ServiceSupport) -> None:
+        result = await service_support.healthcheck()
+        assert isinstance(result, Healthcheck)

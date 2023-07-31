@@ -100,6 +100,9 @@ class ProviderAVStocksMockSuccess(ProviderAlphaVantageStocks):
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         return df_quotes_stocks()
 
+    async def healthcheck(self) -> bool:
+        return True
+
 
 class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
     async def download_raw_tickers(self) -> csv_table:
@@ -111,6 +114,9 @@ class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
 
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         return df_quotes_crypto()
+
+    async def healthcheck(self) -> bool:
+        return True
 
 
 class ProviderAVStocksMockFailureBroken(ProviderAlphaVantageStocks):

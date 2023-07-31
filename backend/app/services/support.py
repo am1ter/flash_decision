@@ -1,42 +1,56 @@
 from asyncio import TaskGroup
+from contextlib import suppress
+from typing import Any, Protocol
 
 import structlog
 from attrs import asdict
-from sqlalchemy import text
 
 from app.bootstrap import Bootstrap
-from app.domain.support import HealthCheck
+from app.domain.support import Healthcheck
 
 # Create logger
 logger = structlog.get_logger()
 
 
+class HasHealthcheck(Protocol):
+    async def healthcheck(self) -> bool:
+        ...
+
+
+class HasResult(Protocol):
+    def result(self) -> Any:
+        ...
+
+
 class ServiceSupport:
     """Service for system self check"""
 
-    async def _check_sql_connection(self) -> bool:
-        try:
-            async with Bootstrap().db_sql.get_connection() as conn:
-                await conn.execute(text("SELECT 1"))
-        except Exception:  # noqa: BLE001
-            check_result = False
-        else:
-            check_result = True
+    async def healthcheck(self) -> Healthcheck:
+        """Create async tasks to run healthcheck for all external services"""
 
-        return check_result
+        class NoneResult(HasResult):
+            def result(self) -> bool:
+                """Emulate behaviour of the TaskGroup's task"""
+                return False
 
-    async def healthcheck(self) -> HealthCheck:
+        healthchecks: dict[HasHealthcheck, HasResult] = {
+            Bootstrap().db_sql: NoneResult(),
+            Bootstrap().db_nosql: NoneResult(),
+            Bootstrap().cache: NoneResult(),
+            Bootstrap().provider_stocks: NoneResult(),
+            Bootstrap().provider_crypto: NoneResult(),
+        }
         async with TaskGroup() as tg:
-            is_sql_up = tg.create_task(self._check_sql_connection())
-            is_cache_up = tg.create_task(Bootstrap().cache.healthcheck())
-            is_provider_stocks_up = tg.create_task(Bootstrap().provider_stocks.healthcheck())
-            is_provider_crypto_up = tg.create_task(Bootstrap().provider_crypto.healthcheck())
-        result = HealthCheck(
+            for service in healthchecks:
+                with suppress(AttributeError):
+                    healthchecks[service] = tg.create_task(service.healthcheck())
+        result = Healthcheck(
             is_app_up=True,
-            is_sql_up=is_sql_up.result(),
-            is_cache_up=is_cache_up.result(),
-            is_provider_stocks_up=is_provider_stocks_up.result(),
-            is_provider_crypto_up=is_provider_crypto_up.result(),
+            is_sql_up=healthchecks[Bootstrap().db_sql].result(),
+            is_nosql_up=healthchecks[Bootstrap().db_nosql].result(),
+            is_cache_up=healthchecks[Bootstrap().cache].result(),
+            is_provider_stocks_up=healthchecks[Bootstrap().provider_stocks].result(),
+            is_provider_crypto_up=healthchecks[Bootstrap().provider_crypto].result(),
         )
         if all(asdict(result).values()):
             await logger.ainfo_finish(cls=self.__class__, show_func_name=True, result=result)

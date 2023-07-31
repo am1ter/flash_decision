@@ -4,14 +4,12 @@ import pytest
 from uuid6 import UUID
 
 from app.api.schemas.session import ReqSession
-from app.bootstrap import Bootstrap
 from app.domain.session import DomainSession
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.session import ServiceSession
 from app.system.constants import SessionMode
-from tests.conftest import ProviderAVCryptoMockSuccess, ProviderAVStocksMockSuccess
 
 pytestmark = pytest.mark.asyncio
 
@@ -55,13 +53,6 @@ class UnitOfWorkSessionFake(UnitOfWork):
 
 @pytest.fixture()
 def service_session() -> ServiceSession:
-    type(Bootstrap)._instances = {}
-    Bootstrap(
-        start_orm=False,
-        cache=None,  # type: ignore[arg-type]
-        provider_stocks=ProviderAVStocksMockSuccess(),
-        provider_crypto=ProviderAVCryptoMockSuccess(),
-    )
     return ServiceSession(UnitOfWorkSessionFake())  # type: ignore[arg-type]
 
 

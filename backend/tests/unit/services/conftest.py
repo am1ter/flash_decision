@@ -13,6 +13,8 @@ class DbSqlFake(DbSql):
 Bootstrap(
     start_orm=True,
     db_sql=DbSqlFake(),
+    db_nosql=None,  # type: ignore[arg-type]
+    cache=None,  # type: ignore[arg-type]
     provider_stocks=ProviderAVStocksMockSuccess(),
     provider_crypto=ProviderAVCryptoMockSuccess(),
 )
