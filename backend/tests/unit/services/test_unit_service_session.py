@@ -73,6 +73,6 @@ class TestServiceSession:
         user_domain: DomainUser,
     ) -> None:
         params = req_session_params_custom if mode == SessionMode.custom else None
-        session = await service_session.create_session(mode, params, user_domain)
-        assert not session.time_series.df_quotes.empty
-        assert session
+        session_quotes = await service_session.create_session(mode, params, user_domain)
+        assert session_quotes.session
+        assert not session_quotes.df_quotes.empty

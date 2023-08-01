@@ -34,11 +34,11 @@ if TYPE_CHECKING:
 
 
 @define(kw_only=True, slots=False, hash=True)
-class SessionTimeSeries:
-    """Quotes contains the data (df and metadata) used for creating charts of sessions"""
+class SessionQuotes:
+    """Contains session and quotes dataframe for creating iterations' charts"""
 
     session: DomainSession
-    df_quotes: pd.DataFrame
+    df_quotes: pd.DataFrame = field(repr=False)
     trading_type: SessionTradingType
     first_bar_datetime: Timestamp = field()
     last_bar_datetime: Timestamp = field()
@@ -76,7 +76,7 @@ class SessionTimeSeries:
         assert_never(diff)
 
     @classmethod
-    def create(cls, session: DomainSession, df_quotes: pd.DataFrame) -> SessionTimeSeries:
+    def create(cls, session: DomainSession, df_quotes: pd.DataFrame) -> SessionQuotes:
         first_bar_datetime = df_quotes["datetime"].iloc[0]
         last_bar_datetime = df_quotes["datetime"].iloc[-1]
         trading_type = cls._determine_trading_type(first_bar_datetime, last_bar_datetime)
@@ -112,7 +112,6 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     fixingbar: SessionFixingbar
     status: SessionStatus
     user: DomainUser = field_relationship(init=False)
-    time_series: SessionTimeSeries = field(init=False, repr=False)
 
     @classmethod
     @abstractmethod
@@ -133,9 +132,6 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     def bound_to_user(self, user: DomainUser) -> Self:
         self.user = user
         return self
-
-    def set_time_series(self, time_series: SessionTimeSeries) -> None:
-        self.time_series = time_series
 
 
 @define(kw_only=True, slots=False, hash=True)

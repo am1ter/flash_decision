@@ -24,7 +24,7 @@ class RepositoryNoSqlIteration(RepositoryNoSqlMongo):
         field_key = DomainIteration.__attrs_attrs__.session_id.name
         field_to_find = {field_key: session_id}
         documents = self._select_all(entity_class=DomainIteration, field=field_to_find)
-        iteration_collection = DomainIterationCollection(session=None)
+        iteration_collection = DomainIterationCollection(session_quotes=None)
         for document in documents:
             iteration = self._create_iteration_by_document(document)
             iteration_collection.append(iteration)

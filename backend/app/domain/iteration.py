@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+import reprlib
 from typing import TYPE_CHECKING, Self
 
 import pandas as pd
@@ -16,15 +17,19 @@ from app.system.exceptions import ProviderInvalidDataError, SessionConfiguration
 if TYPE_CHECKING:
     from decimal import Decimal
 
-    from app.domain.session import DomainSession
+    from app.domain.session import DomainSession, SessionQuotes
 
 
 @define(kw_only=True, slots=False, hash=True)
 class DomainIterationCollection:
     """Container for the session's iterations"""
 
-    session: DomainSession | None
-    iterations: list[DomainIteration] = field(factory=list)
+    session_quotes: SessionQuotes | None
+    iterations: list[DomainIteration] = field(factory=list, repr=lambda i: f"{reprlib.repr(i)}")
+
+    @property
+    def session(self) -> DomainSession | None:
+        return self.session_quotes.session if self.session_quotes else None
 
     def __getitem__(self, key: int) -> DomainIteration:
         return self.iterations[key]
@@ -69,9 +74,9 @@ class DomainIterationCollection:
 
     def create_iterations(self) -> Self:
         """Extract random slices from the full df and create all iterations for the session"""
-        assert self.session
+        assert self.session_quotes and self.session
         slices = self._calculate_random_slices(
-            total_df_quotes_bars=self.session.time_series.total_df_quotes_bars,
+            total_df_quotes_bars=self.session_quotes.total_df_quotes_bars,
             required_slices=self.session.iterations.value,
             slice_len=self.session.barsnumber.value + self.session.fixingbar.value,
         )
@@ -81,7 +86,7 @@ class DomainIterationCollection:
             iteration = DomainIteration(
                 session_id=self.session._id,
                 iteration_num=iter_num,
-                df_quotes=self.session.time_series.df_quotes[iter_slice],
+                df_quotes=self.session_quotes.df_quotes[iter_slice],
                 session=self.session,
             )
             self.append(iteration)

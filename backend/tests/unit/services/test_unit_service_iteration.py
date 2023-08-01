@@ -4,7 +4,7 @@ import pytest
 from uuid6 import UUID
 
 from app.domain.iteration import DomainIteration
-from app.domain.session import DomainSession
+from app.domain.session import SessionQuotes
 from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.iteration import ServiceIteration
@@ -37,8 +37,8 @@ def service_iteration() -> ServiceIteration:
 class TestServiceIteration:
     @pytest.mark.asyncio()
     async def test_create_iterations(
-        self, service_iteration: ServiceIteration, session: DomainSession
+        self, service_iteration: ServiceIteration, session_quotes: SessionQuotes
     ) -> None:
-        iteration_collection = await service_iteration.create_iterations(session)
-        assert len(iteration_collection) == session.iterations.value
+        iteration_collection = await service_iteration.create_iterations(session_quotes)
+        assert len(iteration_collection) == session_quotes.session.iterations.value
         assert isinstance(iteration_collection[0], DomainIteration)

@@ -5,7 +5,7 @@ from fastapi import Depends
 from uuid6 import UUID
 
 from app.domain.iteration import DomainIterationCollection
-from app.domain.session import DomainSession
+from app.domain.session import SessionQuotes
 from app.infrastructure.repositories.iteration import RepositoryNoSqlIteration
 from app.infrastructure.units_of_work.base_nosql import UnitOfWorkNoSqlMongo
 
@@ -23,8 +23,8 @@ class ServiceIteration:
     def __init__(self, uow: UowIterationDep) -> None:
         self.uow = uow
 
-    async def create_iterations(self, session: DomainSession) -> DomainIterationCollection:
-        iteration_collection = DomainIterationCollection(session=session)
+    async def create_iterations(self, session_quotes: SessionQuotes) -> DomainIterationCollection:
+        iteration_collection = DomainIterationCollection(session_quotes=session_quotes)
         iteration_collection.create_iterations()
         async with self.uow:
             for iteration in iteration_collection.iterations:

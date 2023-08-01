@@ -8,7 +8,7 @@ from uuid6 import uuid6
 
 from app.api.schemas.session import ReqSession
 from app.api.schemas.user import ReqSignIn, ReqSignUp
-from app.domain.session import DomainSession, DomainSessionCustom, SessionTimeSeries
+from app.domain.session import DomainSession, DomainSessionCustom, SessionQuotes
 from app.domain.session_provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,
@@ -64,9 +64,12 @@ def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
         status=SessionStatus.created,
     )
     session.user = user_domain
-    df_quotes = df_quotes_stocks()
-    session.time_series = SessionTimeSeries.create(session=session, df_quotes=df_quotes)
     return session
+
+
+@pytest.fixture()
+def session_quotes(session: DomainSession) -> SessionQuotes:
+    return SessionQuotes.create(session=session, df_quotes=df_quotes_stocks())
 
 
 @pytest.fixture(scope="module")

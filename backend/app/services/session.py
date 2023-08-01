@@ -16,7 +16,7 @@ from app.domain.session import (
     DomainSessionCrypto,
     DomainSessionCustom,
     SessionOptions,
-    SessionTimeSeries,
+    SessionQuotes,
 )
 from app.domain.session_provider import Provider, Ticker, csv_table
 from app.domain.user import DomainUser
@@ -70,17 +70,17 @@ class ServiceSession:
 
     async def create_session(
         self, mode: SessionMode, session_params: ReqSession | None, user: DomainUser
-    ) -> DomainSession:
+    ) -> SessionQuotes:
         await CommandValidateTickers(self).execute()
         session = CommandCreateSession(self, mode, session_params, user).execute()
         try:
             async with TaskGroup() as task_group:
-                task_group.create_task(CommandLoadQuotes(self, session).execute())
+                session_quotes = task_group.create_task(CommandLoadQuotes(self, session).execute())
                 task_group.create_task(CommandSaveSessionToDb(self, session).execute())
         except ExceptionGroup as eg:
             raise eg.exceptions[0] from eg
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
-        return session
+        return session_quotes.result()
 
 
 @define
@@ -199,18 +199,17 @@ class CommandLoadQuotes:
     service: ServiceSession
     session: DomainSession
 
-    async def execute(self) -> DomainSession:
+    async def execute(self) -> SessionQuotes:
         try:
             df_quotes = await self._get_from_cache()
         except (CacheObjectNotFoundError, CacheConnectionError):
             df_quotes = await self._get_from_provider()
-        time_series = SessionTimeSeries.create(session=self.session, df_quotes=df_quotes)
-        self.session.set_time_series(time_series)
-        return self.session
+        session_quotes = SessionQuotes.create(session=self.session, df_quotes=df_quotes)
+        return session_quotes
 
     @property
     def _cache_key(self) -> str:
-        prefix = SessionTimeSeries.__name__
+        prefix = SessionQuotes.__name__
         return f"{prefix}:{self.session.ticker.symbol}:{self.session.timeframe.value}:quotes"
 
     async def _get_from_cache(self) -> pd.DataFrame:
