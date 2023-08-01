@@ -168,14 +168,6 @@ class CommandCreateSession:
         session.bound_to_user(self.user)
         return session
 
-    def _find_provider(self, ticker_type: str) -> Provider:
-        match TickerType(ticker_type):
-            case TickerType.crypto:
-                provider = self.service.provider_crypto
-            case _:
-                provider = self.service.provider_stocks
-        return provider
-
     def _create_session(self) -> DomainSession:
         session: DomainSession
         match self.mode:
@@ -188,7 +180,7 @@ class CommandCreateSession:
             case SessionMode.custom:
                 assert self.session_params
                 session = DomainSessionCustom.create(
-                    provider=self._find_provider(self.session_params.ticker_type),
+                    provider=_find_provider(self.session_params.ticker_type),
                     ticker_symbol=self.session_params.ticker_symbol,
                     timeframe=self.session_params.timeframe,
                     barsnumber=self.session_params.barsnumber,
@@ -229,9 +221,8 @@ class CommandLoadQuotes:
         return df_quotes
 
     async def _get_from_provider(self) -> pd.DataFrame:
-        df_quotes = await self.session.provider.get_data(
-            self.session.ticker, self.session.timeframe
-        )
+        provider = _find_provider(self.session.ticker.ticker_type.value)
+        df_quotes = await provider.get_data(self.session.ticker, self.session.timeframe)
         if self.service.cache:
             with contextlib.suppress(CacheConnectionError):
                 await self.service.cache.set(self._cache_key, df_quotes.to_json())
@@ -247,3 +238,12 @@ class CommandSaveSessionToDb:
         async with self.service.uow:
             self.service.uow.repository.add(self.session)
             await self.service.uow.commit()
+
+
+def _find_provider(ticker_type: str) -> Provider:
+    match TickerType(ticker_type):
+        case TickerType.crypto:
+            provider = Bootstrap().provider_crypto
+        case _:
+            provider = Bootstrap().provider_stocks
+    return provider

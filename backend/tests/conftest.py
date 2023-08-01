@@ -54,7 +54,6 @@ def df_quotes_crypto() -> pd.DataFrame:
 def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
     session = DomainSessionCustom(
         mode=SessionMode.custom,
-        provider=None,  # type: ignore[arg-type]
         ticker=mock_ticker,
         timeframe=SessionTimeframe.daily,
         barsnumber=SessionBarsnumber.bars70,

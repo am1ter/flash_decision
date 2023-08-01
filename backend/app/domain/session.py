@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from random import choice
-from typing import TYPE_CHECKING, Self, assert_never
+from typing import TYPE_CHECKING, ClassVar, Self, assert_never
 
 import pandas as pd
 from attrs import define, field
@@ -100,7 +100,8 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     The app has different modes - each of them is a subclass of the Session.
     """
 
-    provider: Provider
+    random_tickers: ClassVar[str]
+
     mode: SessionMode
     ticker: Ticker = field(converter=lambda j: Ticker(**j) if isinstance(j, dict) else j)
     timeframe: SessionTimeframe
@@ -112,7 +113,6 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     status: SessionStatus
     user: DomainUser = field_relationship(init=False)
     time_series: SessionTimeSeries = field(init=False, repr=False)
-    random_tickers: str = field(init=False, repr=False, default="")
 
     @classmethod
     @abstractmethod
@@ -146,7 +146,6 @@ class DomainSessionClassic(DomainSession):
     def create(cls, provider: Provider) -> Self:
         session = cls(
             mode=SessionMode.classic,
-            provider=provider,
             ticker=cls._select_random_ticker(provider),
             timeframe=SessionTimeframe.daily,
             barsnumber=SessionBarsnumber.bars70,
@@ -167,7 +166,6 @@ class DomainSessionBlitz(DomainSession):
     def create(cls, provider: Provider) -> Self:
         session = cls(
             mode=SessionMode.blitz,
-            provider=provider,
             ticker=cls._select_random_ticker(provider),
             timeframe=SessionTimeframe.minutes5,
             barsnumber=SessionBarsnumber.bars30,
@@ -188,7 +186,6 @@ class DomainSessionCrypto(DomainSession):
     def create(cls, provider: Provider) -> Self:
         session = cls(
             mode=SessionMode.crypto,
-            provider=provider,
             ticker=cls._select_random_ticker(provider),
             timeframe=SessionTimeframe.daily,
             barsnumber=SessionBarsnumber.bars50,
@@ -217,7 +214,6 @@ class DomainSessionCustom(DomainSession):
     ) -> Self:
         session = cls(
             mode=SessionMode.custom,
-            provider=provider,
             ticker=provider._get_ticker_by_symbol(ticker_symbol),
             timeframe=SessionTimeframe(timeframe),
             barsnumber=SessionBarsnumber(barsnumber),
