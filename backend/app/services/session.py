@@ -4,7 +4,7 @@ from typing import Annotated, assert_never, cast
 
 import pandas as pd
 import structlog
-from attr import define
+from attrs import define
 from fastapi import Depends
 from uuid6 import UUID
 
