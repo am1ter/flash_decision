@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
+from decimal import Decimal
 from typing import TypeAlias
 
-JSON: TypeAlias = Mapping[str, "JSON"] | Sequence["JSON"] | str | int | float | bool | None
+JSON: TypeAlias = Mapping[str, "JSON"] | Sequence["JSON"] | str | int | Decimal | bool | None
 
 
 class Cache(metaclass=ABCMeta):

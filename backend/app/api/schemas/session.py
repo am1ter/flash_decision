@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import BaseModel
 
 from app.api.schemas.base import RespData
@@ -11,7 +13,7 @@ class ReqSession(BaseModel):
     barsnumber: int
     timelimit: int
     iterations: int
-    slippage: float
+    slippage: Decimal
     fixingbar: int
 
 
@@ -21,7 +23,7 @@ class RespSessionOptions(RespData):
     all_barsnumber: list[int]
     all_timelimit: list[int]
     all_iterations: list[int]
-    all_slippage: list[float]
+    all_slippage: list[Decimal]
     all_fixingbar: list[int]
 
 
@@ -34,6 +36,6 @@ class RespSession(RespData):
     barsnumber: int
     timelimit: int
     iterations: int
-    slippage: float
+    slippage: Decimal
     fixingbar: int
     status: str

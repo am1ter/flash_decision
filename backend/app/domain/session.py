@@ -30,6 +30,8 @@ from app.system.exceptions import (
 from app.system.metaclasses import SingletonMeta
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from app.domain.user import DomainUser
 
 
@@ -205,7 +207,7 @@ class DomainSessionCustom(DomainSession):
         barsnumber: int,
         timelimit: int,
         iterations: int,
-        slippage: float,
+        slippage: Decimal,
         fixingbar: int,
     ) -> Self:
         session = cls(

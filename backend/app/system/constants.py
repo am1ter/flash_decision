@@ -1,3 +1,4 @@
+from decimal import Decimal
 from enum import Enum
 
 
@@ -69,12 +70,12 @@ class SessionIterations(Enum):
 
 
 class SessionSlippage(Enum):
-    """Slippage is also used as an imitation of all possible commissions (in percentages)"""
+    """Used as an imitation of all commissions (decimal representation of the percentage)"""
 
-    no_slippage = 0
-    low = 0.1
-    average = 0.5
-    high = 1
+    no_slippage = Decimal("0")
+    low = Decimal("0.001")
+    average = Decimal("0.005")
+    high = Decimal("0.01")
 
 
 class SessionFixingbar(Enum):
@@ -90,4 +91,4 @@ class SessionTradingType(Enum):
     intraday = 1
     swingtrading = 30
     shortinvesting = 90
-    longinvesting = float("inf")
+    longinvesting = Decimal("inf")
