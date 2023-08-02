@@ -27,3 +27,13 @@ class RespSessionOptions(RespData):
 
 class RespSession(RespData):
     _id: str
+    mode: str
+    ticker_type: str
+    ticker_symbol: str
+    timeframe: str
+    barsnumber: int
+    timelimit: int
+    iterations: int
+    slippage: float
+    fixingbar: int
+    status: str

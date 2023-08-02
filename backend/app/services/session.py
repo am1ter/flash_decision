@@ -1,11 +1,12 @@
 import contextlib
 from asyncio import TaskGroup
-from typing import Annotated, assert_never
+from typing import Annotated, assert_never, cast
 
 import pandas as pd
 import structlog
 from attr import define
 from fastapi import Depends
+from uuid6 import UUID
 
 from app.api.schemas.session import ReqSession
 from app.bootstrap import Bootstrap
@@ -81,6 +82,11 @@ class ServiceSession:
             raise eg.exceptions[0] from eg
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
         return session_quotes.result()
+
+    async def get_session(self, session_id: UUID) -> DomainSession:
+        session = await CommandGetSession(self, session_id).execute()
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
+        return session
 
 
 @define
@@ -237,6 +243,18 @@ class CommandSaveSessionToDb:
         async with self.service.uow:
             self.service.uow.repository.add(self.session)
             await self.service.uow.commit()
+
+
+@define
+class CommandGetSession:
+    service: ServiceSession
+    session_id: UUID
+
+    async def execute(self) -> DomainSession:
+        async with self.service.uow:
+            self.service.uow.repository = cast(RepositorySessionSql, self.service.uow.repository)
+            session = await self.service.uow.repository.get_by_id(self.session_id)
+        return session
 
 
 def _find_provider(ticker_type: str) -> Provider:

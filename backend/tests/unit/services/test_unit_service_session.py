@@ -30,7 +30,7 @@ class RepositorySessionFake(Repository):
     async def refresh(self, object: DomainSession) -> None:
         pass
 
-    async def get_by_id(self, _id: str) -> DomainSession:
+    async def get_by_id(self, _id: UUID) -> DomainSession:
         return self.storage[_id]
 
 
@@ -76,3 +76,19 @@ class TestServiceSession:
         session_quotes = await service_session.create_session(mode, params, user_domain)
         assert session_quotes.session
         assert not session_quotes.df_quotes.empty
+
+    async def test_get_session(
+        self,
+        service_session: ServiceSession,
+        req_session_params_custom: ReqSession,
+        user_domain: DomainUser,
+    ) -> None:
+        # Create session
+        session_quotes = await service_session.create_session(
+            SessionMode.custom, req_session_params_custom, user_domain
+        )
+        assert session_quotes.session
+
+        # Test get session
+        session = await service_session.get_session(session_quotes.session._id)
+        assert session == session_quotes.session

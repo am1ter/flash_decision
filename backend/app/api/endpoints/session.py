@@ -2,10 +2,12 @@ from typing import Annotated
 
 from attrs import asdict
 from fastapi import APIRouter, Depends
+from uuid6 import UUID
 
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.session import ReqSession, RespSession, RespSessionOptions
 from app.domain.base import custom_serializer
+from app.domain.session import DomainSession
 from app.services.iteration import ServiceIteration
 from app.services.session import ServiceSession
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
@@ -43,6 +45,33 @@ async def start_new_session(
     assert auth.user
     session_quotes = await service_session.create_session(mode, session_params, auth.user)
     await service_iteration.create_iterations(session_quotes)
-    meta = RespMeta()
-    data = RespSession(_id=str(session_quotes.session._id))
-    return Resp(meta=meta, data=data)
+    data = _resp_session_by_session(session_quotes.session)
+    return Resp(data=data)
+
+
+@router.get("/")
+async def get_session_info(
+    session_id: str,
+    service_session: ServiceSessionDep,
+    auth: ServiceAuthorizationDep,
+) -> Resp[RespMeta, RespSession]:
+    """Extract session from db and send it to the client"""
+    session = await service_session.get_session(UUID(session_id))
+    data = _resp_session_by_session(session)
+    return Resp(data=data)
+
+
+def _resp_session_by_session(session: DomainSession) -> RespSession:
+    return RespSession(
+        _id=str(session._id),
+        mode=session.mode.value,
+        ticker_type=session.ticker.ticker_type.value,
+        ticker_symbol=session.ticker.symbol,
+        timeframe=session.timeframe.value,
+        barsnumber=session.barsnumber.value,
+        timelimit=session.timelimit.value,
+        iterations=session.iterations.value,
+        slippage=session.slippage.value,
+        fixingbar=session.fixingbar.value,
+        status=session.status.value,
+    )

@@ -26,6 +26,19 @@ def oauth2(req_sign_in: ReqSignIn) -> OAuth2Auth:
     return auth
 
 
+@pytest.fixture()
+def response_custom_session(req_session_params_custom: ReqSession, oauth2: OAuth2Auth) -> Response:
+    rs = requests.post(
+        f"{Settings().general.BACKEND_URL}/session/custom",
+        data=req_session_params_custom.json(),
+        auth=oauth2,
+    )
+    response_session = Response(rs)
+    catch_provider_requests_limit_error(response_session)
+    response_session.assert_status_code(200)
+    return response_session
+
+
 def catch_provider_requests_limit_error(response: Response) -> None:
     if response.response.status_code != ProviderRateLimitExceededError.status_code:
         return
@@ -127,22 +140,18 @@ class TestBackendSession:
         catch_provider_requests_limit_error(response)
         response.assert_status_code(200)
 
+    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
+    def test_get_session(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
+        query_str = f"?session_id={response_custom_session.data['_id']}"
+        rgs = requests.get(f"{Settings().general.BACKEND_URL}/session/{query_str}", auth=oauth2)
+        response_iteration = Response(rgs)
+        response_iteration.assert_status_code(200)
+
 
 @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
 class TestBackendIteration:
-    def test_render_chart(self, oauth2: OAuth2Auth, req_session_params_custom: ReqSession) -> None:
-        # Create new session
-        rs = requests.post(
-            f"{Settings().general.BACKEND_URL}/session/custom",
-            data=req_session_params_custom.json(),
-            auth=oauth2,
-        )
-        response_session = Response(rs)
-        catch_provider_requests_limit_error(response_session)
-        response_session.assert_status_code(200)
-
-        # Test chart rendering
-        query_str = f"session_id={response_session.data['_id']}&iteration_num=1"
-        ri = requests.get(f"{Settings().general.BACKEND_URL}/iteration/?{query_str}", auth=oauth2)
+    def test_render_chart(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
+        query_str = f"?session_id={response_custom_session.data['_id']}&iteration_num=1"
+        ri = requests.get(f"{Settings().general.BACKEND_URL}/iteration/{query_str}", auth=oauth2)
         response_iteration = Response(ri)
         response_iteration.assert_status_code(200)
