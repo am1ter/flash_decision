@@ -170,13 +170,13 @@ class TestRepositoryNoSql:
         # Create and record iterations
         current_file_path = Path(__file__).parent.parent.parent
         data_path = current_file_path / "_mock_data" / "mock_iteration_01.json"
-        mock_data_raw = pd.read_json(data_path)
+        df_quotes_iteration = pd.read_json(data_path)
         mock_session_id = uuid6()
         for iter_num in range(2):
             iteration = DomainIteration(
                 session_id=mock_session_id,
                 iteration_num=iter_num,
-                df_quotes=pd.DataFrame.from_dict(mock_data_raw),
+                df_quotes=df_quotes_iteration,
                 session=session,
             )
             repository.add(iteration)

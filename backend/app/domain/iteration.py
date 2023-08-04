@@ -104,7 +104,7 @@ class DomainIteration(Entity):
     session_id: UUID
     iteration_num: int = field()
     df_quotes: pd.DataFrame = field(repr=False)
-    session: DomainSession | None = field(metadata={"asdict_ignore": True})
+    session: DomainSession | None = field(repr=False, metadata={"asdict_ignore": True})
     bar_price_start: Decimal = field()
     bar_price_finish: Decimal = field()
     bar_price_fix: Decimal = field()

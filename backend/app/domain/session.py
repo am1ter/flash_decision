@@ -32,6 +32,7 @@ from app.system.metaclasses import SingletonMeta
 if TYPE_CHECKING:
     from decimal import Decimal
 
+    from app.domain.decision import DomainDecision
     from app.domain.user import DomainUser
 
 
@@ -114,6 +115,7 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     fixingbar: SessionFixingbar
     status: SessionStatus
     user: DomainUser = field_relationship(init=False)
+    decisions: list[DomainDecision] = field_relationship(init=False)
 
     @classmethod
     @abstractmethod

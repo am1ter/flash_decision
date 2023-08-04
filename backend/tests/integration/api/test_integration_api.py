@@ -128,7 +128,7 @@ class TestBackendSession:
 
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     @pytest.mark.parametrize("mode", list(SessionMode))
-    def test_start_new_session_custom(
+    def test_start_new_session(
         self, oauth2: OAuth2Auth, mode: SessionMode, req_session_params_custom: ReqSession
     ) -> None:
         r = requests.post(

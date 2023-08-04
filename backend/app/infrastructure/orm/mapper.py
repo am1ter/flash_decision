@@ -1,10 +1,12 @@
 from sqlalchemy import Table
 from sqlalchemy.orm import composite, relationship
 
+from app.domain.decision import DomainDecision
 from app.domain.session import DomainSession
 from app.domain.session_provider import Ticker
 from app.domain.user import DomainAuth, DomainUser, Email, IpAddress, Password
 from app.infrastructure.orm.base import Base, mapper_registry
+from app.infrastructure.orm.decision import OrmDecision
 from app.infrastructure.orm.session import OrmSession
 from app.infrastructure.orm.user import OrmAuth, OrmUser
 
@@ -50,6 +52,9 @@ def map_session() -> None:
             "user": relationship(
                 DomainUser, back_populates="sessions", lazy="joined", uselist=False
             ),
+            "decisions": relationship(
+                DomainDecision, back_populates="session", lazy="joined", uselist=True
+            ),
         },
     )
     for subclass in DomainSession.__subclasses__():
@@ -61,6 +66,18 @@ def map_session() -> None:
         )
 
 
+def map_decision() -> None:
+    mapper_registry.map_imperatively(
+        DomainDecision,
+        OrmDecision.__table__,
+        properties={
+            "session": relationship(
+                DomainSession, back_populates="decisions", lazy="joined", uselist=False
+            ),
+        },
+    )
+
+
 def init_orm_mappers() -> None:
     """Single point to setup all domain <-> ORM model mappings"""
     verify_orm()
@@ -68,3 +85,4 @@ def init_orm_mappers() -> None:
     # Map domain models with ORM models
     map_user()
     map_session()
+    map_decision()

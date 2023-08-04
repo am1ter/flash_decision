@@ -109,6 +109,11 @@ class CacheConnectionError(BaseHTTPError):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
+class WrongDecisionError(BaseHTTPError):
+    msg = "Received decision is incorrect. Please try again."
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
 class ConfigHTTPHardcodedBackendUrlError(BaseValidationError):
     msg = "Set `BACKEND_URL` in environment variables is not allowed. Please remove it."
 

@@ -80,8 +80,9 @@ class ServiceSession:
                 task_group.create_task(CommandSaveSessionToDb(self, session).execute())
         except ExceptionGroup as eg:
             raise eg.exceptions[0] from eg
-        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
-        return session_quotes.result()
+        session_quotes_result = session_quotes.result()
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True)
+        return session_quotes_result
 
     async def get_session(self, session_id: UUID) -> DomainSession:
         session = await CommandGetSession(self, session_id).execute()

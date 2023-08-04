@@ -92,3 +92,9 @@ class SessionTradingType(Enum):
     swingtrading = 30
     shortinvesting = 90
     longinvesting = Decimal("inf")
+
+
+class DecisionAction(Enum):
+    buy = "buy"
+    skip = "skip"
+    sell = "sell"

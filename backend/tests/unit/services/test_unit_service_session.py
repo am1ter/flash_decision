@@ -21,15 +21,6 @@ class RepositorySessionFake(Repository):
     def add(self, obj: DomainSession) -> None:  # type: ignore[override]
         self.storage[obj._id] = obj
 
-    async def save(self) -> None:
-        pass
-
-    async def flush(self) -> None:
-        pass
-
-    async def refresh(self, object: DomainSession) -> None:
-        pass
-
     async def get_by_id(self, _id: UUID) -> DomainSession:
         return self.storage[_id]
 
@@ -45,9 +36,6 @@ class UnitOfWorkSessionFake(UnitOfWork):
         pass
 
     async def commit(self) -> None:
-        pass
-
-    async def rollback(self) -> None:
         pass
 
 

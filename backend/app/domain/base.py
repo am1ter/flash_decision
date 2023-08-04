@@ -7,9 +7,9 @@ from attrs import Attribute, asdict, define, field
 from uuid6 import UUID, uuid6
 
 
-def field_relationship(*, init: bool) -> Any:
+def field_relationship(*, init: bool, repr: bool = False) -> Any:
     """Mark domain attribute as ORM relationships (mapped with ORM in map_imperatively() func)"""
-    return field(init=init, repr=False, eq=False)
+    return field(init=init, repr=repr, eq=False)
 
 
 @define(kw_only=False, slots=False, frozen=True)

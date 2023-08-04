@@ -8,6 +8,7 @@ from uuid6 import uuid6
 
 from app.api.schemas.session import ReqSession
 from app.api.schemas.user import ReqSignIn, ReqSignUp
+from app.domain.iteration import DomainIteration
 from app.domain.session import DomainSession, DomainSessionCustom, SessionQuotes
 from app.domain.session_provider import (
     ProviderAlphaVantageCrypto,
@@ -70,6 +71,18 @@ def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
 @pytest.fixture()
 def session_quotes(session: DomainSession) -> SessionQuotes:
     return SessionQuotes.create(session=session, df_quotes=df_quotes_stocks())
+
+
+@pytest.fixture()
+def iteration(session_quotes: SessionQuotes) -> DomainIteration:
+    data_path = Path(__file__).parent / "_mock_data" / "mock_iteration_01.json"
+    df_quotes_iteration = pd.read_json(data_path)
+    return DomainIteration(
+        session_id=session_quotes.session._id,
+        iteration_num=0,
+        df_quotes=df_quotes_iteration,
+        session=session_quotes.session,
+    )
 
 
 @pytest.fixture(scope="module")
