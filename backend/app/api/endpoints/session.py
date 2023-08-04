@@ -8,7 +8,7 @@ from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.session import ReqSession, RespSession, RespSessionOptions
 from app.domain.base import custom_serializer
 from app.domain.session import DomainSession
-from app.services.session import ServiceSession
+from app.services.session import ServiceSession, SessionParams
 from app.services.session_iteration import ServiceIteration
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import Settings
@@ -39,10 +39,11 @@ async def start_new_session(
     service_session: ServiceSessionDep,
     service_iteration: ServiceIterationDep,
     auth: ServiceAuthorizationDep,
-    session_params: ReqSession | None = None,
+    req_session: ReqSession | None = None,
 ) -> Resp[RespMeta, RespSession]:
     """Start new session: receive session's mode and options, download quotes, create iterations"""
     assert auth.user
+    session_params = SessionParams(**req_session.dict()) if req_session else None
     session_quotes = await service_session.create_session(mode, session_params, auth.user)
     await service_iteration.create_iterations(session_quotes)
     data = _resp_session_by_session(session_quotes.session)

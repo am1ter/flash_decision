@@ -1,5 +1,6 @@
 import contextlib
 from asyncio import TaskGroup
+from decimal import Decimal
 from typing import Annotated, assert_never, cast
 
 import pandas as pd
@@ -8,7 +9,6 @@ from attrs import define
 from fastapi import Depends
 from uuid6 import UUID
 
-from app.api.schemas.session import ReqSession
 from app.bootstrap import Bootstrap
 from app.domain.session import (
     DomainSession,
@@ -40,13 +40,38 @@ UowSessionDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_session)]
 
 
 @define
+class SessionParams:
+    """This container must be used in external controllers (e.g. API layer) to create Session"""
+
+    mode: str
+    ticker_type: str
+    ticker_symbol: str
+    timeframe: str
+    barsnumber: int
+    timelimit: int
+    iterations: int
+    slippage: Decimal
+    fixingbar: int
+
+
+@define
 class TickersColRaw:
+    """
+    Information about all possible tickers stored in 2 formats: Raw and Processed.
+    Raw - exact the same data received from Provider (json-like format).
+    """
+
     stocks: csv_table
     crypto: csv_table
 
 
 @define
 class TickersColProcessed:
+    """
+    Information about all possible tickers stored in 2 formats: Raw and Processed.
+    Processed - the data after serialization json to python objects.
+    """
+
     stocks: dict[str, Ticker]
     crypto: dict[str, Ticker]
 
@@ -70,7 +95,7 @@ class ServiceSession:
         return options
 
     async def create_session(
-        self, mode: SessionMode, session_params: ReqSession | None, user: DomainUser
+        self, mode: SessionMode, session_params: SessionParams | None, user: DomainUser
     ) -> SessionQuotes:
         await CommandValidateTickers(self).execute()
         session = CommandCreateSession(self, mode, session_params, user).execute()
@@ -167,7 +192,7 @@ class CommandValidateTickers:
 class CommandCreateSession:
     service: ServiceSession
     mode: SessionMode
-    session_params: ReqSession | None
+    session_params: SessionParams | None
     user: DomainUser
 
     def execute(self) -> DomainSession:

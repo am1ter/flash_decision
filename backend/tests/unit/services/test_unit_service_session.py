@@ -8,7 +8,7 @@ from app.domain.session import DomainSession
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
-from app.services.session import ServiceSession
+from app.services.session import ServiceSession, SessionParams
 from app.system.constants import SessionMode
 
 pytestmark = pytest.mark.asyncio
@@ -60,7 +60,10 @@ class TestServiceSession:
         req_session_params_custom: ReqSession,
         user_domain: DomainUser,
     ) -> None:
-        params = req_session_params_custom if mode == SessionMode.custom else None
+        if mode == SessionMode.custom:
+            params = SessionParams(**req_session_params_custom.dict())
+        else:
+            params = None
         session_quotes = await service_session.create_session(mode, params, user_domain)
         assert session_quotes.session
         assert not session_quotes.df_quotes.empty
@@ -72,8 +75,9 @@ class TestServiceSession:
         user_domain: DomainUser,
     ) -> None:
         # Create session
+        params = SessionParams(**req_session_params_custom.dict())
         session_quotes = await service_session.create_session(
-            SessionMode.custom, req_session_params_custom, user_domain
+            SessionMode.custom, params, user_domain
         )
         assert session_quotes.session
 

@@ -1,4 +1,4 @@
-from copy import copy, deepcopy
+from copy import copy
 from datetime import datetime
 from typing import Self
 
@@ -39,15 +39,6 @@ class RepositoryUserFake(Repository):
         self.storage_user[obj._id] = obj
         self.storage_auth[obj._id] = list(obj.auths)
 
-    async def save(self) -> None:
-        pass
-
-    async def flush(self) -> None:
-        pass
-
-    async def refresh(self, object: DomainUser) -> None:
-        pass
-
     async def get_by_id(self, _id: str) -> DomainUser:
         return self.storage_user[_id]
 
@@ -67,9 +58,6 @@ class UnitOfWorkUserFake(UnitOfWork):
         pass
 
     async def commit(self) -> None:
-        pass
-
-    async def rollback(self) -> None:
         pass
 
 
@@ -92,7 +80,13 @@ def req_system_info() -> ReqSystemInfo:
 async def user_sign_up(
     service_user: ServiceUser, req_sign_up: ReqSignUp, req_system_info: ReqSystemInfo
 ) -> DomainUser:
-    user = await service_user.sign_up(req_sign_up, req_system_info)
+    user = await service_user.sign_up(
+        email=req_sign_up.email,
+        name=req_sign_up.name,
+        password=req_sign_up.password,
+        ip_address=req_system_info.ip_address,
+        user_agent=req_system_info.user_agent,
+    )
     return user
 
 
@@ -116,7 +110,13 @@ class TestServiceUser:
         req_sign_up: ReqSignUp,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        user = await service_user.sign_up(req_sign_up, req_system_info)
+        user = await service_user.sign_up(
+            email=req_sign_up.email,
+            name=req_sign_up.name,
+            password=req_sign_up.password,
+            ip_address=req_system_info.ip_address,
+            user_agent=req_system_info.user_agent,
+        )
 
         # Check user
         assert user is not None, "New user is not created"
@@ -136,10 +136,14 @@ class TestServiceUser:
         req_sign_up: ReqSignUp,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        req_sign_up_wrong_email = deepcopy(req_sign_up)
-        req_sign_up_wrong_email.email = "wrong@wrong"
         with pytest.raises(EmailValidationError):
-            await service_user.sign_up(req_sign_up_wrong_email, req_system_info)
+            await service_user.sign_up(
+                email="wrong@wrong",
+                name=req_sign_up.name,
+                password=req_sign_up.password,
+                ip_address=req_system_info.ip_address,
+                user_agent=req_system_info.user_agent,
+            )
 
     async def test_sign_in_success(
         self,
@@ -148,8 +152,19 @@ class TestServiceUser:
         req_sign_in: ReqSignIn,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        user_sign_up = await service_user.sign_up(req_sign_up, req_system_info)
-        user_sign_in = await service_user.sign_in(req_sign_in, req_system_info)
+        user_sign_up = await service_user.sign_up(
+            email=req_sign_up.email,
+            name=req_sign_up.name,
+            password=req_sign_up.password,
+            ip_address=req_system_info.ip_address,
+            user_agent=req_system_info.user_agent,
+        )
+        user_sign_in = await service_user.sign_in(
+            username=req_sign_in.username,
+            password=req_sign_in.password,
+            ip_address=req_system_info.ip_address,
+            user_agent=req_system_info.user_agent,
+        )
 
         # Check user signed in
         assert user_sign_up == user_sign_in
@@ -166,11 +181,22 @@ class TestServiceUser:
         req_sign_in: ReqSignIn,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        user_sign_up = await service_user.sign_up(req_sign_up, req_system_info)
+        user_sign_up = await service_user.sign_up(
+            email=req_sign_up.email,
+            name=req_sign_up.name,
+            password=req_sign_up.password,
+            ip_address=req_system_info.ip_address,
+            user_agent=req_system_info.user_agent,
+        )
         assert user_sign_up is not None, "User is not created"
         user_sign_up.status = UserStatus.disabled
         with pytest.raises(UserDisabledError):
-            await service_user.sign_in(req_sign_in, req_system_info)
+            await service_user.sign_in(
+                username=req_sign_in.username,
+                password=req_sign_in.password,
+                ip_address=req_system_info.ip_address,
+                user_agent=req_system_info.user_agent,
+            )
         user_sign_up.status = UserStatus.active
 
     async def test_sign_in_failure_wrong_password(
@@ -180,11 +206,21 @@ class TestServiceUser:
         req_sign_in: ReqSignIn,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        user_sign_up = await service_user.sign_up(req_sign_up, req_system_info)
+        user_sign_up = await service_user.sign_up(
+            email=req_sign_up.email,
+            name=req_sign_up.name,
+            password=req_sign_up.password,
+            ip_address=req_system_info.ip_address,
+            user_agent=req_system_info.user_agent,
+        )
         assert user_sign_up is not None, "User is not created"
-        req_sign_in.password = "wrongPass"  # noqa: S105
         with pytest.raises(WrongPasswordError):
-            await service_user.sign_in(req_sign_in, req_system_info)
+            await service_user.sign_in(
+                username=req_sign_in.username,
+                password="wrongPass",  # noqa: S106
+                ip_address=req_system_info.ip_address,
+                user_agent=req_system_info.user_agent,
+            )
         auth_wrong_pass = service_user.uow.repository.storage_auth[user_sign_up._id][-1]  # type: ignore[attr-defined]
         assert auth_wrong_pass.status == AuthStatus.wrong_password
 
@@ -194,10 +230,14 @@ class TestServiceUser:
         req_sign_up: ReqSignUp,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        req_system_info_wrong_ip = deepcopy(req_system_info)
-        req_system_info_wrong_ip.ip_address = "192.168.0."
         with pytest.raises(IpAddressValidationError):
-            await service_user.sign_up(req_sign_up, req_system_info_wrong_ip)
+            await service_user.sign_up(
+                email=req_sign_up.email,
+                name=req_sign_up.name,
+                password=req_sign_up.password,
+                ip_address="192.168.0.",
+                user_agent=req_system_info.user_agent,
+            )
 
     async def test_create_access_token(
         self,
@@ -205,7 +245,13 @@ class TestServiceUser:
         req_sign_up: ReqSignUp,
         req_system_info: ReqSystemInfo,
     ) -> None:
-        user = await service_user.sign_up(req_sign_up, req_system_info)
+        user = await service_user.sign_up(
+            email=req_sign_up.email,
+            name=req_sign_up.name,
+            password=req_sign_up.password,
+            ip_address=req_system_info.ip_address,
+            user_agent=req_system_info.user_agent,
+        )
         token_encoded = await service_user.create_access_token(user)
         token_decoded = jwt.decode(
             token=token_encoded.access_token, key=Settings().general.JWT_SECRET_KEY

@@ -6,7 +6,6 @@ from attrs import define
 from fastapi import Depends
 from jose import jwt
 
-from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
@@ -42,12 +41,12 @@ class ServiceUser:
         except DbObjectNotFoundError as e:
             raise UserNotFoundError from e
 
-    async def sign_up(self, req: ReqSignUp, req_system_info: ReqSystemInfo) -> DomainUser:
+    async def sign_up(
+        self, email: str, name: str, password: str, ip_address: str, user_agent: str
+    ) -> DomainUser:
         # Create user
-        user = DomainUser.sign_up(**req.dict())
-        user.create_auth_sign_up(
-            ip_address=req_system_info.ip_address, http_user_agent=req_system_info.user_agent
-        )
+        user = DomainUser.sign_up(name=name, email=email, password=password)
+        user.create_auth_sign_up(ip_address=ip_address, http_user_agent=user_agent)
         # Save user to the database
         async with self.uow:
             self.uow.repository.add(user)
@@ -55,17 +54,17 @@ class ServiceUser:
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user)
         return user
 
-    async def sign_in(self, req: ReqSignIn, req_system_info: ReqSystemInfo) -> DomainUser:
+    async def sign_in(
+        self, username: str, password: str, ip_address: str, user_agent: str
+    ) -> DomainUser:
         async with self.uow:
             # Get user with specified email, check password and status
-            user = await self.get_user_by_email(req.username)
+            user = await self.get_user_by_email(username)
             try:
-                user.sign_in(req.password)
+                user.sign_in(password)
             except WrongPasswordError as e:
                 # Record sign-in attempt to the database
-                auth = user.create_auth_wrong_pass(
-                    req_system_info.ip_address, req_system_info.user_agent
-                )
+                auth = user.create_auth_wrong_pass(ip_address, user_agent)
                 self.uow.repository.add(user)
                 await self.uow.commit()
                 await logger.ainfo(
@@ -76,7 +75,7 @@ class ServiceUser:
                 )
                 raise WrongPasswordError from e
             # Record success
-            auth = user.create_auth_sign_in(req_system_info.ip_address, req_system_info.user_agent)
+            auth = user.create_auth_sign_in(ip_address, user_agent)
             self.uow.repository.add(user)
             await self.uow.commit()
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user, auth=auth)
