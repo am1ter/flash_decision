@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from decimal import Decimal
 
 import pytest
 import requests
 from authlib.integrations.requests_client import OAuth2Auth, OAuth2Session
 
+from app.api.schemas.decision import ReqRecordDecision
 from app.api.schemas.session import ReqSession, RespSessionOptions
 from app.api.schemas.support import RespDataHealthcheck
 from app.api.schemas.user import ReqSignIn, ReqSignUp, RespSignIn, RespSignUp
@@ -151,7 +153,26 @@ class TestBackendSession:
 @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
 class TestBackendIteration:
     def test_render_chart(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
-        query_str = f"?session_id={response_custom_session.data['_id']}&iteration_num=1"
+        query_str = f"?session_id={response_custom_session.data['_id']}&iteration_num=0"
         ri = requests.get(f"{Settings().general.BACKEND_URL}/iteration/{query_str}", auth=oauth2)
         response_iteration = Response(ri)
         response_iteration.assert_status_code(200)
+
+
+@pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
+class TestBackendDecision:
+    def test_record_decision(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
+        req_decision = ReqRecordDecision(
+            session_id=response_custom_session.data["_id"],
+            iteration_num=0,
+            action="buy",
+            time_spent=Decimal("5"),
+        )
+        r = requests.post(
+            f"{Settings().general.BACKEND_URL}/decision/",
+            data=req_decision.json(),
+            auth=oauth2,
+        )
+        response = Response(r)
+        catch_provider_requests_limit_error(response)
+        response.assert_status_code(200)
