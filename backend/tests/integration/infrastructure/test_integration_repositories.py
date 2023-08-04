@@ -1,4 +1,5 @@
 from collections.abc import Callable, Coroutine
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,7 @@ from sqlalchemy.orm.dynamic import AppenderQuery
 from uuid6 import uuid6
 
 from app.domain.session import DomainSession
+from app.domain.session_decision import DomainDecision
 from app.domain.session_iteration import DomainIteration
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
@@ -18,7 +20,7 @@ from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.repositories.session_iteration import RepositoryNoSqlIteration
 from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.sql import DbSql, DbSqlPg
-from app.system.constants import AuthStatus
+from app.system.constants import AuthStatus, DecisionAction
 from app.system.exceptions import DbObjectNotFoundError
 
 RepositoryUserSqlWithUser = Callable[
@@ -152,15 +154,31 @@ class TestRepositorySql:
             assert auths_repo[0].status.value == auth_domain_sign_up.status.value, "Wrong status"
 
     @pytest.mark.asyncio()
-    async def test_repository_session(self, session: DomainSession, db_sql: DbSql) -> None:
-        """Check if it is possible to create single db object using domain model"""
+    async def test_repository_session(
+        self, session: DomainSession, iteration: DomainIteration, db_sql: DbSql
+    ) -> None:
+        """Check if it is possible to create multiple db objects using domain models"""
         async with db_sql.get_session() as db_session:
             repository_session = RepositorySessionSql(db_session)
             repository_session.add(session)
             await repository_session.flush()
+
+            # Get session
             assert session._id
             session_from_db = await repository_session.get_by_id(session._id)
             assert session_from_db.ticker == session.ticker
+
+            # Create decision for the session and add it to repo directly
+            decision = DomainDecision(
+                session=session,
+                iteration=iteration,
+                action=DecisionAction.buy,
+                time_spent=Decimal("5"),
+            )
+            repository_session.add(decision)
+            await repository_session.flush()
+            await repository_session.refresh(session_from_db)
+            assert len(session_from_db.decisions) == 1
 
 
 class TestRepositoryNoSql:
