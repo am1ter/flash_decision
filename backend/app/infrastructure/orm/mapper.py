@@ -1,13 +1,13 @@
 from sqlalchemy import Table
 from sqlalchemy.orm import composite, relationship
 
-from app.domain.decision import DomainDecision
 from app.domain.session import DomainSession
+from app.domain.session_decision import DomainDecision
 from app.domain.session_provider import Ticker
 from app.domain.user import DomainAuth, DomainUser, Email, IpAddress, Password
 from app.infrastructure.orm.base import Base, mapper_registry
-from app.infrastructure.orm.decision import OrmDecision
 from app.infrastructure.orm.session import OrmSession
+from app.infrastructure.orm.session_decision import OrmDecision
 from app.infrastructure.orm.user import OrmAuth, OrmUser
 
 

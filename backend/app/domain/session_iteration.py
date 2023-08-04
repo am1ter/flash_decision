@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 @define(kw_only=True, slots=False, hash=True)
 class DomainIterationCollection:
-    """Container for the session's iterations"""
+    """Container for the Session's Iterations"""
 
     session_quotes: SessionQuotes | None
     iterations: list[DomainIteration] = field(factory=list, repr=lambda i: f"{reprlib.repr(i)}")
@@ -97,8 +97,9 @@ class DomainIterationCollection:
 @define(kw_only=True, slots=False, hash=True)
 class DomainIteration(Entity):
     """
-    Every session is divided into several parts - iterations.
+    Every session is divided into several parts - Iterations.
     For every iteration the user makes a decision - to buy, to sell or do nothing.
+    It is the part of the `Session` Aggregate.
     """
 
     session_id: UUID

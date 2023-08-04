@@ -4,9 +4,9 @@ import structlog
 from fastapi import Depends
 from uuid6 import UUID
 
-from app.domain.iteration import DomainIteration, DomainIterationCollection
 from app.domain.session import SessionQuotes
-from app.infrastructure.repositories.iteration import RepositoryNoSqlIteration
+from app.domain.session_iteration import DomainIteration, DomainIterationCollection
+from app.infrastructure.repositories.session_iteration import RepositoryNoSqlIteration
 from app.infrastructure.units_of_work.base_nosql import UnitOfWorkNoSqlMongo
 
 # Create logger

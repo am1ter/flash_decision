@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from uuid6 import UUID
 
-from app.api.schemas.iteration import RespIteration
-from app.services.iteration import ServiceIteration
+from app.api.schemas.session_iteration import RespIteration
+from app.services.session_iteration import ServiceIteration
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import Settings
 

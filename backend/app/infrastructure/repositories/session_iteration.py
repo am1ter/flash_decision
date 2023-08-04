@@ -1,7 +1,7 @@
 import pandas as pd
 from uuid6 import UUID
 
-from app.domain.iteration import DomainIteration, DomainIterationCollection
+from app.domain.session_iteration import DomainIteration, DomainIterationCollection
 from app.infrastructure.repositories.base import RepositoryNoSqlMongo
 
 

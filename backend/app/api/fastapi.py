@@ -8,9 +8,9 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette import status
 
-from app.api.endpoints.decision import router as router_decision
-from app.api.endpoints.iteration import router as router_iteration
 from app.api.endpoints.session import router as router_session
+from app.api.endpoints.session_decision import router as router_decision
+from app.api.endpoints.session_iteration import router as router_iteration
 from app.api.endpoints.support import router as router_support
 from app.api.endpoints.user import router as router_user
 from app.system.config import Settings

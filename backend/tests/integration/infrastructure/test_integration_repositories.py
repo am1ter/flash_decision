@@ -9,13 +9,13 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 from uuid6 import uuid6
 
-from app.domain.iteration import DomainIteration
 from app.domain.session import DomainSession
+from app.domain.session_iteration import DomainIteration
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
-from app.infrastructure.repositories.iteration import RepositoryNoSqlIteration
 from app.infrastructure.repositories.session import RepositorySessionSql
+from app.infrastructure.repositories.session_iteration import RepositoryNoSqlIteration
 from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.constants import AuthStatus
@@ -164,7 +164,7 @@ class TestRepositorySql:
 
 
 class TestRepositoryNoSql:
-    def test_repository_iteration_quotes(self, db_nosql: DbNoSql, session: DomainSession) -> None:
+    def test_repository_iteration(self, db_nosql: DbNoSql, session: DomainSession) -> None:
         repository = RepositoryNoSqlIteration(db_nosql)  # type: ignore[arg-type]
 
         # Create and record iterations

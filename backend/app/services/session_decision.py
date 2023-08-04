@@ -4,10 +4,10 @@ from typing import Annotated
 import structlog
 from fastapi import Depends
 
-from app.domain.decision import DomainDecision
-from app.domain.iteration import DomainIteration
 from app.domain.session import DomainSession
-from app.infrastructure.repositories.decision import RepositoryDecisionSql
+from app.domain.session_decision import DomainDecision
+from app.domain.session_iteration import DomainIteration
+from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
 from app.system.constants import DecisionAction
 
@@ -15,14 +15,14 @@ from app.system.constants import DecisionAction
 logger = structlog.get_logger()
 
 # Internal dependencies
-uow_decision = UnitOfWorkSqlAlchemy(repository_type=RepositoryDecisionSql)
-UowDecisionDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_decision)]
+uow_session = UnitOfWorkSqlAlchemy(repository_type=RepositorySessionSql)
+UowSessionDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_session)]
 
 
 class ServiceDecision:
     """This service records decisions for every Iteration in the Session."""
 
-    def __init__(self, uow: UowDecisionDep) -> None:
+    def __init__(self, uow: UowSessionDep) -> None:
         self.uow = uow
 
     async def record_decision(

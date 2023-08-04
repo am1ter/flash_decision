@@ -8,8 +8,8 @@ from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.session import ReqSession, RespSession, RespSessionOptions
 from app.domain.base import custom_serializer
 from app.domain.session import DomainSession
-from app.services.iteration import ServiceIteration
 from app.services.session import ServiceSession
+from app.services.session_iteration import ServiceIteration
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import Settings
 from app.system.constants import SessionMode

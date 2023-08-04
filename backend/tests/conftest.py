@@ -8,8 +8,8 @@ from uuid6 import uuid6
 
 from app.api.schemas.session import ReqSession
 from app.api.schemas.user import ReqSignIn, ReqSignUp
-from app.domain.iteration import DomainIteration
 from app.domain.session import DomainSession, DomainSessionCustom, SessionQuotes
+from app.domain.session_iteration import DomainIteration
 from app.domain.session_provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,

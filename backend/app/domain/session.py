@@ -32,7 +32,7 @@ from app.system.metaclasses import SingletonMeta
 if TYPE_CHECKING:
     from decimal import Decimal
 
-    from app.domain.decision import DomainDecision
+    from app.domain.session_decision import DomainDecision
     from app.domain.user import DomainUser
 
 

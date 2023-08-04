@@ -5,11 +5,11 @@ from typing import Self
 import pytest
 from uuid6 import UUID
 
-from app.domain.iteration import DomainIteration
 from app.domain.session import SessionQuotes
+from app.domain.session_iteration import DomainIteration
 from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
-from app.services.iteration import ServiceIteration
+from app.services.session_iteration import ServiceIteration
 
 
 class RepositoryNoSqlIterationFake(Repository):
