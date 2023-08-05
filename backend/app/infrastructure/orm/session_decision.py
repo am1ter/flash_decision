@@ -18,7 +18,7 @@ class OrmDecision(Base):
     session_id: Mapped[str] = mapped_column(
         ForeignKey(f"{Settings().sql.SQL_DB_SCHEMA}.session._id", ondelete="CASCADE"), index=True
     )
-    iteration_num: int
+    iteration_num: Mapped[int]
     time_spent: Mapped[Decimal]
     result_raw: Mapped[Decimal]
     result_final: Mapped[Decimal]
