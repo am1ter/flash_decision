@@ -29,6 +29,7 @@ from app.system.exceptions import (
     CacheConnectionError,
     CacheObjectNotFoundError,
     MemoryObjectNotFoundError,
+    SessionAccessError,
 )
 
 # Create logger
@@ -109,8 +110,10 @@ class ServiceSession:
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True)
         return session_quotes_result
 
-    async def get_session(self, session_id: UUID) -> DomainSession:
+    async def get_session(self, session_id: UUID, user: DomainUser) -> DomainSession:
         session = await CommandGetSession(self, session_id).execute()
+        if session.user != user:
+            raise SessionAccessError
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
         return session
 

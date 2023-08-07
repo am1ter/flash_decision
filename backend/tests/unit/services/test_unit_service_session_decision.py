@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 from decimal import Decimal
 from typing import Self
 
@@ -10,7 +11,8 @@ from app.domain.session_iteration import DomainIteration
 from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.session_decision import ServiceDecision
-from app.system.constants import DecisionAction
+from app.system.constants import DecisionAction, SessionStatus
+from app.system.exceptions import WrongDecisionError
 
 
 class RepositoryNoSqlDecisionFake(Repository):
@@ -84,3 +86,52 @@ class TestServiceDecision:
         assert round(iteration.df_quotes["close"].sum()) == 58837, "Incorrect mock iteration df"
         assert decision.result_raw == Decimal("0.185969")
         assert decision.result_final == Decimal("0.180969")
+
+    @pytest.mark.asyncio()
+    async def test_record_decision_status_active(
+        self, service_decision: ServiceDecision, iteration: DomainIteration
+    ) -> None:
+        assert iteration.session
+        assert iteration.session.status == SessionStatus.created
+        decision = await service_decision.record_decision(
+            session=iteration.session,  # type: ignore[arg-type]
+            iteration=iteration,
+            action=DecisionAction.buy,
+            time_spent=Decimal(5),
+        )
+        assert isinstance(decision, DomainDecision)
+        assert iteration.session.status == SessionStatus.active
+
+    @pytest.mark.asyncio()
+    async def test_record_decision_status_closed(
+        self, service_decision: ServiceDecision, iteration: DomainIteration
+    ) -> None:
+        assert iteration.session
+        """Create all neccesary decisions to close the session"""
+        for iter_num in range(iteration.session.iterations.value):
+            new_iteration = deepcopy(iteration)
+            new_iteration.iteration_num = iter_num
+            decision = await service_decision.record_decision(
+                session=iteration.session,  # type: ignore[arg-type]
+                iteration=new_iteration,
+                action=DecisionAction.buy,
+                time_spent=Decimal(5),
+            )
+        assert isinstance(decision, DomainDecision)
+        assert iteration.session.status == SessionStatus.closed
+
+    @pytest.mark.asyncio()
+    async def test_record_decision_status_closed_failure(
+        self, service_decision: ServiceDecision, iteration: DomainIteration
+    ) -> None:
+        """Try to record new decisionin closed session"""
+        assert iteration.session
+        new_iteration = deepcopy(iteration)
+        new_iteration.iteration_num = iteration.session.iterations.value
+        with pytest.raises(WrongDecisionError):
+            await service_decision.record_decision(
+                session=iteration.session,  # type: ignore[arg-type]
+                iteration=new_iteration,
+                action=DecisionAction.buy,
+                time_spent=Decimal(5),
+            )

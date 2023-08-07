@@ -3,6 +3,7 @@ from uuid6 import UUID
 
 from app.domain.session_iteration import DomainIteration, DomainIterationCollection
 from app.infrastructure.repositories.base import RepositoryNoSqlMongo
+from app.system.exceptions import IterationNotFoundError
 
 
 class RepositoryNoSqlIteration(RepositoryNoSqlMongo):
@@ -36,5 +37,7 @@ class RepositoryNoSqlIteration(RepositoryNoSqlMongo):
         iteration_num_key = DomainIteration.__attrs_attrs__.iteration_num.name
         field_to_find = {session_id_key: session_id, iteration_num_key: iteration_num}
         document = self._select_one(entity_class=DomainIteration, field=field_to_find)
+        if not document:
+            raise IterationNotFoundError
         iteration = self._create_iteration_by_document(document)
         return iteration

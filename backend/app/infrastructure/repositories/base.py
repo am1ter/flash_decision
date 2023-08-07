@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
 from typing import Any
+from uuid import UUID
 
 import bson
 from attrs import asdict
@@ -10,7 +11,6 @@ from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
-from uuid6 import UUID
 
 from app.domain.base import Entity, custom_serializer
 from app.infrastructure.nosql import DbNoSql

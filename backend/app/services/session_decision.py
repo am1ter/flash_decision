@@ -25,6 +25,14 @@ class ServiceDecision:
     def __init__(self, uow: UowSessionDep) -> None:
         self.uow = uow
 
+    def _update_session_status(self, session: DomainSession, iteration: DomainIteration) -> None:
+        last_iteration_num = session.iterations.value - 1
+        assert iteration.iteration_num <= last_iteration_num
+        if iteration.iteration_num == 0:
+            session.set_status_active()
+        if iteration.iteration_num == last_iteration_num:
+            session.set_status_closed()
+
     async def record_decision(
         self,
         session: DomainSession,
@@ -35,6 +43,7 @@ class ServiceDecision:
         decision = DomainDecision(
             session=session, iteration=iteration, action=action, time_spent=time_spent
         )
+        self._update_session_status(session, iteration)
         async with self.uow:
             self.uow.repository.add(decision)
             await self.uow.commit()

@@ -12,7 +12,11 @@ from plotly.utils import PlotlyJSONEncoder
 from uuid6 import UUID
 
 from app.domain.base import Entity
-from app.system.exceptions import ProviderInvalidDataError, SessionConfigurationError
+from app.system.exceptions import (
+    IterationNotFoundError,
+    ProviderInvalidDataError,
+    SessionConfigurationError,
+)
 
 if TYPE_CHECKING:
     from decimal import Decimal
@@ -109,13 +113,14 @@ class DomainIteration(Entity):
     bar_price_start: Decimal = field()
     bar_price_finish: Decimal = field()
     bar_price_fix: Decimal = field()
+    chart: str = field(repr=False)
 
     @iteration_num.validator
     def _validate_iteration_num(self, attribute: str, value: int) -> None:
         if not self.session:
             return
         if value > self.session.iterations.value:
-            raise SessionConfigurationError
+            raise IterationNotFoundError
 
     @bar_price_start.default
     def default_bar_price_start(self) -> Decimal:
@@ -143,7 +148,8 @@ class DomainIteration(Entity):
             raise ProviderInvalidDataError
         return bar_price_fix
 
-    def render_chart(self) -> str:
+    @chart.default
+    def default_chart(self) -> str:
         candles = graph_objs.Candlestick(
             x=self.df_quotes.index,
             open=self.df_quotes["open"],

@@ -82,5 +82,5 @@ class TestServiceSession:
         assert session_quotes.session
 
         # Test get session
-        session = await service_session.get_session(session_quotes.session._id)
+        session = await service_session.get_session(session_quotes.session._id, user_domain)
         assert session == session_quotes.session

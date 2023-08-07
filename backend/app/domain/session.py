@@ -26,6 +26,7 @@ from app.system.exceptions import (
     MemoryObjectNotFoundError,
     ProviderInvalidDataError,
     SessionConfigurationError,
+    SetSessionStatusError,
 )
 from app.system.metaclasses import SingletonMeta
 
@@ -136,6 +137,14 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     def bound_to_user(self, user: DomainUser) -> Self:
         self.user = user
         return self
+
+    def set_status_active(self) -> None:
+        if self.status == SessionStatus.closed:
+            raise SetSessionStatusError
+        self.status = SessionStatus.active
+
+    def set_status_closed(self) -> None:
+        self.status = SessionStatus.closed
 
 
 @define(kw_only=True, slots=False, hash=True)

@@ -109,6 +109,26 @@ class CacheConnectionError(BaseHTTPError):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
+class SessionClosedError(BaseHTTPError):
+    msg = "The session you are trying to access is already closed."
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
+class SessionAccessError(BaseHTTPError):
+    msg = "You do not have access to this session."
+    status_code = status.HTTP_403_FORBIDDEN
+
+
+class IterationNotFoundError(BaseHTTPError):
+    msg = "The iterations you are trying to access could not be found."
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class SetSessionStatusError(BaseHTTPError):
+    msg = "Session's status cannot be changed. The session is already closed."
+    status_code = status.HTTP_404_NOT_FOUND
+
+
 class WrongDecisionError(BaseHTTPError):
     msg = "Received decision is incorrect. Please try again."
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR

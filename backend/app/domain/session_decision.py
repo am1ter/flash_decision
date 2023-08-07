@@ -33,6 +33,10 @@ class DomainDecision(Entity):
 
     @iteration_num.default
     def iteration_num_default(self) -> int:
+        if self.iteration.iteration_num >= self.session.iterations.value:
+            raise WrongDecisionError
+        if self.iteration.iteration_num != len(self.session.decisions) - 1:
+            raise WrongDecisionError
         return self.iteration.iteration_num
 
     @result_raw.default

@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from copy import deepcopy
 from typing import Self
 
 import pytest
@@ -10,6 +11,8 @@ from app.domain.session_iteration import DomainIteration
 from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.session_iteration import ServiceIteration
+from app.system.constants import SessionStatus
+from app.system.exceptions import SessionClosedError
 
 
 class RepositoryNoSqlIterationFake(Repository):
@@ -54,13 +57,26 @@ class TestServiceIteration:
     async def test_get_iteration(self, service_iteration: ServiceIteration) -> None:
         session_id = list(service_iteration.uow.repository.storage.keys())[0]  # type: ignore[attr-defined]
         iteration_num = 0
-        iteration = await service_iteration.get_iteration(session_id, iteration_num)
+        iteration = await service_iteration._load_iteration(session_id, iteration_num)
         assert isinstance(iteration, DomainIteration)
         assert iteration.iteration_num == iteration_num
 
     @pytest.mark.dependency(depends=["TestServiceIteration::test_create_iterations"])
     @pytest.mark.asyncio()
-    async def test_render_chart(self, service_iteration: ServiceIteration) -> None:
-        session_id = list(service_iteration.uow.repository.storage.keys())[0]  # type: ignore[attr-defined]
-        iteration = await service_iteration.render_chart(session_id=session_id, iteration_num=0)
-        assert "data" in json.loads(iteration)
+    async def test_get_next_iteration_success(self, service_iteration: ServiceIteration) -> None:
+        session_id = list(service_iteration.uow.repository.storage)[0]  # type: ignore[attr-defined]
+        session = service_iteration.uow.repository.storage[session_id][0].session  # type: ignore[attr-defined]
+        iteration = await service_iteration.get_next_iteration(session)
+        assert isinstance(iteration, DomainIteration)
+        assert "data" in json.loads(iteration.chart)
+
+    @pytest.mark.dependency(depends=["TestServiceIteration::test_create_iterations"])
+    @pytest.mark.asyncio()
+    async def test_get_next_iteration_failure_closed(
+        self, service_iteration: ServiceIteration
+    ) -> None:
+        session_id = list(service_iteration.uow.repository.storage)[0]  # type: ignore[attr-defined]
+        session = deepcopy(service_iteration.uow.repository.storage[session_id][0].session)  # type: ignore[attr-defined]
+        session.status = SessionStatus.closed
+        with pytest.raises(SessionClosedError):
+            await service_iteration.get_next_iteration(session)

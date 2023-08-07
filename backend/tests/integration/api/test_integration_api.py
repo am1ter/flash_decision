@@ -152,8 +152,10 @@ class TestBackendSession:
 
 @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
 class TestBackendIteration:
-    def test_render_chart(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
-        query_str = f"?session_id={response_custom_session.data['_id']}&iteration_num=0"
+    def test_get_next_iteration(
+        self, oauth2: OAuth2Auth, response_custom_session: Response
+    ) -> None:
+        query_str = f"?session_id={response_custom_session.data['_id']}"
         ri = requests.get(f"{Settings().general.BACKEND_URL}/iteration/{query_str}", auth=oauth2)
         response_iteration = Response(ri)
         response_iteration.assert_status_code(200)

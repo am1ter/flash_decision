@@ -57,7 +57,8 @@ async def get_session_info(
     auth: ServiceAuthorizationDep,
 ) -> Resp[RespMeta, RespSession]:
     """Extract session from db and send it to the client"""
-    session = await service_session.get_session(UUID(session_id))
+    assert auth.user
+    session = await service_session.get_session(session_id=UUID(session_id), user=auth.user)
     data = _resp_session_by_session(session)
     return Resp(data=data)
 
