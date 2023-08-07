@@ -1,7 +1,8 @@
 import contextlib
+from abc import ABCMeta, abstractmethod
 from asyncio import TaskGroup
 from decimal import Decimal
-from typing import Annotated, assert_never, cast
+from typing import Annotated, Any, assert_never, cast
 
 import pandas as pd
 import structlog
@@ -118,8 +119,14 @@ class ServiceSession:
         return session
 
 
+class Command(metaclass=ABCMeta):
+    @abstractmethod
+    def execute(self) -> Any:
+        pass
+
+
 @define
-class CommandLoadTickers:
+class CommandLoadTickers(Command):
     service: ServiceSession
 
     async def execute(self) -> SessionOptions:
@@ -180,7 +187,7 @@ class CommandLoadTickers:
 
 
 @define
-class CommandValidateTickers:
+class CommandValidateTickers(Command):
     service: ServiceSession
 
     async def execute(self) -> None:
@@ -192,7 +199,7 @@ class CommandValidateTickers:
 
 
 @define
-class CommandCreateSession:
+class CommandCreateSession(Command):
     service: ServiceSession
     mode: SessionMode
     session_params: SessionParams | None
@@ -230,7 +237,7 @@ class CommandCreateSession:
 
 
 @define
-class CommandLoadQuotes:
+class CommandLoadQuotes(Command):
     service: ServiceSession
     session: DomainSession
 
@@ -264,7 +271,7 @@ class CommandLoadQuotes:
 
 
 @define
-class CommandSaveSessionToDb:
+class CommandSaveSessionToDb(Command):
     service: ServiceSession
     session: DomainSession
 
@@ -275,7 +282,7 @@ class CommandSaveSessionToDb:
 
 
 @define
-class CommandGetSession:
+class CommandGetSession(Command):
     service: ServiceSession
     session_id: UUID
 
