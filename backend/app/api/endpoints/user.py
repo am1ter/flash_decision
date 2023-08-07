@@ -46,7 +46,7 @@ async def sign_up(
     access_token = await service_user.create_access_token(user)
 
     return RespSignUp(
-        _id=user._id,
+        id=str(user._id),
         email=user.email.value,
         status=user.status.value,
         access_token=access_token.access_token,
@@ -77,7 +77,7 @@ async def sign_in(
     access_token = await service_user.create_access_token(user)
 
     return RespSignIn(
-        _id=user._id,
+        id=str(user._id),
         email=user.email.value,
         status=user.status.value,
         access_token=access_token.access_token,

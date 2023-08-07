@@ -28,7 +28,7 @@ class RespSessionOptions(RespData):
 
 
 class RespSession(RespData):
-    _id: str
+    id: str
     mode: str
     ticker_type: str
     ticker_symbol: str

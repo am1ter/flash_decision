@@ -1,21 +1,15 @@
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 from pydantic.generics import GenericModel
 
 
 class RespMeta(BaseModel):
     """Container for sending Request's meta data to a client"""
 
-    class Config:
-        extra = Extra.allow  # Gives ability to inherit from this class and add additional attrs
-
 
 class RespData(BaseModel):
     """Container for sending Request's data to a client"""
-
-    class Config:
-        extra = Extra.allow  # Gives ability to inherit from this class and add additional attrs
 
 
 # Create a generic type variables for the response models
