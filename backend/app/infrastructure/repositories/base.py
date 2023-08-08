@@ -6,6 +6,7 @@ from uuid import UUID
 
 import bson
 from attrs import asdict
+from pymongo.errors import ConnectionFailure
 from sqlalchemy import select
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -142,6 +143,20 @@ class RepositoryNoSqlMongo(Repository):
     def __init__(self, db: DbNoSql) -> None:
         self._db = db.engine
 
+    @staticmethod
+    def catch_db_errors(func: Callable) -> Callable:
+        """Decorator to catch errors during requests to the database"""
+
+        @wraps(func)
+        def inner(*args, **kwargs) -> Any:
+            try:
+                result = func(*args, **kwargs)
+            except ConnectionFailure as e:
+                raise DbConnectionError from e
+            return result
+
+        return inner
+
     def _convert_uuid_to_binary(self, field: dict) -> dict:
         for key, val in field.items():
             if isinstance(val, UUID):
@@ -154,17 +169,23 @@ class RepositoryNoSqlMongo(Repository):
                 doc[key] = UUID(bytes=bson.BSON(val))
         return doc
 
+    @catch_db_errors
     def add(self, entity: Entity) -> None:
         entity_as_dict = asdict(entity, recurse=True, value_serializer=custom_serializer)
         entity_as_dict = self._convert_uuid_to_binary(entity_as_dict)
         collection_name = entity.__class__.__name__
         self._db[collection_name].insert_one(entity_as_dict)
 
+    @catch_db_errors
     def _select_one(self, entity_class: type, field: dict) -> dict:
         collection_name = entity_class.__name__
         field_updated = self._convert_uuid_to_binary(field)
-        return self._db[collection_name].find_one(field_updated)
+        obj_from_db = self._db[collection_name].find_one(field_updated)
+        if not obj_from_db:  # If object are not found in the database, raise an exception
+            raise DbObjectNotFoundError
+        return obj_from_db
 
+    @catch_db_errors
     def _select_all(self, entity_class: type, field: dict) -> list[dict]:
         collection_name = entity_class.__name__
         all_documents = []
@@ -172,4 +193,6 @@ class RepositoryNoSqlMongo(Repository):
         documents_from_db = self._db[collection_name].find(field_updated)
         for doc in documents_from_db:
             all_documents.append(doc)
+        if not all_documents:  # If objects are not found in the database, raise an exception
+            raise DbObjectNotFoundError
         return all_documents

@@ -11,7 +11,7 @@ class DbNoSql(metaclass=ABCMeta):
     """ABC class for describing all NoSQL databases"""
 
     def __init__(self) -> None:
-        self.engine = self.get_engine()
+        self.engine: Database = self.get_engine()
 
     @abstractmethod
     def get_engine(self) -> Any:
