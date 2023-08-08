@@ -149,6 +149,18 @@ class TestBackendSession:
         response_iteration = Response(rgs)
         response_iteration.assert_status_code(200)
 
+    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
+    def test_get_session_result_failure(
+        self, oauth2: OAuth2Auth, response_custom_session: Response
+    ) -> None:
+        query_str = f"?session_id={response_custom_session.data['id']}"
+        ri = requests.get(
+            f"{Settings().general.BACKEND_URL}/session/result/{query_str}", auth=oauth2
+        )
+        response_iteration = Response(ri)
+        # As session is not closed, error should be raised
+        response_iteration.assert_status_code(400)
+
 
 @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
 class TestBackendIteration:

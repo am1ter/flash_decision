@@ -21,6 +21,7 @@ from app.domain.session import (
     SessionQuotes,
 )
 from app.domain.session_provider import Provider, Ticker, csv_table
+from app.domain.session_result import SessionResult
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
@@ -117,6 +118,11 @@ class ServiceSession:
             raise SessionAccessError
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
         return session
+
+    async def calc_session_result(self, session: DomainSession) -> SessionResult:
+        result = SessionResult.create(session)
+        await logger.ainfo_finish(cls=self.__class__, show_func_name=True, result=result)
+        return result
 
 
 class Command(metaclass=ABCMeta):

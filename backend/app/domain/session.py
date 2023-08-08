@@ -25,8 +25,9 @@ from app.system.constants import (
 from app.system.exceptions import (
     MemoryObjectNotFoundError,
     ProviderInvalidDataError,
+    SessionClosedError,
     SessionConfigurationError,
-    SetSessionStatusError,
+    WrongDecisionsNumberError,
 )
 from app.system.metaclasses import SingletonMeta
 
@@ -140,10 +141,12 @@ class DomainSession(Agregate, metaclass=ABCMeta):
 
     def set_status_active(self) -> None:
         if self.status == SessionStatus.closed:
-            raise SetSessionStatusError
+            raise SessionClosedError
         self.status = SessionStatus.active
 
     def set_status_closed(self) -> None:
+        if len(self.decisions) != self.iterations.value:
+            raise WrongDecisionsNumberError
         self.status = SessionStatus.closed
 
 

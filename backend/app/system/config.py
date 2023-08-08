@@ -171,7 +171,7 @@ class SettingsProvider(BaseSettingsCustom):
     ALPHAVANTAGE_API_KEY_CRYPTO = "my_alpha_avantage_api_key"
     CRYPTO_PRICE_CURRENCY = "CNY"  # Source: https://www.alphavantage.co/physical_currency_list/
     RANDOM_TICKERS_STOCKS = "AMZN,META,GOOGL,AAPL,AMD,XOM,GS,DAL,NKE,NFLX,INTC,TSLA,MSFT,PEP,DIS"
-    RANDOM_TICKERS_CRYPTO = "BTC,BNB,ETH,DOGE,LTC,TRX,MATIC,BCH"
+    RANDOM_TICKERS_CRYPTO = "BTC,BNB,ETH,DOGE,MATIC,BCH"
 
 
 class Settings(metaclass=SingletonMeta):

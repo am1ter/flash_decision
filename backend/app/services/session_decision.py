@@ -20,7 +20,7 @@ UowSessionDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_session)]
 
 
 class ServiceDecision:
-    """This service records decisions for every Iteration in the Session."""
+    """This service records decisions for every Iteration in the Session"""
 
     def __init__(self, uow: UowSessionDep) -> None:
         self.uow = uow

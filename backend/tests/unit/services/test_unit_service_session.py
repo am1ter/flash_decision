@@ -84,3 +84,11 @@ class TestServiceSession:
         # Test get session
         session = await service_session.get_session(session_quotes.session._id, user_domain)
         assert session == session_quotes.session
+
+    async def test_calc_session_result(
+        self,
+        service_session: ServiceSession,
+        closed_session: DomainSession,
+    ) -> None:
+        session_result = await service_session.calc_session_result(closed_session)
+        assert session_result.total_decisions == closed_session.iterations.value

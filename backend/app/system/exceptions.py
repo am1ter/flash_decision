@@ -124,13 +124,23 @@ class IterationNotFoundError(BaseHTTPError):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class SetSessionStatusError(BaseHTTPError):
-    msg = "Session's status cannot be changed. The session is already closed."
-    status_code = status.HTTP_404_NOT_FOUND
+class WrongDecisionsNumberError(BaseHTTPError):
+    msg = "Not all decisions have been made. The session cannot be closed."
+    status_code = status.HTTP_400_BAD_REQUEST
 
 
 class WrongDecisionError(BaseHTTPError):
     msg = "Received decision is incorrect. Please try again."
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+class SessionNotClosedError(BaseHTTPError):
+    msg = "The session is not closed yet."
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
+class WrongSessionResultError(BaseHTTPError):
+    msg = "Session's result cannot be calculated."
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 

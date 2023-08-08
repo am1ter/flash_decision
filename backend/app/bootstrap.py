@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import _AsyncGeneratorContextManager, suppress
+from decimal import getcontext
 from typing import TYPE_CHECKING
 
 import structlog
@@ -89,3 +90,6 @@ class Bootstrap(metaclass=SingletonMeta):
             provider_stocks=provider_stocks.__class__.__name__,
             provider_crypto=provider_crypto.__class__.__name__,
         )
+
+        # Set Decimal precision
+        getcontext().prec = 6

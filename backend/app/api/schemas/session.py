@@ -27,7 +27,7 @@ class RespSessionOptions(RespData):
     all_fixingbar: list[int]
 
 
-class RespSession(RespData):
+class RespSessionInfo(RespData):
     id: str
     mode: str
     ticker_type: str
@@ -39,3 +39,15 @@ class RespSession(RespData):
     slippage: Decimal
     fixingbar: int
     status: str
+
+
+class RespSessionResult(RespData):
+    total_decisions: int
+    profitable_decisions: int
+    unprofitable_decisions: int
+    skipped_decisions: int
+    total_result: Decimal
+    median_decisions_result: Decimal
+    best_decisions_result: Decimal
+    worst_decisions_result: Decimal
+    total_time_spent: Decimal

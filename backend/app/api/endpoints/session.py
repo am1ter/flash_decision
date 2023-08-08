@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends
 from uuid6 import UUID
 
 from app.api.schemas.base import Resp, RespMeta
-from app.api.schemas.session import ReqSession, RespSession, RespSessionOptions
+from app.api.schemas.session import (
+    ReqSession,
+    RespSessionInfo,
+    RespSessionOptions,
+    RespSessionResult,
+)
 from app.domain.base import custom_serializer
 from app.domain.session import DomainSession
 from app.services.session import ServiceSession, SessionParams
@@ -40,7 +45,7 @@ async def start_new_session(
     service_iteration: ServiceIterationDep,
     auth: ServiceAuthorizationDep,
     req_session: ReqSession | None = None,
-) -> Resp[RespMeta, RespSession]:
+) -> Resp[RespMeta, RespSessionInfo]:
     """Start new session: receive session's mode and options, download quotes, create iterations"""
     assert auth.user
     session_params = SessionParams(**req_session.dict()) if req_session else None
@@ -55,7 +60,7 @@ async def get_session_info(
     session_id: str,
     service_session: ServiceSessionDep,
     auth: ServiceAuthorizationDep,
-) -> Resp[RespMeta, RespSession]:
+) -> Resp[RespMeta, RespSessionInfo]:
     """Extract session from db and send it to the client"""
     assert auth.user
     session = await service_session.get_session(session_id=UUID(session_id), user=auth.user)
@@ -63,9 +68,23 @@ async def get_session_info(
     return Resp(data=data)
 
 
-def _resp_session_by_session(session: DomainSession) -> RespSession:
-    return RespSession(
-        _id=str(session._id),
+@router.get("/result/")
+async def get_session_result(
+    session_id: str,
+    service_session: ServiceSessionDep,
+    auth: ServiceAuthorizationDep,
+) -> Resp[RespMeta, RespSessionResult]:
+    """Show session's result as a summary of all decisions"""
+    assert auth.user
+    session = await service_session.get_session(session_id=UUID(session_id), user=auth.user)
+    session_result = await service_session.calc_session_result(session)
+    data = RespSessionResult(**asdict(session_result, value_serializer=custom_serializer))
+    return Resp(data=data)
+
+
+def _resp_session_by_session(session: DomainSession) -> RespSessionInfo:
+    return RespSessionInfo(
+        id=str(session._id),
         mode=session.mode.value,
         ticker_type=session.ticker.ticker_type.value,
         ticker_symbol=session.ticker.symbol,
