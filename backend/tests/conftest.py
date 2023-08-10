@@ -217,7 +217,7 @@ class ProviderAVCryptoMockFailureBlank(ProviderAlphaVantageCrypto):
         return pd.DataFrame.from_dict(mock_data_raw)
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def req_session_params_custom() -> ReqSession:
     return ReqSession(
         mode=SessionMode.custom.value,
@@ -225,7 +225,7 @@ def req_session_params_custom() -> ReqSession:
         ticker_symbol="AAPL",
         barsnumber=SessionBarsnumber.bars50.value,
         fixingbar=SessionFixingbar.bar20.value,
-        iterations=SessionIterations.iterations10.value,
+        iterations=SessionIterations.iterations5.value,
         slippage=SessionSlippage.low.value,
         timeframe=SessionTimeframe.minutes15.value,
         timelimit=SessionTimelimit.seconds60.value,

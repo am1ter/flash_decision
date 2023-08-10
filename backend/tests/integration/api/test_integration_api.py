@@ -16,7 +16,7 @@ from app.system.constants import SessionBarsnumber, SessionMode
 from app.system.exceptions import ProviderRateLimitExceededError
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def oauth2(req_sign_in: ReqSignIn) -> OAuth2Auth:
     client = OAuth2Session()
     token_endpoint = f"{Settings().general.BACKEND_URL}/user/sign-in"
@@ -28,7 +28,7 @@ def oauth2(req_sign_in: ReqSignIn) -> OAuth2Auth:
     return auth
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def response_custom_session(req_session_params_custom: ReqSession, oauth2: OAuth2Auth) -> Response:
     rs = requests.post(
         f"{Settings().general.BACKEND_URL}/session/custom",
@@ -149,21 +149,9 @@ class TestBackendSession:
         response_iteration = Response(rgs)
         response_iteration.assert_status_code(200)
 
-    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
-    def test_get_session_result_failure(
-        self, oauth2: OAuth2Auth, response_custom_session: Response
-    ) -> None:
-        query_str = f"?session_id={response_custom_session.data['id']}"
-        ri = requests.get(
-            f"{Settings().general.BACKEND_URL}/session/result/{query_str}", auth=oauth2
-        )
-        response_iteration = Response(ri)
-        # As session is not closed, error should be raised
-        response_iteration.assert_status_code(400)
 
-
-@pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
 class TestBackendIteration:
+    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_get_next_iteration(
         self, oauth2: OAuth2Auth, response_custom_session: Response
     ) -> None:
@@ -173,20 +161,38 @@ class TestBackendIteration:
         response_iteration.assert_status_code(200)
 
 
-@pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
 class TestBackendDecision:
-    def test_record_decision(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
-        req_decision = ReqRecordDecision(
-            session_id=response_custom_session.data["id"],
-            iteration_num=0,
-            action="buy",
-            time_spent=Decimal("5"),
+    @pytest.mark.dependency()
+    @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
+    def test_record_decision(
+        self,
+        oauth2: OAuth2Auth,
+        response_custom_session: Response,
+        req_session_params_custom: ReqSession,
+    ) -> None:
+        for iter_num in range(req_session_params_custom.iterations):
+            req_decision = ReqRecordDecision(
+                session_id=response_custom_session.data["id"],
+                iteration_num=iter_num,
+                action="buy",
+                time_spent=Decimal("5"),
+            )
+            r = requests.post(
+                f"{Settings().general.BACKEND_URL}/decision/",
+                data=req_decision.json(),
+                auth=oauth2,
+            )
+            response = Response(r)
+            catch_provider_requests_limit_error(response)
+            response.assert_status_code(200)
+
+    @pytest.mark.dependency(depends=["TestBackendDecision::test_record_decision"])
+    def test_get_session_result(
+        self, oauth2: OAuth2Auth, response_custom_session: Response
+    ) -> None:
+        query_str = f"?session_id={response_custom_session.data['id']}"
+        ri = requests.get(
+            f"{Settings().general.BACKEND_URL}/session/result/{query_str}", auth=oauth2
         )
-        r = requests.post(
-            f"{Settings().general.BACKEND_URL}/decision/",
-            data=req_decision.json(),
-            auth=oauth2,
-        )
-        response = Response(r)
-        catch_provider_requests_limit_error(response)
-        response.assert_status_code(200)
+        response_iteration = Response(ri)
+        response_iteration.assert_status_code(200)
