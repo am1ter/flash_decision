@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from uuid6 import UUID
 
 from app.api.schemas.session_decision import ReqRecordDecision, RespDecision
 from app.services.session import ServiceSession
@@ -29,7 +28,7 @@ async def record_decision(
     auth: ServiceAuthorizationDep,
 ) -> RespDecision:
     assert auth.user
-    session_id = UUID(decision_params.session_id)
+    session_id = decision_params.session_id
     session = await service_session.get_session(session_id=session_id, user=auth.user)
     iteration = await service_iteration._load_iteration(session_id, decision_params.iteration_num)
     decision = await service_decision.record_decision(

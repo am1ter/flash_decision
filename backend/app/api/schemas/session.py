@@ -29,7 +29,7 @@ class RespSessionOptions(RespData):
 
 
 class RespSessionInfo(RespData):
-    id: str
+    id: UUID
     mode: str
     ticker_type: str
     ticker_symbol: str

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 from app.api.schemas.base import RespData
@@ -15,7 +17,7 @@ class ReqSignUp(BaseModel):
 
 
 class RespSignUp(RespData):
-    id: str
+    id: UUID
     email: str
     status: str
     access_token: str
@@ -31,7 +33,7 @@ class ReqSignIn(BaseModel):
 
 
 class RespSignIn(RespData):
-    id: str
+    id: UUID
     email: str
     status: str
     access_token: str

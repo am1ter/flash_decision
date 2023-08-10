@@ -1,8 +1,8 @@
 from typing import Annotated
+from uuid import UUID
 
 from attrs import asdict
 from fastapi import APIRouter, Depends
-from uuid6 import UUID
 
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.session import (
@@ -57,26 +57,26 @@ async def start_new_session(
 
 @router.get("/")
 async def get_session_info(
-    session_id: str,
+    session_id: UUID,
     service_session: ServiceSessionDep,
     auth: ServiceAuthorizationDep,
 ) -> Resp[RespMeta, RespSessionInfo]:
     """Extract session from db and send it to the client"""
     assert auth.user
-    session = await service_session.get_session(session_id=UUID(session_id), user=auth.user)
+    session = await service_session.get_session(session_id=session_id, user=auth.user)
     data = _resp_session_by_session(session)
     return Resp(data=data)
 
 
 @router.get("/result/")
 async def get_session_result(
-    session_id: str,
+    session_id: UUID,
     service_session: ServiceSessionDep,
     auth: ServiceAuthorizationDep,
 ) -> Resp[RespMeta, RespSessionResult]:
     """Show session's result as a summary of all decisions"""
     assert auth.user
-    session = await service_session.get_session(session_id=UUID(session_id), user=auth.user)
+    session = await service_session.get_session(session_id=session_id, user=auth.user)
     session_result = await service_session.calc_session_result(session)
     data = RespSessionResult(**asdict(session_result, value_serializer=custom_serializer))
     return Resp(data=data)
@@ -84,7 +84,7 @@ async def get_session_result(
 
 def _resp_session_by_session(session: DomainSession) -> RespSessionInfo:
     return RespSessionInfo(
-        id=str(session._id),
+        id=session._id,
         mode=session.mode.value,
         ticker_type=session.ticker.ticker_type.value,
         ticker_symbol=session.ticker.symbol,
