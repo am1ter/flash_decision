@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -42,6 +43,8 @@ class RespSessionInfo(RespData):
 
 
 class RespSessionResult(RespData):
+    session_id: UUID
+    mode: str
     total_decisions: int
     profitable_decisions: int
     unprofitable_decisions: int

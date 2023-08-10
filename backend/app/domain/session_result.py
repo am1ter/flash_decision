@@ -3,9 +3,10 @@ from statistics import median
 from typing import Self
 
 from attrs import define, field, validators
+from uuid6 import UUID
 
 from app.domain.session import DomainSession
-from app.system.constants import DecisionAction, SessionStatus
+from app.system.constants import DecisionAction, SessionMode, SessionStatus
 from app.system.exceptions import SessionNotClosedError, WrongSessionResultError
 
 
@@ -27,6 +28,16 @@ class SessionResult:
     best_decisions_result: Decimal = field()
     worst_decisions_result: Decimal = field()
     total_time_spent: Decimal = field()
+    session_id: UUID = field()
+    mode: SessionMode = field()
+
+    @session_id.default
+    def session_id_default(self) -> UUID:
+        return self.session._id
+
+    @mode.default
+    def mode_default(self) -> SessionMode:
+        return self.session.mode
 
     @session.validator
     def session_validator(self, attribute: str, value: DomainSession) -> None:
@@ -56,15 +67,15 @@ class SessionResult:
 
     @classmethod
     def create(cls, session: DomainSession) -> Self:
-        if session.status != SessionStatus.closed:
+        if session.status != SessionStatus.closed or not session.decisions:
             raise SessionNotClosedError
 
         profitable_decisions = 0
         unprofitable_decisions = 0
         skipped_decisions = 0
         total_result = Decimal("0")
-        best_decisions_result = Decimal("0")
-        worst_decisions_result = Decimal("0")
+        best_decisions_result = Decimal("-inf")
+        worst_decisions_result = Decimal("inf")
         total_time_spent = Decimal("0")
 
         for decision in session.decisions:
@@ -78,8 +89,6 @@ class SessionResult:
                 worst_decisions_result = decision.result_final
             total_time_spent += decision.time_spent
 
-        median_decisions_result = median([d.result_final for d in session.decisions])
-
         return cls(
             session=session,
             total_decisions=len(session.decisions),
@@ -89,6 +98,6 @@ class SessionResult:
             total_result=total_result,
             best_decisions_result=best_decisions_result,
             worst_decisions_result=worst_decisions_result,
-            median_decisions_result=median_decisions_result,
+            median_decisions_result=median([d.result_final for d in session.decisions]),
             total_time_spent=total_time_spent,
         )
