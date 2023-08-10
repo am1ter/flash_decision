@@ -6,7 +6,7 @@ from typing import Any
 import pandas as pd
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm.attributes import InstrumentedAttribute, QueryableAttribute
+from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 from uuid6 import uuid6
 
@@ -57,7 +57,7 @@ class TestRepositorySql:
         """Chech if identity map works as expected"""
 
         identity_map = IdentityMapSqlAlchemy()
-        if not isinstance(DomainUser.email, InstrumentedAttribute | QueryableAttribute):
+        if not isinstance(DomainUser.email, QueryableAttribute):
             pytest.fail("Domain model is not mapped with ORM")
         if not isinstance(user_domain.auths, AppenderQuery):
             pytest.fail("Domain model relationships is not supported by ORM mapper")
@@ -146,6 +146,7 @@ class TestRepositorySql:
 
             # Get auth by user
             await repository_user.refresh(user_from_repo)
+            assert isinstance(user_from_repo.auths, AppenderQuery)
             auths_repo = await repository_user.load_relationship(user_from_repo.auths)
             assert auths_repo, "Auth not created"
             assert len(auths_repo) == 2, "Auths do not inserted correctly"

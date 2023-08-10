@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Sequence
 from typing import Any
+from uuid import UUID
 
-from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity
@@ -36,15 +37,15 @@ class IdentityMapSqlAlchemyABC(ABC):
 class IdentityMapSqlAlchemyQueries(IdentityMapSqlAlchemyABC):
     """Cache SQL queries and their results"""
 
-    _map: dict[InstrumentedAttribute, dict[Any, Sequence[Entity]]]
+    _map: dict[QueryableAttribute, dict[Any, Sequence[Entity]]]
 
-    def add(self, col: InstrumentedAttribute, val: Any, entities: Sequence[Entity]) -> None:
+    def add(self, col: QueryableAttribute, val: Any, entities: Sequence[Entity]) -> None:
         """Add query parameters to its identity map and also add all entities to a separate map."""
         self._map[col][val] = entities
         for entity in entities:
             self._identity_map.entities.add(entity)
 
-    def get(self, col: InstrumentedAttribute, val: Any) -> Sequence[Entity]:
+    def get(self, col: QueryableAttribute, val: Any) -> Sequence[Entity]:
         """Find the entities in the local storage by query parameters"""
         # For selecting by ID, use the entity identity map instead
         if col.key == "_id":
@@ -75,13 +76,13 @@ class IdentityMapSqlAlchemyRelationships(IdentityMapSqlAlchemyABC):
 class IdentityMapSqlAlchemyEntities(IdentityMapSqlAlchemyABC):
     """Store every domain object loaded from the database using its type and ID."""
 
-    _map: dict[type, dict[str, Entity]]
+    _map: dict[type, dict[UUID, Entity]]
 
     def add(self, entity: Entity) -> None:
         """Add an entity to its identity map."""
         self._map[type(entity)][entity._id] = entity
 
-    def get(self, cls_type: type, _id: str) -> Entity:
+    def get(self, cls_type: type, _id: UUID) -> Entity:
         """Find the entity in the local storage by type and ID."""
         entity = self._map[cls_type][_id]
         return entity

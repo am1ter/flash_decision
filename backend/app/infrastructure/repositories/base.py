@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
-from typing import Any
+from typing import Any, TypeVar, cast
 from uuid import UUID
 
 import bson
@@ -10,13 +10,16 @@ from pymongo.errors import ConnectionFailure
 from sqlalchemy import select
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity, custom_serializer
 from app.infrastructure.nosql import DbNoSql
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
 from app.system.exceptions import DbConnectionError, DbObjectNotFoundError
+
+DecoratedFunction = TypeVar("DecoratedFunction", bound=Callable)
+DecoratedFunctionAwaitable = TypeVar("DecoratedFunctionAwaitable", bound=Callable[..., Awaitable])
 
 
 class Repository(metaclass=ABCMeta):
@@ -46,7 +49,7 @@ class RepositorySqlAlchemy(Repository):
         self._identity_map = identity_map()
 
     @staticmethod
-    def catch_db_errors(func: Callable[..., Awaitable]) -> Callable[..., Awaitable]:
+    def catch_db_errors(func: DecoratedFunctionAwaitable) -> DecoratedFunctionAwaitable:
         """Decorator to catch errors during requests to the database"""
 
         @wraps(func)
@@ -57,10 +60,10 @@ class RepositorySqlAlchemy(Repository):
                 raise DbConnectionError from e
             return result
 
-        return inner
+        return cast(DecoratedFunctionAwaitable, inner)
 
     async def _load_from_db_query(
-        self, col: InstrumentedAttribute, val: Any, *, uselist: bool
+        self, col: QueryableAttribute, val: Any, *, uselist: bool
     ) -> Sequence[Entity]:
         """Load ONE/ALL entities from the database using `WHERE` condition by column and a value"""
 
@@ -86,7 +89,7 @@ class RepositorySqlAlchemy(Repository):
         return entities
 
     @catch_db_errors
-    async def _select_one(self, col: InstrumentedAttribute, val: Any) -> Entity:
+    async def _select_one(self, col: QueryableAttribute, val: Any) -> Entity:
         """Return a single object from the identity map or the database"""
 
         try:  # Try to find the query/entity in the related identity map
@@ -99,7 +102,7 @@ class RepositorySqlAlchemy(Repository):
         return entity
 
     @catch_db_errors
-    async def _select_all(self, col: InstrumentedAttribute, val: Any) -> Sequence[Entity]:
+    async def _select_all(self, col: QueryableAttribute, val: Any) -> Sequence[Entity]:
         """Return all objects from the identity map or the database"""
 
         try:  # Try to find the query/entity in the related identity map
@@ -144,7 +147,7 @@ class RepositoryNoSqlMongo(Repository):
         self._db = db.engine
 
     @staticmethod
-    def catch_db_errors(func: Callable) -> Callable:
+    def catch_db_errors(func: DecoratedFunction) -> DecoratedFunction:
         """Decorator to catch errors during requests to the database"""
 
         @wraps(func)
@@ -155,15 +158,17 @@ class RepositoryNoSqlMongo(Repository):
                 raise DbConnectionError from e
             return result
 
-        return inner
+        return cast(DecoratedFunction, inner)
 
     def _convert_uuid_to_binary(self, field: dict) -> dict:
+        """Convert all UUID values into binary format"""
         for key, val in field.items():
             if isinstance(val, UUID):
                 field[key] = bson.Binary.from_uuid(val)
         return field
 
     def _convert_binary_to_uuid(self, doc: dict) -> dict:
+        """Convert binary formated values into pythonic format"""
         for key, val in doc.items():
             if isinstance(val, bson.Binary):
                 doc[key] = UUID(bytes=bson.BSON(val))
@@ -171,6 +176,7 @@ class RepositoryNoSqlMongo(Repository):
 
     @catch_db_errors
     def add(self, entity: Entity) -> None:
+        """Serialize and save an entity to the database"""
         entity_as_dict = asdict(entity, recurse=True, value_serializer=custom_serializer)
         entity_as_dict = self._convert_uuid_to_binary(entity_as_dict)
         collection_name = entity.__class__.__name__
@@ -178,6 +184,7 @@ class RepositoryNoSqlMongo(Repository):
 
     @catch_db_errors
     def _select_one(self, entity_class: type, field: dict) -> dict:
+        """Extract one record from the database"""
         collection_name = entity_class.__name__
         field_updated = self._convert_uuid_to_binary(field)
         obj_from_db = self._db[collection_name].find_one(field_updated)
@@ -187,6 +194,7 @@ class RepositoryNoSqlMongo(Repository):
 
     @catch_db_errors
     def _select_all(self, entity_class: type, field: dict) -> list[dict]:
+        """Extract all related records from the database"""
         collection_name = entity_class.__name__
         all_documents = []
         field_updated = self._convert_uuid_to_binary(field)

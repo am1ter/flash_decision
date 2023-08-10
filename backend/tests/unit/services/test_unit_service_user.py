@@ -1,6 +1,7 @@
 from copy import copy
 from datetime import datetime
 from typing import Self
+from uuid import UUID
 
 import pytest
 import pytest_asyncio
@@ -29,8 +30,8 @@ pytestmark = pytest.mark.asyncio
 
 class RepositoryUserFake(Repository):
     def __init__(self) -> None:
-        self.storage_user: dict[str, DomainUser] = {}
-        self.storage_auth: dict[str, list[DomainAuth]] = {}
+        self.storage_user: dict[UUID, DomainUser] = {}
+        self.storage_auth: dict[UUID, list[DomainAuth]] = {}
 
     def add(self, obj: DomainUser) -> None:  # type: ignore[override]
         if not hasattr(obj, "_id"):
@@ -39,7 +40,7 @@ class RepositoryUserFake(Repository):
         self.storage_user[obj._id] = obj
         self.storage_auth[obj._id] = list(obj.auths)
 
-    async def get_by_id(self, _id: str) -> DomainUser:
+    async def get_by_id(self, _id: UUID) -> DomainUser:
         return self.storage_user[_id]
 
     async def get_by_email(self, email: str) -> DomainUser | None:
