@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any, Self
+from uuid import UUID
 
 import pandas as pd
 from attrs import Attribute, asdict, define, field
-from uuid6 import UUID, uuid6
+from uuid6 import uuid6
 
 
 def field_relationship(*, init: bool, repr: bool = False) -> Any:
@@ -75,12 +76,13 @@ def custom_serializer(instance: type, field: Attribute, value: Any) -> Any:
         return None
     match value:
         case ValueObject():
-            return value.value
+            value_upd = value.value
         case Enum():
-            return value.value
+            value_upd = value.value
         case pd.DataFrame():
-            return value.to_json()
+            value_upd = value.to_json()
         case datetime():
-            return value.isoformat()
+            value_upd = value.isoformat()
         case _:
-            return value
+            value_upd = value
+    return value_upd

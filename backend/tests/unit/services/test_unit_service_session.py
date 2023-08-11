@@ -1,7 +1,7 @@
 from typing import Self
+from uuid import UUID
 
 import pytest
-from uuid6 import UUID
 
 from app.api.schemas.session import ReqSession
 from app.domain.session import DomainSession
@@ -23,6 +23,9 @@ class RepositorySessionFake(Repository):
 
     async def get_by_id(self, _id: UUID) -> DomainSession:
         return self.storage[_id]
+
+    async def get_all_sessions_by_user(self, user: DomainUser) -> list[DomainSession]:
+        return list(self.storage.values())
 
 
 class UnitOfWorkSessionFake(UnitOfWork):
@@ -86,9 +89,19 @@ class TestServiceSession:
         assert session == session_quotes.session
 
     async def test_calc_session_result(
-        self,
-        service_session: ServiceSession,
-        closed_session: DomainSession,
+        self, service_session: ServiceSession, closed_session: DomainSession
     ) -> None:
         session_result = await service_session.calc_session_result(closed_session)
         assert session_result.total_decisions == closed_session.iterations.value
+
+    @pytest.mark.asyncio()
+    async def test_calc_user_mode_summary(
+        self, service_session: ServiceSession, closed_session: DomainSession
+    ) -> None:
+        service_session.uow.repository.add(closed_session)
+        user_mode_summary = await service_session.calc_user_mode_summary(
+            closed_session.user, SessionMode.custom
+        )
+        assert user_mode_summary
+        assert user_mode_summary.user == closed_session.user
+        assert user_mode_summary.total_sessions == 1

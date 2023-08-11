@@ -13,14 +13,16 @@ from uuid6 import uuid6
 from app.domain.session import DomainSession
 from app.domain.session_decision import DomainDecision
 from app.domain.session_iteration import DomainIteration
+from app.domain.session_result import SessionResult
 from app.domain.user import DomainAuth, DomainUser
 from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
+from app.infrastructure.repositories.scoreboard import RepositoryNoSqlScoreboard
 from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.repositories.session_iteration import RepositoryNoSqlIteration
 from app.infrastructure.repositories.user import RepositoryUserSql
 from app.infrastructure.sql import DbSql, DbSqlPg
-from app.system.constants import AuthStatus, DecisionAction
+from app.system.constants import AuthStatus, DecisionAction, SessionMode
 from app.system.exceptions import DbObjectNotFoundError
 
 RepositoryUserSqlWithUser = Callable[
@@ -210,3 +212,19 @@ class TestRepositoryNoSql:
         iteration_from_repo = repository.get_iteration(mock_session_id, 1)
         assert iteration_from_repo.session_id == mock_session_id
         assert not iteration_from_repo.df_quotes.empty
+
+    def test_repository_scoreboard(
+        self, db_nosql: DbNoSql, closed_session: DomainSession, session_result: SessionResult
+    ) -> None:
+        repository = RepositoryNoSqlScoreboard(db_nosql)  # type: ignore[arg-type]
+
+        # Update scoreboard
+        repository.update_score(session_result)
+
+        # Get an iteration collection from repository
+        scoreboard = repository.get_full_scoreboard(SessionMode.custom)
+        assert isinstance(scoreboard[0].result, Decimal)
+
+        # Get an iteration collection from repository
+        scoreboard_rec = repository.get_scoreboard_record(closed_session.user, SessionMode.custom)
+        assert isinstance(scoreboard_rec.result, Decimal)

@@ -18,6 +18,7 @@ from app.domain.session_provider import (
     Ticker,
     csv_table,
 )
+from app.domain.session_result import SessionResult
 from app.domain.user import DomainUser
 from app.system.constants import (
     DecisionAction,
@@ -105,6 +106,11 @@ def closed_session(session: DomainSession, decision: DomainDecision) -> DomainSe
         session.decisions.append(decision)
     session.set_status_closed()
     return session
+
+
+@pytest.fixture()
+def session_result(closed_session: DomainSession) -> SessionResult:
+    return SessionResult.create(closed_session)
 
 
 @pytest.fixture(scope="module")

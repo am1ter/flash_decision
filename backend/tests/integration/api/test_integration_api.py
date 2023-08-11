@@ -196,3 +196,11 @@ class TestBackendDecision:
         )
         response_iteration = Response(ri)
         response_iteration.assert_status_code(200)
+
+
+class TestBackendScoreboard:
+    @pytest.mark.dependency(depends=["TestBackendDecision::test_record_decision"])
+    def test_show_scoreboard(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
+        r = requests.get(f"{Settings().general.BACKEND_URL}/scoreboard/custom/", auth=oauth2)
+        response_iteration = Response(r)
+        response_iteration.assert_status_code(200)

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette import status
 
+from app.api.endpoints.scoreboard import router as router_scoreboard
 from app.api.endpoints.session import router as router_session
 from app.api.endpoints.session_decision import router as router_decision
 from app.api.endpoints.session_iteration import router as router_iteration
@@ -39,6 +40,7 @@ fastapi_app.include_router(router_user)
 fastapi_app.include_router(router_session)
 fastapi_app.include_router(router_iteration)
 fastapi_app.include_router(router_decision)
+fastapi_app.include_router(router_scoreboard)
 fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=[Settings().general.FRONTEND_URL],

@@ -40,6 +40,8 @@ class SettingsGeneral(BaseSettingsCustom):
     JWT_SECRET_KEY: str = "my_jwt_secret_key"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     JWT_ALGORITHM: str = "HS256"
+    # Scoreboard
+    TOP_USER_COUNT: int = 3
 
     @cached_property
     def BACKEND_URL(self) -> str:  # noqa: N802

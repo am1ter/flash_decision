@@ -22,6 +22,7 @@ from app.domain.session import (
 )
 from app.domain.session_provider import Provider, Ticker, csv_table
 from app.domain.session_result import SessionResult
+from app.domain.session_user_summary import UserModeSummary
 from app.domain.user import DomainUser
 from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
@@ -31,6 +32,7 @@ from app.system.exceptions import (
     CacheConnectionError,
     CacheObjectNotFoundError,
     MemoryObjectNotFoundError,
+    NoUserModeSummaryError,
     SessionAccessError,
 )
 
@@ -123,6 +125,15 @@ class ServiceSession:
         result = SessionResult.create(session)
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, result=result)
         return result
+
+    async def calc_user_mode_summary(
+        self, user: DomainUser, mode: SessionMode
+    ) -> UserModeSummary | None:
+        user_mode_summary = await CommandCalcUserModeSummary(self, user, mode).execute()
+        await logger.ainfo_finish(
+            cls=self.__class__, show_func_name=True, mode=mode, user_score_summary=user_mode_summary
+        )
+        return user_mode_summary
 
 
 class Command(metaclass=ABCMeta):
@@ -297,6 +308,23 @@ class CommandGetSession(Command):
             self.service.uow.repository = cast(RepositorySessionSql, self.service.uow.repository)
             session = await self.service.uow.repository.get_by_id(self.session_id)
         return session
+
+
+@define
+class CommandCalcUserModeSummary(Command):
+    service: ServiceSession
+    user: DomainUser
+    mode: SessionMode
+
+    async def execute(self) -> UserModeSummary | None:
+        async with self.service.uow:
+            self.service.uow.repository = cast(RepositorySessionSql, self.service.uow.repository)
+            sessions = await self.service.uow.repository.get_all_sessions_by_user(self.user)
+        try:
+            user_mode_summary = UserModeSummary.create(sessions, self.mode)
+        except NoUserModeSummaryError:
+            user_mode_summary = None
+        return user_mode_summary
 
 
 def _find_provider(ticker_type: str) -> Provider:

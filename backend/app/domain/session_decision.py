@@ -45,7 +45,7 @@ class DomainDecision(Entity):
             case DecisionAction.buy:
                 return self.price_change
             case DecisionAction.skip:
-                return Decimal(0)
+                return Decimal("0")
             case DecisionAction.sell:
                 return self.price_change * -1
             case _:
@@ -57,7 +57,7 @@ class DomainDecision(Entity):
             case DecisionAction.buy | DecisionAction.sell:
                 return self.result_raw - self.session.slippage.value
             case DecisionAction.skip:
-                return Decimal(0)
+                return Decimal("0")
             case _:
                 assert_never(self.action)
 

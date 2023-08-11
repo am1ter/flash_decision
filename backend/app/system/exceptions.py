@@ -144,6 +144,16 @@ class WrongSessionResultError(BaseHTTPError):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
+class NoUserModeSummaryError(BaseHTTPError):
+    msg = "Current user do not have any finished sessions for the specific mode."
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class WrongUserModeSummaryError(BaseHTTPError):
+    msg = "User summary for the specific mode cannot be calculated."
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
 class ConfigHTTPHardcodedBackendUrlError(BaseValidationError):
     msg = "Set `BACKEND_URL` in environment variables is not allowed. Please remove it."
 
