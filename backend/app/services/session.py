@@ -3,12 +3,12 @@ from abc import ABCMeta, abstractmethod
 from asyncio import TaskGroup
 from decimal import Decimal
 from typing import Annotated, Any, assert_never, cast
+from uuid import UUID
 
 import pandas as pd
 import structlog
 from attrs import define
 from fastapi import Depends
-from uuid6 import UUID
 
 from app.bootstrap import Bootstrap
 from app.domain.session import (

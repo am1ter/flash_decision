@@ -144,10 +144,11 @@ class TestBackendSession:
 
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_get_session(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
-        query_str = f"?session_id={response_custom_session.data['id']}"
-        rgs = requests.get(f"{Settings().general.BACKEND_URL}/session/{query_str}", auth=oauth2)
+        q_str = f"?session_id={response_custom_session.data['session_id']}&info=true"
+        rgs = requests.get(f"{Settings().general.BACKEND_URL}/session/{q_str}", auth=oauth2)
         response_iteration = Response(rgs)
         response_iteration.assert_status_code(200)
+        assert "info" in response_iteration.data
 
 
 class TestBackendIteration:
@@ -155,8 +156,8 @@ class TestBackendIteration:
     def test_get_next_iteration(
         self, oauth2: OAuth2Auth, response_custom_session: Response
     ) -> None:
-        query_str = f"?session_id={response_custom_session.data['id']}"
-        ri = requests.get(f"{Settings().general.BACKEND_URL}/iteration/{query_str}", auth=oauth2)
+        q_str = f"?session_id={response_custom_session.data['session_id']}"
+        ri = requests.get(f"{Settings().general.BACKEND_URL}/iteration/{q_str}", auth=oauth2)
         response_iteration = Response(ri)
         response_iteration.assert_status_code(200)
 
@@ -172,7 +173,7 @@ class TestBackendDecision:
     ) -> None:
         for iter_num in range(req_session_params_custom.iterations):
             req_decision = ReqRecordDecision(
-                session_id=response_custom_session.data["id"],
+                session_id=response_custom_session.data["session_id"],
                 iteration_num=iter_num,
                 action="buy",
                 time_spent=Decimal("5"),
@@ -190,12 +191,11 @@ class TestBackendDecision:
     def test_get_session_result(
         self, oauth2: OAuth2Auth, response_custom_session: Response
     ) -> None:
-        query_str = f"?session_id={response_custom_session.data['id']}"
-        ri = requests.get(
-            f"{Settings().general.BACKEND_URL}/session/result/{query_str}", auth=oauth2
-        )
+        q_str = f"?session_id={response_custom_session.data['session_id']}&info=true&result=true"
+        ri = requests.get(f"{Settings().general.BACKEND_URL}/session/{q_str}", auth=oauth2)
         response_iteration = Response(ri)
         response_iteration.assert_status_code(200)
+        assert "result" in response_iteration.data
 
 
 class TestBackendScoreboard:

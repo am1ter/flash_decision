@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.session import (
     ReqSession,
+    RespSession,
     RespSessionInfo,
     RespSessionOptions,
     RespSessionResult,
@@ -57,34 +58,29 @@ async def start_new_session(
 
 @router.get("/")
 async def get_session_info(
+    *,
     session_id: UUID,
+    info: bool = False,
+    result: bool = False,
     service_session: ServiceSessionDep,
     auth: ServiceAuthorizationDep,
-) -> Resp[RespMeta, RespSessionInfo]:
-    """Extract session from db and send it to the client"""
+) -> Resp[RespMeta, RespSession]:
+    """Extract session info and/or session results from db and send it to the client"""
     assert auth.user
     session = await service_session.get_session(session_id=session_id, user=auth.user)
-    data = _resp_session_by_session(session)
-    return Resp(data=data)
-
-
-@router.get("/result/")
-async def get_session_result(
-    session_id: UUID,
-    service_session: ServiceSessionDep,
-    auth: ServiceAuthorizationDep,
-) -> Resp[RespMeta, RespSessionResult]:
-    """Show session's result as a summary of all decisions"""
-    assert auth.user
-    session = await service_session.get_session(session_id=session_id, user=auth.user)
-    session_result = await service_session.calc_session_result(session)
-    data = RespSessionResult(**asdict(session_result, value_serializer=custom_serializer))
+    resp_info = _resp_session_by_session(session) if info else None
+    if result:
+        session_result = await service_session.calc_session_result(session)
+        resp_res = RespSessionResult(**asdict(session_result, value_serializer=custom_serializer))
+    else:
+        resp_res = None
+    data = RespSession(info=resp_info, result=resp_res)
     return Resp(data=data)
 
 
 def _resp_session_by_session(session: DomainSession) -> RespSessionInfo:
     return RespSessionInfo(
-        id=session._id,
+        session_id=session._id,
         mode=session.mode.value,
         ticker_type=session.ticker.ticker_type.value,
         ticker_symbol=session.ticker.symbol,

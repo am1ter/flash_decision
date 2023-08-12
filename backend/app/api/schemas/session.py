@@ -29,7 +29,7 @@ class RespSessionOptions(RespData):
 
 
 class RespSessionInfo(RespData):
-    id: UUID
+    session_id: UUID
     mode: str
     ticker_type: str
     ticker_symbol: str
@@ -42,7 +42,7 @@ class RespSessionInfo(RespData):
     status: str
 
 
-class RespSessionResult(RespData):
+class RespSessionResult(BaseModel):
     session_id: UUID
     mode: str
     total_decisions: int
@@ -54,3 +54,8 @@ class RespSessionResult(RespData):
     best_decisions_result: Decimal
     worst_decisions_result: Decimal
     total_time_spent: Decimal
+
+
+class RespSession(RespData):
+    info: RespSessionInfo | None
+    result: RespSessionResult | None
