@@ -9,12 +9,11 @@ import structlog
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.domain.session_provider import (
-    Provider,
+from app.infrastructure.cache.redis import CacheRedis
+from app.infrastructure.external_api.session_provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,
 )
-from app.infrastructure.cache.redis import CacheRedis
 from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
 from app.infrastructure.orm.mapper import init_orm_mappers
 from app.infrastructure.sql import DbSql, DbSqlPg
@@ -23,6 +22,7 @@ from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta
 
 if TYPE_CHECKING:
+    from app.domain.session_provider import Provider
     from app.infrastructure.cache.base import Cache
 
 

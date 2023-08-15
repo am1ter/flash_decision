@@ -12,14 +12,13 @@ from app.api.schemas.user import ReqSignIn, ReqSignUp
 from app.domain.session import DomainSession, DomainSessionCustom, SessionQuotes
 from app.domain.session_decision import DomainDecision
 from app.domain.session_iteration import DomainIteration
-from app.domain.session_provider import (
-    ProviderAlphaVantageCrypto,
-    ProviderAlphaVantageStocks,
-    Ticker,
-    csv_table,
-)
+from app.domain.session_provider import Ticker, csv_table
 from app.domain.session_result import SessionResult
 from app.domain.user import DomainUser
+from app.infrastructure.external_api.session_provider import (
+    ProviderAlphaVantageCrypto,
+    ProviderAlphaVantageStocks,
+)
 from app.system.constants import (
     DecisionAction,
     SessionBarsnumber,

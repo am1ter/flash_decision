@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from app.domain.session_provider import (
+from app.domain.session_provider import Ticker
+from app.infrastructure.external_api.session_provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,
-    Ticker,
 )
 from app.system.config import Settings
 from app.system.constants import SessionTimeframe, TickerType
