@@ -2,9 +2,9 @@ import json
 from collections import defaultdict
 from copy import deepcopy
 from typing import Self
+from uuid import UUID
 
 import pytest
-from uuid6 import UUID
 
 from app.domain.session import SessionQuotes
 from app.domain.session_iteration import DomainIteration

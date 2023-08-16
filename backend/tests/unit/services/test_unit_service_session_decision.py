@@ -1,10 +1,9 @@
 from collections import defaultdict
 from copy import deepcopy
 from decimal import Decimal
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import pytest
-from uuid6 import UUID
 
 from app.domain.session_decision import DomainDecision
 from app.domain.session_iteration import DomainIteration
@@ -13,6 +12,9 @@ from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.session_decision import ServiceDecision
 from app.system.constants import DecisionAction, SessionStatus
 from app.system.exceptions import WrongDecisionError
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 class RepositoryNoSqlDecisionFake(Repository):

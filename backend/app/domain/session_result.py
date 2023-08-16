@@ -1,9 +1,9 @@
 from decimal import Decimal
 from statistics import median
 from typing import Self
+from uuid import UUID
 
 from attrs import define, field, validators
-from uuid6 import UUID
 
 from app.domain.session import DomainSession
 from app.system.constants import DecisionAction, SessionMode, SessionStatus

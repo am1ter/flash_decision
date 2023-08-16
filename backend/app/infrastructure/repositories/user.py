@@ -1,5 +1,6 @@
+from uuid import UUID
+
 from sqlalchemy.orm.attributes import QueryableAttribute
-from uuid6 import UUID
 
 from app.domain.user import DomainUser, Email
 from app.infrastructure.repositories.base import RepositorySqlAlchemy

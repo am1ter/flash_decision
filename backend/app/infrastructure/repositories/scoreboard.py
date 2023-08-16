@@ -1,9 +1,9 @@
 from decimal import Decimal
 from typing import ClassVar
+from uuid import UUID
 
 import bson
 from pymongo import DESCENDING, ReturnDocument
-from uuid6 import UUID
 
 from app.domain.scoreboard import ScoreboardRecord, ScoreboardRecords
 from app.domain.session_result import SessionResult

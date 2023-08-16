@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from typing import Annotated, assert_never, cast
+from uuid import UUID
 
 import structlog
 from fastapi import Depends
-from uuid6 import UUID
 
 from app.domain.session import DomainSession, SessionQuotes
 from app.domain.session_iteration import DomainIteration, DomainIterationCollection

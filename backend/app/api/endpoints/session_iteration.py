@@ -1,7 +1,7 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from uuid6 import UUID
 
 from app.api.schemas.session_iteration import RespIteration
 from app.services.session import ServiceSession

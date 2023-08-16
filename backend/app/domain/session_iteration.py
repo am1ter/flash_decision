@@ -9,7 +9,6 @@ import pandas as pd
 from attrs import define, field
 from plotly import graph_objs
 from plotly.utils import PlotlyJSONEncoder
-from uuid6 import UUID
 
 from app.domain.base import Entity
 from app.system.exceptions import (
@@ -20,6 +19,7 @@ from app.system.exceptions import (
 
 if TYPE_CHECKING:
     from decimal import Decimal
+    from uuid import UUID
 
     from app.domain.session import DomainSession, SessionQuotes
 
