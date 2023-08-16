@@ -6,16 +6,16 @@ from uuid import UUID
 
 import pytest
 
+from app.domain.repository import RepositoryIteration
 from app.domain.session import SessionQuotes
-from app.domain.session_iteration import DomainIteration
-from app.infrastructure.repositories.base import Repository
+from app.domain.session_iteration import DomainIteration, DomainIterationCollection
 from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.session_iteration import ServiceIteration
 from app.system.constants import SessionStatus
 from app.system.exceptions import SessionClosedError
 
 
-class RepositoryNoSqlIterationFake(Repository):
+class RepositoryIterationFake(RepositoryIteration):
     def __init__(self) -> None:
         self.storage: dict[UUID, dict[int, DomainIteration]] = defaultdict(dict)
 
@@ -25,10 +25,13 @@ class RepositoryNoSqlIterationFake(Repository):
     def get_iteration(self, session_id: UUID, iteration_num: int) -> DomainIteration:
         return self.storage[session_id][iteration_num]
 
+    def get_iteration_collection(self, session_id: UUID) -> DomainIterationCollection:  # type: ignore[empty-body]
+        pass
+
 
 class UnitOfWorkIterationFake(UnitOfWork):
     def __init__(self) -> None:
-        self.repository = RepositoryNoSqlIterationFake()
+        self.repository = RepositoryIterationFake()
 
     async def __aenter__(self) -> Self:
         return self

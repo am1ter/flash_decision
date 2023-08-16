@@ -1,47 +1,19 @@
-from collections import defaultdict
 from copy import deepcopy
 from decimal import Decimal
-from typing import TYPE_CHECKING, Self
 
 import pytest
 
 from app.domain.session_decision import DomainDecision
 from app.domain.session_iteration import DomainIteration
-from app.infrastructure.repositories.base import Repository
-from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.session_decision import ServiceDecision
 from app.system.constants import DecisionAction, SessionStatus
 from app.system.exceptions import WrongDecisionError
-
-if TYPE_CHECKING:
-    from uuid import UUID
-
-
-class RepositoryNoSqlDecisionFake(Repository):
-    def __init__(self) -> None:
-        self.storage: dict[UUID, dict[int, DomainDecision]] = defaultdict(dict)
-
-    def add(self, obj: DomainDecision) -> None:  # type: ignore[override]
-        self.storage[obj.session._id][obj.iteration.iteration_num] = obj
-
-
-class UnitOfWorkDecisionFake(UnitOfWork):
-    def __init__(self) -> None:
-        self.repository = RepositoryNoSqlDecisionFake()
-
-    async def __aenter__(self) -> Self:
-        return self
-
-    async def __aexit__(self, *args) -> None:
-        pass
-
-    async def commit(self) -> None:
-        pass
+from tests.unit.services.test_unit_service_session import UnitOfWorkSessionFake
 
 
 @pytest.fixture(scope="class")
 def service_decision() -> ServiceDecision:
-    return ServiceDecision(UnitOfWorkDecisionFake())  # type: ignore[arg-type]
+    return ServiceDecision(UnitOfWorkSessionFake())  # type: ignore[arg-type]
 
 
 class TestServiceDecision:

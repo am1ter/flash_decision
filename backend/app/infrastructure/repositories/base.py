@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
 from functools import wraps
 from typing import Any, TypeVar, cast
@@ -14,25 +13,13 @@ from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity, custom_serializer
+from app.domain.repository import Repository
 from app.infrastructure.nosql import DbNoSql
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
 from app.system.exceptions import DbConnectionError, DbObjectNotFoundError
 
 DecoratedFunction = TypeVar("DecoratedFunction", bound=Callable)
 DecoratedFunctionAwaitable = TypeVar("DecoratedFunctionAwaitable", bound=Callable[..., Awaitable])
-
-
-class Repository(metaclass=ABCMeta):
-    """
-    Abstract class for repositories - mediates between the domain and ORM.
-    Repository is the place where domain models and ORM models work together.
-    https://martinfowler.com/eaaCatalog/repository.html
-    """
-
-    @abstractmethod
-    def add(self, entity: Entity) -> None:
-        """Add an entity to the repository"""
-        raise NotImplementedError
 
 
 class RepositorySqlAlchemy(Repository):

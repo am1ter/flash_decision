@@ -9,8 +9,8 @@ from jose import jwt
 from uuid6 import uuid6
 
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
+from app.domain.repository import RepositoryUser
 from app.domain.user import DomainAuth, DomainUser
-from app.infrastructure.repositories.base import Repository
 from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.user import JwtTokenEncoded, ServiceUser
 from app.services.user_authorization import ServiceAuthorization, verify_authorization
@@ -28,7 +28,7 @@ from app.system.exceptions import (
 pytestmark = pytest.mark.asyncio
 
 
-class RepositoryUserFake(Repository):
+class RepositoryUserFake(RepositoryUser):
     def __init__(self) -> None:
         self.storage_user: dict[UUID, DomainUser] = {}
         self.storage_auth: dict[UUID, list[DomainAuth]] = {}
@@ -43,7 +43,7 @@ class RepositoryUserFake(Repository):
     async def get_by_id(self, _id: UUID) -> DomainUser:
         return self.storage_user[_id]
 
-    async def get_by_email(self, email: str) -> DomainUser | None:
+    async def get_by_email(self, email: str) -> DomainUser:
         user = [v for v in self.storage_user.values() if v.email.value == email]
         return user[0]
 
