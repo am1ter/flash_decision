@@ -15,13 +15,13 @@ from app.domain.session_decision import DomainDecision
 from app.domain.session_iteration import DomainIteration
 from app.domain.session_result import SessionResult
 from app.domain.user import DomainAuth, DomainUser
-from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
+from app.infrastructure.databases.nosql import DbNoSql, DbNoSqlMongo
+from app.infrastructure.databases.sql import DbSql, DbSqlPg
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
 from app.infrastructure.repositories.scoreboard import RepositoryNoSqlScoreboard
 from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.repositories.session_iteration import RepositoryNoSqlIteration
 from app.infrastructure.repositories.user import RepositoryUserSql
-from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.constants import AuthStatus, DecisionAction, SessionMode
 from app.system.exceptions import DbObjectNotFoundError
 

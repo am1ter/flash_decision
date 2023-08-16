@@ -4,8 +4,8 @@ from alembic.runtime.migration import MigrationContext
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from app.infrastructure.databases.sql import DbSql, DbSqlPg
 from app.infrastructure.orm import Base
-from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.config import Environment, Settings
 
 pytestmark = pytest.mark.asyncio

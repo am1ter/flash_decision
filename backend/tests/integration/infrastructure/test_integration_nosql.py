@@ -1,7 +1,7 @@
 import pytest
 from pymongo.errors import ConnectionFailure
 
-from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
+from app.infrastructure.databases.nosql import DbNoSql, DbNoSqlMongo
 
 
 @pytest.fixture()

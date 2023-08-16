@@ -1,8 +1,8 @@
 import pytest
 
 from app.domain.user import DomainUser
+from app.infrastructure.databases.sql import DbSqlPg
 from app.infrastructure.repositories.user import RepositoryUserSql
-from app.infrastructure.sql import DbSqlPg
 from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
 from app.system.exceptions import DbObjectCannotBeCreatedError
 

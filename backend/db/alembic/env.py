@@ -7,8 +7,8 @@ from typing import Literal
 from alembic import context
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from app.infrastructure.databases.sql import DbSqlPg
 from app.infrastructure.orm.base import Base
-from app.infrastructure.sql import DbSqlPg
 from app.system.config import Settings
 
 # Read logger config with json-formatter from alembic.ini and create logger

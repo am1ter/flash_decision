@@ -14,7 +14,7 @@ from sqlalchemy.orm.dynamic import AppenderQuery
 
 from app.domain.base import Entity, custom_serializer
 from app.domain.repository import Repository
-from app.infrastructure.nosql import DbNoSql
+from app.infrastructure.databases.nosql import DbNoSql
 from app.infrastructure.repositories.identity_map import IdentityMapSqlAlchemy
 from app.system.exceptions import DbConnectionError, DbObjectNotFoundError
 

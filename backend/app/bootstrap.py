@@ -10,13 +10,13 @@ from sqlalchemy.exc import ArgumentError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.infrastructure.cache.redis import CacheRedis
+from app.infrastructure.databases.nosql import DbNoSql, DbNoSqlMongo
+from app.infrastructure.databases.sql import DbSql, DbSqlPg
 from app.infrastructure.external_api.session_provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,
 )
-from app.infrastructure.nosql import DbNoSql, DbNoSqlMongo
 from app.infrastructure.orm.mapper import init_orm_mappers
-from app.infrastructure.sql import DbSql, DbSqlPg
 from app.system.config import Settings
 from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta

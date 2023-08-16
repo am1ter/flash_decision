@@ -9,8 +9,8 @@ from app.infrastructure.units_of_work.base import UnitOfWork
 from app.system.exceptions import DbConnectionError, DbObjectCannotBeCreatedError
 
 if TYPE_CHECKING:
+    from app.infrastructure.databases.sql import DbSql
     from app.infrastructure.repositories.base import RepositorySqlAlchemy
-    from app.infrastructure.sql import DbSql
 
 
 class UnitOfWorkSqlAlchemy(UnitOfWork):

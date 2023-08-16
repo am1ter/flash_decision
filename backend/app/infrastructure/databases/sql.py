@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -12,21 +12,15 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.infrastructure.databases.base import Db
 from app.system.config import Settings
 
 
-class DbSql(metaclass=ABCMeta):
+class DbSql(Db, metaclass=ABCMeta):
     """
     ABC class for describing all classical SQL RMDBS.
     Used SQLAlchemy's async engines.
     """
-
-    def __init__(self) -> None:
-        self.engine = self.get_engine()
-
-    @abstractmethod
-    def get_engine(self) -> AsyncEngine:
-        """All db configuration for concrete classes must be done here"""
 
     @asynccontextmanager
     async def get_connection(self) -> AsyncGenerator[AsyncConnection, Any]:
@@ -42,6 +36,11 @@ class DbSql(metaclass=ABCMeta):
         sessionmaker = async_sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
         return sessionmaker()
 
+
+class DbSqlPg(DbSql):
+    def get_engine(self) -> AsyncEngine:
+        return create_async_engine(Settings().sql.SQL_URL, echo=Settings().log.LOG_SQL_ACCESS)
+
     async def healthcheck(self) -> bool:
         """Run self healthcheck"""
         try:
@@ -52,8 +51,3 @@ class DbSql(metaclass=ABCMeta):
         else:
             check_result = True
         return check_result
-
-
-class DbSqlPg(DbSql):
-    def get_engine(self) -> AsyncEngine:
-        return create_async_engine(Settings().sql.SQL_URL, echo=Settings().log.LOG_SQL_ACCESS)
