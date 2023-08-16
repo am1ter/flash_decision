@@ -1,7 +1,5 @@
-import csv
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar
 
 import pandas as pd
 import pytest
@@ -12,13 +10,9 @@ from app.api.schemas.user import ReqSignIn, ReqSignUp
 from app.domain.session import DomainSession, DomainSessionCustom, SessionQuotes
 from app.domain.session_decision import DomainDecision
 from app.domain.session_iteration import DomainIteration
-from app.domain.session_provider import Ticker, csv_table
+from app.domain.session_provider import Ticker
 from app.domain.session_result import SessionResult
 from app.domain.user import DomainUser
-from app.infrastructure.external_api.session_provider import (
-    ProviderAlphaVantageCrypto,
-    ProviderAlphaVantageStocks,
-)
 from app.system.constants import (
     DecisionAction,
     SessionBarsnumber,
@@ -129,97 +123,6 @@ def req_sign_in(req_sign_up: ReqSignUp) -> ReqSignIn:
 @pytest.fixture()
 def mock_ticker() -> Ticker:
     return Ticker(ticker_type=TickerType.stock, exchange="Mock", symbol="MOCK", name="Mock ticker")
-
-
-class ProviderAVStocksMockSuccess(ProviderAlphaVantageStocks):
-    async def download_raw_tickers(self) -> csv_table:
-        path = Path(__file__).parent / "_mock_data" / "provider_av_stocks_mock_success_tickers.csv"
-        with path.open() as file:
-            csv_table = csv.reader(file.read().splitlines(), delimiter=",")
-        next(csv_table)  # skip table header
-        return list(csv_table)
-
-    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        return df_quotes_stocks()
-
-    async def healthcheck(self) -> bool:
-        return True
-
-
-class ProviderAVCryptoMockSuccess(ProviderAlphaVantageCrypto):
-    async def download_raw_tickers(self) -> csv_table:
-        path = Path(__file__).parent / "_mock_data" / "provider_av_crypto_mock_success_tickers.csv"
-        with path.open() as file:
-            csv_table = csv.reader(file.read().splitlines(), delimiter=",")
-        next(csv_table)  # skip table header
-        return list(csv_table)
-
-    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        return df_quotes_crypto()
-
-    async def healthcheck(self) -> bool:
-        return True
-
-
-class ProviderAVStocksMockFailureBroken(ProviderAlphaVantageStocks):
-    _tickers: ClassVar[dict[str, Ticker]] = {}
-
-    async def download_raw_tickers(self) -> csv_table:
-        return [
-            ["", "", "NASDAQ", "Stock", "13.03.1986", "null", "Active"],
-            ["AAPL", "Apple Inc", "NASDAQ", "Stock", "12.12.1980", "null", "Active"],
-        ]
-
-    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        mock_data_raw = {
-            "datetime": ["2010-06-28 10:00", "2010-06-28 10:05"],
-            "wrong_col_name": [100.00, 101.05],
-            "high": [105.00, 106.05],
-            "low": [95.50, 96.60],
-            "close": [101.05, 102.10],
-            "volume": [2000, 2020],
-        }
-        return pd.DataFrame.from_dict(mock_data_raw)
-
-
-class ProviderAVCryptoMockFailureBroken(ProviderAlphaVantageCrypto):
-    _tickers: ClassVar[dict[str, Ticker]] = {}
-
-    async def download_raw_tickers(self) -> csv_table:
-        return [["", "Bitcoin"], ["ETH", "Ethereum"]]
-
-    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        mock_data_raw = {
-            "datetime": ["2010-06-28 10:00", "2010-06-28 10:05"],
-            "wrong_col_name": [100.00, 101.05],
-            "high": [105.00, 106.05],
-            "low": [95.50, 96.60],
-            "close": [101.05, 102.10],
-            "volume": [2000, 2020],
-        }
-        return pd.DataFrame.from_dict(mock_data_raw)
-
-
-class ProviderAVStocksMockFailureBlank(ProviderAlphaVantageStocks):
-    _tickers: ClassVar[dict[str, Ticker]] = {}
-
-    async def download_raw_tickers(self) -> csv_table:
-        return []
-
-    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        mock_data_raw: dict[str, list] = {}
-        return pd.DataFrame.from_dict(mock_data_raw)
-
-
-class ProviderAVCryptoMockFailureBlank(ProviderAlphaVantageCrypto):
-    _tickers: ClassVar[dict[str, Ticker]] = {}
-
-    async def download_raw_tickers(self) -> csv_table:
-        return []
-
-    async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
-        mock_data_raw: dict[str, list] = {}
-        return pd.DataFrame.from_dict(mock_data_raw)
 
 
 @pytest.fixture(scope="module")

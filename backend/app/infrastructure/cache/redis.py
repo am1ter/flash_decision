@@ -6,7 +6,7 @@ import structlog
 from redis.asyncio import Redis
 from redis.exceptions import ConnectionError
 
-from app.infrastructure.cache.base import JSON, Cache
+from app.domain.cache import JSON, Cache
 from app.system.config import Settings
 from app.system.exceptions import CacheConnectionError, CacheObjectNotFoundError
 

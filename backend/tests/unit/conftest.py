@@ -2,7 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from app.bootstrap import Bootstrap
 from app.infrastructure.sql import DbSql
-from tests.conftest import ProviderAVCryptoMockSuccess, ProviderAVStocksMockSuccess
+from tests.unit.mock_session_providers import (
+    provider_av_crypto_mock_success,
+    provider_av_stocks_mock_success,
+)
 
 
 class DbSqlFake(DbSql):
@@ -16,6 +19,6 @@ Bootstrap(
     db_sql=DbSqlFake(),
     db_nosql=None,  # type: ignore[arg-type]
     cache=None,  # type: ignore[arg-type]
-    provider_stocks=ProviderAVStocksMockSuccess(),
-    provider_crypto=ProviderAVCryptoMockSuccess(),
+    provider_stocks=provider_av_stocks_mock_success,
+    provider_crypto=provider_av_crypto_mock_success,
 )

@@ -25,16 +25,16 @@ class TestProviderAlphaVantageStocks:
     @pytest.mark.asyncio()
     async def test_get_list(self) -> None:
         assert Settings().provider.ALPHAVANTAGE_API_KEY_STOCKS
-        provider = ProviderAlphaVantageStocks()
-        raw_tickers = await provider.download_raw_tickers()
-        tickers = provider.process_tickers(raw_tickers)
+        provider = ProviderAlphaVantageStocks(cache=None)  # type: ignore[arg-type]
+        raw_tickers = await provider.ticker_col._download_raw_tickers()
+        tickers = provider.ticker_col._process_tickers(raw_tickers)
         if not tickers:
             raise ProviderRateLimitExceededError
 
     @pytest.mark.asyncio()
     async def test_get_data_intraday(self, ticker_stocks: Ticker) -> None:
         assert Settings().provider.ALPHAVANTAGE_API_KEY_STOCKS
-        provider = ProviderAlphaVantageStocks()
+        provider = ProviderAlphaVantageStocks(cache=None)  # type: ignore[arg-type]
         data = await provider.get_data(ticker_stocks, SessionTimeframe.minutes5)
         assert isinstance(data, pd.DataFrame)
         assert not data.empty
@@ -42,7 +42,7 @@ class TestProviderAlphaVantageStocks:
     @pytest.mark.asyncio()
     async def test_get_data_daily(self, ticker_stocks: Ticker) -> None:
         assert Settings().provider.ALPHAVANTAGE_API_KEY_STOCKS
-        provider = ProviderAlphaVantageStocks()
+        provider = ProviderAlphaVantageStocks(cache=None)  # type: ignore[arg-type]
         data = await provider.get_data(ticker_stocks, SessionTimeframe.daily)
         assert isinstance(data, pd.DataFrame)
         assert not data.empty
@@ -52,16 +52,16 @@ class TestProviderAlphaVantageCrypto:
     @pytest.mark.asyncio()
     async def test_get_list(self) -> None:
         assert Settings().provider.ALPHAVANTAGE_API_KEY_CRYPTO
-        provider = ProviderAlphaVantageCrypto()
-        raw_tickers = await provider.download_raw_tickers()
-        tickers = provider.process_tickers(raw_tickers)
+        provider = ProviderAlphaVantageCrypto(cache=None)  # type: ignore[arg-type]
+        raw_tickers = await provider.ticker_col._download_raw_tickers()
+        tickers = provider.ticker_col._process_tickers(raw_tickers)
         if not tickers:
             raise ProviderRateLimitExceededError
 
     @pytest.mark.asyncio()
     async def test_get_data_intraday(self, ticker_crypto: Ticker) -> None:
         assert Settings().provider.ALPHAVANTAGE_API_KEY_CRYPTO
-        provider = ProviderAlphaVantageCrypto()
+        provider = ProviderAlphaVantageCrypto(cache=None)  # type: ignore[arg-type]
         data = await provider.get_data(ticker_crypto, SessionTimeframe.daily)
         assert isinstance(data, pd.DataFrame)
         assert not data.empty

@@ -130,7 +130,7 @@ class DomainSession(Agregate, metaclass=ABCMeta):
         mode_random_tickers = cls.random_tickers.split(",")
         ticker_symbol = choice(mode_random_tickers)
         try:
-            ticker = provider._get_ticker_by_symbol(ticker_symbol)
+            ticker = provider.get_ticker_by_symbol(ticker_symbol)
         except MemoryObjectNotFoundError as e:
             raise SessionConfigurationError from e
         return ticker
@@ -226,7 +226,7 @@ class DomainSessionCustom(DomainSession):
     ) -> Self:
         session = cls(
             mode=SessionMode.custom,
-            ticker=provider._get_ticker_by_symbol(ticker_symbol),
+            ticker=provider.get_ticker_by_symbol(ticker_symbol),
             timeframe=SessionTimeframe(timeframe),
             barsnumber=SessionBarsnumber(barsnumber),
             timelimit=SessionTimelimit(timelimit),

@@ -1,10 +1,15 @@
+from contextlib import suppress
+
 import pytest
 
+from app.bootstrap import Bootstrap
 from app.infrastructure.cache.redis import CacheRedis
 
 
 @pytest.fixture()
 def redis() -> CacheRedis:
+    with suppress(KeyError):
+        type(Bootstrap)._instances.pop(CacheRedis)
     return CacheRedis()
 
 

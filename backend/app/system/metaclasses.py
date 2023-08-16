@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABCMeta
 from threading import Lock
 from typing import Generic, TypeVar
 
@@ -23,3 +24,7 @@ class SingletonMeta(type, Generic[SingletonInstance]):
                 if cls not in cls._instances:
                     cls._instances[cls] = instance
         return cls._instances[cls]
+
+
+class SingletonMetaAbc(SingletonMeta, ABCMeta):
+    """Mixin to resolve metaclass conflict"""

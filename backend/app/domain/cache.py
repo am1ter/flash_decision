@@ -1,12 +1,14 @@
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import TypeAlias
 
+from app.system.metaclasses import SingletonMetaAbc
+
 JSON: TypeAlias = Mapping[str, "JSON"] | Sequence["JSON"] | str | int | Decimal | bool | None
 
 
-class Cache(metaclass=ABCMeta):
+class Cache(metaclass=SingletonMetaAbc):
     @abstractmethod
     async def get(self, key: str) -> JSON:
         """Retrieve a single JSON (dict) from the cache based on the key"""

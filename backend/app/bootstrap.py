@@ -22,8 +22,8 @@ from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta
 
 if TYPE_CHECKING:
+    from app.domain.cache import Cache
     from app.domain.session_provider import Provider
-    from app.infrastructure.cache.base import Cache
 
 
 # Create logger
@@ -52,8 +52,8 @@ class Bootstrap(metaclass=SingletonMeta):
         db_sql: DbSql = DbSqlPg(),
         db_nosql: DbNoSql = DbNoSqlMongo(),
         cache: Cache = CacheRedis(),
-        provider_stocks: Provider = ProviderAlphaVantageStocks(),
-        provider_crypto: Provider = ProviderAlphaVantageCrypto(),
+        provider_stocks: Provider = ProviderAlphaVantageStocks(CacheRedis()),
+        provider_crypto: Provider = ProviderAlphaVantageCrypto(CacheRedis()),
     ) -> None:
         # Configure logger
         configure_logger()

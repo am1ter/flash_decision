@@ -1,4 +1,5 @@
 import csv
+from abc import ABCMeta, abstractmethod
 from typing import ClassVar
 
 import httpx
@@ -6,8 +7,17 @@ import pandas as pd
 import structlog
 from alpha_vantage.async_support.cryptocurrencies import CryptoCurrencies
 from alpha_vantage.async_support.timeseries import TimeSeries
+from attrs import define, field
 
-from app.domain.session_provider import Provider, Ticker, csv_table
+from app.domain.cache import Cache
+from app.domain.session_provider import (
+    DataExporter,
+    Provider,
+    Ticker,
+    TickerCol,
+    csv_table,
+    tickers,
+)
 from app.system.config import Settings
 from app.system.constants import SessionTimeframe, TickerType
 from app.system.exceptions import (
@@ -20,26 +30,22 @@ from app.system.exceptions import (
 # Create logger
 logger = structlog.get_logger()
 
+url_root = "https://www.alphavantage.co"
+api_key_stocks = Settings().provider.ALPHAVANTAGE_API_KEY_STOCKS
+api_key_crypto = Settings().provider.ALPHAVANTAGE_API_KEY_CRYPTO
 
-class ProviderAlphaVantage(Provider):
-    """
-    Data provider for USA stocks market and cryptocurrencies market.
-    Documentation: https://www.alphavantage.co/documentation/
-    """
 
-    _tickers: ClassVar[dict[str, Ticker]] = {}
-    api_key: str = "demo"
-    url_root = "https://www.alphavantage.co"
-    url_get_list: str
-    url_healthcheck = f"{url_root}/query?function=MARKET_STATUS&apikey={api_key}"
-    data_cols_final = ("datetime", "open", "high", "low", "close")
+@define(kw_only=False, slots=False, hash=True)
+class TickerColAlphaVantage(TickerCol, metaclass=ABCMeta):
+    url_get_all: ClassVar[str]
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>"
+    @abstractmethod
+    def _process_csv(self, csv_table: csv_table) -> tickers:
+        raise NotImplementedError
 
-    async def download_raw_tickers(self) -> csv_table:
+    async def _download_raw_tickers(self) -> csv_table:
         async with httpx.AsyncClient() as client:
-            r = await client.get(self.url_get_list)
+            r = await client.get(self.url_get_all)
         if r.status_code != 200:
             raise ProviderAccessError
         tickers_bytes = r.content.decode("utf-8")
@@ -50,9 +56,78 @@ class ProviderAlphaVantage(Provider):
             raise ProviderAccessError
         return raw_tickers
 
-    def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
-        raise NotImplementedError
+    def _process_tickers(self, raw_tickers: csv_table) -> tickers:
+        if not self._tickers:
+            # Do not crash the app if the list of tickers is not available
+            try:
+                self.__class__._tickers = self._process_csv(raw_tickers)
+            except (ProviderAccessError, ValueError):
+                self.__class__._tickers = {}
+            if not self._tickers:
+                logger.error_finish(
+                    cls=self.__class__, show_func_name=True, error=ProviderAccessError.msg
+                )
+        return self._tickers
 
+
+@define(kw_only=False, slots=False, hash=True)
+class TickerColAlphaVantageStocks(TickerColAlphaVantage):
+    url_get_all: ClassVar[str] = f"{url_root}/query?function=LISTING_STATUS&apikey={api_key_stocks}"
+
+    def _process_csv(self, csv_table: csv_table) -> tickers:
+        tickers = {}
+        for symbol, name, exchange, ticker_type, *_ in csv_table:
+            # Do not crash the app if the there is broken tickers in the csv
+            try:
+                ticker = Ticker(
+                    ticker_type=TickerType(ticker_type),
+                    exchange=exchange,
+                    symbol=symbol,
+                    name=name,
+                )
+            except ValueError:
+                logger.error_finish(
+                    cls=self.__class__,
+                    show_func_name=True,
+                    error=ProviderInvalidDataError.msg,
+                    record=(symbol, name, exchange, ticker_type),
+                )
+            else:
+                tickers[ticker.symbol] = ticker
+        return tickers
+
+
+@define(kw_only=False, slots=False, hash=True)
+class TickerColAlphaVantageCrypto(TickerColAlphaVantage):
+    url_get_all: ClassVar[str] = f"{url_root}/digital_currency_list/"
+
+    def _process_csv(self, csv_table: csv_table) -> tickers:
+        _tickers = {}
+        for currency_code, currency_name in csv_table:
+            try:
+                ticker = Ticker(
+                    ticker_type=TickerType("Crypto"),
+                    exchange=Settings().provider.CRYPTO_PRICE_CURRENCY,
+                    symbol=currency_code,
+                    name=currency_name,
+                )
+            except ValueError:
+                logger.error_finish(
+                    cls=self.__class__,
+                    show_func_name=True,
+                    error=ProviderInvalidDataError.msg,
+                    record=(currency_code, currency_name),
+                )
+            else:
+                _tickers[ticker.symbol] = ticker
+        return _tickers
+
+
+@define(kw_only=False, slots=False, hash=True)
+class DataExporterAlphaVantage(DataExporter, metaclass=ABCMeta):
+    data_cols_final: ClassVar[tuple[str, ...]] = ("datetime", "open", "high", "low", "close")
+
+    @abstractmethod
     async def _download_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         raise NotImplementedError
 
@@ -76,61 +151,19 @@ class ProviderAlphaVantage(Provider):
 
         return df_quotes
 
-    def process_tickers(self, raw_tickers: csv_table) -> dict[str, Ticker]:
-        if not self._tickers:
-            # Do not crash the app if the list of tickers is not available
-            try:
-                self.__class__._tickers = self._process_csv(raw_tickers)
-            except (ProviderAccessError, ValueError):
-                self.__class__._tickers = {}
-            if not self._tickers:
-                logger.error_finish(
-                    cls=self.__class__, show_func_name=True, error=ProviderAccessError.msg
-                )
-        return self._tickers
-
     async def get_data(self, ticker: Ticker, timeframe: SessionTimeframe) -> pd.DataFrame:
         data = await self._download_data(ticker, timeframe)
         data = self._transform_df_quotes(data)
         return data
 
-    async def healthcheck(self) -> bool:
-        async with httpx.AsyncClient() as client:
-            r = await client.get(self.__class__.url_healthcheck)
-        result = bool(r.status_code == 200)
-        return result
 
+@define(kw_only=False, slots=False, hash=True)
+class DataExporterAlphaVantageStocks(DataExporterAlphaVantage):
+    exporter: TimeSeries = field()
 
-class ProviderAlphaVantageStocks(ProviderAlphaVantage):
-    api_key = Settings().provider.ALPHAVANTAGE_API_KEY_STOCKS
-
-    def __init__(self) -> None:
-        self.url_get_list = f"{self.url_root}/query?function=LISTING_STATUS&apikey={self.api_key}"
-        self.exporter = TimeSeries(
-            key=self.__class__.api_key, output_format="pandas", indexing_type="integer"
-        )
-
-    def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
-        tickers = {}
-        for symbol, name, exchange, ticker_type, *_ in csv_table:
-            # Do not crash the app if the there is broken tickers in the csv
-            try:
-                ticker = Ticker(
-                    ticker_type=TickerType(ticker_type),
-                    exchange=exchange,
-                    symbol=symbol,
-                    name=name,
-                )
-            except ValueError:
-                logger.error_finish(
-                    cls=self.__class__,
-                    show_func_name=True,
-                    error=ProviderInvalidDataError.msg,
-                    record=(symbol, name, exchange, ticker_type),
-                )
-            else:
-                tickers[ticker.symbol] = ticker
-        return tickers
+    @exporter.default
+    def exporter_default(self) -> TimeSeries:
+        return TimeSeries(key=api_key_stocks, output_format="pandas", indexing_type="integer")
 
     async def _download_data_intraday(
         self, ticker: Ticker, timeframe: SessionTimeframe
@@ -176,35 +209,13 @@ class ProviderAlphaVantageStocks(ProviderAlphaVantage):
         return data
 
 
-class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
-    api_key = Settings().provider.ALPHAVANTAGE_API_KEY_CRYPTO
+@define(kw_only=False, slots=False, hash=True)
+class DataExporterAlphaVantageCrypto(DataExporterAlphaVantage):
+    exporter: CryptoCurrencies = field()
 
-    def __init__(self) -> None:
-        self.url_get_list = f"{self.url_root}/digital_currency_list/"
-        self.exporter = CryptoCurrencies(
-            key=self.__class__.api_key, output_format="pandas", indexing_type="integer"
-        )
-
-    def _process_csv(self, csv_table: csv_table) -> dict[str, Ticker]:
-        _tickers = {}
-        for currency_code, currency_name in csv_table:
-            try:
-                ticker = Ticker(
-                    ticker_type=TickerType("Crypto"),
-                    exchange=Settings().provider.CRYPTO_PRICE_CURRENCY,
-                    symbol=currency_code,
-                    name=currency_name,
-                )
-            except ValueError:
-                logger.error_finish(
-                    cls=self.__class__,
-                    show_func_name=True,
-                    error=ProviderInvalidDataError.msg,
-                    record=(currency_code, currency_name),
-                )
-            else:
-                _tickers[ticker.symbol] = ticker
-        return _tickers
+    @exporter.default
+    def exporter_default(self) -> TimeSeries:
+        return CryptoCurrencies(key=api_key_crypto, output_format="pandas", indexing_type="integer")
 
     async def _download_data_daily(self, ticker: Ticker) -> pd.DataFrame:
         try:
@@ -233,3 +244,52 @@ class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
             case _:
                 raise UnsupportedModeError
         return data
+
+
+@define(kw_only=False, slots=False, hash=True)
+class ProviderAlphaVantage(Provider, metaclass=ABCMeta):
+    """
+    Data provider for USA stocks market and cryptocurrencies market.
+    Documentation: https://www.alphavantage.co/documentation/
+    """
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>"
+
+    async def healthcheck(self) -> bool:
+        api_key = "demo"
+        url_healthcheck = f"{url_root}/query?function=MARKET_STATUS&apikey={api_key}"
+        async with httpx.AsyncClient() as client:
+            r = await client.get(url_healthcheck)
+        result = bool(r.status_code == 200)
+        return result
+
+
+@define(kw_only=False, slots=False, hash=True)
+class ProviderAlphaVantageStocks(ProviderAlphaVantage):
+    cache: Cache
+    ticker_col: TickerColAlphaVantageStocks = field()
+    data_exporter: DataExporterAlphaVantageStocks = field()
+
+    @ticker_col.default
+    def ticker_col_default(self) -> TimeSeries:
+        return TickerColAlphaVantageStocks(self.cache)
+
+    @data_exporter.default
+    def data_exporter_default(self) -> TimeSeries:
+        return DataExporterAlphaVantageStocks()
+
+
+@define(kw_only=False, slots=False, hash=True)
+class ProviderAlphaVantageCrypto(ProviderAlphaVantage):
+    cache: Cache
+    ticker_col: TickerColAlphaVantageCrypto = field()
+    data_exporter: DataExporterAlphaVantageCrypto = field()
+
+    @ticker_col.default
+    def ticker_col_default(self) -> TimeSeries:
+        return TickerColAlphaVantageCrypto(self.cache)
+
+    @data_exporter.default
+    def data_exporter_default(self) -> TimeSeries:
+        return DataExporterAlphaVantageCrypto()

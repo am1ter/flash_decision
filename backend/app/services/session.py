@@ -20,7 +20,7 @@ from app.domain.session import (
     SessionOptions,
     SessionQuotes,
 )
-from app.domain.session_provider import Provider, Ticker, csv_table
+from app.domain.session_provider import Provider
 from app.domain.session_result import SessionResult
 from app.domain.session_user_summary import UserModeSummary
 from app.domain.user import DomainUser
@@ -31,7 +31,6 @@ from app.system.constants import SessionMode, TickerType
 from app.system.exceptions import (
     CacheConnectionError,
     CacheObjectNotFoundError,
-    MemoryObjectNotFoundError,
     NoUserModeSummaryError,
     SessionAccessError,
 )
@@ -57,28 +56,6 @@ class SessionParams:
     iterations: int
     slippage: Decimal
     fixingbar: int
-
-
-@define
-class TickersColRaw:
-    """
-    Information about all possible tickers stored in 2 formats: Raw and Processed.
-    Raw - exact the same data received from Provider (json-like format).
-    """
-
-    stocks: csv_table
-    crypto: csv_table
-
-
-@define
-class TickersColProcessed:
-    """
-    Information about all possible tickers stored in 2 formats: Raw and Processed.
-    Processed - the data after serialization json to python objects.
-    """
-
-    stocks: dict[str, Ticker]
-    crypto: dict[str, Ticker]
 
 
 class ServiceSession:
@@ -147,60 +124,11 @@ class CommandLoadTickers(Command):
     service: ServiceSession
 
     async def execute(self) -> SessionOptions:
-        tickers_col_proc = await self._load_processed_tickers()
-        all_ticker = list(tickers_col_proc.stocks.values()) + list(tickers_col_proc.crypto.values())
+        tickers_col_stocks = await self.service.provider_stocks.get_tickers()
+        tickers_col_crypto = await self.service.provider_crypto.get_tickers()
+        all_ticker = list(tickers_col_stocks.values()) + list(tickers_col_crypto.values())
         options = SessionOptions(all_ticker=all_ticker)
         return options
-
-    @staticmethod
-    def _cache_key_by_provider(provider: Provider) -> str:
-        return f"{provider.__class__.__name__}:_tickers"
-
-    def _get_processed_tickers_from_memory(self) -> TickersColProcessed:
-        return TickersColProcessed(
-            stocks=self.service.provider_stocks.get_tickers(),
-            crypto=self.service.provider_crypto.get_tickers(),
-        )
-
-    async def _get_raw_tickers_from_cache(self) -> TickersColRaw:
-        if not self.service.cache:
-            raise CacheObjectNotFoundError
-        raw_tickers = await self.service.cache.mget(
-            [
-                self._cache_key_by_provider(self.service.provider_stocks),
-                self._cache_key_by_provider(self.service.provider_crypto),
-            ]
-        )
-        assert isinstance(raw_tickers[0], list) and isinstance(raw_tickers[1], list)
-        return TickersColRaw(stocks=raw_tickers[0], crypto=raw_tickers[1])
-
-    async def _get_raw_tickers_from_provider(self) -> TickersColRaw:
-        tickers_col_raw = TickersColRaw(
-            stocks=await self.service.provider_stocks.download_raw_tickers(),
-            crypto=await self.service.provider_crypto.download_raw_tickers(),
-        )
-        if self.service.cache:
-            objects_to_cache = {
-                self._cache_key_by_provider(self.service.provider_stocks): tickers_col_raw.stocks,
-                self._cache_key_by_provider(self.service.provider_crypto): tickers_col_raw.crypto,
-            }
-            with contextlib.suppress(CacheConnectionError):
-                await self.service.cache.mset(objects_to_cache)
-        return tickers_col_raw
-
-    async def _load_processed_tickers(self) -> TickersColProcessed:
-        with contextlib.suppress(MemoryObjectNotFoundError):
-            return self._get_processed_tickers_from_memory()
-
-        try:
-            tickers_col_raw = await self._get_raw_tickers_from_cache()
-        except (CacheObjectNotFoundError, CacheConnectionError):
-            tickers_col_raw = await self._get_raw_tickers_from_provider()
-
-        return TickersColProcessed(
-            self.service.provider_stocks.process_tickers(tickers_col_raw.stocks),
-            self.service.provider_crypto.process_tickers(tickers_col_raw.crypto),
-        )
 
 
 @define
@@ -208,10 +136,9 @@ class CommandValidateTickers(Command):
     service: ServiceSession
 
     async def execute(self) -> None:
-        try:
-            self.service.provider_stocks.get_tickers()
-            self.service.provider_crypto.get_tickers()
-        except MemoryObjectNotFoundError:
+        is_tickers_stocks_loaded = self.service.provider_stocks.is_tickers_loaded()
+        is_tickers_crypto_loaded = self.service.provider_crypto.is_tickers_loaded()
+        if not any((is_tickers_stocks_loaded, is_tickers_crypto_loaded)):
             await CommandLoadTickers(service=self.service).execute()
 
 
