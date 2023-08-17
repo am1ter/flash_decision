@@ -1,28 +1,16 @@
-from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Annotated, Any, Self, cast
+from typing import Self
 
-from attrs import define
-from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from attrs import define, field
 from jose import ExpiredSignatureError, JWTError, jwt
 from structlog.contextvars import bind_contextvars, unbind_contextvars
 
+from app.domain.repository import RepositoryUser
+from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.user import RepositoryUserSql
-from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
+from app.services.base import Service
 from app.system.config import Settings
 from app.system.exceptions import InvalidJwtError, JwtExpiredError
-
-# Use FastAPI default tools (dependencies) for OAuth2 authorization protocol
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"/{Settings().general.BACKEND_API_PREFIX}/user/sign-in"
-)
-TokenDep = Annotated[str, Depends(oauth2_scheme)]
-
-# Internal dependencies
-uow_user = UnitOfWorkSqlAlchemy(RepositoryUserSql)
-UowUserDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_user)]
 
 
 @define
@@ -34,13 +22,18 @@ class JwtTokenDecoded:
     exp: datetime
 
 
-class ServiceAuthorization:
+@define(kw_only=False, slots=False, hash=True)
+class ServiceAuthorization(Service):
     """Service for an endpoint that may only be accessed by authorized users only"""
 
-    def __init__(self, token_encoded: TokenDep, uow: UowUserDep) -> None:
-        self.uow = uow
-        self.token_decoded = self._decode_token(token_encoded)
-        self.user: DomainUser | None = None
+    uow: UnitOfWork[RepositoryUser]
+    token_encoded: str = field()
+    token_decoded = field()
+    user: DomainUser | None = field(default=None)
+
+    @token_decoded.default
+    def token_decoded_default(self) -> JwtTokenDecoded:
+        return self._decode_token(self.token_encoded)
 
     async def __aenter__(self) -> Self:
         self.user = await self.get_current_user()
@@ -65,15 +58,6 @@ class ServiceAuthorization:
     async def get_current_user(self) -> DomainUser:
         """Get user with email extracted from token and verify it"""
         async with self.uow:
-            self.uow.repository = cast(RepositoryUserSql, self.uow.repository)
             self.user = await self.uow.repository.get_by_email(self.token_decoded.sub)
         self.user.verify_user()
         return self.user
-
-
-async def verify_authorization(
-    token_encoded: TokenDep, uow: UowUserDep
-) -> AsyncGenerator[ServiceAuthorization, Any]:
-    """Automatically enter into `ServiceAuthorization` context manager when used FastApi Depends"""
-    async with ServiceAuthorization(token_encoded, uow) as service_auth:
-        yield service_auth

@@ -1,20 +1,16 @@
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
+from app.api.dependencies.dependencies import (
+    ServiceAuthorizationDep,
+    ServiceIterationDep,
+    ServiceSessionDep,
+)
 from app.api.schemas.session_iteration import RespIteration
-from app.services.session import ServiceSession
-from app.services.session_iteration import ServiceIteration
-from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import Settings
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/iteration")
-
-# Internal dependencies
-ServiceSessionDep = Annotated[ServiceSession, Depends()]
-ServiceIterationDep = Annotated[ServiceIteration, Depends()]
-ServiceAuthorizationDep = Annotated[ServiceAuthorization, Depends(verify_authorization)]
 
 
 @router.get("/")

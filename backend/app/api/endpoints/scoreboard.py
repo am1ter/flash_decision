@@ -1,8 +1,11 @@
-from typing import Annotated
-
 from attrs import asdict
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
+from app.api.dependencies.dependencies import (
+    ServiceAuthorizationDep,
+    ServiceScoreboardGlobalDep,
+    ServiceSessionDep,
+)
 from app.api.schemas.scoreboard import (
     RespScoreboard,
     TopUserRec,
@@ -10,18 +13,10 @@ from app.api.schemas.scoreboard import (
     UserModeSummery,
     UserRank,
 )
-from app.services.scoreboard import ServiceScoreboardGlobal
-from app.services.session import ServiceSession
-from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import Settings
 from app.system.constants import SessionMode
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/scoreboard")
-
-# Internal dependencies
-ServiceSessionDep = Annotated[ServiceSession, Depends()]
-ServiceScoreboardGlobalDep = Annotated[ServiceScoreboardGlobal, Depends()]
-ServiceAuthorizationDep = Annotated[ServiceAuthorization, Depends(verify_authorization)]
 
 
 @router.get("/{mode}")

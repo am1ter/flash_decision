@@ -1,24 +1,17 @@
-from typing import Annotated
+from fastapi import APIRouter
 
-from fastapi import APIRouter, Depends
-
+from app.api.dependencies.dependencies import (
+    ServiceAuthorizationDep,
+    ServiceDecisionDep,
+    ServiceIterationDep,
+    ServiceScoreboardGlobalDep,
+    ServiceSessionDep,
+)
 from app.api.schemas.session_decision import ReqRecordDecision, RespDecision
-from app.services.scoreboard import ServiceScoreboardGlobal
-from app.services.session import ServiceSession
-from app.services.session_decision import ServiceDecision
-from app.services.session_iteration import ServiceIteration
-from app.services.user_authorization import ServiceAuthorization, verify_authorization
 from app.system.config import Settings
 from app.system.constants import DecisionAction
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/decision")
-
-# Internal dependencies
-ServiceSessionDep = Annotated[ServiceSession, Depends()]
-ServiceIterationDep = Annotated[ServiceIteration, Depends()]
-ServiceDecisionDep = Annotated[ServiceDecision, Depends()]
-ServiceScoreboardGlobalDep = Annotated[ServiceScoreboardGlobal, Depends()]
-ServiceAuthorizationDep = Annotated[ServiceAuthorization, Depends(verify_authorization)]
 
 
 @router.post("/")

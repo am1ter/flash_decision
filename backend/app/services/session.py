@@ -2,15 +2,16 @@ import contextlib
 from abc import ABCMeta, abstractmethod
 from asyncio import TaskGroup
 from decimal import Decimal
-from typing import Annotated, Any, assert_never, cast
+from typing import Any, assert_never
 from uuid import UUID
 
 import pandas as pd
 import structlog
 from attrs import define
-from fastapi import Depends
 
 from app.bootstrap import Bootstrap
+from app.domain.cache import Cache
+from app.domain.repository import RepositorySession
 from app.domain.session import (
     DomainSession,
     DomainSessionBlitz,
@@ -23,9 +24,9 @@ from app.domain.session import (
 from app.domain.session_provider import Provider
 from app.domain.session_result import SessionResult
 from app.domain.session_user_summary import UserModeSummary
+from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.session import RepositorySessionSql
-from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
+from app.services.base import Service
 from app.system.config import Settings
 from app.system.constants import SessionMode, TickerType
 from app.system.exceptions import (
@@ -37,10 +38,6 @@ from app.system.exceptions import (
 
 # Create logger
 logger = structlog.get_logger()
-
-# Internal dependencies
-uow_session = UnitOfWorkSqlAlchemy(repository_type=RepositorySessionSql)
-UowSessionDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_session)]
 
 
 @define
@@ -58,18 +55,18 @@ class SessionParams:
     fixingbar: int
 
 
-class ServiceSession:
+@define(kw_only=False, slots=False, hash=True)
+class ServiceSession(Service):
     """
     Session is the key object of the application.
     This service determine how user interacts with it.
     All interactions are decomposed into commands that called from this service.
     """
 
-    def __init__(self, uow: UowSessionDep) -> None:
-        self.uow = uow
-        self.cache = Bootstrap().cache if Settings().cache.CACHE_ENABLED else None
-        self.provider_stocks = Bootstrap().provider_stocks
-        self.provider_crypto = Bootstrap().provider_crypto
+    uow: UnitOfWork[RepositorySession]
+    cache: Cache | None = Bootstrap().cache if Settings().cache.CACHE_ENABLED else None
+    provider_stocks: Provider = Bootstrap().provider_stocks
+    provider_crypto: Provider = Bootstrap().provider_crypto
 
     async def collect_session_options(self) -> SessionOptions:
         options = await CommandLoadTickers(self).execute()
@@ -232,7 +229,6 @@ class CommandGetSession(Command):
 
     async def execute(self) -> DomainSession:
         async with self.service.uow:
-            self.service.uow.repository = cast(RepositorySessionSql, self.service.uow.repository)
             session = await self.service.uow.repository.get_by_id(self.session_id)
         return session
 
@@ -245,7 +241,6 @@ class CommandCalcUserModeSummary(Command):
 
     async def execute(self) -> UserModeSummary | None:
         async with self.service.uow:
-            self.service.uow.repository = cast(RepositorySessionSql, self.service.uow.repository)
             sessions = await self.service.uow.repository.get_all_sessions_by_user(self.user)
         try:
             user_mode_summary = UserModeSummary.create(sessions, self.mode)

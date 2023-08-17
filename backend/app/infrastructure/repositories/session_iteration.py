@@ -2,12 +2,13 @@ from uuid import UUID
 
 import pandas as pd
 
+from app.domain.repository import RepositoryIteration
 from app.domain.session_iteration import DomainIteration, DomainIterationCollection
 from app.infrastructure.repositories.base import RepositoryNoSqlMongo
 from app.system.exceptions import IterationNotFoundError
 
 
-class RepositoryNoSqlIteration(RepositoryNoSqlMongo):
+class RepositoryNoSqlIteration(RepositoryNoSqlMongo, RepositoryIteration):
     def _create_iteration_by_document(self, document: dict) -> DomainIteration:
         document_updated = self._convert_binary_to_uuid(document)
         return DomainIteration(

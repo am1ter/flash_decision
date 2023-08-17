@@ -1,33 +1,31 @@
 from __future__ import annotations
 
 from asyncio import TaskGroup
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
 import structlog
-from fastapi import Depends
+from attrs import define, field
 
 from app.domain.session_decision import DomainDecision
 from app.domain.session_result import SessionResult
-from app.infrastructure.repositories.session import RepositorySessionSql
-from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
+from app.services.base import Service
 from app.system.constants import DecisionAction, SessionStatus
 
 if TYPE_CHECKING:
     from decimal import Decimal
 
+    from app.domain.repository import RepositorySession
     from app.domain.session import DomainSession
     from app.domain.session_iteration import DomainIteration
+    from app.domain.unit_of_work import UnitOfWork
     from app.services.scoreboard import ServiceScoreboard
 
 # Create logger
 logger = structlog.get_logger()
 
-# Internal dependencies
-uow_session = UnitOfWorkSqlAlchemy(repository_type=RepositorySessionSql)
-UowSessionDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_session)]
 
-
-class ServiceDecision:
+@define(kw_only=False, slots=False, hash=False)
+class ServiceDecision(Service):
     """
     This service records decisions for every `Iteration` in the `Session`.
     This service use Observer pattern implementation and acts as the Publisher.
@@ -35,11 +33,8 @@ class ServiceDecision:
     https://refactoring.guru/design-patterns/observer
     """
 
-    __globals__ = globals()  # Bug workaround: https://github.com/tiangolo/fastapi/discussions/9085
-
-    def __init__(self, uow: UowSessionDep) -> None:
-        self.uow = uow
-        self.scoreboard_services: list[ServiceScoreboard] = []  # list of Subscribers
+    uow: UnitOfWork[RepositorySession]
+    scoreboard_services: list[ServiceScoreboard] = field(factory=list)  # list of Subscribers
 
     def register_scoreboard_service(self, scoreboard_service: ServiceScoreboard) -> None:
         self.scoreboard_services.append(scoreboard_service)

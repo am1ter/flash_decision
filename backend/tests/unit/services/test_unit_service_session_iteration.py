@@ -9,7 +9,7 @@ import pytest
 from app.domain.repository import RepositoryIteration
 from app.domain.session import SessionQuotes
 from app.domain.session_iteration import DomainIteration, DomainIterationCollection
-from app.infrastructure.units_of_work.base import UnitOfWork
+from app.domain.unit_of_work import UnitOfWork
 from app.services.session_iteration import ServiceIteration
 from app.system.constants import SessionStatus
 from app.system.exceptions import SessionClosedError
@@ -37,6 +37,9 @@ class UnitOfWorkIterationFake(UnitOfWork):
         return self
 
     async def __aexit__(self, *args) -> None:
+        pass
+
+    async def commit(self) -> None:
         pass
 
 

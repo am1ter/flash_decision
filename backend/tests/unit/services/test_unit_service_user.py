@@ -8,12 +8,13 @@ import pytest_asyncio
 from jose import jwt
 from uuid6 import uuid6
 
+from app.api.dependencies.dependencies import verify_authorization
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.repository import RepositoryUser
+from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import DomainAuth, DomainUser
-from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.user import JwtTokenEncoded, ServiceUser
-from app.services.user_authorization import ServiceAuthorization, verify_authorization
+from app.services.user_authorization import ServiceAuthorization
 from app.system.config import Settings
 from app.system.constants import AuthStatus, UserStatus
 from app.system.exceptions import (
@@ -101,7 +102,7 @@ async def token_encoded(service_user: ServiceUser, user_sign_up: DomainUser) -> 
 async def service_auth(
     token_encoded: JwtTokenEncoded, uow_user: UnitOfWorkUserFake
 ) -> ServiceAuthorization:
-    return ServiceAuthorization(token_encoded.access_token, uow_user)  # type: ignore[arg-type]
+    return ServiceAuthorization(uow_user, token_encoded.access_token)  # type: ignore[arg-type]
 
 
 class TestServiceUser:
@@ -273,7 +274,7 @@ class TestServiceAuthorization:
     ) -> None:
         token_encoded_invalid = token_encoded.access_token + "wrong"
         with pytest.raises(InvalidJwtError):
-            ServiceAuthorization(token_encoded_invalid, uow_user)  # type: ignore[arg-type]
+            ServiceAuthorization(uow_user, token_encoded_invalid)  # type: ignore[arg-type]
 
     async def test_authorization_failure_expired(
         self, token_encoded: JwtTokenEncoded, uow_user: UnitOfWorkUserFake
@@ -290,12 +291,12 @@ class TestServiceAuthorization:
             Settings().general.JWT_ALGORITHM,
         )
         with pytest.raises(JwtExpiredError):
-            ServiceAuthorization(token_encoded_invalid, uow_user)  # type: ignore[arg-type]
+            ServiceAuthorization(uow_user, token_encoded_invalid)  # type: ignore[arg-type]
 
     async def test_verify_authorization(
         self, token_encoded: JwtTokenEncoded, uow_user: UnitOfWorkUserFake
     ) -> None:
-        service_auth_gen = verify_authorization(token_encoded.access_token, uow_user)  # type: ignore[arg-type]
+        service_auth_gen = verify_authorization(uow_user, token_encoded.access_token)  # type: ignore[arg-type]
         service_auth = await anext(service_auth_gen)
         assert isinstance(service_auth, ServiceAuthorization)
         assert isinstance(service_auth.user, DomainUser)

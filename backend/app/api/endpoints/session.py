@@ -1,9 +1,13 @@
-from typing import Annotated
 from uuid import UUID
 
 from attrs import asdict
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
+from app.api.dependencies.dependencies import (
+    ServiceAuthorizationDep,
+    ServiceIterationDep,
+    ServiceSessionDep,
+)
 from app.api.schemas.base import Resp, RespMeta
 from app.api.schemas.session import (
     ReqSession,
@@ -14,18 +18,11 @@ from app.api.schemas.session import (
 )
 from app.domain.base import custom_serializer
 from app.domain.session import DomainSession
-from app.services.session import ServiceSession, SessionParams
-from app.services.session_iteration import ServiceIteration
-from app.services.user_authorization import ServiceAuthorization, verify_authorization
+from app.services.session import SessionParams
 from app.system.config import Settings
 from app.system.constants import SessionMode
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/session")
-
-# Internal dependencies
-ServiceSessionDep = Annotated[ServiceSession, Depends()]
-ServiceIterationDep = Annotated[ServiceIteration, Depends()]
-ServiceAuthorizationDep = Annotated[ServiceAuthorization, Depends(verify_authorization)]
 
 
 @router.get("/options")

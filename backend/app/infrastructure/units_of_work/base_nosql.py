@@ -1,9 +1,9 @@
 from typing import Self
 
 from app.bootstrap import Bootstrap
+from app.domain.unit_of_work import UnitOfWork
 from app.infrastructure.databases.nosql import DbNoSql
 from app.infrastructure.repositories.base import RepositoryNoSqlMongo
-from app.infrastructure.units_of_work.base import UnitOfWork
 
 
 class UnitOfWorkNoSqlMongo(UnitOfWork):
@@ -22,6 +22,9 @@ class UnitOfWorkNoSqlMongo(UnitOfWork):
         return self
 
     async def __aexit__(self, *args) -> None:
+        pass
+
+    async def commit(self) -> None:
         pass
 
     def __call__(self) -> Self:

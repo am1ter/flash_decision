@@ -8,8 +8,8 @@ from app.domain.base import Entity
 from app.domain.repository import RepositoryScoreboard
 from app.domain.scoreboard import ScoreboardRecord, ScoreboardRecords
 from app.domain.session_result import SessionResult
+from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import DomainUser
-from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.scoreboard import ServiceScoreboardGlobal
 from app.system.constants import SessionMode
 
@@ -45,6 +45,9 @@ class UnitOfWorkScoreboardFake(UnitOfWork):
         return self
 
     async def __aexit__(self, *args) -> None:
+        pass
+
+    async def commit(self) -> None:
         pass
 
 

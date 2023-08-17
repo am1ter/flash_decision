@@ -1,30 +1,27 @@
 from abc import ABCMeta, abstractmethod
-from typing import Annotated, assert_never, cast
+from typing import assert_never
 from uuid import UUID
 
 import structlog
-from fastapi import Depends
+from attrs import define
 
+from app.domain.repository import RepositoryIteration
 from app.domain.session import DomainSession, SessionQuotes
 from app.domain.session_iteration import DomainIteration, DomainIterationCollection
-from app.infrastructure.repositories.session_iteration import RepositoryNoSqlIteration
-from app.infrastructure.units_of_work.base_nosql import UnitOfWorkNoSqlMongo
+from app.domain.unit_of_work import UnitOfWork
+from app.services.base import Service
 from app.system.constants import SessionStatus
 from app.system.exceptions import SessionClosedError
 
 # Create logger
 logger = structlog.get_logger()
 
-# Internal dependencies
-uow_iteration = UnitOfWorkNoSqlMongo(repository_type=RepositoryNoSqlIteration)
-UowIterationDep = Annotated[UnitOfWorkNoSqlMongo, Depends(uow_iteration)]
 
-
-class ServiceIteration:
+@define(kw_only=False, slots=False, hash=True)
+class ServiceIteration(Service):
     """Decompose Session into several parts - Iterations"""
 
-    def __init__(self, uow: UowIterationDep) -> None:
-        self.uow = uow
+    uow: UnitOfWork[RepositoryIteration]
 
     async def create_iterations(self, session_quotes: SessionQuotes) -> DomainIterationCollection:
         iteration_collection = DomainIterationCollection(session_quotes=session_quotes)
@@ -55,7 +52,6 @@ class ServiceIteration:
 
     async def _load_iteration(self, session_id: UUID, iteration_num: int) -> DomainIteration:
         async with self.uow:
-            self.uow.repository = cast(RepositoryNoSqlIteration, self.uow.repository)
             iteration = self.uow.repository.get_iteration(session_id, iteration_num)
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, iteration=iteration)
         return iteration

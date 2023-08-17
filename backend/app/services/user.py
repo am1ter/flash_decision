@@ -1,23 +1,18 @@
 from datetime import datetime, timedelta
-from typing import Annotated, cast
 
 import structlog
 from attrs import define
-from fastapi import Depends
 from jose import jwt
 
+from app.domain.repository import RepositoryUser
+from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.user import RepositoryUserSql
-from app.infrastructure.units_of_work.base_sql import UnitOfWorkSqlAlchemy
+from app.services.base import Service
 from app.system.config import Settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, WrongPasswordError
 
 # Create logger
 logger = structlog.get_logger()
-
-# Internal dependencies
-uow_user = UnitOfWorkSqlAlchemy(RepositoryUserSql)
-UowUserDep = Annotated[UnitOfWorkSqlAlchemy, Depends(uow_user)]
 
 
 @define
@@ -28,15 +23,14 @@ class JwtTokenEncoded:
     token_type: str = "bearer"
 
 
-class ServiceUser:
+@define(kw_only=False, slots=False, hash=True)
+class ServiceUser(Service):
     """User manager class"""
 
-    def __init__(self, uow: UowUserDep) -> None:
-        self.uow = uow
+    uow: UnitOfWork[RepositoryUser]
 
     async def get_user_by_email(self, email: str) -> DomainUser:
         try:
-            self.uow.repository = cast(RepositoryUserSql, self.uow.repository)
             return await self.uow.repository.get_by_email(email)
         except DbObjectNotFoundError as e:
             raise UserNotFoundError from e

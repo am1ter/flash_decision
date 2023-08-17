@@ -1,19 +1,10 @@
-from typing import Annotated
+from fastapi import APIRouter, Request
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.security import OAuth2PasswordRequestForm
-
+from app.api.dependencies.dependencies import ServiceUserDep, SignUpFormDep
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo, RespSignIn, RespSignUp
-from app.services.user import ServiceUser
 from app.system.config import Settings
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/user")
-
-# Use FastAPI default tools (dependencies) for OAuth2 authentication
-SignUpFormDep = Annotated[OAuth2PasswordRequestForm, Depends()]
-
-# Internal dependencies
-ServiceUserDep = Annotated[ServiceUser, Depends()]
 
 
 def parse_request_system_info(raw_request: Request) -> ReqSystemInfo:

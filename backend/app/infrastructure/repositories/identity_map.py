@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from collections.abc import Sequence
 from typing import Any
@@ -10,7 +10,7 @@ from sqlalchemy.orm.dynamic import AppenderQuery
 from app.domain.base import Entity
 
 
-class IdentityMapSqlAlchemyABC(ABC):
+class IdentityMapSqlAlchemyABC(metaclass=ABCMeta):
     """
     Abstract base class for SQLAlchemy Identity Map.
     Ensures that each object gets loaded only once by keeping every loaded object in a map.

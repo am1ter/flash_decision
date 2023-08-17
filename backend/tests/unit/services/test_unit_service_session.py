@@ -6,8 +6,8 @@ import pytest
 from app.api.schemas.session import ReqSession
 from app.domain.repository import RepositorySession
 from app.domain.session import DomainSession
+from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import DomainUser
-from app.infrastructure.units_of_work.base import UnitOfWork
 from app.services.session import ServiceSession, SessionParams
 from app.system.constants import SessionMode
 

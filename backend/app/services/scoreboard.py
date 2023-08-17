@@ -1,14 +1,14 @@
 from abc import ABCMeta, abstractmethod
-from typing import Annotated, cast
 
 import structlog
-from fastapi import Depends
+from attrs import define
 
+from app.domain.repository import RepositoryScoreboard
 from app.domain.scoreboard import ScoreboardRecordsTop
 from app.domain.session_result import SessionResult
+from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import DomainUser
-from app.infrastructure.repositories.scoreboard import RepositoryNoSqlScoreboard
-from app.infrastructure.units_of_work.base_nosql import UnitOfWorkNoSqlMongo
+from app.services.base import Service
 from app.system.config import Settings
 from app.system.constants import SessionMode
 from app.system.exceptions import DbObjectNotFoundError
@@ -16,12 +16,9 @@ from app.system.exceptions import DbObjectNotFoundError
 # Create logger
 logger = structlog.get_logger()
 
-# Internal dependencies
-uow_scoreboard = UnitOfWorkNoSqlMongo(repository_type=RepositoryNoSqlScoreboard)
-UowScoreboardDep = Annotated[UnitOfWorkNoSqlMongo, Depends(uow_scoreboard)]
 
-
-class ServiceScoreboard(metaclass=ABCMeta):
+@define(kw_only=False, slots=False, hash=True)
+class ServiceScoreboard(Service, metaclass=ABCMeta):
     """
     Multiple different `ServiceScoreboard` implementations allowed.
     This service acts as the Subscriber of the Observer design pattern.
@@ -34,19 +31,17 @@ class ServiceScoreboard(metaclass=ABCMeta):
         pass
 
 
+@define(kw_only=False, slots=False, hash=True)
 class ServiceScoreboardGlobal(ServiceScoreboard):
-    def __init__(self, uow: UowScoreboardDep) -> None:
-        self.uow = uow
+    uow: UnitOfWork[RepositoryScoreboard]
 
     async def update_scoreboard(self, session_result: SessionResult) -> None:
         async with self.uow:
-            self.uow.repository = cast(RepositoryNoSqlScoreboard, self.uow.repository)
             updated_score = self.uow.repository.update_score(session_result)
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, score=updated_score)
 
     async def show_top_users(self, mode: SessionMode) -> ScoreboardRecordsTop | None:
         async with self.uow:
-            self.uow.repository = cast(RepositoryNoSqlScoreboard, self.uow.repository)
             try:
                 scoreboard_records = self.uow.repository.get_full_scoreboard(mode)
             except DbObjectNotFoundError:
@@ -61,7 +56,6 @@ class ServiceScoreboardGlobal(ServiceScoreboard):
 
     async def get_user_rank(self, user: DomainUser, mode: SessionMode) -> int | None:
         async with self.uow:
-            self.uow.repository = cast(RepositoryNoSqlScoreboard, self.uow.repository)
             try:
                 user_scoreboard_record = self.uow.repository.get_scoreboard_record(user, mode)
             except DbObjectNotFoundError:
