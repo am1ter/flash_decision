@@ -4,10 +4,10 @@ from uuid import UUID
 
 from app.domain.base import Entity
 from app.domain.scoreboard import ScoreboardRecord, ScoreboardRecords
-from app.domain.session import DomainSession
-from app.domain.session_iteration import DomainIteration, DomainIterationCollection
+from app.domain.session import Session
+from app.domain.session_iteration import Iteration, IterationCollection
 from app.domain.session_result import SessionResult
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.system.constants import SessionMode
 
 
@@ -25,31 +25,31 @@ class Repository(metaclass=ABCMeta):
 
 class RepositoryUser(Repository, metaclass=ABCMeta):
     @abstractmethod
-    async def get_by_id(self, _id: UUID) -> DomainUser:
+    async def get_by_id(self, _id: UUID) -> User:
         ...
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> DomainUser:
+    async def get_by_email(self, email: str) -> User:
         ...
 
 
 class RepositorySession(Repository, metaclass=ABCMeta):
     @abstractmethod
-    async def get_by_id(self, _id: UUID) -> DomainSession:
+    async def get_by_id(self, _id: UUID) -> Session:
         ...
 
     @abstractmethod
-    async def get_all_sessions_by_user(self, user: DomainUser) -> list[DomainSession]:
+    async def get_all_sessions_by_user(self, user: User) -> list[Session]:
         ...
 
 
 class RepositoryIteration(Repository, metaclass=ABCMeta):
     @abstractmethod
-    def get_iteration_collection(self, session_id: UUID) -> DomainIterationCollection:
+    def get_iteration_collection(self, session_id: UUID) -> IterationCollection:
         ...
 
     @abstractmethod
-    def get_iteration(self, session_id: UUID, iteration_num: int) -> DomainIteration:
+    def get_iteration(self, session_id: UUID, iteration_num: int) -> Iteration:
         ...
 
 
@@ -63,5 +63,5 @@ class RepositoryScoreboard(Repository, metaclass=ABCMeta):
         ...
 
     @abstractmethod
-    def get_scoreboard_record(self, user: DomainUser, mode: SessionMode) -> ScoreboardRecord:
+    def get_scoreboard_record(self, user: User, mode: SessionMode) -> ScoreboardRecord:
         ...

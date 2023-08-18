@@ -6,7 +6,7 @@ from jose import jwt
 
 from app.domain.repository import RepositoryUser
 from app.domain.unit_of_work import UnitOfWork
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.services.base import Service
 from app.system.config import Settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, WrongPasswordError
@@ -29,7 +29,7 @@ class ServiceUser(Service):
 
     uow: UnitOfWork[RepositoryUser]
 
-    async def get_user_by_email(self, email: str) -> DomainUser:
+    async def get_user_by_email(self, email: str) -> User:
         try:
             return await self.uow.repository.get_by_email(email)
         except DbObjectNotFoundError as e:
@@ -37,9 +37,9 @@ class ServiceUser(Service):
 
     async def sign_up(
         self, email: str, name: str, password: str, ip_address: str, user_agent: str
-    ) -> DomainUser:
+    ) -> User:
         # Create user
-        user = DomainUser.sign_up(name=name, email=email, password=password)
+        user = User.sign_up(name=name, email=email, password=password)
         user.create_auth_sign_up(ip_address=ip_address, http_user_agent=user_agent)
         # Save user to the database
         async with self.uow:
@@ -48,9 +48,7 @@ class ServiceUser(Service):
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user)
         return user
 
-    async def sign_in(
-        self, username: str, password: str, ip_address: str, user_agent: str
-    ) -> DomainUser:
+    async def sign_in(self, username: str, password: str, ip_address: str, user_agent: str) -> User:
         async with self.uow:
             # Get user with specified email, check password and status
             user = await self.get_user_by_email(username)
@@ -75,7 +73,7 @@ class ServiceUser(Service):
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, user=user, auth=auth)
         return user
 
-    async def create_access_token(self, user: DomainUser) -> JwtTokenEncoded:
+    async def create_access_token(self, user: User) -> JwtTokenEncoded:
         """Create JWT according its specification"""
         payload = {
             "sub": user.email.value,

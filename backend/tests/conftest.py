@@ -7,12 +7,12 @@ from uuid6 import uuid6
 
 from app.api.schemas.session import ReqSession
 from app.api.schemas.user import ReqSignIn, ReqSignUp
-from app.domain.session import DomainSession, DomainSessionCustom, SessionQuotes
-from app.domain.session_decision import DomainDecision
-from app.domain.session_iteration import DomainIteration
+from app.domain.session import Session, SessionCustom, SessionQuotes
+from app.domain.session_decision import Decision
+from app.domain.session_iteration import Iteration
 from app.domain.session_provider import Ticker
 from app.domain.session_result import SessionResult
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.system.constants import (
     DecisionAction,
     SessionBarsnumber,
@@ -29,8 +29,8 @@ from app.system.constants import (
 
 
 @pytest.fixture()
-def user_domain() -> DomainUser:
-    return DomainUser(
+def user_domain() -> User:
+    return User(
         email=f"test-user-{uuid6()!s}@alekseisemenov.ru",
         name="test-user",
         password=str(uuid6()),
@@ -49,8 +49,8 @@ def df_quotes_crypto() -> pd.DataFrame:
 
 
 @pytest.fixture()
-def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
-    session = DomainSessionCustom(
+def session(mock_ticker: Ticker, user_domain: User) -> Session:
+    session = SessionCustom(
         mode=SessionMode.custom,
         ticker=mock_ticker,
         timeframe=SessionTimeframe.daily,
@@ -66,15 +66,15 @@ def session(mock_ticker: Ticker, user_domain: DomainUser) -> DomainSession:
 
 
 @pytest.fixture()
-def session_quotes(session: DomainSession) -> SessionQuotes:
+def session_quotes(session: Session) -> SessionQuotes:
     return SessionQuotes.create(session=session, df_quotes=df_quotes_stocks())
 
 
 @pytest.fixture()
-def iteration(session_quotes: SessionQuotes) -> DomainIteration:
+def iteration(session_quotes: SessionQuotes) -> Iteration:
     data_path = Path(__file__).parent / "_mock_data" / "mock_iteration_01.json"
     df_quotes_iteration = pd.read_json(data_path)
-    return DomainIteration(
+    return Iteration(
         session_id=session_quotes.session._id,
         iteration_num=0,
         df_quotes=df_quotes_iteration,
@@ -83,9 +83,9 @@ def iteration(session_quotes: SessionQuotes) -> DomainIteration:
 
 
 @pytest.fixture()
-def decision(iteration: DomainIteration) -> DomainDecision:
+def decision(iteration: Iteration) -> Decision:
     assert iteration.session
-    return DomainDecision(
+    return Decision(
         session=iteration.session,
         iteration=iteration,
         action=DecisionAction.buy,
@@ -94,7 +94,7 @@ def decision(iteration: DomainIteration) -> DomainDecision:
 
 
 @pytest.fixture()
-def closed_session(session: DomainSession, decision: DomainDecision) -> DomainSession:
+def closed_session(session: Session, decision: Decision) -> Session:
     for _ in range(session.iterations.value - 1):
         session.decisions.append(decision)
     session.set_status_closed()
@@ -102,7 +102,7 @@ def closed_session(session: DomainSession, decision: DomainDecision) -> DomainSe
 
 
 @pytest.fixture()
-def session_result(closed_session: DomainSession) -> SessionResult:
+def session_result(closed_session: Session) -> SessionResult:
     return SessionResult.create(closed_session)
 
 

@@ -34,15 +34,15 @@ from app.system.metaclasses import SingletonMeta
 if TYPE_CHECKING:
     from decimal import Decimal
 
-    from app.domain.session_decision import DomainDecision
-    from app.domain.user import DomainUser
+    from app.domain.session_decision import Decision
+    from app.domain.user import User
 
 
 @define(kw_only=True, slots=False, hash=True)
 class SessionQuotes:
     """Contains session and quotes dataframe for creating iterations' charts"""
 
-    session: DomainSession
+    session: Session
     df_quotes: pd.DataFrame = field(repr=False)
     trading_type: SessionTradingType
     first_bar_datetime: Timestamp = field()
@@ -81,7 +81,7 @@ class SessionQuotes:
         assert_never(diff)
 
     @classmethod
-    def create(cls, session: DomainSession, df_quotes: pd.DataFrame) -> SessionQuotes:
+    def create(cls, session: Session, df_quotes: pd.DataFrame) -> SessionQuotes:
         first_bar_datetime = df_quotes["datetime"].iloc[0]
         last_bar_datetime = df_quotes["datetime"].iloc[-1]
         trading_type = cls._determine_trading_type(first_bar_datetime, last_bar_datetime)
@@ -98,7 +98,7 @@ class SessionQuotes:
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainSession(Agregate, metaclass=ABCMeta):
+class Session(Agregate, metaclass=ABCMeta):
     """
     Session is the key object of the application.
     Class attributes is options which determine most application functions behavior.
@@ -116,8 +116,8 @@ class DomainSession(Agregate, metaclass=ABCMeta):
     slippage: SessionSlippage
     fixingbar: SessionFixingbar
     status: SessionStatus
-    user: DomainUser = field_relationship(init=False)
-    decisions: list[DomainDecision] = field_relationship(init=False)
+    user: User = field_relationship(init=False)
+    decisions: list[Decision] = field_relationship(init=False)
 
     @classmethod
     @abstractmethod
@@ -135,7 +135,7 @@ class DomainSession(Agregate, metaclass=ABCMeta):
             raise SessionConfigurationError from e
         return ticker
 
-    def bound_to_user(self, user: DomainUser) -> Self:
+    def bound_to_user(self, user: User) -> Self:
         self.user = user
         return self
 
@@ -151,7 +151,7 @@ class DomainSession(Agregate, metaclass=ABCMeta):
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainSessionClassic(DomainSession):
+class SessionClassic(Session):
     random_tickers = Settings().provider.RANDOM_TICKERS_STOCKS
 
     @classmethod
@@ -171,7 +171,7 @@ class DomainSessionClassic(DomainSession):
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainSessionBlitz(DomainSession):
+class SessionBlitz(Session):
     random_tickers = Settings().provider.RANDOM_TICKERS_STOCKS
 
     @classmethod
@@ -191,7 +191,7 @@ class DomainSessionBlitz(DomainSession):
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainSessionCrypto(DomainSession):
+class SessionCrypto(Session):
     random_tickers = Settings().provider.RANDOM_TICKERS_CRYPTO
 
     @classmethod
@@ -211,7 +211,7 @@ class DomainSessionCrypto(DomainSession):
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainSessionCustom(DomainSession):
+class SessionCustom(Session):
     @classmethod
     def create(
         cls,

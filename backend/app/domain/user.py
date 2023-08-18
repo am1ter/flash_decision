@@ -17,7 +17,7 @@ from app.system.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from app.domain.session import DomainSession
+    from app.domain.session import Session
 
 password_hasher = PasswordHasher()
 
@@ -50,7 +50,7 @@ class Password(ValueObject):
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainUser(Agregate):
+class User(Agregate):
     """
     This class is the DDD Agregate.
     Represents a user with its credits and authentication functionality.
@@ -60,8 +60,8 @@ class DomainUser(Agregate):
     email: Email = field(converter=Email)
     password: Password = field(converter=Password, repr=lambda _: "***")
     status: UserStatus
-    auths: list[DomainAuth] = field_relationship(init=False)
-    sessions: list[DomainSession] = field_relationship(init=False)
+    auths: list[Auth] = field_relationship(init=False)
+    sessions: list[Session] = field_relationship(init=False)
 
     def verify_user(self) -> None:
         # Check if user is not disabled
@@ -69,7 +69,7 @@ class DomainUser(Agregate):
             raise UserDisabledError
 
     @classmethod
-    def sign_up(cls, name: str, email: str, password: str) -> DomainUser:
+    def sign_up(cls, name: str, email: str, password: str) -> User:
         hashed_password = Password(password).hash_password()
         new_user = cls(name=name, email=email, password=hashed_password, status=UserStatus.active)
         return new_user
@@ -82,8 +82,8 @@ class DomainUser(Agregate):
         except VerifyMismatchError as e:
             raise WrongPasswordError from e
 
-    def create_auth_sign_up(self, ip_address: str, http_user_agent: str) -> DomainAuth:
-        new_auth = DomainAuth(
+    def create_auth_sign_up(self, ip_address: str, http_user_agent: str) -> Auth:
+        new_auth = Auth(
             user=self,
             ip_address=ip_address,
             http_user_agent=http_user_agent,
@@ -91,8 +91,8 @@ class DomainUser(Agregate):
         )
         return new_auth
 
-    def create_auth_sign_in(self, ip_address: str, http_user_agent: str) -> DomainAuth:
-        new_auth = DomainAuth(
+    def create_auth_sign_in(self, ip_address: str, http_user_agent: str) -> Auth:
+        new_auth = Auth(
             user=self,
             ip_address=ip_address,
             http_user_agent=http_user_agent,
@@ -100,8 +100,8 @@ class DomainUser(Agregate):
         )
         return new_auth
 
-    def create_auth_wrong_pass(self, ip_address: str, http_user_agent: str) -> DomainAuth:
-        new_auth = DomainAuth(
+    def create_auth_wrong_pass(self, ip_address: str, http_user_agent: str) -> Auth:
+        new_auth = Auth(
             user=self,
             ip_address=ip_address,
             http_user_agent=http_user_agent,
@@ -125,7 +125,7 @@ class IpAddress(ValueObject):
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainAuth(Entity):
+class Auth(Entity):
     """
     This class is the part of the DDD Agregate `User`.
     Represents information about each user's sign-in.
@@ -134,4 +134,4 @@ class DomainAuth(Entity):
     ip_address: IpAddress = field(converter=IpAddress)
     http_user_agent: str
     status: AuthStatus
-    user: DomainUser = field_relationship(init=True)
+    user: User = field_relationship(init=True)

@@ -21,27 +21,27 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from uuid import UUID
 
-    from app.domain.session import DomainSession, SessionQuotes
+    from app.domain.session import Session, SessionQuotes
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainIterationCollection:
+class IterationCollection:
     """Container for the Session's Iterations"""
 
     session_quotes: SessionQuotes | None
-    iterations: list[DomainIteration] = field(factory=list, repr=lambda i: f"{reprlib.repr(i)}")
+    iterations: list[Iteration] = field(factory=list, repr=lambda i: f"{reprlib.repr(i)}")
 
     @property
-    def session(self) -> DomainSession | None:
+    def session(self) -> Session | None:
         return self.session_quotes.session if self.session_quotes else None
 
-    def __getitem__(self, key: int) -> DomainIteration:
+    def __getitem__(self, key: int) -> Iteration:
         return self.iterations[key]
 
     def __len__(self) -> int:
         return len(self.iterations)
 
-    def append(self, iteration: DomainIteration) -> None:
+    def append(self, iteration: Iteration) -> None:
         self.iterations.append(iteration)
 
     @staticmethod
@@ -87,7 +87,7 @@ class DomainIterationCollection:
         self.iterations = []
         for iter_num in range(self.session.iterations.value):
             iter_slice = slices[iter_num]
-            iteration = DomainIteration(
+            iteration = Iteration(
                 session_id=self.session._id,
                 iteration_num=iter_num,
                 df_quotes=self.session_quotes.df_quotes[iter_slice],
@@ -99,7 +99,7 @@ class DomainIterationCollection:
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainIteration(Entity):
+class Iteration(Entity):
     """
     Every session is divided into several parts - Iterations.
     For every iteration the user makes a decision - to buy, to sell or do nothing.
@@ -109,7 +109,7 @@ class DomainIteration(Entity):
     session_id: UUID
     iteration_num: int = field()
     df_quotes: pd.DataFrame = field(repr=False)
-    session: DomainSession | None = field(repr=False, metadata={"asdict_ignore": True})
+    session: Session | None = field(repr=False, metadata={"asdict_ignore": True})
     bar_price_start: Decimal = field()
     bar_price_finish: Decimal = field()
     bar_price_fix: Decimal = field()

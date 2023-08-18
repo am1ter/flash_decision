@@ -12,7 +12,7 @@ from app.api.dependencies.dependencies import verify_authorization
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.repository import RepositoryUser
 from app.domain.unit_of_work import UnitOfWork
-from app.domain.user import DomainAuth, DomainUser
+from app.domain.user import Auth, User
 from app.services.user import JwtTokenEncoded, ServiceUser
 from app.services.user_authorization import ServiceAuthorization
 from app.system.config import Settings
@@ -31,20 +31,20 @@ pytestmark = pytest.mark.asyncio
 
 class RepositoryUserFake(RepositoryUser):
     def __init__(self) -> None:
-        self.storage_user: dict[UUID, DomainUser] = {}
-        self.storage_auth: dict[UUID, list[DomainAuth]] = {}
+        self.storage_user: dict[UUID, User] = {}
+        self.storage_auth: dict[UUID, list[Auth]] = {}
 
-    def add(self, obj: DomainUser) -> None:  # type: ignore[override]
+    def add(self, obj: User) -> None:  # type: ignore[override]
         if not hasattr(obj, "_id"):
             obj._id = uuid6()
         obj.datetime_create = datetime.utcnow()
         self.storage_user[obj._id] = obj
         self.storage_auth[obj._id] = list(obj.auths)
 
-    async def get_by_id(self, _id: UUID) -> DomainUser:
+    async def get_by_id(self, _id: UUID) -> User:
         return self.storage_user[_id]
 
-    async def get_by_email(self, email: str) -> DomainUser:
+    async def get_by_email(self, email: str) -> User:
         user = [v for v in self.storage_user.values() if v.email.value == email]
         return user[0]
 
@@ -81,7 +81,7 @@ def req_system_info() -> ReqSystemInfo:
 @pytest_asyncio.fixture()
 async def user_sign_up(
     service_user: ServiceUser, req_sign_up: ReqSignUp, req_system_info: ReqSystemInfo
-) -> DomainUser:
+) -> User:
     user = await service_user.sign_up(
         email=req_sign_up.email,
         name=req_sign_up.name,
@@ -93,7 +93,7 @@ async def user_sign_up(
 
 
 @pytest_asyncio.fixture()
-async def token_encoded(service_user: ServiceUser, user_sign_up: DomainUser) -> JwtTokenEncoded:
+async def token_encoded(service_user: ServiceUser, user_sign_up: User) -> JwtTokenEncoded:
     token = await service_user.create_access_token(user_sign_up)
     return token
 
@@ -264,7 +264,7 @@ class TestServiceUser:
 
 class TestServiceAuthorization:
     async def test_authorization_success(
-        self, service_auth: ServiceAuthorization, user_sign_up: DomainUser
+        self, service_auth: ServiceAuthorization, user_sign_up: User
     ) -> None:
         user_by_token = await service_auth.get_current_user()
         assert user_by_token == user_sign_up
@@ -299,4 +299,4 @@ class TestServiceAuthorization:
         service_auth_gen = verify_authorization(uow_user, token_encoded.access_token)  # type: ignore[arg-type]
         service_auth = await anext(service_auth_gen)
         assert isinstance(service_auth, ServiceAuthorization)
-        assert isinstance(service_auth.user, DomainUser)
+        assert isinstance(service_auth.user, User)

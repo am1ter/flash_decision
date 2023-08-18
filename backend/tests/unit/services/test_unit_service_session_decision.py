@@ -3,8 +3,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.domain.session_decision import DomainDecision
-from app.domain.session_iteration import DomainIteration
+from app.domain.session_decision import Decision
+from app.domain.session_iteration import Iteration
 from app.services.session_decision import ServiceDecision
 from app.system.constants import DecisionAction, SessionStatus
 from app.system.exceptions import WrongDecisionError
@@ -19,7 +19,7 @@ def service_decision() -> ServiceDecision:
 class TestServiceDecision:
     @pytest.mark.asyncio()
     async def test_record_decision_buy(
-        self, service_decision: ServiceDecision, iteration: DomainIteration
+        self, service_decision: ServiceDecision, iteration: Iteration
     ) -> None:
         decision = await service_decision.record_decision(
             session=iteration.session,  # type: ignore[arg-type]
@@ -27,14 +27,14 @@ class TestServiceDecision:
             action=DecisionAction.buy,
             time_spent=Decimal(5),
         )
-        assert isinstance(decision, DomainDecision)
+        assert isinstance(decision, Decision)
         assert round(iteration.df_quotes["close"].sum()) == 58837, "Incorrect mock iteration df"
         assert decision.result_raw == Decimal("-0.185969")
         assert decision.result_final == Decimal("-0.190969")
 
     @pytest.mark.asyncio()
     async def test_record_decision_skip(
-        self, service_decision: ServiceDecision, iteration: DomainIteration
+        self, service_decision: ServiceDecision, iteration: Iteration
     ) -> None:
         decision = await service_decision.record_decision(
             session=iteration.session,  # type: ignore[arg-type]
@@ -42,13 +42,13 @@ class TestServiceDecision:
             action=DecisionAction.skip,
             time_spent=Decimal(5),
         )
-        assert isinstance(decision, DomainDecision)
+        assert isinstance(decision, Decision)
         assert decision.result_raw == Decimal("0")
         assert decision.result_final == Decimal("0")
 
     @pytest.mark.asyncio()
     async def test_record_decision_sell(
-        self, service_decision: ServiceDecision, iteration: DomainIteration
+        self, service_decision: ServiceDecision, iteration: Iteration
     ) -> None:
         decision = await service_decision.record_decision(
             session=iteration.session,  # type: ignore[arg-type]
@@ -56,14 +56,14 @@ class TestServiceDecision:
             action=DecisionAction.sell,
             time_spent=Decimal(5),
         )
-        assert isinstance(decision, DomainDecision)
+        assert isinstance(decision, Decision)
         assert round(iteration.df_quotes["close"].sum()) == 58837, "Incorrect mock iteration df"
         assert decision.result_raw == Decimal("0.185969")
         assert decision.result_final == Decimal("0.180969")
 
     @pytest.mark.asyncio()
     async def test_record_decision_status_active(
-        self, service_decision: ServiceDecision, iteration: DomainIteration
+        self, service_decision: ServiceDecision, iteration: Iteration
     ) -> None:
         assert iteration.session
         assert iteration.session.status == SessionStatus.created
@@ -73,12 +73,12 @@ class TestServiceDecision:
             action=DecisionAction.buy,
             time_spent=Decimal(5),
         )
-        assert isinstance(decision, DomainDecision)
+        assert isinstance(decision, Decision)
         assert iteration.session.status == SessionStatus.active
 
     @pytest.mark.asyncio()
     async def test_record_decision_status_closed(
-        self, service_decision: ServiceDecision, iteration: DomainIteration
+        self, service_decision: ServiceDecision, iteration: Iteration
     ) -> None:
         assert iteration.session
         """Create all neccesary decisions to close the session"""
@@ -91,12 +91,12 @@ class TestServiceDecision:
                 action=DecisionAction.buy,
                 time_spent=Decimal(5),
             )
-        assert isinstance(decision, DomainDecision)
+        assert isinstance(decision, Decision)
         assert iteration.session.status == SessionStatus.closed
 
     @pytest.mark.asyncio()
     async def test_record_decision_status_closed_failure(
-        self, service_decision: ServiceDecision, iteration: DomainIteration
+        self, service_decision: ServiceDecision, iteration: Iteration
     ) -> None:
         """Try to record new decisionin closed session"""
         assert iteration.session

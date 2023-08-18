@@ -13,11 +13,11 @@ from app.bootstrap import Bootstrap
 from app.domain.cache import Cache
 from app.domain.repository import RepositorySession
 from app.domain.session import (
-    DomainSession,
-    DomainSessionBlitz,
-    DomainSessionClassic,
-    DomainSessionCrypto,
-    DomainSessionCustom,
+    Session,
+    SessionBlitz,
+    SessionClassic,
+    SessionCrypto,
+    SessionCustom,
     SessionOptions,
     SessionQuotes,
 )
@@ -25,7 +25,7 @@ from app.domain.session_provider import Provider
 from app.domain.session_result import SessionResult
 from app.domain.session_user_summary import UserModeSummary
 from app.domain.unit_of_work import UnitOfWork
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.services.base import Service
 from app.system.config import Settings
 from app.system.constants import SessionMode, TickerType
@@ -74,7 +74,7 @@ class ServiceSession(Service):
         return options
 
     async def create_session(
-        self, mode: SessionMode, session_params: SessionParams | None, user: DomainUser
+        self, mode: SessionMode, session_params: SessionParams | None, user: User
     ) -> SessionQuotes:
         await CommandValidateTickers(self).execute()
         session = CommandCreateSession(self, mode, session_params, user).execute()
@@ -88,21 +88,19 @@ class ServiceSession(Service):
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True)
         return session_quotes_result
 
-    async def get_session(self, session_id: UUID, user: DomainUser) -> DomainSession:
+    async def get_session(self, session_id: UUID, user: User) -> Session:
         session = await CommandGetSession(self, session_id).execute()
         if session.user != user:
             raise SessionAccessError
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, session=session)
         return session
 
-    async def calc_session_result(self, session: DomainSession) -> SessionResult:
+    async def calc_session_result(self, session: Session) -> SessionResult:
         result = SessionResult.create(session)
         await logger.ainfo_finish(cls=self.__class__, show_func_name=True, result=result)
         return result
 
-    async def calc_user_mode_summary(
-        self, user: DomainUser, mode: SessionMode
-    ) -> UserModeSummary | None:
+    async def calc_user_mode_summary(self, user: User, mode: SessionMode) -> UserModeSummary | None:
         user_mode_summary = await CommandCalcUserModeSummary(self, user, mode).execute()
         await logger.ainfo_finish(
             cls=self.__class__, show_func_name=True, mode=mode, user_score_summary=user_mode_summary
@@ -144,25 +142,25 @@ class CommandCreateSession(Command):
     service: ServiceSession
     mode: SessionMode
     session_params: SessionParams | None
-    user: DomainUser
+    user: User
 
-    def execute(self) -> DomainSession:
+    def execute(self) -> Session:
         session = self._create_session()
         session.bound_to_user(self.user)
         return session
 
-    def _create_session(self) -> DomainSession:
-        session: DomainSession
+    def _create_session(self) -> Session:
+        session: Session
         match self.mode:
             case SessionMode.classic:
-                session = DomainSessionClassic.create(provider=self.service.provider_stocks)
+                session = SessionClassic.create(provider=self.service.provider_stocks)
             case SessionMode.blitz:
-                session = DomainSessionBlitz.create(provider=self.service.provider_stocks)
+                session = SessionBlitz.create(provider=self.service.provider_stocks)
             case SessionMode.crypto:
-                session = DomainSessionCrypto.create(provider=self.service.provider_crypto)
+                session = SessionCrypto.create(provider=self.service.provider_crypto)
             case SessionMode.custom:
                 assert self.session_params
-                session = DomainSessionCustom.create(
+                session = SessionCustom.create(
                     provider=_find_provider(self.session_params.ticker_type),
                     ticker_symbol=self.session_params.ticker_symbol,
                     timeframe=self.session_params.timeframe,
@@ -180,7 +178,7 @@ class CommandCreateSession(Command):
 @define
 class CommandLoadQuotes(Command):
     service: ServiceSession
-    session: DomainSession
+    session: Session
 
     async def execute(self) -> SessionQuotes:
         try:
@@ -214,7 +212,7 @@ class CommandLoadQuotes(Command):
 @define
 class CommandSaveSessionToDb(Command):
     service: ServiceSession
-    session: DomainSession
+    session: Session
 
     async def execute(self) -> None:
         async with self.service.uow:
@@ -227,7 +225,7 @@ class CommandGetSession(Command):
     service: ServiceSession
     session_id: UUID
 
-    async def execute(self) -> DomainSession:
+    async def execute(self) -> Session:
         async with self.service.uow:
             session = await self.service.uow.repository.get_by_id(self.session_id)
         return session
@@ -236,7 +234,7 @@ class CommandGetSession(Command):
 @define
 class CommandCalcUserModeSummary(Command):
     service: ServiceSession
-    user: DomainUser
+    user: User
     mode: SessionMode
 
     async def execute(self) -> UserModeSummary | None:

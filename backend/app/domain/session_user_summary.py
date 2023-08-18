@@ -6,16 +6,16 @@ from typing import Self
 
 from attrs import define, field, validators
 
-from app.domain.session import DomainSession
+from app.domain.session import Session
 from app.domain.session_result import SessionResult
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.system.constants import SessionMode, SessionStatus
 from app.system.exceptions import NoUserModeSummaryError, WrongUserModeSummaryError
 
 
 @define
 class UserModeSummary:
-    user: DomainUser
+    user: User
     mode: SessionMode
     total_sessions: int = field(validator=validators.ge(0))
     profitable_sessions: int = field(validator=validators.ge(0))
@@ -31,7 +31,7 @@ class UserModeSummary:
             raise WrongUserModeSummaryError
 
     @classmethod
-    def create(cls, sessions: Sequence[DomainSession], mode: SessionMode) -> Self:
+    def create(cls, sessions: Sequence[Session], mode: SessionMode) -> Self:
         session_results: list[SessionResult] = []
         profitable_sessions = 0
         unprofitable_sessions = 0

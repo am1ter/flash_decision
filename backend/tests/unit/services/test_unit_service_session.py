@@ -5,9 +5,9 @@ import pytest
 
 from app.api.schemas.session import ReqSession
 from app.domain.repository import RepositorySession
-from app.domain.session import DomainSession
+from app.domain.session import Session
 from app.domain.unit_of_work import UnitOfWork
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.services.session import ServiceSession, SessionParams
 from app.system.constants import SessionMode
 
@@ -16,15 +16,15 @@ pytestmark = pytest.mark.asyncio
 
 class RepositorySessionFake(RepositorySession):
     def __init__(self) -> None:
-        self.storage: dict[UUID, DomainSession] = {}
+        self.storage: dict[UUID, Session] = {}
 
-    def add(self, obj: DomainSession) -> None:  # type: ignore[override]
+    def add(self, obj: Session) -> None:  # type: ignore[override]
         self.storage[obj._id] = obj
 
-    async def get_by_id(self, _id: UUID) -> DomainSession:
+    async def get_by_id(self, _id: UUID) -> Session:
         return self.storage[_id]
 
-    async def get_all_sessions_by_user(self, user: DomainUser) -> list[DomainSession]:
+    async def get_all_sessions_by_user(self, user: User) -> list[Session]:
         return list(self.storage.values())
 
 
@@ -61,7 +61,7 @@ class TestServiceSession:
         mode: SessionMode,
         service_session: ServiceSession,
         req_session_params_custom: ReqSession,
-        user_domain: DomainUser,
+        user_domain: User,
     ) -> None:
         if mode == SessionMode.custom:
             params = SessionParams(**req_session_params_custom.dict())
@@ -75,7 +75,7 @@ class TestServiceSession:
         self,
         service_session: ServiceSession,
         req_session_params_custom: ReqSession,
-        user_domain: DomainUser,
+        user_domain: User,
     ) -> None:
         # Create session
         params = SessionParams(**req_session_params_custom.dict())
@@ -89,14 +89,14 @@ class TestServiceSession:
         assert session == session_quotes.session
 
     async def test_calc_session_result(
-        self, service_session: ServiceSession, closed_session: DomainSession
+        self, service_session: ServiceSession, closed_session: Session
     ) -> None:
         session_result = await service_session.calc_session_result(closed_session)
         assert session_result.total_decisions == closed_session.iterations.value
 
     @pytest.mark.asyncio()
     async def test_calc_user_mode_summary(
-        self, service_session: ServiceSession, closed_session: DomainSession
+        self, service_session: ServiceSession, closed_session: Session
     ) -> None:
         service_session.uow.repository.add(closed_session)
         user_mode_summary = await service_session.calc_user_mode_summary(

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from attrs import define, field, validators
 
-from app.domain.session import DomainSession
+from app.domain.session import Session
 from app.system.constants import DecisionAction, SessionMode, SessionStatus
 from app.system.exceptions import SessionNotClosedError, WrongSessionResultError
 
@@ -18,7 +18,7 @@ class SessionResult:
     It is not an ORM object - db is not used for storing sessions' results.
     """
 
-    session: DomainSession = field(metadata={"asdict_ignore": True})
+    session: Session = field(metadata={"asdict_ignore": True})
     total_decisions: int = field()
     profitable_decisions: int = field(validator=validators.ge(0))
     unprofitable_decisions: int = field(validator=validators.ge(0))
@@ -40,7 +40,7 @@ class SessionResult:
         return self.session.mode
 
     @session.validator
-    def session_validator(self, attribute: str, value: DomainSession) -> None:
+    def session_validator(self, attribute: str, value: Session) -> None:
         if value.status != SessionStatus.closed:
             raise SessionNotClosedError
 
@@ -66,7 +66,7 @@ class SessionResult:
             raise WrongSessionResultError
 
     @classmethod
-    def create(cls, session: DomainSession) -> Self:
+    def create(cls, session: Session) -> Self:
         if session.status != SessionStatus.closed or not session.decisions:
             raise SessionNotClosedError
 

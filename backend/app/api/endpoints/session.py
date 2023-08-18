@@ -17,7 +17,7 @@ from app.api.schemas.session import (
     RespSessionResult,
 )
 from app.domain.base import custom_serializer
-from app.domain.session import DomainSession
+from app.domain.session import Session
 from app.services.session import SessionParams
 from app.system.config import Settings
 from app.system.constants import SessionMode
@@ -75,7 +75,7 @@ async def get_session_info(
     return Resp(data=data)
 
 
-def _resp_session_by_session(session: DomainSession) -> RespSessionInfo:
+def _resp_session_by_session(session: Session) -> RespSessionInfo:
     return RespSessionInfo(
         session_id=session._id,
         mode=session.mode.value,

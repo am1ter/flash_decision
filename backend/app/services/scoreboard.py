@@ -7,7 +7,7 @@ from app.domain.repository import RepositoryScoreboard
 from app.domain.scoreboard import ScoreboardRecordsTop
 from app.domain.session_result import SessionResult
 from app.domain.unit_of_work import UnitOfWork
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.services.base import Service
 from app.system.config import Settings
 from app.system.constants import SessionMode
@@ -54,7 +54,7 @@ class ServiceScoreboardGlobal(ServiceScoreboard):
         )
         return top_users
 
-    async def get_user_rank(self, user: DomainUser, mode: SessionMode) -> int | None:
+    async def get_user_rank(self, user: User, mode: SessionMode) -> int | None:
         async with self.uow:
             try:
                 user_scoreboard_record = self.uow.repository.get_scoreboard_record(user, mode)

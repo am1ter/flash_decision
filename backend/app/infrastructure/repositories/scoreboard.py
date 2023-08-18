@@ -7,7 +7,7 @@ from pymongo import DESCENDING, ReturnDocument
 
 from app.domain.scoreboard import ScoreboardRecord, ScoreboardRecords
 from app.domain.session_result import SessionResult
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.infrastructure.repositories.base import RepositoryNoSqlMongo
 from app.system.constants import SessionMode
 from app.system.exceptions import DbObjectNotFoundError
@@ -53,7 +53,7 @@ class RepositoryNoSqlScoreboard(RepositoryNoSqlMongo):
         return scoreboard_records
 
     @RepositoryNoSqlMongo.catch_db_errors
-    def get_scoreboard_record(self, user: DomainUser, mode: SessionMode) -> ScoreboardRecord:
+    def get_scoreboard_record(self, user: User, mode: SessionMode) -> ScoreboardRecord:
         find_query = {"user_id": bson.Binary.from_uuid(user._id), "mode": mode}
         raw_scoreboard = self._db[self.collection_name].find_one(find_query)
         if not raw_scoreboard:  # If objects are not found in the database, raise an exception

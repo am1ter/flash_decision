@@ -7,7 +7,7 @@ from structlog.contextvars import bind_contextvars, unbind_contextvars
 
 from app.domain.repository import RepositoryUser
 from app.domain.unit_of_work import UnitOfWork
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.services.base import Service
 from app.system.config import Settings
 from app.system.exceptions import InvalidJwtError, JwtExpiredError
@@ -29,7 +29,7 @@ class ServiceAuthorization(Service):
     uow: UnitOfWork[RepositoryUser]
     token_encoded: str = field()
     token_decoded = field()
-    user: DomainUser | None = field(default=None)
+    user: User | None = field(default=None)
 
     @token_decoded.default
     def token_decoded_default(self) -> JwtTokenDecoded:
@@ -55,7 +55,7 @@ class ServiceAuthorization(Service):
             raise InvalidJwtError from e
         return JwtTokenDecoded(**token_dec)
 
-    async def get_current_user(self) -> DomainUser:
+    async def get_current_user(self) -> User:
         """Get user with email extracted from token and verify it"""
         async with self.uow:
             self.user = await self.uow.repository.get_by_email(self.token_decoded.sub)

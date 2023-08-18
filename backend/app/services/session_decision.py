@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import structlog
 from attrs import define, field
 
-from app.domain.session_decision import DomainDecision
+from app.domain.session_decision import Decision
 from app.domain.session_result import SessionResult
 from app.services.base import Service
 from app.system.constants import DecisionAction, SessionStatus
@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from app.domain.repository import RepositorySession
-    from app.domain.session import DomainSession
-    from app.domain.session_iteration import DomainIteration
+    from app.domain.session import Session
+    from app.domain.session_iteration import Iteration
     from app.domain.unit_of_work import UnitOfWork
     from app.services.scoreboard import ServiceScoreboard
 
@@ -39,14 +39,14 @@ class ServiceDecision(Service):
     def register_scoreboard_service(self, scoreboard_service: ServiceScoreboard) -> None:
         self.scoreboard_services.append(scoreboard_service)
 
-    async def _notify_scoreboard_services(self, session: DomainSession) -> None:
+    async def _notify_scoreboard_services(self, session: Session) -> None:
         if session.status != SessionStatus.closed:
             return
         session_result = SessionResult.create(session)
         for scoreboard_service in self.scoreboard_services:
             await scoreboard_service.update_scoreboard(session_result)
 
-    def _update_session_status(self, session: DomainSession, iteration: DomainIteration) -> None:
+    def _update_session_status(self, session: Session, iteration: Iteration) -> None:
         last_iteration_num = session.iterations.value - 1
         assert iteration.iteration_num <= last_iteration_num
         if iteration.iteration_num == 0:
@@ -54,19 +54,19 @@ class ServiceDecision(Service):
         if iteration.iteration_num == last_iteration_num:
             session.set_status_closed()
 
-    async def _save_decision_to_sql(self, decision: DomainDecision) -> None:
+    async def _save_decision_to_sql(self, decision: Decision) -> None:
         async with self.uow:
             self.uow.repository.add(decision)
             await self.uow.commit()
 
     async def record_decision(
         self,
-        session: DomainSession,
-        iteration: DomainIteration,
+        session: Session,
+        iteration: Iteration,
         action: DecisionAction,
         time_spent: Decimal,
-    ) -> DomainDecision:
-        decision = DomainDecision(
+    ) -> Decision:
+        decision = Decision(
             session=session, iteration=iteration, action=action, time_spent=time_spent
         )
         self._update_session_status(session, iteration)

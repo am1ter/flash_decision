@@ -4,21 +4,21 @@ from typing import assert_never
 from attrs import define, field
 
 from app.domain.base import Entity, field_relationship
-from app.domain.session import DomainSession
-from app.domain.session_iteration import DomainIteration
+from app.domain.session import Session
+from app.domain.session_iteration import Iteration
 from app.system.constants import DecisionAction
 from app.system.exceptions import WrongDecisionError
 
 
 @define(kw_only=True, slots=False, hash=True)
-class DomainDecision(Entity):
+class Decision(Entity):
     """
     User decision for particular `Iteration`.
     It is the part of the `Session` Aggregate.
     """
 
-    session: DomainSession = field_relationship(init=True, repr=True)
-    iteration: DomainIteration
+    session: Session = field_relationship(init=True, repr=True)
+    iteration: Iteration
     action: DecisionAction
     time_spent: Decimal = field()
     iteration_num: int = field()

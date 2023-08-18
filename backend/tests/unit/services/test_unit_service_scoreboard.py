@@ -9,14 +9,14 @@ from app.domain.repository import RepositoryScoreboard
 from app.domain.scoreboard import ScoreboardRecord, ScoreboardRecords
 from app.domain.session_result import SessionResult
 from app.domain.unit_of_work import UnitOfWork
-from app.domain.user import DomainUser
+from app.domain.user import User
 from app.services.scoreboard import ServiceScoreboardGlobal
 from app.system.constants import SessionMode
 
 
 class RepositoryScoreboardFake(RepositoryScoreboard):
     def __init__(self) -> None:
-        self.storage: dict[SessionMode, dict[DomainUser, ScoreboardRecord]] = defaultdict(dict)
+        self.storage: dict[SessionMode, dict[User, ScoreboardRecord]] = defaultdict(dict)
 
     def add(self, obj: Entity) -> None:  # type: ignore[empty-body]
         pass
@@ -33,7 +33,7 @@ class RepositoryScoreboardFake(RepositoryScoreboard):
     def get_full_scoreboard(self, mode: SessionMode) -> ScoreboardRecords:
         return ScoreboardRecords(self.storage[mode].values())
 
-    def get_scoreboard_record(self, user: DomainUser, mode: SessionMode) -> ScoreboardRecord:
+    def get_scoreboard_record(self, user: User, mode: SessionMode) -> ScoreboardRecord:
         return self.storage[mode][user]
 
 
