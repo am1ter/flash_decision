@@ -1,55 +1,26 @@
 # Flash decision
-Web application for testing & training securities trading skills.
+## Description
+Flash Decision - an application designed to enhance your securities trading skills through comprehensive training.
 
-### Solution Architecture
-Application use microservice architecture and splitted into the following services:
-- Frontend app is a SPA based on Vue.js framework. Frontend is connected to backend via RESTful API.
-- Backend app uses python with Flask and connected to main database with [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy).
-- PostgreSQL is used as a main database to store user-related data. Database migrations are served by [SQLAlchemy Alembic](https://github.com/sqlalchemy/alembic).
+## Backend highlights
+- Built with a focus on high maintainability, scalability, and testability, utilizing architectural patterns like Clean Architecture and Domain-Driven Design (DDD).
+- Employs a modern technology stack: FastAPI with async support, SQLAlchemy 2.0, and Pandas 2.0.
+- Implements powerful logging using `structlog` and `rich`. JSON-based logs for production and aesthetically pleasing RICH logs for development.
+- Offers database flexibility through `alembic` database migrations, with two separate schemas for production and development data.
+- Embraces code conciseness using the `attrs` and `pydantic` libraries.
+- Ensures high code cohesion and low coupling by applying the dependency inversion principle and employing various software design patterns:
+    - Classic patterns: Factory, Singleton, Command, State, Observer, Facade.
+    - DDD patterns: ValueObject, Aggregate, Repository, UnitOfWork.
+- Simplifies high-level configuration with the `Bootstrap` and `Config` modules, along with the use of environment variables via dot-env.
+- Maintains a high-quality codebase with linters such as `mypy`, `ruff`, `black`, and `isort`.
+- Minimizes low-quality code commits with `pre-commit` hooks.
+- Ensures code reliability with extensive testing, covering 94% of the codebase through a combination of 98 integration and unit tests, evaluated using `pytest-cov`.
 
-Every service runs in a personal docker container.
-
-### Setup using docker containers
-1. Install docker and docker-compose
-   ```
-   sudo apt update
-
-   sudo apt-get install ca-certificates curl gnupg lsb-release
-
-   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-
-   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-   sudo apt update
-
-   sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
-   ```
-2. Clone repository
-    ```
-    git clone https://github.com/am1ter/flash_decision.git
-    ```
-3. Go to local copy of repository
-    ```
-    cd flash_decision
-    ```
-4. Change default network settings: ports and custom nginx routing options
-    ```
-    nano .env
-    ```
-5. Use docker-compose command to setup the solution
-    ```
-    docker compose up -d
-    ```
-
-### Codebase features
-- All python code formatted with ["The Black code style"](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html). Line length is enlarged up to 100 symblos. Single quotes are used instead of double quotes.
-- All API endpoints designed according JSON:API specification (as RESTful as possible).
-- The app is adapted to mobile devices (responsive design).
-- 100% of code covered by comments.
-- All use cases covered by end2end tests.
-- Uniform code cases:
-    - Python: snake_case
-    - API routes: kebab-case
-    - SQL: PascalCase
-    - JS: camelCase
-    - CSS: kebab-case
+## Solution Architecture
+- Backend: Python
+- Frontend: Vue.js
+- SQL Database: PostgreSQL
+- NoSQL Database: MongoDB
+- Cache: Redis
+- Observability: Grafana & Loki
+- Deployment: Docker containers
