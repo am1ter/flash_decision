@@ -1,7 +1,7 @@
 from typing import Self
 
 from app.bootstrap import Bootstrap
-from app.domain.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.infrastructure.databases.nosql import DbNoSql
 from app.infrastructure.repositories.base import RepositoryNoSqlMongo
 

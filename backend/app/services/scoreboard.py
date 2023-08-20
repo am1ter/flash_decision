@@ -3,12 +3,13 @@ from abc import ABCMeta, abstractmethod
 import structlog
 from attrs import define
 
-from app.domain.repository import RepositoryScoreboard
+from app.domain.interfaces.repository import RepositoryScoreboard
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.scoreboard import ScoreboardRecordsTop
 from app.domain.session_result import SessionResult
-from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import User
-from app.services.base import Service
+from app.services.interfaces.observer import Subscriber
+from app.services.interfaces.service import Service
 from app.system.config import Settings
 from app.system.constants import SessionMode
 from app.system.exceptions import DbObjectNotFoundError
@@ -18,7 +19,7 @@ logger = structlog.get_logger()
 
 
 @define(kw_only=False, slots=False, hash=True)
-class ServiceScoreboard(Service, metaclass=ABCMeta):
+class ServiceScoreboard(Service, Subscriber, metaclass=ABCMeta):
     """
     Multiple different `ServiceScoreboard` implementations allowed.
     This service acts as the Subscriber of the Observer design pattern.

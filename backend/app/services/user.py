@@ -4,10 +4,10 @@ import structlog
 from attrs import define
 from jose import jwt
 
-from app.domain.repository import RepositoryUser
-from app.domain.unit_of_work import UnitOfWork
+from app.domain.interfaces.repository import RepositoryUser
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.user import User
-from app.services.base import Service
+from app.services.interfaces.service import Service
 from app.system.config import Settings
 from app.system.exceptions import DbObjectNotFoundError, UserNotFoundError, WrongPasswordError
 

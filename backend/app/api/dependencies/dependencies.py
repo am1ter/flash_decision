@@ -4,8 +4,8 @@ from typing import Annotated, Any
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from app.domain.repository import RepositoryUser
-from app.domain.unit_of_work import UnitOfWork
+from app.domain.interfaces.repository import RepositoryUser
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.infrastructure.repositories.scoreboard import RepositoryNoSqlScoreboard
 from app.infrastructure.repositories.session import RepositorySessionSql
 from app.infrastructure.repositories.session_iteration import RepositoryNoSqlIteration

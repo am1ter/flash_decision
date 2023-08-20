@@ -6,7 +6,7 @@ from uuid import UUID
 
 from attrs import define
 
-from app.domain.base import Entity
+from app.domain.interfaces.domain import Entity
 from app.system.constants import SessionMode
 
 

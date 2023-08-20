@@ -3,7 +3,7 @@ from abc import ABCMeta
 from pymongo import MongoClient
 from pymongo.database import Database
 
-from app.domain.db import Db
+from app.domain.interfaces.db import Db
 from app.system.config import Settings
 
 

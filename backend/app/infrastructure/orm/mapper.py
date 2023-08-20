@@ -3,7 +3,7 @@ from sqlalchemy.orm import composite, relationship
 
 from app.domain.session import Session
 from app.domain.session_decision import Decision
-from app.domain.session_provider import Ticker
+from app.domain.ticker import Ticker
 from app.domain.user import Auth, Email, IpAddress, Password, User
 from app.infrastructure.orm.base import Base, mapper_registry
 from app.infrastructure.orm.session import OrmSession

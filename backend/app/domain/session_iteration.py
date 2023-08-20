@@ -10,7 +10,7 @@ from attrs import define, field
 from plotly import graph_objs
 from plotly.utils import PlotlyJSONEncoder
 
-from app.domain.base import Entity
+from app.domain.interfaces.domain import Entity
 from app.system.exceptions import (
     IterationNotFoundError,
     ProviderInvalidDataError,

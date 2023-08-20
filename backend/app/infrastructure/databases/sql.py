@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.domain.db import Db
+from app.domain.interfaces.db import Db
 from app.system.config import Settings
 
 

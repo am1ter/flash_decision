@@ -8,16 +8,17 @@ from attrs import define, field
 
 from app.domain.session_decision import Decision
 from app.domain.session_result import SessionResult
-from app.services.base import Service
+from app.services.interfaces.observer import Publisher
+from app.services.interfaces.service import Service
 from app.system.constants import DecisionAction, SessionStatus
 
 if TYPE_CHECKING:
     from decimal import Decimal
 
-    from app.domain.repository import RepositorySession
+    from app.domain.interfaces.repository import RepositorySession
+    from app.domain.interfaces.unit_of_work import UnitOfWork
     from app.domain.session import Session
     from app.domain.session_iteration import Iteration
-    from app.domain.unit_of_work import UnitOfWork
     from app.services.scoreboard import ServiceScoreboard
 
 # Create logger
@@ -25,7 +26,7 @@ logger = structlog.get_logger()
 
 
 @define(kw_only=False, slots=False, hash=False)
-class ServiceDecision(Service):
+class ServiceDecision(Service, Publisher):
     """
     This service records decisions for every `Iteration` in the `Session`.
     This service use Observer pattern implementation and acts as the Publisher.

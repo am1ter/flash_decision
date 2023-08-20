@@ -4,11 +4,11 @@ from typing import ClassVar, TypeAlias, cast
 
 import pandas as pd
 import structlog
-from attrs import define, field, validators
+from attrs import define
 
-from app.domain.base import ValueObjectJson
-from app.domain.cache import Cache
-from app.system.constants import SessionTimeframe, TickerType
+from app.domain.interfaces.cache import Cache
+from app.domain.ticker import Ticker, tickers
+from app.system.constants import SessionTimeframe
 from app.system.exceptions import (
     CacheConnectionError,
     CacheObjectNotFoundError,
@@ -20,16 +20,7 @@ from app.system.exceptions import (
 logger = structlog.get_logger()
 
 
-@define
-class Ticker(ValueObjectJson):
-    ticker_type: TickerType = field(converter=TickerType)
-    exchange: str
-    symbol: str = field(validator=validators.min_len(1))
-    name: str
-
-
 csv_table: TypeAlias = list[list[str]]
-tickers: TypeAlias = dict[str, Ticker]
 
 
 @define(kw_only=False, slots=False, hash=True)

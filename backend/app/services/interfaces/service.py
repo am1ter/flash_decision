@@ -3,7 +3,7 @@ from collections.abc import Callable
 
 from attrs import define
 
-from app.domain.unit_of_work import UnitOfWork
+from app.domain.interfaces.unit_of_work import UnitOfWork
 
 
 @define(kw_only=False, slots=False, hash=True)

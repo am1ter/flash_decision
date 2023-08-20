@@ -2,7 +2,7 @@ from uuid import UUID
 
 import pandas as pd
 
-from app.domain.repository import RepositoryIteration
+from app.domain.interfaces.repository import RepositoryIteration
 from app.domain.session_iteration import Iteration, IterationCollection
 from app.infrastructure.repositories.base import RepositoryNoSqlMongo
 from app.system.exceptions import IterationNotFoundError

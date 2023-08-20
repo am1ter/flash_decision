@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
-from app.domain.repository import RepositorySession
+from app.domain.interfaces.repository import RepositorySession
 from app.domain.session import Session
 from app.domain.user import User
 from app.infrastructure.repositories.base import RepositorySqlAlchemy

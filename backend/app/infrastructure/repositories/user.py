@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.orm.attributes import QueryableAttribute
 
-from app.domain.repository import RepositoryUser
+from app.domain.interfaces.repository import RepositoryUser
 from app.domain.user import Email, User
 from app.infrastructure.repositories.base import RepositorySqlAlchemy
 

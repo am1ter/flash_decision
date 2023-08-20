@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from decimal import Decimal
 from uuid import UUID
 
-from app.domain.base import Entity
+from app.domain.interfaces.domain import Entity
 from app.domain.scoreboard import ScoreboardRecord, ScoreboardRecords
 from app.domain.session import Session
 from app.domain.session_iteration import Iteration, IterationCollection

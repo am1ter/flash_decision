@@ -5,11 +5,12 @@ from uuid import UUID
 import structlog
 from attrs import define
 
-from app.domain.repository import RepositoryIteration
+from app.domain.interfaces.repository import RepositoryIteration
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.session import Session, SessionQuotes
 from app.domain.session_iteration import Iteration, IterationCollection
-from app.domain.unit_of_work import UnitOfWork
-from app.services.base import Service
+from app.services.interfaces.service import Service
+from app.services.interfaces.state import State
 from app.system.constants import SessionStatus
 from app.system.exceptions import SessionClosedError
 
@@ -57,9 +58,9 @@ class ServiceIteration(Service):
         return iteration
 
 
-class Loader(metaclass=ABCMeta):
+class Loader(State, metaclass=ABCMeta):
     """
-    Interfacte for the State design pattern.
+    Interface for the State design pattern.
     Used to setup type of the behaviour during the request to extract Iterations from db.
     https://refactoring.guru/design-patterns/state
     """

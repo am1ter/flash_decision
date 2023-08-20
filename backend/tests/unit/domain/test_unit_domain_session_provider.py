@@ -1,7 +1,8 @@
 import pytest
 import structlog
 
-from app.domain.session_provider import Provider, Ticker
+from app.domain.interfaces.provider import Provider
+from app.domain.ticker import Ticker
 from app.system.constants import SessionTimeframe
 from app.system.exceptions import ProviderAccessError, ProviderInvalidDataError
 from app.system.logger import configure_logger

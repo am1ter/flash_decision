@@ -9,15 +9,9 @@ from alpha_vantage.async_support.cryptocurrencies import CryptoCurrencies
 from alpha_vantage.async_support.timeseries import TimeSeries
 from attrs import define, field
 
-from app.domain.cache import Cache
-from app.domain.session_provider import (
-    DataExporter,
-    Provider,
-    Ticker,
-    TickerCol,
-    csv_table,
-    tickers,
-)
+from app.domain.interfaces.cache import Cache
+from app.domain.interfaces.provider import DataExporter, Provider, TickerCol, csv_table
+from app.domain.ticker import Ticker, tickers
 from app.system.config import Settings
 from app.system.constants import SessionTimeframe, TickerType
 from app.system.exceptions import (

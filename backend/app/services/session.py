@@ -1,8 +1,7 @@
 import contextlib
-from abc import ABCMeta, abstractmethod
 from asyncio import TaskGroup
 from decimal import Decimal
-from typing import Any, assert_never
+from typing import assert_never
 from uuid import UUID
 
 import pandas as pd
@@ -10,8 +9,10 @@ import structlog
 from attrs import define
 
 from app.bootstrap import Bootstrap
-from app.domain.cache import Cache
-from app.domain.repository import RepositorySession
+from app.domain.interfaces.cache import Cache
+from app.domain.interfaces.provider import Provider
+from app.domain.interfaces.repository import RepositorySession
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.session import (
     Session,
     SessionBlitz,
@@ -21,12 +22,11 @@ from app.domain.session import (
     SessionOptions,
     SessionQuotes,
 )
-from app.domain.session_provider import Provider
 from app.domain.session_result import SessionResult
 from app.domain.session_user_summary import UserModeSummary
-from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import User
-from app.services.base import Service
+from app.services.interfaces.command import Command
+from app.services.interfaces.service import Service
 from app.system.config import Settings
 from app.system.constants import SessionMode, TickerType
 from app.system.exceptions import (
@@ -106,12 +106,6 @@ class ServiceSession(Service):
             cls=self.__class__, show_func_name=True, mode=mode, user_score_summary=user_mode_summary
         )
         return user_mode_summary
-
-
-class Command(metaclass=ABCMeta):
-    @abstractmethod
-    def execute(self) -> Any:
-        pass
 
 
 @define

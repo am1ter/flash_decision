@@ -7,7 +7,7 @@ from argon2.exceptions import VerifyMismatchError
 from attrs import define, field
 from pydantic import EmailStr, IPvAnyAddress, ValidationError, parse_obj_as
 
-from app.domain.base import Agregate, Entity, ValueObject, field_relationship
+from app.domain.interfaces.domain import Agregate, Entity, ValueObject, field_relationship
 from app.system.constants import AuthStatus, UserStatus
 from app.system.exceptions import (
     EmailValidationError,

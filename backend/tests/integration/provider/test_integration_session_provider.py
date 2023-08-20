@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from app.domain.session_provider import Ticker
-from app.infrastructure.external_api.session_provider import (
+from app.domain.ticker import Ticker
+from app.infrastructure.external_api.provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,
 )

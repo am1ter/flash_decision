@@ -16,7 +16,7 @@ from app.api.schemas.session import (
     RespSessionOptions,
     RespSessionResult,
 )
-from app.domain.base import custom_serializer
+from app.domain.interfaces.domain import custom_serializer
 from app.domain.session import Session
 from app.services.session import SessionParams
 from app.system.config import Settings

@@ -10,8 +10,8 @@ from app.api.schemas.user import ReqSignIn, ReqSignUp
 from app.domain.session import Session, SessionCustom, SessionQuotes
 from app.domain.session_decision import Decision
 from app.domain.session_iteration import Iteration
-from app.domain.session_provider import Ticker
 from app.domain.session_result import SessionResult
+from app.domain.ticker import Ticker
 from app.domain.user import User
 from app.system.constants import (
     DecisionAction,

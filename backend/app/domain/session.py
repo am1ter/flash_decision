@@ -8,8 +8,8 @@ import pandas as pd
 from attrs import define, field
 from pandas import Timestamp
 
-from app.domain.base import Agregate, field_relationship
-from app.domain.session_provider import Provider, Ticker
+from app.domain.interfaces.domain import Agregate, field_relationship
+from app.domain.ticker import Ticker
 from app.system.config import Settings
 from app.system.constants import (
     SessionBarsnumber,
@@ -34,6 +34,7 @@ from app.system.metaclasses import SingletonMeta
 if TYPE_CHECKING:
     from decimal import Decimal
 
+    from app.domain.interfaces.provider import Provider
     from app.domain.session_decision import Decision
     from app.domain.user import User
 

@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from typing import Generic, Self, TypeVar
 
-from app.domain.db import Db
-from app.domain.repository import Repository
+from app.domain.interfaces.db import Db
+from app.domain.interfaces.repository import Repository
 
 RepositoryType = TypeVar("RepositoryType", bound=Repository)
 

@@ -4,11 +4,11 @@ from typing import Self, cast
 
 import pytest
 
-from app.domain.base import Entity
-from app.domain.repository import RepositoryScoreboard
+from app.domain.interfaces.domain import Entity
+from app.domain.interfaces.repository import RepositoryScoreboard
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.scoreboard import ScoreboardRecord, ScoreboardRecords
 from app.domain.session_result import SessionResult
-from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import User
 from app.services.scoreboard import ServiceScoreboardGlobal
 from app.system.constants import SessionMode

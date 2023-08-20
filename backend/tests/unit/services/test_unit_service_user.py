@@ -10,8 +10,8 @@ from uuid6 import uuid6
 
 from app.api.dependencies.dependencies import verify_authorization
 from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
-from app.domain.repository import RepositoryUser
-from app.domain.unit_of_work import UnitOfWork
+from app.domain.interfaces.repository import RepositoryUser
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.user import Auth, User
 from app.services.user import JwtTokenEncoded, ServiceUser
 from app.services.user_authorization import ServiceAuthorization

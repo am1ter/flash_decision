@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from app.infrastructure.cache.redis import CacheRedis
 from app.infrastructure.databases.nosql import DbNoSql, DbNoSqlMongo
 from app.infrastructure.databases.sql import DbSql, DbSqlPg
-from app.infrastructure.external_api.session_provider import (
+from app.infrastructure.external_api.provider import (
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,
 )
@@ -22,8 +22,8 @@ from app.system.logger import configure_logger
 from app.system.metaclasses import SingletonMeta
 
 if TYPE_CHECKING:
-    from app.domain.cache import Cache
-    from app.domain.session_provider import Provider
+    from app.domain.interfaces.cache import Cache
+    from app.domain.interfaces.provider import Provider
 
 
 # Create logger

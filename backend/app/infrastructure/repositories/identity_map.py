@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.orm.attributes import QueryableAttribute
 from sqlalchemy.orm.dynamic import AppenderQuery
 
-from app.domain.base import Entity
+from app.domain.interfaces.domain import Entity
 
 
 class IdentityMapSqlAlchemyABC(metaclass=ABCMeta):

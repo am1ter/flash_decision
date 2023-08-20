@@ -4,9 +4,9 @@ from uuid import UUID
 import pytest
 
 from app.api.schemas.session import ReqSession
-from app.domain.repository import RepositorySession
+from app.domain.interfaces.repository import RepositorySession
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.session import Session
-from app.domain.unit_of_work import UnitOfWork
 from app.domain.user import User
 from app.services.session import ServiceSession, SessionParams
 from app.system.constants import SessionMode

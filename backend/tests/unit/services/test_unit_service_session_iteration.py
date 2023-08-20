@@ -6,10 +6,10 @@ from uuid import UUID
 
 import pytest
 
-from app.domain.repository import RepositoryIteration
+from app.domain.interfaces.repository import RepositoryIteration
+from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.session import SessionQuotes
 from app.domain.session_iteration import Iteration, IterationCollection
-from app.domain.unit_of_work import UnitOfWork
 from app.services.session_iteration import ServiceIteration
 from app.system.constants import SessionStatus
 from app.system.exceptions import SessionClosedError

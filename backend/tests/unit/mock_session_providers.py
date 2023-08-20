@@ -5,9 +5,10 @@ from typing import ClassVar
 import pandas as pd
 from attrs import define
 
-from app.domain.cache import Cache
-from app.domain.session_provider import Ticker, csv_table, tickers
-from app.infrastructure.external_api.session_provider import (
+from app.domain.interfaces.cache import Cache
+from app.domain.interfaces.provider import csv_table
+from app.domain.ticker import Ticker, tickers
+from app.infrastructure.external_api.provider import (
     DataExporterAlphaVantage,
     ProviderAlphaVantageCrypto,
     ProviderAlphaVantageStocks,

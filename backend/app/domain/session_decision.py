@@ -3,7 +3,7 @@ from typing import assert_never
 
 from attrs import define, field
 
-from app.domain.base import Entity, field_relationship
+from app.domain.interfaces.domain import Entity, field_relationship
 from app.domain.session import Session
 from app.domain.session_iteration import Iteration
 from app.system.constants import DecisionAction
