@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-from app.api.schemas.base import RespData
+from app.adapters.api.schemas.base import RespData
 
 
 class TopUserRec(BaseModel):

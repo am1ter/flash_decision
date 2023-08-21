@@ -1,13 +1,13 @@
 from fastapi import APIRouter
 
-from app.api.dependencies.dependencies import (
+from app.adapters.api.dependencies.dependencies import (
     ServiceAuthorizationDep,
     ServiceDecisionDep,
     ServiceIterationDep,
     ServiceScoreboardGlobalDep,
     ServiceSessionDep,
 )
-from app.api.schemas.session_decision import ReqRecordDecision, RespDecision
+from app.adapters.api.schemas.session_decision import ReqRecordDecision, RespDecision
 from app.system.config import Settings
 from app.system.constants import DecisionAction
 

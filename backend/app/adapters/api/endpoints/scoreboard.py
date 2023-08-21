@@ -1,12 +1,12 @@
 from attrs import asdict
 from fastapi import APIRouter
 
-from app.api.dependencies.dependencies import (
+from app.adapters.api.dependencies.dependencies import (
     ServiceAuthorizationDep,
     ServiceScoreboardGlobalDep,
     ServiceSessionDep,
 )
-from app.api.schemas.scoreboard import (
+from app.adapters.api.schemas.scoreboard import (
     RespScoreboard,
     TopUserRec,
     TopUsers,

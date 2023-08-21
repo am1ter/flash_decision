@@ -7,10 +7,10 @@ import pytest
 import requests
 from authlib.integrations.requests_client import OAuth2Auth, OAuth2Session
 
-from app.api.schemas.session import ReqSession, RespSessionOptions
-from app.api.schemas.session_decision import ReqRecordDecision
-from app.api.schemas.support import RespDataHealthcheck
-from app.api.schemas.user import ReqSignIn, ReqSignUp, RespSignIn, RespSignUp
+from app.adapters.api.schemas.session import ReqSession, RespSessionOptions
+from app.adapters.api.schemas.session_decision import ReqRecordDecision
+from app.adapters.api.schemas.support import RespDataHealthcheck
+from app.adapters.api.schemas.user import ReqSignIn, ReqSignUp, RespSignIn, RespSignUp
 from app.system.config import Settings
 from app.system.constants import SessionBarsnumber, SessionMode
 from app.system.exceptions import ProviderRateLimitExceededError

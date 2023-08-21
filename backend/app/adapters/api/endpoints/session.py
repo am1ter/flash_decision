@@ -3,13 +3,13 @@ from uuid import UUID
 from attrs import asdict
 from fastapi import APIRouter
 
-from app.api.dependencies.dependencies import (
+from app.adapters.api.dependencies.dependencies import (
     ServiceAuthorizationDep,
     ServiceIterationDep,
     ServiceSessionDep,
 )
-from app.api.schemas.base import Resp, RespMeta
-from app.api.schemas.session import (
+from app.adapters.api.schemas.base import Resp, RespMeta
+from app.adapters.api.schemas.session import (
     ReqSession,
     RespSession,
     RespSessionInfo,

@@ -2,7 +2,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.api.schemas.base import RespData
+from app.adapters.api.schemas.base import RespData
 
 
 class ReqSystemInfo(BaseModel):

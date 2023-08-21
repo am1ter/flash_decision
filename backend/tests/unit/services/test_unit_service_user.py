@@ -8,8 +8,8 @@ import pytest_asyncio
 from jose import jwt
 from uuid6 import uuid6
 
-from app.api.dependencies.dependencies import verify_authorization
-from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
+from app.adapters.api.dependencies.dependencies import verify_authorization
+from app.adapters.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo
 from app.domain.interfaces.repository import RepositoryUser
 from app.domain.interfaces.unit_of_work import UnitOfWork
 from app.domain.user import Auth, User

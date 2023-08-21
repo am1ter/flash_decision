@@ -2,12 +2,12 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.api.dependencies.dependencies import (
+from app.adapters.api.dependencies.dependencies import (
     ServiceAuthorizationDep,
     ServiceIterationDep,
     ServiceSessionDep,
 )
-from app.api.schemas.session_iteration import RespIteration
+from app.adapters.api.schemas.session_iteration import RespIteration
 from app.system.config import Settings
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/iteration")

@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 from uuid6 import uuid6
 
-from app.api.schemas.session import ReqSession
-from app.api.schemas.user import ReqSignIn, ReqSignUp
+from app.adapters.api.schemas.session import ReqSession
+from app.adapters.api.schemas.user import ReqSignIn, ReqSignUp
 from app.domain.session import Session, SessionCustom, SessionQuotes
 from app.domain.session_decision import Decision
 from app.domain.session_iteration import Iteration

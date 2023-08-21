@@ -1,9 +1,9 @@
 from attrs import asdict
 from fastapi import APIRouter
 
-from app.api.dependencies.dependencies import ServiceSupportDep
-from app.api.schemas.base import Resp, RespMeta
-from app.api.schemas.support import RespDataHealthcheck
+from app.adapters.api.dependencies.dependencies import ServiceSupportDep
+from app.adapters.api.schemas.base import Resp, RespMeta
+from app.adapters.api.schemas.support import RespDataHealthcheck
 from app.system.config import Settings
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/support")

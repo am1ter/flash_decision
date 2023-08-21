@@ -1,7 +1,13 @@
 from fastapi import APIRouter, Request
 
-from app.api.dependencies.dependencies import ServiceUserDep, SignUpFormDep
-from app.api.schemas.user import ReqSignIn, ReqSignUp, ReqSystemInfo, RespSignIn, RespSignUp
+from app.adapters.api.dependencies.dependencies import ServiceUserDep, SignUpFormDep
+from app.adapters.api.schemas.user import (
+    ReqSignIn,
+    ReqSignUp,
+    ReqSystemInfo,
+    RespSignIn,
+    RespSignUp,
+)
 from app.system.config import Settings
 
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/user")

@@ -8,12 +8,12 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette import status
 
-from app.api.endpoints.scoreboard import router as router_scoreboard
-from app.api.endpoints.session import router as router_session
-from app.api.endpoints.session_decision import router as router_decision
-from app.api.endpoints.session_iteration import router as router_iteration
-from app.api.endpoints.support import router as router_support
-from app.api.endpoints.user import router as router_user
+from app.adapters.api.endpoints.scoreboard import router as router_scoreboard
+from app.adapters.api.endpoints.session import router as router_session
+from app.adapters.api.endpoints.session_decision import router as router_decision
+from app.adapters.api.endpoints.session_iteration import router as router_iteration
+from app.adapters.api.endpoints.support import router as router_support
+from app.adapters.api.endpoints.user import router as router_user
 from app.system.config import Settings
 from app.system.exceptions import BaseHTTPError
 

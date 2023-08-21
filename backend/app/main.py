@@ -7,7 +7,7 @@ from app.system.logger import update_uvicorn_log_config
 def run() -> None:
     if Settings().general.DEV_MODE:
         uvicorn.run(
-            "app.api.fastapi:fastapi_app",
+            "app.adapters.api.fastapi:fastapi_app",
             host=Settings().general.BACKEND_HOST,
             port=Settings().general.BACKEND_PORT,
             log_config=update_uvicorn_log_config(),
@@ -16,7 +16,7 @@ def run() -> None:
         )
     else:
         uvicorn.run(
-            "app.api.fastapi:fastapi_app",
+            "app.adapters.api.fastapi:fastapi_app",
             host=Settings().general.BACKEND_HOST,
             port=Settings().general.BACKEND_PORT,
             log_config=update_uvicorn_log_config(),
