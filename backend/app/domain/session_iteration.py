@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import random
 import reprlib
+from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING, Self
 
 import pandas as pd
@@ -57,6 +58,7 @@ class IterationCollection:
         3. The function first checks if it's possible to get the required number of slices of the
         specified length from the list. This is always true, because there is a handler for a such
         type of errors in `SessionTimeSeries` class.
+        NB: The state of the `IterationCollection` are always valid - all corner cases are covered.
         """
         assert required_slices * slice_len <= total_df_quotes_bars, SessionConfigurationError.msg
         slices: list[slice] = []
@@ -76,14 +78,22 @@ class IterationCollection:
                 ]
         return slices
 
+    def _run_calculate_random_slices(self) -> list[slice]:
+        """Use ProcessPoolExecutor to avoid the EventLoop blocking"""
+        assert self.session_quotes and self.session
+        total_df_quotes_bars = self.session_quotes.total_df_quotes_bars
+        required_slices = self.session.iterations.value
+        slice_len = self.session.barsnumber.value + self.session.fixingbar.value
+        with ProcessPoolExecutor() as executor:
+            future = executor.submit(
+                self._calculate_random_slices, total_df_quotes_bars, required_slices, slice_len
+            )
+            return future.result()
+
     def create_iterations(self) -> Self:
         """Extract random slices from the full df and create all iterations for the session"""
         assert self.session_quotes and self.session
-        slices = self._calculate_random_slices(
-            total_df_quotes_bars=self.session_quotes.total_df_quotes_bars,
-            required_slices=self.session.iterations.value,
-            slice_len=self.session.barsnumber.value + self.session.fixingbar.value,
-        )
+        slices = self._run_calculate_random_slices()
         self.iterations = []
         for iter_num in range(self.session.iterations.value):
             iter_slice = slices[iter_num]
