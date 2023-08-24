@@ -25,7 +25,7 @@ from app.system.constants import SessionMode
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/session")
 
 
-@router.get("/options")
+@router.get("/options", status_code=200)
 async def collect_session_options(
     service: ServiceSessionDep, auth: ServiceAuthorizationDep
 ) -> Resp[RespMeta, RespSessionOptions]:
@@ -36,7 +36,7 @@ async def collect_session_options(
     return Resp(meta=meta, data=data)
 
 
-@router.post("/{mode}")
+@router.post("/{mode}", status_code=201)
 async def start_new_session(
     mode: SessionMode,
     service_session: ServiceSessionDep,
@@ -53,7 +53,7 @@ async def start_new_session(
     return Resp(data=data)
 
 
-@router.get("/")
+@router.get("/", status_code=200)
 async def get_session_info(
     *,
     session_id: UUID,

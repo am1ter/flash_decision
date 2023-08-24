@@ -9,7 +9,7 @@ from app.system.config import Settings
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/support")
 
 
-@router.get("/healthcheck")
+@router.get("/healthcheck", status_code=200)
 async def run_healthcheck(service: ServiceSupportDep) -> Resp[RespMeta, RespDataHealthcheck]:
     """Run system self check"""
     result = await service.healthcheck()

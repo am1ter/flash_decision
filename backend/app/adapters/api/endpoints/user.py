@@ -22,7 +22,7 @@ def parse_request_system_info(raw_request: Request) -> ReqSystemInfo:
     return req_system_info
 
 
-@router.post("/sign-up")
+@router.post("/sign-up", status_code=201)
 async def sign_up(
     payload: ReqSignUp, raw_request: Request, service_user: ServiceUserDep
 ) -> RespSignUp:
@@ -51,7 +51,7 @@ async def sign_up(
     )
 
 
-@router.post("/sign-in")
+@router.post("/sign-in", status_code=200)
 async def sign_in(
     form_data: SignUpFormDep,
     raw_request: Request,

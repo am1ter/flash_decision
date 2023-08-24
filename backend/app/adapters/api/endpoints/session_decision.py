@@ -14,7 +14,7 @@ from app.system.constants import DecisionAction
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/decision")
 
 
-@router.post("/")
+@router.post("/", status_code=201)
 async def record_decision(
     decision_params: ReqRecordDecision,
     service_session: ServiceSessionDep,

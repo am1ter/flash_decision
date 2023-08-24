@@ -37,7 +37,7 @@ def response_custom_session(req_session_params_custom: ReqSession, oauth2: OAuth
     )
     response_session = Response(rs)
     catch_provider_requests_limit_error(response_session)
-    response_session.assert_status_code(200)
+    response_session.assert_status_code(201)
     return response_session
 
 
@@ -101,7 +101,7 @@ class TestBackendUser:
     def test_sign_up(self, req_sign_up: ReqSignUp) -> None:
         r = requests.post(f"{Settings().general.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
         response = Response(r)
-        response.assert_status_code(200)
+        response.assert_status_code(201)
         data_model = RespSignUp(**response.response.json())
         assert data_model is not None
         assert data_model.email == req_sign_up.email
@@ -140,7 +140,7 @@ class TestBackendSession:
         )
         response = Response(r)
         catch_provider_requests_limit_error(response)
-        response.assert_status_code(200)
+        response.assert_status_code(201)
 
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_get_session(self, oauth2: OAuth2Auth, response_custom_session: Response) -> None:
@@ -185,7 +185,7 @@ class TestBackendDecision:
             )
             response = Response(r)
             catch_provider_requests_limit_error(response)
-            response.assert_status_code(200)
+            response.assert_status_code(201)
 
     @pytest.mark.dependency(depends=["TestBackendDecision::test_record_decision"])
     def test_get_session_result(

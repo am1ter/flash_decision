@@ -19,7 +19,7 @@ from app.system.constants import SessionMode
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/scoreboard")
 
 
-@router.get("/{mode}")
+@router.get("/{mode}", status_code=200)
 async def show_scoreboard(
     mode: SessionMode,
     service_session: ServiceSessionDep,

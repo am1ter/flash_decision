@@ -13,7 +13,7 @@ from app.system.config import Settings
 router = APIRouter(prefix=f"/{Settings().general.BACKEND_API_PREFIX}/iteration")
 
 
-@router.get("/")
+@router.get("/", status_code=200)
 async def get_next_iteration(
     session_id: str,
     service_session: ServiceSessionDep,
