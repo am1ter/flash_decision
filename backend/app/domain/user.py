@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from attrs import define, field
-from pydantic import EmailStr, IPvAnyAddress, ValidationError, parse_obj_as
+from pydantic import EmailStr, IPvAnyAddress, TypeAdapter, ValidationError
 
 from app.domain.interfaces.domain import Agregate, Entity, ValueObject, field_relationship
 from app.system.constants import AuthStatus, UserStatus
@@ -31,7 +31,7 @@ class Email(ValueObject):
     @value.validator
     def _validate_email(self, attribute: str, value: str) -> None:
         try:
-            parse_obj_as(EmailStr, value)
+            TypeAdapter(EmailStr).validate_python(value)
         except ValidationError as e:
             raise EmailValidationError from e
 
@@ -119,7 +119,7 @@ class IpAddress(ValueObject):
     @value.validator
     def _validate_ip(self, attribute: str, value: str) -> None:
         try:
-            parse_obj_as(IPvAnyAddress, value)
+            TypeAdapter(IPvAnyAddress).validate_python(value)
         except ValidationError as e:
             raise IpAddressValidationError from e
 

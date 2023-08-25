@@ -32,7 +32,7 @@ def oauth2(req_sign_in: ReqSignIn) -> OAuth2Auth:
 def response_custom_session(req_session_params_custom: ReqSession, oauth2: OAuth2Auth) -> Response:
     rs = requests.post(
         f"{Settings().general.BACKEND_URL}/session/custom",
-        data=req_session_params_custom.json(),
+        data=req_session_params_custom.model_dump_json(),
         auth=oauth2,
     )
     response_session = Response(rs)
@@ -99,7 +99,9 @@ class TestBackendSupport:
 class TestBackendUser:
     @pytest.mark.dependency()
     def test_sign_up(self, req_sign_up: ReqSignUp) -> None:
-        r = requests.post(f"{Settings().general.BACKEND_URL}/user/sign-up", json=req_sign_up.dict())
+        r = requests.post(
+            f"{Settings().general.BACKEND_URL}/user/sign-up", json=req_sign_up.model_dump()
+        )
         response = Response(r)
         response.assert_status_code(201)
         data_model = RespSignUp(**response.response.json())
@@ -108,7 +110,9 @@ class TestBackendUser:
 
     @pytest.mark.dependency(depends=["TestBackendUser::test_sign_up"])
     def test_sign_in(self, req_sign_in: ReqSignIn) -> None:
-        r = requests.post(f"{Settings().general.BACKEND_URL}/user/sign-in", data=req_sign_in.dict())
+        r = requests.post(
+            f"{Settings().general.BACKEND_URL}/user/sign-in", data=req_sign_in.model_dump()
+        )
         response = Response(r)
         response.assert_status_code(200)
         data_model = RespSignIn(**response.response.json())
@@ -133,9 +137,10 @@ class TestBackendSession:
     def test_start_new_session(
         self, oauth2: OAuth2Auth, mode: SessionMode, req_session_params_custom: ReqSession
     ) -> None:
+        data = req_session_params_custom.model_dump_json() if mode == SessionMode.custom else None
         r = requests.post(
             f"{Settings().general.BACKEND_URL}/session/{mode.value}",
-            data=req_session_params_custom.json() if mode == SessionMode.custom else None,
+            data=data,
             auth=oauth2,
         )
         response = Response(r)
@@ -180,7 +185,7 @@ class TestBackendDecision:
             )
             r = requests.post(
                 f"{Settings().general.BACKEND_URL}/decision/",
-                data=req_decision.json(),
+                data=req_decision.model_dump_json(),
                 auth=oauth2,
             )
             response = Response(r)

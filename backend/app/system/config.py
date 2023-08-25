@@ -1,18 +1,10 @@
 import os
-from copy import copy
 from distutils.util import strtobool
 from functools import cached_property
 from typing import Literal
 
-from pydantic import (
-    BaseSettings,
-    HttpUrl,
-    MongoDsn,
-    PostgresDsn,
-    RedisDsn,
-    ValidationError,
-    parse_obj_as,
-)
+from pydantic import HttpUrl, MongoDsn, PostgresDsn, RedisDsn, TypeAdapter, ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.system.constants import Environment
 from app.system.exceptions import ConfigHTTPHardcodedBackendUrlError, ConfigHTTPWrongURLError
@@ -22,9 +14,7 @@ from app.system.metaclasses import SingletonMeta
 class BaseSettingsCustom(BaseSettings):
     """Parent class for all settings subclasses"""
 
-    class Config:
-        # Allow use cached_property
-        keep_untouched = (cached_property,)
+    model_config = SettingsConfigDict(ignored_types=(cached_property,))  # Allow use cached_property
 
 
 class SettingsGeneral(BaseSettingsCustom):
@@ -55,10 +45,7 @@ class SettingsGeneral(BaseSettingsCustom):
 
         # Parse URL and validate it
         try:
-            # Allow urls without `top level domain` like `localhost`
-            http_url_no_tld = copy(HttpUrl)
-            http_url_no_tld.tld_required = False
-            parse_obj_as(http_url_no_tld, url_api)
+            TypeAdapter(HttpUrl).validate_python(url_api)
         except ValidationError as e:
             raise ConfigHTTPWrongURLError from e
 
@@ -110,14 +97,15 @@ class SettingsDbSql(BaseSettingsCustom):
 
     @cached_property
     def SQL_URL(self) -> str:  # noqa: N802
-        return PostgresDsn.build(
+        url = PostgresDsn.build(
             scheme=self.SQL_ENGINE_SCHEMA,
             host=self.SQL_HOST,
-            port=str(self.SQL_PORT),
-            user=self.SQL_USER,
+            port=self.SQL_PORT,
+            username=self.SQL_USER,
             password=self.SQL_PASS,
-            path=f"/{self.SQL_DB_NAME}",
+            path=f"{self.SQL_DB_NAME}",
         )
+        return str(url)
 
     @cached_property
     def SQL_URL_WO_PASS(self) -> str:  # noqa: N802
@@ -134,13 +122,14 @@ class SettingsDbNoSql(BaseSettingsCustom):
 
     @cached_property
     def NOSQL_URL(self) -> str:  # noqa: N802
-        return MongoDsn.build(
+        url = MongoDsn.build(
             scheme=self.NOSQL_ENGINE_SCHEMA,
             host=self.NOSQL_HOST,
-            port=str(self.NOSQL_PORT),
-            user=self.NOSQL_USER,
+            port=self.NOSQL_PORT,
+            username=self.NOSQL_USER,
             password=self.NOSQL_PASS,
         )
+        return str(url)
 
     @cached_property
     def NOSQL_URL_WO_PASS(self) -> str:  # noqa: N802
@@ -155,25 +144,26 @@ class SettingsCache(BaseSettingsCustom):
     CACHE_REDIS_PORT: int = 6379
     CACHE_REDIS_DB: int = 0
     CACHE_REDIS_PASS: str = "my_redis_pass"
-    CACHE_REDIS_DECODE_RESPONSES = True
+    CACHE_REDIS_DECODE_RESPONSES: bool = True
 
     @cached_property
     def CACHE_REDIS_URL(self) -> str:  # noqa: N802
-        return RedisDsn.build(
+        url = RedisDsn.build(
             scheme=self.CACHE_REDIS_SCHEMA,
             host=self.CACHE_REDIS_HOST,
-            port=str(self.CACHE_REDIS_PORT),
+            port=self.CACHE_REDIS_PORT,
             password=self.CACHE_REDIS_PASS,
-            path=f"/{self.CACHE_REDIS_DB!s}",
+            path=f"{self.CACHE_REDIS_DB!s}",
         )
+        return str(url)
 
 
 class SettingsProvider(BaseSettingsCustom):
-    ALPHAVANTAGE_API_KEY_STOCKS = "my_alpha_avantage_api_key"
-    ALPHAVANTAGE_API_KEY_CRYPTO = "my_alpha_avantage_api_key"
-    CRYPTO_PRICE_CURRENCY = "CNY"  # Source: https://www.alphavantage.co/physical_currency_list/
-    RANDOM_TICKERS_STOCKS = "AMZN,META,GOOGL,AAPL,AMD,XOM,GS,DAL,NKE,NFLX,INTC,TSLA,MSFT,PEP,DIS"
-    RANDOM_TICKERS_CRYPTO = "BTC,BNB,ETH,DOGE,MATIC,BCH"
+    ALPHAVANTAGE_API_KEY_STOCKS: str = "my_alpha_avantage_api_key"
+    ALPHAVANTAGE_API_KEY_CRYPTO: str = "my_alpha_avantage_api_key"
+    CRYPTO_PRICE_CURRENCY: str = "CNY"  # Source: https://www.alphavantage.co/physical_currency_list
+    RANDOM_TICKERS_STOCKS: str = "AMZN,META,GOOGL,AAPL,AMD,XOM,GS,DAL,NKE,NFLX,INTC,TSLA,MSFT,PEP"
+    RANDOM_TICKERS_CRYPTO: str = "BTC,BNB,ETH,DOGE,MATIC,BCH"
 
 
 class Settings(metaclass=SingletonMeta):

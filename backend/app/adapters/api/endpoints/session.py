@@ -46,7 +46,7 @@ async def start_new_session(
 ) -> Resp[RespMeta, RespSessionInfo]:
     """Start new session: receive session's mode and options, download quotes, create iterations"""
     assert auth.user
-    session_params = SessionParams(**req_session.dict()) if req_session else None
+    session_params = SessionParams(**req_session.model_dump()) if req_session else None
     session_quotes = await service_session.create_session(mode, session_params, auth.user)
     await service_iteration.create_iterations(session_quotes)
     data = _resp_session_by_session(session_quotes.session)

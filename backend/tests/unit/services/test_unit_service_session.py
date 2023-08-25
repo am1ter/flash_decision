@@ -64,7 +64,7 @@ class TestServiceSession:
         user_domain: User,
     ) -> None:
         if mode == SessionMode.custom:
-            params = SessionParams(**req_session_params_custom.dict())
+            params = SessionParams(**req_session_params_custom.model_dump())
         else:
             params = None
         session_quotes = await service_session.create_session(mode, params, user_domain)
@@ -78,7 +78,7 @@ class TestServiceSession:
         user_domain: User,
     ) -> None:
         # Create session
-        params = SessionParams(**req_session_params_custom.dict())
+        params = SessionParams(**req_session_params_custom.model_dump())
         session_quotes = await service_session.create_session(
             SessionMode.custom, params, user_domain
         )

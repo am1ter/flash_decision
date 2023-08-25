@@ -14,7 +14,7 @@ def _mock_env_hardcode_backend_url(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture()
 def _mock_settings_wrong_backend_host(monkeypatch: pytest.MonkeyPatch) -> None:
     type(Bootstrap)._instances = {}
-    monkeypatch.setattr(Settings().general, "BACKEND_HOST", ".localhost")
+    monkeypatch.setattr(Settings().general, "BACKEND_HOST", "")
 
 
 class TestSettingsGeneral:

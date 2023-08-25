@@ -1,11 +1,13 @@
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel
-from pydantic.generics import GenericModel
+from pydantic import BaseModel, ConfigDict
 
 
 class RespMeta(BaseModel):
     """Container for sending Request's meta data to a client"""
+
+    # Allow to receive custom attributes during instance creation
+    model_config = ConfigDict(extra="allow")
 
 
 class RespData(BaseModel):
@@ -17,7 +19,7 @@ Rm = TypeVar("Rm", bound=RespMeta)
 Rd = TypeVar("Rd", bound=RespData)
 
 
-class Resp(GenericModel, Generic[Rm, Rd]):
+class Resp(BaseModel, Generic[Rm, Rd]):
     """Format every API response with JSON:API specification format (https://jsonapi.org)"""
 
     meta: Rm | None = None
