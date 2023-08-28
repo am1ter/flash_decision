@@ -1,0 +1,37 @@
+name: Run tests
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Run tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: step1
+        name: Create .env.secrets file
+        run: cp -n .env.secrets.sample .env.secrets
+
+      - id: step2
+        name: Run tests
+        run: make docker-run-tests > output_make.txt
+
+      - id: step3
+        name: Echo full tests' logs
+        run: cat output_make.txt | awk '/test session starts/ {flag=1; next} flag'
+
+      - id: step4
+        name: Save tests' summary
+        run: cat output_make.txt | grep -oE '^={5,}[[:space:]][0-9][^=]+[[:space:]]={5,}$' | sed 's/=\+//g; s/^ //;' > output_tests.txt
+
+      - id: step5
+        name: Echo tests' summary
+        run: cat output_tests.txt >> $GITHUB_STEP_SUMMARY;
+
+      - id: step6
+        name: Check for errors
+        run: if cat output_tests.txt | grep -q "failed"; then exit 1; fi
