@@ -88,7 +88,7 @@ class IterationCollection:
             future = executor.submit(
                 self._calculate_random_slices, total_df_quotes_bars, required_slices, slice_len
             )
-            return future.result()
+        return future.result()
 
     def create_iterations(self) -> Self:
         """Extract random slices from the full df and create all iterations for the session"""

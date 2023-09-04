@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABCMeta, abstractmethod
 from typing import assert_never
 from uuid import UUID
@@ -26,7 +27,7 @@ class ServiceIteration(Service):
 
     async def create_iterations(self, session_quotes: SessionQuotes) -> IterationCollection:
         iteration_collection = IterationCollection(session_quotes=session_quotes)
-        iteration_collection.create_iterations()
+        await asyncio.to_thread(iteration_collection.create_iterations)
         async with self.uow:
             for iteration in iteration_collection.iterations:
                 self.uow.repository.add(iteration)
