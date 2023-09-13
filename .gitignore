@@ -1,34 +1,36 @@
 # Service
-__pycache__/
-.mypy_cache/
-.ruff_cache/
 .vscode/
 .idea/
 workspace.code-workspace/
-*.pyc
-*.log*
-
-# Backend
-.venv/
 
 # Env files
 .env.secrets
 
-# Frontend: Main
-/frontend/.DS_Store/
-/frontend/node_modules/
-/frontend/dist/
+# Backend
+*.pyc
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.venv/
 
-# Frontend: local env files
-/frontend/.env.local
-/frontend/.env.*.local
+# Frontend
+*.lockb
+node_modules
+dist
+dist-ssr
+*.local
 
-# Frontend: Editor directories and files
-/frontend/*.suo
-/frontend/*.ntvs*
-/frontend/*.njsproj
-/frontend/*.sln
-/frontend/*.sw?
+# Editor directories and files
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Tests
 .pytest_cache/
+
+# Logs
+*.log*
+logs

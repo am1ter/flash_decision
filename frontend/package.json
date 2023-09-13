@@ -1,0 +1,23 @@
+{
+  "name": "flash_decision_frontend",
+  "description": "Flash Decision Frontend",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bunx --bun vite --port 8000",
+    "build": "bunx --bun vite build",
+    "preview": "bunx --bun vite preview"
+  },
+  "dependencies": {
+    "@vue/compat": "^3.3.4",
+    "bootstrap-vue": "^2.23.1",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4",
+    "vuex": "^4.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^4.4.5"
+  }
+}
