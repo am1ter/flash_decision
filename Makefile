@@ -29,6 +29,10 @@ docker-down:  # Shutdown and remove containers for backend in prod environment
 		docker compose --env-file=.env.prod --env-file=.env.secrets -f ./docker-compose.prod.yaml --profile backend --profile db down;
 		docker compose --env-file=.env.tests --env-file=.env.secrets -f ./docker-compose.tests.yaml down --rmi local
 
+.PHONY: frontend-up
+frontend-up:  # Run bun.sh with the frontend in dev mode
+		cd frontend; bun run dev
+
 .PHONY: shutdown
 shutdown:  # Shutdown local python backend server
 		kill $$(lsof -i :$(BACKEND_PORT) | grep "^python" |  awk '{print $$2}') || true \
